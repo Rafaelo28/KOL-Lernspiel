@@ -42,7 +42,21 @@ def starte_spiel():
         )
         return 1
 
-    fenster = tk.Tk()
+    try:
+        fenster = tk.Tk()
+    except tk.TclError as fehler:
+        # Tritt auf, wenn kein Bildschirm zur Verfuegung steht, etwa bei einer
+        # SSH-Sitzung ohne Weiterleitung oder auf einem Server. Ohne diesen
+        # Zweig endet der Start mit einem englischen Stacktrace.
+        print(
+            "Fehler: Es ist keine Bildschirmanzeige verfügbar.\n"
+            f"Meldung des Systems: {fehler}\n"
+            "Starte das Spiel direkt am Rechner und nicht über eine\n"
+            "Fernverbindung ohne Grafikweiterleitung.",
+            file=sys.stderr,
+        )
+        return 1
+
     fenster.title(FENSTER_TITEL)
     fenster.minsize(MIN_BREITE, MIN_HOEHE)
     _zentriere(fenster, FENSTER_BREITE, FENSTER_HOEHE)

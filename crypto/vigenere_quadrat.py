@@ -53,12 +53,18 @@ def _index_pruefen(buchstabe, rolle):
     ``rolle`` ist die Bezeichnung für die Fehlermeldung, damit man ihr
     ansieht, *welcher* der beiden Buchstaben nicht gestimmt hat.
 
-    Alles, was kein einzelner Buchstabe von A bis Z ist, führt zu einem
-    ``ValueError`` – auch eine Zahl oder ein ganzes Wort. Das Quadrat kennt
-    schlicht keine anderen Felder, deshalb ist das hier immer ein
-    Wertproblem und nie eine bloße Typfrage.
+    Die Fehlerarten folgen der Konvention aus dem Kopf von
+    :mod:`crypto.normalize`: Ein falscher **Typ** (Zahl, ``None``, Liste) ist
+    ein Programmierfehler im aufrufenden Code und ergibt einen ``TypeError``.
+    Ein Text, der kein einzelner Buchstabe von A bis Z ist, ist ein
+    unbrauchbarer **Wert** und ergibt einen ``ValueError``.
     """
-    if not isinstance(buchstabe, str) or len(buchstabe) != 1:
+    if not isinstance(buchstabe, str):
+        raise TypeError(
+            f"Als {rolle} wird ein Text (str) erwartet, "
+            f"nicht {type(buchstabe).__name__}."
+        )
+    if len(buchstabe) != 1:
         raise ValueError(
             f"Als {rolle} wird genau ein Buchstabe von A bis Z erwartet, "
             f"nicht {buchstabe!r}."

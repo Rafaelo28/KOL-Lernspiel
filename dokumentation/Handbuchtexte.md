@@ -135,7 +135,10 @@ Je länger der Text, desto leichter wird er über Häufigkeitsanalyse knackbar
 
 ## Seite 3: Die Vigenère-Verschlüsselung (mit dem Vigenère-Quadrat)
 
-![Das ist das Vigenère-Quadrat du wirst es noch brauchen](.attachments.8333/image.png)
+> **Hinweis für die Umsetzung:** Hier stand ein Bild des Vigenère-Quadrats,
+> das nicht mit ins Repository gewandert ist. Es wird auch nicht gebraucht:
+> Das Quadrat wird von `crypto/vigenere_quadrat.py` aus der Formel erzeugt
+> und in Phase 6.7 als 26×26-Raster angezeigt.
 
 ### Was ist das?
 

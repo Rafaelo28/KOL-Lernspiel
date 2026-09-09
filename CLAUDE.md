@@ -104,7 +104,12 @@ Ausführliche Begründungen stehen im Kopf von `crypto/normalize.py`.
    doppeltes Leerzeichen darf keinen der drei Versuche verbrauchen.
 5. **Umlaute werden ersetzt, nicht abgewiesen:** Ä→AE, Ö→OE, Ü→UE, ß→SS.
    (Bobs erster Funkspruch enthält "hört" – eine Fehlermeldung würde nur Zeit
-   im festen Zeitfenster kosten.)
+   im festen Zeitfenster kosten.) Die Schreibweise in Unicode spielt keine
+   Rolle – zusammengesetzte und zerlegte Umlaute werden gleich behandelt.
+   Andere Akzentbuchstaben behalten ihren Grundbuchstaben: É→E, Ç→C. Sonst
+   würde aus dem Charakter "Théo Lambert" im Spiel "THO LAMBERT". Nicht
+   zerlegbare Zeichen (Ø, Ł, Æ) fallen dagegen unter Regel 6 und verschwinden;
+   in den Spieltexten kommt keines davon vor.
 6. **Alle übrigen Zeichen werden entfernt** (Satzzeichen, Ziffern). Die UI
    zeigt deshalb **immer den bereits normalisierten Text** an, sonst steht im
    Aufgabentext ein Komma, das in der Lösung fehlt.
@@ -117,7 +122,7 @@ Ausführliche Begründungen stehen im Kopf von `crypto/normalize.py`.
 ```
 crypto/        – reine Verschlüsselungslogik, kein GUI
 game/          – Spiellogik, Zustand, Timer, Logging
-ui/            – Tkinter-Oberfläche (einzige Schicht, die Tkinter importiert)
+ui/            – Tkinter-Oberfläche (baut als einzige Schicht Bedienelemente)
 content/       – Handbuchtexte, Wortlisten, Story-Texte, Charaktere (als Python-Daten)
 tests/         – pytest
 logs/          – Messdaten der Durchläufe (Inhalt in .gitignore!)
@@ -127,6 +132,13 @@ main.py        – Einstiegspunkt
 
 Erlaubte Abhängigkeitsrichtung: `ui` → `game` → `crypto` / `content`.
 Niemals umgekehrt.
+
+Tkinter darf nur in `ui/` und in `main.py` vorkommen. `main.py` öffnet das
+Hauptfenster und fängt die zwei Startfehler ab (Tkinter fehlt, keine
+Bildschirmanzeige); alles Weitere gehört nach `ui/`. In `crypto/`, `game/`
+und `content/` sind Tkinter-Importe verboten, ebenso `print()` und `input()` –
+`tests/test_zusammenspiel.py` prüft beides für alle drei Pakete über den
+Syntaxbaum.
 
 ---
 

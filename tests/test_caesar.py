@@ -18,6 +18,8 @@ Denkfehler unwahrscheinlich.
 
 import doctest
 
+from pathlib import Path
+
 import pytest
 
 from crypto import caesar
@@ -421,10 +423,16 @@ def test_verschiebungen_addieren_sich():
 
 
 def test_die_25_schluessel_ergeben_25_verschiedene_geheimtexte():
-    """Handbuch Seite 2: "Bei Caesar gibt es nur 25 mögliche Schlüssel"."""
+    """Handbuch Seite 2: "Bei Caesar gibt es nur 25 mögliche Schlüssel".
+
+    Gezählt werden die Schlüssel 1 bis 25 – Schlüssel 0 verschiebt nichts und
+    ist deshalb kein Schlüssel im Sinne des Handbuchs. Genau darauf beruht das
+    Argument von Handbuchseite 2, dass Caesar in Minuten zu knacken ist.
+    """
     text = "STANDORT UNBEKANNT"
-    ergebnisse = {caesar.verschluesseln(text, k) for k in range(26)}
-    assert len(ergebnisse) == 26
+    ergebnisse = {caesar.verschluesseln(text, k) for k in range(1, 26)}
+    assert len(ergebnisse) == 25
+    assert normalisieren(text) not in ergebnisse
     assert caesar.verschluesseln(text, 0) == normalisieren(text)
 
 
@@ -538,9 +546,8 @@ def test_pflicht_doctests_enthalten_die_referenzwerte():
         assert referenzwert in doku, f"{referenzwert} fehlt in den Doctests."
 
 
-def test_crypto_modul_enthaelt_keinen_gui_code():
-    """Projektregel: crypto/ importiert niemals tkinter, ui oder game."""
-    with open(caesar.__file__, encoding="utf-8") as datei:
-        quelltext = datei.read().lower()
-    for verboten in ("tkinter", "import ui", "from ui", "import game", "from game"):
-        assert verboten not in quelltext, f"Verbotener Bezug gefunden: {verboten}"
+# Die Projektregel "kein GUI-Code in crypto/" wird zentral in
+# tests/test_zusammenspiel.py über den Syntaxbaum geprüft – für alle Module
+# auf einmal, statt in jeder Testdatei erneut.
+
+

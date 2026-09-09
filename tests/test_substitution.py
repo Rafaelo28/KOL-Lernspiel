@@ -178,6 +178,20 @@ def test_doppelter_buchstabe_in_den_reihen_wird_gemeldet(monkeypatch):
         substitution.erzeuge_tastatur_tabelle()
 
 
+def test_zu_viele_buchstaben_in_den_reihen_werden_gemeldet(monkeypatch):
+    """Auch eine zu lange Reihe muss auffallen, nicht nur eine zu kurze.
+
+    Ohne diesen Fall überlebt eine Mutation, die die Längenprüfung in
+    erzeuge_tastatur_tabelle() ganz entfernt: Der Test mit zu wenigen
+    Buchstaben schlägt dann zwar an, der mit zu vielen aber nicht.
+    """
+    monkeypatch.setattr(
+        substitution, "TASTATUR_REIHEN", ("QWERTZUIOP", "ASDFGHJKL", "YXCVBNM", "X")
+    )
+    with pytest.raises(ValueError):
+        substitution.erzeuge_tastatur_tabelle()
+
+
 # ───────────────────────────────────────────────────────────────────────────
 # 2. umkehren()
 # ───────────────────────────────────────────────────────────────────────────
@@ -200,11 +214,17 @@ def test_umkehren_stichproben(geheim, original):
     assert umkehren(erzeuge_tastatur_tabelle())[geheim] == original
 
 
-def test_umkehren_hat_26_eintraege():
-    """Auch die Rücktabelle ist vollständig."""
+def test_umkehren_hat_26_eintraege_in_alphabetreihenfolge():
+    """Auch die Rücktabelle ist vollständig – und nach A..Z sortiert.
+
+    Die Sortierung ist eine Zusage an die UI (Arbeitsplan 6.4): Sie zeigt die
+    Rücktabelle Spalte für Spalte an und verlässt sich darauf, dass sie nicht
+    selbst sortieren muss. ``sorted()`` im Test würde diese Zusage nicht
+    prüfen, weil es jede Reihenfolge akzeptiert.
+    """
     umgekehrt = umkehren(erzeuge_tastatur_tabelle())
     assert len(umgekehrt) == 26
-    assert sorted(umgekehrt) == list(ALPHABET)
+    assert list(umgekehrt.keys()) == list(ALPHABET)
 
 
 def test_umkehren_zweimal_ergibt_die_ausgangstabelle():
@@ -537,3 +557,69 @@ def test_fehlermeldungen_sind_deutsch():
         wort in meldung.lower()
         for wort in ("table", "must", "invalid", "expected", "letter")
     )
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# Die Teilstring-Falle in der Tabellenprüfung
+# ───────────────────────────────────────────────────────────────────────────
+#
+# "AB" in ALPHABET ist bei Zeichenketten ein Teilstring-Test und liefert True.
+# Ohne ausdrückliche Längenprüfung galten deshalb "" und "AB" als gültige
+# Geheimzeichen. Die Folge war kein Fehler, sondern ein still falscher
+# Geheimtext: Bei A -> "" wurde er kürzer als der Klartext, bei A -> "AB"
+# länger. Damit stimmen weder Länge noch Leerzeichenpositionen, und die
+# Zuordnung ist nicht mehr umkehrbar.
+
+
+@pytest.mark.parametrize(
+    "kaputter_wert",
+    ["", "AB", "XYZ", "QQ"],
+    ids=["leerer Wert", "zwei Buchstaben", "drei Buchstaben", "doppelter Buchstabe"],
+)
+def test_mehrbuchstabige_und_leere_geheimzeichen_werden_abgewiesen(kaputter_wert):
+    """Ein Geheimzeichen ist genau ein Buchstabe – nicht keiner und nicht zwei."""
+    tabelle = erzeuge_tastatur_tabelle()
+    tabelle["A"] = kaputter_wert
+    with pytest.raises(ValueError):
+        substitution.verschluesseln("ABC", tabelle)
+    with pytest.raises(ValueError):
+        substitution.entschluesseln("ABC", tabelle)
+
+
+@pytest.mark.parametrize(
+    "kaputter_schluessel",
+    ["AB", "HUND", ""],
+    ids=["zwei Buchstaben", "ganzes Wort", "leerer Schlüssel"],
+)
+def test_mehrbuchstabige_tabellenschluessel_werden_abgewiesen(kaputter_schluessel):
+    """Auch die linke Spalte der Tabelle kennt nur einzelne Buchstaben."""
+    tabelle = {b: v for b, v in erzeuge_tastatur_tabelle().items() if b != "A"}
+    tabelle[kaputter_schluessel] = "Q"
+    with pytest.raises(ValueError):
+        substitution.verschluesseln("HUND", tabelle)
+
+
+def test_geheimtext_hat_immer_dieselbe_laenge_wie_der_klartext():
+    """Die eigentliche Zusage, die durch die Teilstring-Falle brach.
+
+    Solange jede Tabelle geprüft wird, kann kein Buchstabe verschwinden oder
+    sich verdoppeln – Länge und Leerzeichenpositionen bleiben erhalten.
+    """
+    klartext = normalisieren("Zeit wird knapp")
+    assert len(substitution.verschluesseln(klartext)) == len(klartext)
+
+
+def test_die_fehlermeldung_bei_fehlenden_eintraegen_widerspricht_sich_nicht():
+    """Die Meldung darf nicht "26 statt 26 Einträge" behaupten.
+
+    Die alte Meldung nannte die Gesamtzahl der Einträge und daneben die
+    fehlenden Buchstaben. Sobald ein Eintrag zwar zählt, aber keinen
+    Buchstaben abdeckt, las sich das widersprüchlich. Die Meldung nennt
+    deshalb nur noch, was tatsächlich fehlt.
+    """
+    tabelle = {b: v for b, v in erzeuge_tastatur_tabelle().items() if b != "Z"}
+    with pytest.raises(ValueError) as fehler:
+        substitution.verschluesseln("HUND", tabelle)
+    meldung = str(fehler.value)
+    assert "Es fehlen: Z" in meldung
+    assert "26 statt 26" not in meldung

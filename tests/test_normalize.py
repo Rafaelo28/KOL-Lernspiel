@@ -192,9 +192,12 @@ def test_normalisieren_ersetzt_umlaute(eingabe, erwartet):
         ("ZEIT-WIRD-KNAPP", "ZEITWIRDKNAPP"),
         ("@#$%&", ""),
         ("[Initialen]", "INITIALEN"),
-        # Akzentbuchstaben stehen nicht in Regel 5 und fallen daher unter
-        # Regel 6: sie werden ersatzlos entfernt.
-        ("Café", "CAF"),
+        # Akzentbuchstaben verlieren nach Regel 5 nur ihren Akzent, der
+        # Grundbuchstabe bleibt stehen. Andernfalls wuerde aus dem Charakter
+        # "Théo Lambert" im Spiel "THO LAMBERT".
+        ("Café", "CAFE"),
+        ("Théo Lambert", "THEO LAMBERT"),
+        ("Curaçao", "CURACAO"),
     ],
 )
 def test_normalisieren_entfernt_satzzeichen_und_ziffern(eingabe, erwartet):

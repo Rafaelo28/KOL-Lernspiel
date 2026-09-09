@@ -534,6 +534,8 @@ def test_schluesselwort_laenger_als_der_text_ist_unproblematisch():
 # 5. Ungültige Eingaben
 # ───────────────────────────────────────────────────────────────────────────
 
+# Texte, die kein einzelner Buchstabe von A bis Z sind: unbrauchbarer Wert
+# bei richtigem Typ -> ValueError.
 UNGUELTIGE_EINGABEN = [
     ("", "leerer Text"),
     (" ", "Leerzeichen"),
@@ -545,9 +547,15 @@ UNGUELTIGE_EINGABEN = [
     ("ß", "scharfes S"),
     ("é", "Buchstabe mit Akzent"),
     ("\n", "Zeilenumbruch"),
+]
+
+# Gar kein Text: Programmierfehler im aufrufenden Code -> TypeError.
+# Die Trennung folgt der Fehlerart-Konvention im Kopf von crypto/normalize.py.
+FALSCHE_TYPEN = [
     (3, "Zahl statt Text"),
     (None, "None"),
     (["A"], "Liste"),
+    (b"A", "bytes"),
 ]
 
 
@@ -694,3 +702,44 @@ def test_funktionen_haben_deutsche_docstrings():
     for funktion in (erzeuge_quadrat, verschluesselter_buchstabe, klarbuchstabe_finden):
         assert funktion.__doc__, f"{funktion.__name__} hat keinen Docstring."
         assert len(funktion.__doc__.strip()) > 20
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# Falscher Typ ergibt TypeError, nicht ValueError
+# ───────────────────────────────────────────────────────────────────────────
+
+@pytest.mark.parametrize(
+    "eingabe, beschreibung", FALSCHE_TYPEN, ids=[b for _, b in FALSCHE_TYPEN]
+)
+def test_falscher_typ_ergibt_typeerror(eingabe, beschreibung):
+    """Konvention: falscher Typ -> TypeError, unbrauchbarer Wert -> ValueError.
+
+    Ein ``TypeError`` bedeutet, dass der aufrufende Code etwas falsch macht;
+    ein ``ValueError`` bedeutet, dass der Wert nicht ins Quadrat passt. Die
+    Oberfläche in Phase 6 muss die beiden unterscheiden können, und alle
+    Module in ``crypto/`` müssen sich dabei gleich verhalten.
+    """
+    for aufruf in (
+        lambda: vigenere_quadrat.verschluesselter_buchstabe(eingabe, "H"),
+        lambda: vigenere_quadrat.verschluesselter_buchstabe("R", eingabe),
+        lambda: vigenere_quadrat.klarbuchstabe_finden(eingabe, "Y"),
+        lambda: vigenere_quadrat.klarbuchstabe_finden("R", eingabe),
+    ):
+        with pytest.raises(TypeError):
+            aufruf()
+
+
+def test_die_module_werfen_bei_falschem_typ_dieselbe_fehlerart():
+    """normalize, substitution und vigenere_quadrat müssen sich gleich verhalten."""
+    from crypto import normalize, substitution, vigenere
+
+    with pytest.raises(TypeError):
+        normalize.buchstabe_zu_index(3)
+    with pytest.raises(TypeError):
+        normalize.normalisieren(3)
+    with pytest.raises(TypeError):
+        substitution.verschluesseln("HUND", ["A", "Q"])
+    with pytest.raises(TypeError):
+        vigenere.verschluesseln("HUND", 3)
+    with pytest.raises(TypeError):
+        vigenere_quadrat.verschluesselter_buchstabe(3, "H")

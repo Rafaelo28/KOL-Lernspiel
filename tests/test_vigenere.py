@@ -618,12 +618,8 @@ def test_funktionen_sind_rein_und_ohne_zustand():
     assert ergebnisse == {"RZEVG HB"}
 
 
-def test_modul_enthaelt_keinen_gui_code():
-    """Projektregel: crypto/ importiert weder tkinter noch ui/ oder game/."""
-    quelltext = Path(vigenere_modul.__file__).read_text(encoding="utf-8")
-    verbotener_import = re.search(
-        r"^\s*(?:import|from)\s+(tkinter|ui|game)\b", quelltext, re.MULTILINE
-    )
-    assert verbotener_import is None
-    assert "print(" not in quelltext
-    assert "input(" not in quelltext
+# Die Projektregeln "kein GUI-Code" und "kein print()/input()" werden zentral
+# in tests/test_zusammenspiel.py über den Syntaxbaum geprüft, für alle Dateien
+# in crypto/, game/ und content/ auf einmal. Die frühere Textsuche an dieser
+# Stelle übersah Sammelimporte wie "import os, tkinter" und wurde umgekehrt bei
+# jeder Erwähnung des Wortes im Docstring rot.

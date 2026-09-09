@@ -51,6 +51,22 @@ Die Regeln
    irgendetwas über Verschlüsselung gelernt wird. Die Ersetzung geschieht
    still im Hintergrund – für den Spieler ändert sich nichts, außer dass im
    Aufgabentext von vornherein "HOERT" steht.
+   Das gilt unabhängig davon, wie der Umlaut in Unicode geschrieben ist: "ö"
+   als ein Zeichen und "o" plus getrenntes Umlautzeichen sehen gleich aus und
+   werden gleich behandelt.
+
+   Andere Akzentbuchstaben behalten ihren Grundbuchstaben, statt ganz zu
+   verschwinden: É → E, Ç → C, Å → A. Das ist keine Nebensache – "Théo
+   Lambert" ist einer der fünf wählbaren Charaktere, und "THO LAMBERT" wäre
+   ein sichtbarer Fehler im Spiel.
+
+   Die Grenze dieser Regel: Sie greift nur, wenn sich das Zeichen in
+   Grundbuchstabe und Akzent zerlegen lässt. Buchstaben, bei denen der Strich
+   fest zum Zeichen gehört (Ø, Ł, Đ, Ħ), und Ligaturen (Æ, Œ) lassen sich
+   nicht zerlegen und fallen deshalb unter Regel 6 – sie verschwinden. In den
+   Handbuchtexten, den Funksprüchen und den fünf Charakternamen kommt keines
+   dieser Zeichen vor; sollte je eines dazukommen, gehört es ausdrücklich in
+   UMLAUT_ERSATZ.
 
 6. ALLE ÜBRIGEN ZEICHEN WERDEN ENTFERNT
    Satzzeichen, Ziffern und Sonderzeichen fallen beim Normalisieren weg
@@ -65,7 +81,38 @@ Die Regeln
    mehr mit mehrwortigen Sätzen überein.
 
 ────────────────────────────────────────────────────────────────────────────
+Welche Fehlerart wann
+────────────────────────────────────────────────────────────────────────────
+
+Gilt für alle Module in ``crypto/``, damit die Oberfläche in Phase 6 nicht
+je Level einen anderen Fehler abfangen muss:
+
+* ``TypeError``  – falscher **Typ**. Das ist ein Programmierfehler im
+  aufrufenden Code, zum Beispiel eine Zahl statt eines Texts. So etwas darf
+  nie durch eine Spielereingabe entstehen.
+* ``ValueError`` – richtiger Typ, aber unbrauchbarer **Wert**: ein
+  Schlüsselwort mit Leerzeichen, eine Tabelle mit doppeltem Geheimbuchstaben,
+  ein Zeichen, das kein Buchstabe von A bis Z ist.
+
+────────────────────────────────────────────────────────────────────────────
+Achtung für Aufgabe 4.2 ("Stelle 3 stimmt nicht")
+────────────────────────────────────────────────────────────────────────────
+
+Es gibt zwei verschiedene Positionen für denselben Buchstaben, und sie
+stimmen nicht überein:
+
+* die **Buchstabenposition** in ``ohne_leerzeichen(text)`` – danach wird
+  verglichen (Regel 4),
+* die **Anzeigeposition** im normalisierten Text mit Leerzeichen – die sehen
+  die Spielenden vor sich.
+
+Für "CHLW ZLUG NQDSS" ist der letzte Buchstabe die 13. der Buchstaben, steht
+aber an 15. Stelle auf dem Bildschirm. Wer die Meldung aus der falschen Zählung
+baut, schickt die Spielenden an die falsche Stelle. Die Umrechnung gehört in
+Phase 4.2 und existiert hier bewusst noch nicht.
 """
+
+import unicodedata
 
 # Arbeitsalphabet (Regel 2). A = Index 0.
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -85,6 +132,16 @@ UMLAUT_ERSATZ = {
     "ẞ": "SS",
 }
 
+# Dieselbe Regel für die zerlegte Schreibweise: Grundbuchstabe gefolgt vom
+# Umlautzeichen U+0308. Diese Form bleibt übrig, wenn das Zeichen ein zweites
+# Diakritikum trägt (etwa "ǖ" = u + Umlaut + Längsstrich) und deshalb nicht zu
+# einem einzelnen "Ü" zusammengesetzt werden kann.
+UMLAUT_ERSATZ_ZERLEGT = {
+    "A\u0308": "AE",
+    "O\u0308": "OE",
+    "U\u0308": "UE",
+}
+
 
 def normalisieren(text):
     """Bringt beliebigen Text in die interne Form der Textkonvention.
@@ -102,14 +159,52 @@ def normalisieren(text):
 
     >>> normalisieren("ALLES\\u00a0OK")
     'ALLES OK'
+
+    Ein Umlaut wird auch dann ersetzt, wenn er in Unicode aus zwei Zeichen
+    zusammengesetzt ist (Grundbuchstabe plus Umlautzeichen):
+
+    >>> normalisieren("h\\u00f6rt"), normalisieren("ho\\u0308rt")
+    ('HOERT', 'HOERT')
+
+    Andere Akzentbuchstaben verlieren nur ihren Akzent, statt ganz zu
+    verschwinden – wichtig fuer den Charakternamen "Th\u00e9o Lambert":
+
+    >>> normalisieren("Th\\u00e9o Lambert")
+    'THEO LAMBERT'
+
+    Auch ein Umlaut mit zweitem Diakritikum wird noch erkannt:
+
+    >>> normalisieren("\\u01d6ber")
+    'UEBER'
     """
     if not isinstance(text, str):
         raise TypeError("normalisieren() erwartet einen Text (str).")
+
+    # Vorbereitung: Ein "ö" kann in Unicode auf zwei Arten geschrieben sein –
+    # als ein Zeichen (U+00F6) oder als "o" plus getrenntes Umlautzeichen
+    # (U+006F U+0308). Beides sieht gleich aus, ist aber nicht dasselbe.
+    # Die zweite Form entsteht beim Kopieren aus manchen PDFs und auf macOS.
+    # Ohne dieses Zusammensetzen würde Regel 5 dort nicht greifen und "hört"
+    # zu "HORT" statt "HOERT" werden – der Funkspruch wäre still verfälscht.
+    text = unicodedata.normalize("NFC", text)
 
     # Regel 1: erst Großbuchstaben, ...
     text = text.upper()
     # ... dann Regel 5, weil die Ersatzformen selbst Großbuchstaben sind.
     for zeichen, ersatz in UMLAUT_ERSATZ.items():
+        text = text.replace(zeichen, ersatz)
+
+    # Alle übrigen Akzentbuchstaben werden jetzt in Grundbuchstabe und
+    # Akzentzeichen zerlegt. Das Akzentzeichen fällt gleich unter Regel 6 weg,
+    # der Grundbuchstabe bleibt stehen: aus "THÉO" wird "THEO" statt "THO".
+    # Das betrifft echte Spielinhalte – "Théo Lambert" ist einer der fünf
+    # wählbaren Charaktere.
+    text = unicodedata.normalize("NFD", text)
+
+    # Regel 5 noch einmal auf der zerlegten Form: Ein Umlaut, der wegen eines
+    # zweiten Diakritikums nicht zusammengesetzt werden konnte, wird hier
+    # eingefangen. Ohne diesen Schritt bliebe von "ǖ" nur ein "U" übrig.
+    for zeichen, ersatz in UMLAUT_ERSATZ_ZERLEGT.items():
         text = text.replace(zeichen, ersatz)
 
     # Regel 2 und 6: A–Z behalten, jede Art von Weißraum zu einem Leerzeichen

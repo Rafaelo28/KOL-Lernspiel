@@ -25,9 +25,12 @@ Worauf die UI sich verlassen darf (Arbeitsplan 1.3 und 6.4)
   ohne dass ein anderer Teil des Spiels davon betroffen ist; einen geteilten
   Zustand gibt es in diesem Modul nicht.
 * ``tabelle=None`` bedeutet überall "die Tastatur-Tabelle verwenden".
-* Eine selbst übergebene Tabelle wird geprüft. Ist sie unbrauchbar, gibt es
-  einen ``ValueError`` mit einer deutschen Meldung, die konkret benennt, was
-  fehlt – die kann die UI direkt anzeigen.
+* Eine selbst übergebene Tabelle wird geprüft. Ist sie zwar ein ``dict``,
+  aber unbrauchbar, gibt es einen ``ValueError`` mit einer deutschen Meldung,
+  die konkret benennt, was fehlt – die kann die UI direkt anzeigen. Ist sie
+  gar kein ``dict``, gibt es einen ``TypeError``; das ist dann ein Fehler im
+  aufrufenden Code, keine schlechte Tabelle (siehe "Welche Fehlerart wann"
+  im Kopf von :mod:`crypto.normalize`).
 * Leerzeichen bleiben stehen (Textkonvention Regel 3); alle übrigen Zeichen
   entfernt vorher :func:`crypto.normalize.normalisieren` (Regeln 1, 5, 6).
 """
@@ -37,6 +40,23 @@ from .normalize import ALPHABET, LEERZEICHEN, normalisieren
 # Der Merk-Trick aus dem Handbuch: die drei Buchstabenreihen einer deutschen
 # Computertastatur. Zusammengesetzt ergeben sie das Geheimalphabet.
 TASTATUR_REIHEN = ("QWERTZUIOP", "ASDFGHJKL", "YXCVBNM")
+
+
+def _ist_einzelbuchstabe(zeichen):
+    """Prüft, ob ``zeichen`` genau ein Buchstabe von A bis Z ist.
+
+    Die Längenprüfung ist der eigentliche Punkt: ``"AB" in ALPHABET`` ist bei
+    Zeichenketten ein Teilstring-Test und liefert ``True``. Ohne diese
+    Funktion würden ``""`` und ``"AB"`` als Geheimzeichen durchgehen – der
+    Geheimtext hätte dann eine andere Länge als der Klartext und die
+    Zuordnung wäre nicht mehr umkehrbar.
+
+    >>> _ist_einzelbuchstabe("Q"), _ist_einzelbuchstabe("")
+    (True, False)
+    >>> _ist_einzelbuchstabe("AB"), _ist_einzelbuchstabe("ä")
+    (False, False)
+    """
+    return len(zeichen) == 1 and zeichen in ALPHABET
 
 
 def _pruefe_tabelle(tabelle):
@@ -53,28 +73,33 @@ def _pruefe_tabelle(tabelle):
     if not isinstance(tabelle, dict):
         raise TypeError(
             "Die Tabelle muss ein dict sein, das jedem Buchstaben A bis Z "
-            "genau einen Geheimbuchstaben zuordnet."
+            f"genau einen Geheimbuchstaben zuordnet, nicht {type(tabelle).__name__}."
         )
 
     # 1. Schlüsselseite: nur Buchstaben A–Z, und zwar alle 26.
+    #    Die Längenprüfung ist Pflicht: "AB" in ALPHABET ist ein
+    #    Teilstring-Treffer und würde ohne sie als gültiger Schlüssel gelten.
     for schluessel in tabelle:
-        if not isinstance(schluessel, str) or schluessel not in ALPHABET:
+        if not isinstance(schluessel, str) or not _ist_einzelbuchstabe(schluessel):
             raise ValueError(
                 f"{schluessel!r} ist kein gültiger Tabellen-Eintrag; "
-                "erlaubt sind nur die Buchstaben A bis Z."
+                "erlaubt sind nur die einzelnen Buchstaben A bis Z."
             )
     fehlend = [buchstabe for buchstabe in ALPHABET if buchstabe not in tabelle]
     if fehlend:
         raise ValueError(
-            f"Die Tabelle hat {len(tabelle)} statt 26 Einträge. "
-            f"Es fehlen: {', '.join(fehlend)}."
+            f"Die Tabelle muss allen 26 Buchstaben A bis Z einen Wert "
+            f"zuordnen. Es fehlen: {', '.join(fehlend)}."
         )
 
     # 2. Werteseite: einzelne Buchstaben A–Z, jeder nur einmal.
+    #    Auch hier die Längenprüfung – ohne sie käme "" als Geheimzeichen
+    #    durch und der Geheimtext wäre kürzer als der Klartext.
     belegt = {}
+    geprueft = {}
     for original in ALPHABET:
         geheim = tabelle[original]
-        if not isinstance(geheim, str) or geheim not in ALPHABET:
+        if not isinstance(geheim, str) or not _ist_einzelbuchstabe(geheim):
             raise ValueError(
                 f"Die Tabelle ordnet '{original}' den Wert {geheim!r} zu; "
                 "erlaubt ist genau ein Buchstabe von A bis Z."
@@ -85,10 +110,15 @@ def _pruefe_tabelle(tabelle):
                 f"(an '{belegt[geheim]}' und '{original}')."
             )
         belegt[geheim] = original
+        geprueft[original] = geheim
 
     # 26 Schlüssel mit 26 verschiedenen Werten aus einem 26-Buchstaben-
     # Alphabet: damit ist die Tabelle automatisch vollständig umkehrbar.
-    return {original: tabelle[original] for original in ALPHABET}
+    #
+    # Zurückgegeben werden die oben geprüften Werte, nicht ein zweiter Zugriff
+    # auf die übergebene Tabelle. Sonst könnte ein dict, dessen __getitem__
+    # beim zweiten Lesen etwas anderes liefert, an der Prüfung vorbeikommen.
+    return geprueft
 
 
 def erzeuge_tastatur_tabelle():
