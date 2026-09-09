@@ -1,0 +1,32 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+build/
+dist/
+*.egg-info/
+
+# --- Virtuelle Umgebung ---
+.venv/
+venv/
+env/
+
+# --- Messdaten aus den Spieldurchläufen ---
+# Enthalten Rohdaten der Versuchspersonen -> gehören NICHT ins Repo (Datenschutz).
+logs/*
+!logs/.gitkeep
+
+# --- Test- und Tooling-Caches ---
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- IDE / Betriebssystem ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
