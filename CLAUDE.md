@@ -10,6 +10,7 @@ durchlesen:
 - `dokumentation/Handbuchtexte.md` – die fertigen Handbuchtexte, Übungswörter und -sätze
 - `dokumentation/Arbeitsplan_Der_Diamantenraub.md` – Aufgabenzerlegung, Phasen 0–8
 - `dokumentation/Tipps-und-Tricks.md` – Hinweise zu Tkinter, Normalisierung, Logging
+- `dokumentation/Commit_Regeln.md` – wann und wie committet wird
 
 ## Sprache
 
@@ -194,7 +195,7 @@ ui/            – Tkinter-Oberfläche (baut als einzige Schicht Bedienelemente)
 content/       – Handbuchtexte, Wortlisten, Story-Texte, Charaktere (als Python-Daten)
 tests/         – pytest
 logs/          – Messdaten der Durchläufe (Inhalt in .gitignore!)
-dokumentation/ – Konzept, Arbeitsplan, Handbuchtexte, Tipps (keine Programmdateien)
+dokumentation/ – Konzept, Arbeitsplan, Handbuchtexte, Tipps, Commit-Regeln (keine Programmdateien)
 main.py        – Einstiegspunkt
 ```
 
@@ -212,8 +213,12 @@ Syntaxbaum.
 
 ## Arbeitsweise
 
-- **Eine Aufgabe aus dem Arbeitsplan pro Sitzung.** Danach selbst durchklicken
-  und committen. Die Git-Historie ist Prozessnachweis (60 % der Bewertung).
+- **Eine Aufgabe aus dem Arbeitsplan pro Sitzung.** Danach selbst
+  durchklicken. Die Git-Historie ist Prozessnachweis (60 % der Bewertung).
+- **Nach jedem abgeschlossenen Schritt wird committet** – Claude macht das
+  selbst, ohne nachzufragen, nach den Regeln in
+  `dokumentation/Commit_Regeln.md`. Claude pusht nie; `git push` bleibt
+  Handarbeit.
 - Referenzwerte, die immer stimmen müssen (aus den Handbuchtexten):
   - Caesar: `HUND` + Schlüssel 3 → `KXQG`
   - Substitution: `HUND` → `IXFR`

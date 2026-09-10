@@ -77,7 +77,7 @@ ui/              Tkinter-Oberfläche (baut als einzige Schicht Bedienelemente)
 content/         Handbuchtexte, Wortlisten, Story-Texte als Python-Daten
 tests/           pytest
 logs/            Messdaten der Durchläufe (Inhalt steht in .gitignore)
-dokumentation/   Konzept, Arbeitsplan, Handbuchtexte
+dokumentation/   Konzept, Arbeitsplan, Handbuchtexte, Commit-Regeln
 main.py          Einstiegspunkt
 ```
 
@@ -248,3 +248,4 @@ Die vollständige Aufgabenzerlegung steht in
 | [dokumentation/Handbuchtexte.md](dokumentation/Handbuchtexte.md) | Die drei Handbuchseiten, Übungswörter und -sätze |
 | [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md) | Aufgabenzerlegung, Phasen 0–8 |
 | [dokumentation/Tipps-und-Tricks.md](dokumentation/Tipps-und-Tricks.md) | Hinweise zu Tkinter, Normalisierung, Logging |
+| [dokumentation/Commit_Regeln.md](dokumentation/Commit_Regeln.md) | Wann und wie committet wird |
