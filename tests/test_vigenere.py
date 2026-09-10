@@ -38,6 +38,8 @@ from pathlib import Path
 
 import pytest
 
+from content import uebungen
+
 import crypto.vigenere as vigenere_modul
 from crypto.normalize import (
     ALPHABET,
@@ -52,50 +54,13 @@ from crypto.vigenere import entschluesseln, schluessel_ausrichten, verschluessel
 # Material aus dokumentation/Handbuchtexte.md
 # ───────────────────────────────────────────────────────────────────────────
 
-# Seite 3, die 10 Übungssätze für Level 3.
-UEBUNGSSAETZE_LEVEL3 = (
-    "ICH BIN IN SICHERHEIT",
-    "STANDORT UNBEKANNT",
-    "NAHE DEM WRACK",
-    "RICHTUNG NORDEN",
-    "KEIN WASSER MEHR",
-    "VERFOLGER SIND NAH",
-    "BRAUCHE SOFORT HILFE",
-    "BIN NOCH AM LEBEN",
-    "WARTE AUF RETTUNG",
-    "SIGNAL WIRD SCHWACH",
-)
-
-# Seite 1, die 10 Caesar-Übungswörter – als kurze, einwortige Gegenprobe.
-UEBUNGSWOERTER_LEVEL1 = (
-    "HUND",
-    "KATZE",
-    "MAUS",
-    "BURG",
-    "FELS",
-    "WALD",
-    "STERN",
-    "MOND",
-    "SAND",
-    "TURM",
-)
-
-# Seite 2, die 10 Substitutions-Übungssätze – zusätzliches mehrwortiges Material.
-UEBUNGSSAETZE_LEVEL2 = (
-    "ALLES OK",
-    "ICH BIN HIER",
-    "KOMM SCHNELL",
-    "WO BIST DU",
-    "BLEIB RUHIG",
-    "WEG IST FREI",
-    "GEFAHR NAH",
-    "ZEIT WIRD KNAPP",
-    "PLAN WIRD NEU",
-    "HILFE WIRD GEBRAUCHT",
-)
-
-# Die im Handbuch-Hinweis vorgeschlagenen Schlüsselwörter für Level 3.
-SCHLUESSELWOERTER = ("ROT", "WEG", "TAG")
+# Das Übungsmaterial und die Schlüsselwörter kommen seit Aufgabe 2.2 aus
+# content/uebungen.py. tests/test_uebungen.py hält sie gegen das Markdown des
+# Handbuchs; hier werden sie nur benutzt.
+UEBUNGSSAETZE_LEVEL3 = uebungen.UEBUNGSSAETZE_LEVEL_3
+UEBUNGSWOERTER_LEVEL1 = uebungen.UEBUNGSWOERTER_LEVEL_1
+UEBUNGSSAETZE_LEVEL2 = uebungen.UEBUNGSSAETZE_LEVEL_2
+SCHLUESSELWOERTER = uebungen.VIGENERE_SCHLUESSELWOERTER
 
 # ───────────────────────────────────────────────────────────────────────────
 # Von Hand durchgerechnete Referenzwerte

@@ -136,6 +136,9 @@ Schlüssel, erwartete Lösung, Level.
 ### 4.1 Prüf-Funktion
 - Vergleicht Eingabe mit Lösung (tolerant nach 0.3)
 - Falsche Eingabe kann nicht abgeschickt werden
+- **Bei echten Funksprüchen wird `selbst_zu_loesen` geprüft, nicht der ganze
+  Klartext** – die langen Nachrichten werden nur zum Teil von Hand gerechnet
+  (siehe CLAUDE.md, "Lange Funksprüche: Teilaufgabe statt Kürzen")
 
 ### 4.2 Konkrete Fehlermeldung statt "falsch"
 - Rückmeldung, an welcher Stelle es kippt, z. B. "Stelle 3 stimmt nicht – prüf
@@ -144,8 +147,23 @@ Schlüssel, erwartete Lösung, Level.
 ### 4.3 Versuchszähler und Lösungsanzeige
 - Nach 3 erfolglosen Versuchen wird die Lösung eingeblendet
 - **Auch bei Bobs beiden Funksprüchen** – sonst blockiert das Spiel dort
+- Bei Funksprüchen mit Teilaufgabe: Der Knopf "Den Rest entschlüsseln"
+  erscheint, sobald der geprüfte Teil richtig ist **oder** die Lösung
+  angezeigt wurde. Erscheint er nur bei richtiger Lösung, blockiert das Spiel
+  an genau denselben Stellen wieder.
 
-### 4.4 Optional: "Fast richtig"-Markierung
+### 4.4 Teilaufgabe und Weiterrechnen-Knopf
+Gilt für die drei langen Funksprüche (Bobs erste Antwort, Feind-Funkspruch,
+Standort senden). Die Aufteilung steht fertig in `content/story.py`.
+- Aufgabe ist `funkspruch.selbst_zu_loesen`, der Rest ist
+  `klartext[len(selbst_zu_loesen):]`
+- Nach Lösen (oder Anzeigen) der Teilaufgabe: Knopf mit der Beschriftung aus
+  `story.BESCHRIFTUNG_REST[funkspruch.richtung]`
+- Knopf zeigt `funkspruch.weiterrechnen` als Erzähltext und gibt danach die
+  vollständige Nachricht frei
+- Die Erzählzeit darin ist Fiktion – der Level-Timer läuft weiter
+
+### 4.5 Optional: "Fast richtig"-Markierung
 - Falsche Buchstaben farblich hervorheben
 - Bewusst als *letzte* Aufgabe eingeplant, weil Zusatzaufwand
 
@@ -175,6 +193,9 @@ Schlüssel, erwartete Lösung, Level.
 ### 5.5 CSV-Logging
 Pro Aufgabe eine Zeile: Pseudonym-ID, Level, Aufgabennummer, Richtung, Anzahl
 Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/nein).
+- **Zusätzlich: Länge des tatsächlich geprüften Textes in Buchstaben.** Bei
+  Funksprüchen mit Teilaufgabe wird nicht die ganze Nachricht gerechnet – ohne
+  diese Spalte sind die Bearbeitungszeiten später nicht vergleichbar.
 - Dateiname mit Zeitstempel, damit nichts überschrieben wird
 - **Kein Klarname** – nur eine ID, die du separat zuordnest (Datenschutz)
 
@@ -199,6 +220,13 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.6 Funk-Screen
 - Optisch abgesetzt vom Handbuch, damit "echte Nachricht" und "Übung"
   unterscheidbar sind
+- **Beim Empfangen bleibt der vollständige Geheimtext sichtbar**, der selbst
+  zu entschlüsselnde Anfang ist hervorgehoben. Sonst sieht man in Level 2 nicht
+  mehr, dass der Geheimtext lang ist – und genau darauf beruht der Merksatz zur
+  Häufigkeitsanalyse auf Handbuchseite 2
+- **Beim Senden gilt das Gegenteil:** sichtbar ist der vollständige Klartext,
+  der Geheimtext niemals – er ist die Lösung, die eingetippt werden soll
+- Knopf "Den Rest entschlüsseln" plus Erzähltext-Einblendung (siehe 4.4)
 
 ### 6.7 Vigenère-Quadrat als Anzeige
 - 26×26-Grid aus Phase 1.5, mit Hervorhebung der aktiven Zeile/Spalte
@@ -253,6 +281,12 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 
 - [ ] Level-2-Zuordnungstrick (Tastatur) gegen den echten Testbogen (Anhang A2)
       gegenchecken – kollidiert er mit einer Testantwort?
+- [ ] **Übungsumfang gegen Anhang A4 abgleichen:** Die Spielgruppe rechnet pro
+      echtem Funkspruch nur den Anfang von Hand (15–25 Buchstaben). Wenn die
+      Frontalunterrichts-Gruppe auf Papier deutlich längere Texte bearbeitet,
+      unterscheiden sich die Gruppen nicht mehr nur in der Methode, sondern
+      auch im Übungsumfang. Entweder die Papieraufgaben entsprechend
+      zuschneiden oder die Abweichung in der Arbeit begründen.
 - [ ] Einverständnis/Datenschutz für die Datenerhebung klären
 - [ ] Ablauf für den Vortest/Nachtest festlegen: im Spiel integriert oder auf
       Papier? (Muss identisch zur Kontrollgruppe sein.)

@@ -13,6 +13,7 @@ Damit ist "HUND" → "IXFR" (H→I, U→X, N→F, D→R) der Prüfwert des Handb
 
 import pytest
 
+from content import uebungen
 from crypto import substitution
 from crypto.normalize import ALPHABET, normalisieren
 from crypto.substitution import (
@@ -58,21 +59,11 @@ UEBUNGSSAETZE_LEVEL_2 = [
 ]
 
 #: Übungswörter von Handbuchseite 1 und Übungssätze von Seite 3 – reichen
-#: für den Rundlauf, auch wenn sie zu anderen Leveln gehören.
-WEITERE_UEBUNGSTEXTE = [
-    "HUND", "KATZE", "MAUS", "BURG", "FELS",
-    "WALD", "STERN", "MOND", "SAND", "TURM",
-    "ICH BIN IN SICHERHEIT",
-    "STANDORT UNBEKANNT",
-    "NAHE DEM WRACK",
-    "RICHTUNG NORDEN",
-    "KEIN WASSER MEHR",
-    "VERFOLGER SIND NAH",
-    "BRAUCHE SOFORT HILFE",
-    "BIN NOCH AM LEBEN",
-    "WARTE AUF RETTUNG",
-    "SIGNAL WIRD SCHWACH",
-]
+#: für den Rundlauf, auch wenn sie zu anderen Leveln gehören. Seit Aufgabe 2.2
+#: kommen sie aus content/uebungen.py, statt hier noch einmal dazustehen.
+WEITERE_UEBUNGSTEXTE = list(
+    uebungen.UEBUNGSWOERTER_LEVEL_1 + uebungen.UEBUNGSSAETZE_LEVEL_3
+)
 
 #: Atbash-Tabelle (A→Z, B→Y, …, Z→A) als zweite, unabhängige Zuordnung.
 #: Von Hand gebildet, indem das Alphabet rückwärts darunter geschrieben wird.
@@ -623,3 +614,16 @@ def test_die_fehlermeldung_bei_fehlenden_eintraegen_widerspricht_sich_nicht():
     meldung = str(fehler.value)
     assert "Es fehlen: Z" in meldung
     assert "26 statt 26" not in meldung
+
+
+def test_die_klartexte_der_beispielpaare_stammen_aus_dem_uebungspool():
+    """Die Paare oben nennen Klartext und handgerechneten Geheimtext.
+
+    Die Geheimtexte bleiben bewusst von Hand hergeleitet – sie sind der
+    unabhängige Erwartungswert dieses Tests und dürfen nicht aus dem Code
+    kommen. Die Klartexte dagegen sind Material aus dem Handbuch, und dass sie
+    dem Übungspool entsprechen, muss geprüft werden: Sonst prüft diese Datei
+    irgendwann Sätze, die im Spiel gar nicht mehr vorkommen.
+    """
+    klartexte = [paar[0] for paar in UEBUNGSSAETZE_LEVEL_2]
+    assert klartexte == list(uebungen.UEBUNGSSAETZE_LEVEL_2)

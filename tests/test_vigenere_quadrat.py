@@ -27,6 +27,8 @@ import inspect
 
 import pytest
 
+from content import uebungen
+
 from crypto.normalize import ALPHABET, LEERZEICHEN, normalisieren, ohne_leerzeichen
 from crypto import vigenere_quadrat
 from crypto.vigenere_quadrat import (
@@ -39,28 +41,11 @@ from crypto.vigenere_quadrat import (
 # Testdaten aus dokumentation/Handbuchtexte.md
 # ───────────────────────────────────────────────────────────────────────────
 
-# Seite 1, die zehn Caesar-Übungswörter – hier als kurze Klartexte benutzt.
-UEBUNGSWOERTER = [
-    "HUND", "KATZE", "MAUS", "BURG", "FELS",
-    "WALD", "STERN", "MOND", "SAND", "TURM",
-]
-
-# Seite 3, die zehn Vigenère-Übungssätze.
-UEBUNGSSAETZE = [
-    "ICH BIN IN SICHERHEIT",
-    "STANDORT UNBEKANNT",
-    "NAHE DEM WRACK",
-    "RICHTUNG NORDEN",
-    "KEIN WASSER MEHR",
-    "VERFOLGER SIND NAH",
-    "BRAUCHE SOFORT HILFE",
-    "BIN NOCH AM LEBEN",
-    "WARTE AUF RETTUNG",
-    "SIGNAL WIRD SCHWACH",
-]
-
-# Die Schlüsselwörter, die das Handbuch am Ende von Seite 3 vorschlägt.
-SCHLUESSELWOERTER = ["ROT", "WEG", "TAG"]
+# Das Übungsmaterial und die Schlüsselwörter kommen seit Aufgabe 2.2 aus
+# content/uebungen.py.
+UEBUNGSWOERTER = list(uebungen.UEBUNGSWOERTER_LEVEL_1)
+UEBUNGSSAETZE = list(uebungen.UEBUNGSSAETZE_LEVEL_3)
+SCHLUESSELWOERTER = list(uebungen.VIGENERE_SCHLUESSELWOERTER)
 
 
 # ───────────────────────────────────────────────────────────────────────────

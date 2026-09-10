@@ -159,6 +159,26 @@ Händen. Der Diamantensack liegt noch im Wrack in der Wüste. Manchmal ist das
 
 ### Notiz für Entwicklung:
 
+#### **Lange Funksprüche werden nur zum Teil von Hand gerechnet**
+
+Nachträglich entschieden, nachdem die Längen ausgezählt waren: Bobs erste
+Antwort hat 78 Buchstaben, der abgefangene Funkspruch 76. Die vollständig von
+Hand zu entschlüsseln passt nicht in die festen Zeitfenster und ist vor allem
+demotivierend.
+
+Die Wortlaute oben bleiben deshalb inhaltlich unverändert – einzige Ausnahme:
+Zahlen werden ausgeschrieben ("QUADRANT VIER" statt "QUADRANT 4"), weil die
+Textkonvention Ziffern entfernt und der Funkspruch sonst seine Aussage
+verlöre. Gelöst wird die Länge über eine Teilaufgabe: Die Spielenden rechnen den Anfang selbst (15–25 Buchstaben, immer
+bis zu einer Wortgrenze), danach löst ein Knopf den Rest auf, begleitet von
+einem kurzen Erzähltext. Der volle Geheimtext bleibt dabei sichtbar – sonst
+ginge in Level 2 verloren, dass er lang ist, und genau darauf beruht der
+Merksatz zur Häufigkeitsanalyse.
+
+Die Aufteilung steht in `content/story.py`, die vollständige Begründung und
+die Folgen für die Phasen 4, 5 und 6 in `CLAUDE.md`.
+
+
 #### **Adaptive Zusatzaufgaben (Timer):**
 
 - Zeit **pro Level/Aufgabe** messen, nicht die gesamte Spielöffnungsdauer (sonst verfälscht durch Pausen/Ablenkung).

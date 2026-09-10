@@ -13,7 +13,6 @@ einzelnes Modul prüfen kann:
 """
 
 import ast
-import re
 import sys
 from pathlib import Path
 
@@ -22,6 +21,8 @@ import pytest
 import content
 import crypto
 import game
+import ui
+from content import uebungen
 from crypto import caesar, substitution, vigenere, vigenere_quadrat
 from crypto.normalize import (
     ALPHABET,
@@ -30,31 +31,18 @@ from crypto.normalize import (
     vergleiche_tolerant,
 )
 
-# Die Übungswörter und -sätze aus dokumentation/Handbuchtexte.md.
-# Ab Aufgabe 2.2 leben sie in content/uebungen.py; bis dahin stehen sie hier,
-# damit die Rundlauf-Tests schon jetzt auf dem echten Material laufen.
-UEBUNGSWOERTER_LEVEL1 = (
-    "HUND", "KATZE", "MAUS", "BURG", "FELS",
-    "WALD", "STERN", "MOND", "SAND", "TURM",
-)
-UEBUNGSSAETZE_LEVEL2 = (
-    "ALLES OK", "ICH BIN HIER", "KOMM SCHNELL", "WO BIST DU", "BLEIB RUHIG",
-    "WEG IST FREI", "GEFAHR NAH", "ZEIT WIRD KNAPP", "PLAN WIRD NEU",
-    "HILFE WIRD GEBRAUCHT",
-)
-UEBUNGSSAETZE_LEVEL3 = (
-    "ICH BIN IN SICHERHEIT", "STANDORT UNBEKANNT", "NAHE DEM WRACK",
-    "RICHTUNG NORDEN", "KEIN WASSER MEHR", "VERFOLGER SIND NAH",
-    "BRAUCHE SOFORT HILFE", "BIN NOCH AM LEBEN", "WARTE AUF RETTUNG",
-    "SIGNAL WIRD SCHWACH",
-)
-ALLE_UEBUNGSTEXTE = (
-    UEBUNGSWOERTER_LEVEL1 + UEBUNGSSAETZE_LEVEL2 + UEBUNGSSAETZE_LEVEL3
-)
+# Das Übungsmaterial kommt seit Aufgabe 2.2 aus content/uebungen.py – dort
+# steht es einmal, und tests/test_uebungen.py hält es gegen das Markdown des
+# Handbuchs. Hier wird es nur noch benutzt, nicht mehr wiederholt.
+UEBUNGSWOERTER_LEVEL1 = uebungen.UEBUNGSWOERTER_LEVEL_1
+UEBUNGSSAETZE_LEVEL2 = uebungen.UEBUNGSSAETZE_LEVEL_2
+UEBUNGSSAETZE_LEVEL3 = uebungen.UEBUNGSSAETZE_LEVEL_3
+ALLE_UEBUNGSTEXTE = uebungen.ALLE_UEBUNGSTEXTE
+SCHLUESSELWOERTER = uebungen.VIGENERE_SCHLUESSELWOERTER
 
-# Aus dem Handbuch: das Schlüsselwort für Level 3 wird zufällig aus mehreren
-# Wörtern gezogen, damit die Aufgabe nicht vorhersehbar wird.
-SCHLUESSELWOERTER = ("ROT", "WEG", "TAG")
+# Die Caesar-Schlüssel sind kein Handbuch-Material, sondern bewusst gewählte
+# Prüfwerte: 0 und 26 als Nullverschiebung, 25 und -1 als Randfall, 51 als
+# Beleg dafür, dass sehr grosse Schlüssel umgebrochen werden.
 CAESAR_SCHLUESSEL = (0, 1, 3, 7, 13, 25, 26, -1, -3, 51)
 
 
@@ -271,24 +259,46 @@ def test_substitution_ist_keine_verschiebung():
 
 
 # ───────────────────────────────────────────────────────────────────────────
-# 5. Projektregel: crypto/ enthält niemals GUI-Code
+# 5. Projektregeln: Schichten, Tkinter, Fremdpakete
 # ───────────────────────────────────────────────────────────────────────────
 #
 # Geprüft wird über den Syntaxbaum, nicht über Textsuche: Das Wort "tkinter"
-# darf in einem Docstring durchaus vorkommen ("dieses Modul benutzt kein
-# tkinter"). Verboten ist der Import, nicht die Erwähnung.
+# darf in einem Docstring stehen ("dieses Modul benutzt kein tkinter").
+# Verboten ist der Import, nicht die Erwähnung.
 
-# Geprüft werden alle drei Schichten, die keine Oberfläche kennen dürfen.
-# game/ und content/ sind heute noch fast leer – gerade deshalb steht die
-# Prüfung schon hier: Sie greift ab der ersten Datei, die dort entsteht.
-GEPRUEFTE_PAKETE = (crypto, game, content)
+#: Welche Projektpakete darf ein Paket importieren? Bildet die erlaubte
+#: Abhängigkeitsrichtung aus CLAUDE.md ab: ui -> game -> crypto / content.
+#: Ein Paket darf sich immer selbst importieren.
+ERLAUBTE_ABHAENGIGKEITEN = {
+    "crypto": {"crypto"},
+    "content": {"content"},
+    "game": {"game", "crypto", "content"},
+    "ui": {"ui", "game", "crypto", "content"},
+}
+
+#: Nur diese Pakete dürfen Tkinter anfassen. main.py steht ausserhalb der
+#: Pakete und wird gesondert geprüft.
+PAKETE_MIT_TKINTER = {"ui"}
+
+PROJEKTPAKETE = set(ERLAUBTE_ABHAENGIGKEITEN)
+
+# Pakete ohne Oberfläche – dort ist zusätzlich print()/input() verboten.
+LOGIKPAKETE = (crypto, game, content)
+
+
+def _quelldateien(*pakete):
+    dateien = []
+    for paket in pakete:
+        dateien.extend(Path(paket.__file__).parent.glob("*.py"))
+    return sorted(dateien)
 
 
 def _logik_quelldateien():
-    dateien = []
-    for paket in GEPRUEFTE_PAKETE:
-        dateien.extend(Path(paket.__file__).parent.glob("*.py"))
-    return sorted(dateien)
+    return _quelldateien(*LOGIKPAKETE)
+
+
+def _alle_paket_quelldateien():
+    return _quelldateien(crypto, game, content, ui)
 
 
 def _paketname(pfad):
@@ -299,9 +309,9 @@ def _paketname(pfad):
 def _importierte_module(quelldatei):
     """Alle Modulnamen, die eine Datei importiert.
 
-    Ein relativer Import (``from .normalize import ...``) wird als
-    ``".normalize"`` zurückgegeben, damit er sich von einem Fremdpaket
-    unterscheiden lässt.
+    Relative Importe werden auf ihren vollen Namen aufgelöst, damit
+    ``from .normalize import ...`` als ``crypto.normalize`` erscheint und
+    nicht als das viel harmlosere ``normalize``.
     """
     baum = ast.parse(quelldatei.read_text(encoding="utf-8"), filename=str(quelldatei))
     namen = []
@@ -309,43 +319,86 @@ def _importierte_module(quelldatei):
         if isinstance(knoten, ast.Import):
             namen.extend(alias.name for alias in knoten.names)
         elif isinstance(knoten, ast.ImportFrom):
-            namen.append("." * knoten.level + (knoten.module or ""))
+            if knoten.level:
+                namen.append(f"{quelldatei.parent.name}.{knoten.module or ''}")
+            elif knoten.module:
+                namen.append(knoten.module)
     return namen
 
 
 def test_es_gibt_ueberhaupt_module_zu_pruefen():
     """Schutz davor, dass die folgenden Tests durch eine leere Liste grün werden."""
-    namen = {_paketname(pfad) for pfad in _logik_quelldateien()}
+    namen = {_paketname(pfad) for pfad in _alle_paket_quelldateien()}
     assert {
         "crypto/normalize.py",
         "crypto/caesar.py",
         "crypto/substitution.py",
         "crypto/vigenere.py",
         "crypto/vigenere_quadrat.py",
+        "content/handbuch.py",
+        "content/uebungen.py",
+        "content/story.py",
+        "content/charaktere.py",
         "game/__init__.py",
-        "content/__init__.py",
+        "ui/__init__.py",
     } <= namen
 
 
 @pytest.mark.parametrize(
-    "quelldatei", _logik_quelldateien(), ids=_paketname
+    "quelldatei", _alle_paket_quelldateien(), ids=_paketname
 )
-def test_kein_gui_import_in_der_logik(quelldatei):
-    """CLAUDE.md, Regel 5: crypto/, game/ und content/ kennen keine Oberfläche."""
-    verboten = ("tkinter", "ui", "game")
+def test_die_schichten_halten_ihre_abhaengigkeitsrichtung_ein(quelldatei):
+    """CLAUDE.md: ui -> game -> crypto / content, niemals umgekehrt.
+
+    Geprüft wird nur die Richtung zwischen den Projektpaketen. Dass ein Paket
+    sich selbst importiert, ist erlaubt und normal – ``crypto/caesar.py``
+    holt sich seine Textkonvention aus ``crypto/normalize.py``.
+    """
+    paket = quelldatei.parent.name
+    erlaubt = ERLAUBTE_ABHAENGIGKEITEN[paket]
     for name in _importierte_module(quelldatei):
-        wurzel = name.lstrip(".").split(".")[0]
-        assert wurzel not in verboten, (
-            f"{_paketname(quelldatei)} importiert '{name}' – nur ui/ und main.py "
-            "dürfen Tkinter benutzen."
+        wurzel = name.split(".")[0]
+        if wurzel not in PROJEKTPAKETE:
+            continue
+        assert wurzel in erlaubt, (
+            f"{_paketname(quelldatei)} importiert '{name}'. {paket}/ darf nur "
+            f"{sorted(erlaubt)} benutzen – sonst dreht sich die "
+            "Abhängigkeitsrichtung um."
         )
 
 
 @pytest.mark.parametrize(
-    "quelldatei", _logik_quelldateien(), ids=_paketname
+    "quelldatei", _alle_paket_quelldateien(), ids=_paketname
+)
+def test_tkinter_nur_in_der_oberflaeche(quelldatei):
+    """CLAUDE.md, Regel 5: crypto/, game/ und content/ kennen keine Oberfläche."""
+    paket = quelldatei.parent.name
+    for name in _importierte_module(quelldatei):
+        if name.split(".")[0] != "tkinter":
+            continue
+        assert paket in PAKETE_MIT_TKINTER, (
+            f"{_paketname(quelldatei)} importiert '{name}' – Tkinter gehört "
+            "nach ui/ (und in main.py, das den Startfehler abfängt)."
+        )
+
+
+def test_main_py_ist_die_einzige_datei_ausserhalb_von_ui_mit_tkinter():
+    """main.py darf Tkinter benutzen, sonst niemand ausserhalb von ui/."""
+    wurzel = Path(crypto.__file__).resolve().parent.parent
+    with_tkinter = []
+    for pfad in wurzel.glob("*.py"):
+        if "tkinter" in {n.split(".")[0] for n in _importierte_module(pfad)}:
+            with_tkinter.append(pfad.name)
+    assert with_tkinter == ["main.py"], (
+        f"Tkinter im Projekt-Root nur in main.py erwartet, gefunden: {with_tkinter}"
+    )
+
+
+@pytest.mark.parametrize(
+    "quelldatei", _alle_paket_quelldateien(), ids=_paketname
 )
 def test_module_brauchen_keine_fremdpakete(quelldatei):
-    """Nur Standardbibliothek und crypto selbst – Schulrechner haben kein pip.
+    """Nur Standardbibliothek und eigene Pakete – Schulrechner haben kein pip.
 
     Geprüft wird gegen ``sys.stdlib_module_names``, nicht gegen eine eigene
     Liste erlaubter Namen: Die Zusage lautet "keine Fremdpakete", nicht "keine
@@ -354,12 +407,8 @@ def test_module_brauchen_keine_fremdpakete(quelldatei):
     als ernst genommen.
     """
     for name in _importierte_module(quelldatei):
-        wurzel = name.lstrip(".").split(".")[0]
-        erlaubt = (
-            name.startswith(".")
-            or wurzel == "crypto"
-            or wurzel in sys.stdlib_module_names
-        )
+        wurzel = name.split(".")[0]
+        erlaubt = wurzel in PROJEKTPAKETE or wurzel in sys.stdlib_module_names
         assert erlaubt, (
             f"{_paketname(quelldatei)} importiert das Fremdpaket '{name}'."
         )
@@ -384,66 +433,3 @@ def test_keine_konsolenausgabe_in_der_logik(quelldatei):
             )
 
 
-# ───────────────────────────────────────────────────────────────────────────
-# Die Übungstexte im Code müssen zum Handbuch passen
-# ───────────────────────────────────────────────────────────────────────────
-#
-# Die 30 Übungswörter und -sätze stehen bislang doppelt: einmal als Quelle in
-# dokumentation/Handbuchtexte.md, einmal hart in den Testdateien. Ab Aufgabe
-# 2.2 kommt mit content/uebungen.py eine dritte Kopie dazu. Wer eine
-# Handbuchseite ändert, würde das sonst nirgends merken – die Spielenden
-# bekämen ein Wort zu sehen, das im Handbuch gar nicht steht.
-
-HANDBUCH = Path(__file__).resolve().parent.parent / "dokumentation" / "Handbuchtexte.md"
-
-
-def _uebungslisten_aus_dem_handbuch():
-    """Liest die drei nummerierten Übungslisten aus der Handbuch-Datei.
-
-    Rückgabe: Liste mit drei Listen, in der Reihenfolge der Seiten
-    (Caesar, Substitution, Vigenère).
-    """
-    listen = []
-    aktuelle = None
-    for zeile in HANDBUCH.read_text(encoding="utf-8").splitlines():
-        if zeile.startswith("### Übungs"):
-            aktuelle = []
-            listen.append(aktuelle)
-            continue
-        if aktuelle is None:
-            continue
-        eintrag = re.match(r"\s*\d+\.\s+(\S.*?)\s*$", zeile)
-        if eintrag:
-            aktuelle.append(eintrag.group(1))
-        elif zeile.startswith("#") or zeile.startswith("---"):
-            aktuelle = None
-    return listen
-
-
-def test_das_handbuch_enthaelt_drei_uebungslisten_mit_je_zehn_eintraegen():
-    """Schutz davor, dass der folgende Vergleich durch leere Listen grün wird."""
-    listen = _uebungslisten_aus_dem_handbuch()
-    assert len(listen) == 3, f"Erwartet 3 Übungslisten, gefunden {len(listen)}."
-    for nummer, liste in enumerate(listen, start=1):
-        assert len(liste) == 10, (
-            f"Übungsliste {nummer} hat {len(liste)} statt 10 Einträge."
-        )
-
-
-@pytest.mark.parametrize(
-    "level, im_code",
-    [
-        (1, UEBUNGSWOERTER_LEVEL1),
-        (2, UEBUNGSSAETZE_LEVEL2),
-        (3, UEBUNGSSAETZE_LEVEL3),
-    ],
-)
-def test_uebungstexte_stimmen_mit_dem_handbuch_ueberein(level, im_code):
-    """Was der Code übt, muss wörtlich im Handbuch stehen – und umgekehrt."""
-    im_handbuch = _uebungslisten_aus_dem_handbuch()[level - 1]
-    assert list(im_code) == im_handbuch, (
-        f"Level {level}: Übungstexte im Code und in "
-        f"dokumentation/Handbuchtexte.md laufen auseinander.\n"
-        f"  nur im Code:     {sorted(set(im_code) - set(im_handbuch))}\n"
-        f"  nur im Handbuch: {sorted(set(im_handbuch) - set(im_code))}"
-    )

@@ -23,6 +23,12 @@ ist](#warum-das-spiel-so-gebaut-ist).
 
 Dazu je 10 Minuten Vor- und Nachtest sowie 5 Minuten Puffer.
 
+Die echten Funksprüche sind bis zu 78 Buchstaben lang. Die werden nicht
+gekürzt – stattdessen rechnen die Spielenden nur den Anfang von Hand, dann
+löst ein Knopf den Rest auf („zwanzig Minuten später …"). So bleibt die
+Nachricht vollständig, ohne dass Abschreibarbeit die Zeitfenster sprengt.
+Die Begründung und was daran hängt, steht in [CLAUDE.md](CLAUDE.md).
+
 ---
 
 ## Schnellstart
@@ -76,8 +82,25 @@ main.py          Einstiegspunkt
 ```
 
 Erlaubte Abhängigkeitsrichtung: `ui` → `game` → `crypto` / `content`, niemals
-umgekehrt. Ein Test in `tests/test_zusammenspiel.py` hält das maschinell nach,
-indem er den Syntaxbaum jedes Moduls in `crypto/` auf verbotene Importe prüft.
+umgekehrt. Ein Test in `tests/test_zusammenspiel.py` hält das maschinell nach:
+Er liest den Syntaxbaum jeder Datei in `crypto/`, `game/`, `content/` und `ui/`
+und prüft, welche Projektpakete sie importiert. Derselbe Test stellt sicher,
+dass Tkinter nur in `ui/` und `main.py` vorkommt, dass kein Fremdpaket
+hereinrutscht und dass die Logik weder `print()` noch `input()` aufruft.
+
+### Was in `content/` steckt
+
+| Modul | Inhalt |
+|-------|--------|
+| `handbuch.py` | Die drei Handbuchseiten, zerlegt in Absätze, Aufzählungen und Tabellen |
+| `uebungen.py` | Die 30 Übungstexte, die Vigenère-Schlüsselwörter, die Caesar-Schlüssel |
+| `story.py` | Erzähltexte und die fünf Funksprüche samt Teilaufgaben |
+| `charaktere.py` | Die fünf wählbaren Figuren und Bob |
+| `verfahren.py` | Die drei Verfahrenskennungen, gemeinsam für Handbuch und Story |
+
+Alle Texte stammen aus `dokumentation/`, und Tests vergleichen sie Zeile für
+Zeile mit der Quelle – wer eine Handbuchseite ändert, sieht am roten Test
+sofort, wo Text und Code auseinanderlaufen.
 
 ### Was in `crypto/` steckt
 
@@ -151,7 +174,7 @@ Teilnehmenden dürfen nicht im Repository landen.
 |-------|----------------------------------------------|---------|
 | 0     | Projektgerüst, Textkonvention                | fertig  |
 | 1     | Verschlüsselungslogik samt Tests             | fertig  |
-| 2     | Inhalte als Daten (Handbuch, Wortlisten, Story) | offen |
+| 2     | Inhalte als Daten (Handbuch, Wortlisten, Story, Figuren) | fertig |
 | 3     | Aufgaben-Generator                           | offen   |
 | 4     | Prüfung und Fehlerhandling                   | offen   |
 | 5     | Zustand, Timer, CSV-Logging                  | offen   |

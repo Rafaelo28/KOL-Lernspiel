@@ -15,6 +15,7 @@ des Methodenvergleichs.
 """
 
 import pytest
+from content import uebungen
 
 from crypto.normalize import (
     ALPHABET,
@@ -31,47 +32,13 @@ from crypto.normalize import (
 # Testdaten aus dokumentation/Handbuchtexte.md
 # ───────────────────────────────────────────────────────────────────────────
 
-# Seite 1, Uebungswoerter fuer Level 1 (Caesar).
-UEBUNGSWOERTER_CAESAR = [
-    "HUND", "KATZE", "MAUS", "BURG", "FELS",
-    "WALD", "STERN", "MOND", "SAND", "TURM",
-]
-
-# Seite 2, Uebungssaetze fuer Level 2 (Substitution).
-UEBUNGSSAETZE_SUBSTITUTION = [
-    "ALLES OK",
-    "ICH BIN HIER",
-    "KOMM SCHNELL",
-    "WO BIST DU",
-    "BLEIB RUHIG",
-    "WEG IST FREI",
-    "GEFAHR NAH",
-    "ZEIT WIRD KNAPP",
-    "PLAN WIRD NEU",
-    "HILFE WIRD GEBRAUCHT",
-]
-
-# Seite 3, Uebungssaetze fuer Level 3 (Vigenere).
-UEBUNGSSAETZE_VIGENERE = [
-    "ICH BIN IN SICHERHEIT",
-    "STANDORT UNBEKANNT",
-    "NAHE DEM WRACK",
-    "RICHTUNG NORDEN",
-    "KEIN WASSER MEHR",
-    "VERFOLGER SIND NAH",
-    "BRAUCHE SOFORT HILFE",
-    "BIN NOCH AM LEBEN",
-    "WARTE AUF RETTUNG",
-    "SIGNAL WIRD SCHWACH",
-]
-
-# Alle Handbuchtexte zusammen. Sie sind bereits in der internen Form
-# geschrieben: nur A-Z und einfache Leerzeichen.
-ALLE_UEBUNGSTEXTE = (
-    UEBUNGSWOERTER_CAESAR
-    + UEBUNGSSAETZE_SUBSTITUTION
-    + UEBUNGSSAETZE_VIGENERE
-)
+# Das Uebungsmaterial des Handbuchs kommt seit Aufgabe 2.2 aus
+# content/uebungen.py. tests/test_uebungen.py haelt es gegen das Markdown der
+# Quelle; hier wird es nur benutzt.
+UEBUNGSWOERTER_CAESAR = list(uebungen.UEBUNGSWOERTER_LEVEL_1)
+UEBUNGSSAETZE_SUBSTITUTION = list(uebungen.UEBUNGSSAETZE_LEVEL_2)
+UEBUNGSSAETZE_VIGENERE = list(uebungen.UEBUNGSSAETZE_LEVEL_3)
+ALLE_UEBUNGSTEXTE = list(uebungen.ALLE_UEBUNGSTEXTE)
 
 # Seite 2: Tastatur-Trick als Geheimalphabet
 # Q W E R T Z U I O P / A S D F G H J K L / Y X C V B N M

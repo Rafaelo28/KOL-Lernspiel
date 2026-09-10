@@ -194,7 +194,7 @@ Bei der einfachen Substitution steht jeder Buchstabe der Nachricht immer für da
 
 **Verschlüsseln** = Nachrichtenbuchstabe (Spalte) und Schlüsselbuchstabe (Zeile) im Quadrat zusammenführen – der Kreuzpunkt ist der verschlüsselte Buchstabe.
 
-**Entschlüsseln** = Schrittweise den passenden Geheimbuchstaben in der Zeile des Schlüsselbuchstabens suchen und der Spaltenkopf darüber ist der entschlüsselte Buchstabe
+**Entschlüsseln** = In der Zeile des Schlüsselbuchstabens den Geheimbuchstaben suchen – der Spaltenkopf darüber ist der entschlüsselte Buchstabe.
 
 ### Übungssätze (10 Stück – einer wird zufällig ausgewählt)
 

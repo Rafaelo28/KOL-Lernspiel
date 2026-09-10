@@ -69,6 +69,52 @@ In den CSV-Logs steht **kein Klarname**, nur eine Pseudonym-ID. Der Ordner
 
 ---
 
+## Lange Funksprüche: Teilaufgabe statt Kürzen
+
+Die echten Funksprüche sind lang (Bobs erste Antwort 78 Buchstaben, der
+abgefangene Feind-Funkspruch 76). Sie werden **nicht gekürzt**. Stattdessen
+rechnen die Spielenden nur den Anfang von Hand; ein Knopf löst den Rest auf,
+begleitet von einem kurzen Erzähltext ("zwanzig Minuten später …").
+
+Die Aufteilung steht als `selbst_zu_loesen` in `content/story.py`.
+
+**Warum nicht kürzen:**
+
+1. Handbuchseite 2 sagt "Je länger der Text, desto leichter wird er über
+   Häufigkeitsanalyse knackbar". Der abgefangene Funkspruch ist die Stelle,
+   an der ein *sichtbar langer* Geheimtext vor den Spielenden liegen soll –
+   ein gekürzter Text widerspricht dem eigenen Handbuch.
+2. Die Messdaten werden sauberer: Bei 78 Buchstaben würden langsamere Kinder
+   vom Level-Timer mitten in der Aufgabe abgeschnitten, und für die gäbe es
+   keine verwertbare Bearbeitungszeit. Eine feste Teilaufgabe misst für alle
+   dieselbe Arbeitsmenge.
+3. Der Knopf ist keine Abkürzung, sondern die Belohnung dafür, dass man das
+   Verfahren beherrscht.
+
+**Was daran hängt – bitte in den jeweiligen Phasen beachten:**
+
+- **Phase 4:** Geprüft wird `selbst_zu_loesen`, nicht der ganze Klartext. Die
+  3-Versuche-Regel gilt für diesen Teil. Der Knopf muss **auch dann**
+  erscheinen, wenn die Lösung nach drei Versuchen angezeigt wurde – sonst
+  blockiert das Spiel genau an den story-tragenden Stellen (siehe Regel 2).
+- **Phase 5:** Die Länge des geprüften Teils gehört ins Log, sonst sind die
+  Bearbeitungszeiten später nicht vergleichbar.
+- **Phase 6 – und hier hängt es an der Richtung:**
+  - **Empfangen:** Der **vollständige Geheimtext** bleibt sichtbar, nur der zu
+    entschlüsselnde Anfang ist hervorgehoben. Sonst geht Grund 1 verloren.
+  - **Senden:** Sichtbar bleibt der vollständige **Klartext**, hervorgehoben
+    ist der zu verschlüsselnde Anfang. Der Geheimtext darf dort **nie**
+    angezeigt werden – er ist genau das, was eingetippt werden soll. Wer die
+    Empfangen-Regel versehentlich auch beim Senden anwendet, macht die Aufgabe
+    durch Abschreiben lösbar und die gemessene Zeit für Level 3 wertlos.
+- Der Schwellenwert `HOECHSTLAENGE_TEILAUFGABE` in `content/story.py` steht an
+  genau einer Stelle und wird nach dem Pilotdurchlauf angepasst – genau wie
+  der Schwellenwert für die Zusatzaufgaben.
+- Die Erzählzeit ("zwanzig Minuten später") ist reine Fiktion. Der echte
+  Level-Timer läuft unverändert weiter; Zeitfenster bleiben fix (Regel 1).
+
+---
+
 ## Technische Vorgaben
 
 - **Python 3.12 + Tkinter** (nicht Pygame). Tkinter gehört zur

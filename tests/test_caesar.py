@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from content import uebungen
+
 from crypto import caesar
 from crypto.normalize import (
     ALPHABET,
@@ -34,44 +36,14 @@ from crypto.normalize import (
 # Übungsmaterial aus dokumentation/Handbuchtexte.md
 # ---------------------------------------------------------------------------
 
-# Seite 1, Übungswörter (Level 1 – Caesar).
-UEBUNGSWOERTER = [
-    "HUND",
-    "KATZE",
-    "MAUS",
-    "BURG",
-    "FELS",
-    "WALD",
-    "STERN",
-    "MOND",
-    "SAND",
-    "TURM",
-]
+# Das Übungsmaterial kommt seit Aufgabe 2.2 aus content/uebungen.py.
+UEBUNGSWOERTER = list(uebungen.UEBUNGSWOERTER_LEVEL_1)
 
-# Seite 2, Übungssätze (Level 2). Hier nur als mehrwortiges Testmaterial.
-UEBUNGSSAETZE_MIT_LEERZEICHEN = [
-    "ALLES OK",
-    "ICH BIN HIER",
-    "KOMM SCHNELL",
-    "WO BIST DU",
-    "BLEIB RUHIG",
-    "WEG IST FREI",
-    "GEFAHR NAH",
-    "ZEIT WIRD KNAPP",
-    "PLAN WIRD NEU",
-    "HILFE WIRD GEBRAUCHT",
-    # Seite 3, Übungssätze (Level 3).
-    "ICH BIN IN SICHERHEIT",
-    "STANDORT UNBEKANNT",
-    "NAHE DEM WRACK",
-    "RICHTUNG NORDEN",
-    "KEIN WASSER MEHR",
-    "VERFOLGER SIND NAH",
-    "BRAUCHE SOFORT HILFE",
-    "BIN NOCH AM LEBEN",
-    "WARTE AUF RETTUNG",
-    "SIGNAL WIRD SCHWACH",
-]
+# Level 2 und 3 zusammen – hier nur als mehrwortiges Testmaterial, um Regel 3
+# (Leerzeichen bleiben stehen) an echten Sätzen zu prüfen.
+UEBUNGSSAETZE_MIT_LEERZEICHEN = list(
+    uebungen.UEBUNGSSAETZE_LEVEL_2 + uebungen.UEBUNGSSAETZE_LEVEL_3
+)
 
 
 # ---------------------------------------------------------------------------
