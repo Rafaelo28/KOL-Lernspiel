@@ -166,6 +166,16 @@ class Aufgabe(NamedTuple):
         """
         return len(self.loesung.replace(LEERZEICHEN, ""))
 
+    @property
+    def laenge_vollstaendig_in_buchstaben(self):
+        """Wie viele Buchstaben die ganze Nachricht hat.
+
+        Ohne Teilaufgabe dasselbe wie :attr:`laenge_in_buchstaben`. Gebraucht
+        für die, die von sich aus die ganze Nachricht rechnen – ihre Zeit
+        gehört zu dieser Zahl, nicht zur Länge des Anfangs.
+        """
+        return len(self.vollstaendige_loesung.replace(LEERZEICHEN, ""))
+
     def ist_geloest(self, eingabe):
         """Prüft eine Eingabe tolerant nach Textkonvention Regel 4.
 

@@ -183,24 +183,84 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
 
 ## Phase 5 – Zustand, Timer, Logging
 
-### 5.1 `game/state.py`
+### 5.1 `game/spielstand.py`
 - Gewählte Figur, aktuelles Level, aktuelle Aufgabe, Versuchszähler
 - Zentral, nicht über die UI verstreut
+- *(Im Plan stand ursprünglich `game/state.py`. Umbenannt, weil das Projekt
+  laut CLAUDE.md durchgehend deutsche Namen benutzt und alle übrigen Module in
+  `game/` deutsch heissen.)*
+- Dazu gehören: die Pseudonym-ID des Durchlaufs (Projektregel 7) und die
+  Liste der erledigten Bearbeitungen – die Grundlage des Logs aus 5.5
+- Der Levelwechsel schliesst eine offene Aufgabe **ab**, statt sie zu
+  verwerfen: Projektregel 1 sagt "weiter, egal was offen ist", aber die
+  Aufgabe muss im Log stehen bleiben, sonst lässt sich "nicht bearbeitet"
+  nicht von "Zeit war um" unterscheiden. Im Log steht sie als `abgebrochen`
+- **Sperren gegen Oberflächenfehler** – ein Screen, der in Phase 6 neu
+  aufgebaut wird, soll die Messdaten nicht verfälschen können:
+  - `starte_level()` gibt es **einmal je Durchlauf**, danach nur
+    `naechstes_level()`. Sonst begänne ein Zeitfenster von vorn oder ein Level
+    fiele aus. Ein Durchlauf, der nicht bei Level 1 begann, gilt nie als
+    durchgespielt
+  - Nach dem Zeitablauf wird keine Aufgabe mehr gestellt (`ZeitIstUm`); die
+    Oberfläche fängt das und ruft `pruefe_zeitfenster()`
+  - Jeder Funkspruch kommt nur einmal (sonst drei frische Versuche und eine
+    doppelte Kennung im Log)
+- Die automatisch erzeugte Pseudonym-ID ist `P` plus der vollständige,
+  neunstellige Seed – gekürzt hätten zwei Durchläufe dieselbe ID bekommen
+  können
+- Die **Levelzeit** wird festgehalten (`level_sekunden()`, `levelende()`):
+  CLAUDE.md verlangt die Zeitmessung pro Level *und* pro Aufgabe
 
-### 5.2 Level-Timer
+### 5.2 Level-Timer — `game/zeitfenster.py`
 - 15 / 20 / 25 Minuten pro Level
 - Bei Ablauf: automatisch weiter zum nächsten Level, unabhängig davon, was
   gerade offen ist
-- Sichtbare Restzeit für die Spielenden
+- Sichtbare Restzeit für die Spielenden (`spielstand.restzeit_text`, "MM:SS")
+- **Die Uhr wird eingespeist** (`zeitgeber`), sonst liessen sich fünfzehn
+  Minuten nur durch fünfzehn Minuten Warten prüfen
+- **`time.monotonic`, nicht `time.time`:** Ein Zeitserverabgleich oder ein
+  Sommerzeitwechsel würde sonst mitten im Level das Fenster verfälschen
+- **Das Fenster hält nie an** – es gibt bewusst kein `anhalten()`
+  (Projektregel 1)
+- Der Ablauf wirkt erst, wenn die Oberfläche `spielstand.pruefe_zeitfenster()`
+  aufruft (in Tkinter über `after`). So baut kein Nebenläufigkeitsfaden mitten
+  in einer Eingabe den Zustand um
 
-### 5.3 Aufgaben-Timer
+### 5.3 Aufgaben-Timer — in `game/bearbeitung.py`
 - Misst Zeit **pro Aufgabe**, nicht die Gesamtdauer des offenen Fensters
+- Die Uhr hält an, sobald die Aufgabe **entschieden** ist. Das Lesen der
+  Lösung und der Weiterrechnen-Knopf zählen nicht mehr mit – sonst hinge die
+  gemessene Zeit davon ab, wie lange jemand danach noch herumklickt
+- Dieselbe eingespeiste Uhr wie beim Zeitfenster (`time.monotonic`)
 
-### 5.4 Adaptive Zusatzaufgaben
+### 5.4 Adaptive Zusatzaufgaben — `game/zusatzaufgaben.py`
 - Wer deutlich unter dem Schwellenwert liegt, bekommt eine Extra-Aufgabe aus
   demselben Wortpool
-- Schwellenwert als **eine Konstante an einer Stelle**, damit sie nach dem
-  Pilotdurchlauf mit einem Handgriff angepasst werden kann
+- Schwellenwerte stehen **an einer Stelle**, damit sie nach dem
+  Pilotdurchlauf mit einem Handgriff angepasst werden können
+- **Nicht Sekunden je Buchstabe, sondern eine Gerade:**
+  `erwartet = GRUNDZEIT + BUCHSTABEN * SEKUNDEN_JE_BUCHSTABE`. Jede Aufgabe hat
+  eine feste Grundzeit (lesen, Schlüssel nachschlagen, tippen), die nichts mit
+  ihrer Länge zu tun hat. Ein reines "Sekunden je Buchstabe" würde am Ende die
+  Länge der gezogenen Aufgabe messen statt das Tempo der Person
+- **Obergrenze je Level** (`HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL`): Der Pool hat
+  zehn Texte, danach wiederholen sie sich – und eine versehentlich zu
+  grosszügige Schwelle liefe sonst bis zum Zeitablauf durch, ohne dass die
+  Person je zum Funkspruch käme
+- Eine Zusatzaufgabe kurz vor Schluss wird nicht gestellt (Projektregel 1: sie
+  würde nur unfertig abgebrochen)
+- **Im Pilotdurchlauf nachmessen:** die Spalten `sekunden` und
+  `gerechnete_buchstaben` aus dem Log gegeneinander auftragen und die Gerade
+  daran anpassen – Zeilen mit `abgebrochen = ja` vorher herausfiltern, dort
+  ist die Zeit keine Rechenzeit
+- **Nur Übungen lösen eine Zusatzaufgabe aus.** Die Zusammenfassung legt den
+  Ablauf fest: "Übungsaufgaben (+ ggf. Zusatzaufgaben) → echte Sendeaufgabe
+  → Bobs Antwort". Nach einem Funkspruch hat die Geschichte begonnen
+- **Die Restzeit wird am längsten Text im Pool gemessen**, nicht an der eben
+  gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest, und in
+  Level 2 liegen 7 gegen 18 Buchstaben dazwischen
+- Die Obergrenze gilt im Spielstand selbst: `naechste_uebung(zusatzaufgabe=True)`
+  wird darüber hinaus abgewiesen, auch wenn die Oberfläche nicht vorher fragt
 
 ### 5.5 CSV-Logging
 Pro Aufgabe eine Zeile: Pseudonym-ID, Level, Aufgabennummer, Richtung, Anzahl
@@ -211,12 +271,48 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
   Funksprüchen mit Teilaufgabe wird nicht die ganze Nachricht gerechnet – ohne
   diese Spalte sind die Bearbeitungszeiten später nicht vergleichbar.
 - **Der Seed des Durchlaufs gehört einmal pro Logdatei hinein**
-  (`game/zufallsquelle.py`, Feld `protokollwert`). Zusammen mit Level und
-  Aufgabennummer lässt sich damit später nachbauen, welches Wort jemand
-  bekommen hat – siehe `game.generator.wiederhole_uebungen()`. Ohne ihn ist
-  eine lange Bearbeitungszeit nicht davon zu unterscheiden, dass jemand den
-  längsten Übungssatz erwischt hat.
+  (`game/zufallsquelle.py`, Feld `protokollwert`). Zusammen mit der
+  **Kennung** (`uebung_l2_3` = dritte Übung in Level 2) lässt sich damit
+  später nachbauen, welches Wort jemand bekommen hat – siehe
+  `game.generator.uebung_nachbauen(seed, kennung)`. Ohne ihn ist eine lange
+  Bearbeitungszeit nicht davon zu unterscheiden, dass jemand den längsten
+  Übungssatz erwischt hat.
+  *(Ursprünglich stand hier "Level und Aufgabennummer". Das stimmt nicht: Die
+  Aufgabennummer zählt die Funksprüche mit, der Zufallsstrom nur die Übungen.
+  Kommt ein Funkspruch vor einer Übung, liefert das alte Rezept
+  stillschweigend das falsche Wort.)*
+- **Zusätzlich: `abgebrochen`** – das Level endete mitten in der Aufgabe. Dann
+  steht in `sekunden` die Zeit bis zum Levelwechsel, keine Rechenzeit; ohne
+  diese Spalte wanderte sie in jeden Mittelwert
+- **Zusätzlich: `gerechnete_buchstaben`** – wer bei einem langen Funkspruch
+  von sich aus die ganze Nachricht rechnet, hat 78 statt 15 Buchstaben
+  gerechnet
+- **Zusätzlich: `levelende` und `level_sekunden`** – die Zeitmessung pro
+  Level. Ohne sie lässt sich aus der Datei nicht sagen, ob ein Level am Timer
+  endete oder früher fertig war
+- **Zusätzlich: `figur`** (nur die Kennung) – die gesendeten Funksprüche
+  tragen die Initialen der Figur, ihr Wortlaut hängt also an ihr
 - Dateiname mit Zeitstempel, damit nichts überschrieben wird
+- **Semikolon und `utf-8-sig`:** Die Datei wird auf einem deutschen Rechner in
+  Excel geöffnet; mit einem Komma landete die ganze Zeile in einer Spalte.
+  Für pandas: `read_csv(datei, sep=";", encoding="utf-8-sig")`
+- **`sekunden` als ganze Zahl** – sonst käme das Dezimaltrennzeichen ins Spiel
+  ("16.2" liest deutsches Excel nicht als Zahl, "16,2" kollidiert mit dem
+  Semikolon). Eine Zehntelsekunde sagt bei einer halbminütigen Aufgabe nichts
+- Der Seed steht als **Spalte in jeder Zeile**, nicht als Kommentarzeile über
+  der Tabelle – sonst stolpert jedes Auswertungsskript darüber
+- Wird nach jeder Aufgabe **und nach jedem Levelwechsel** geschrieben (immer
+  dieselbe Datei), damit nach einem Absturz alles bis zur letzten erledigten
+  Aufgabe gesichert ist
+- **Erst in eine Nebendatei, dann in einem Schritt ersetzen.** Die Datei direkt
+  zu überschreiben kürzt sie sofort auf null – bricht das Schreiben dann ab,
+  bleibt nur die Kopfzeile, und ausgerechnet beim Absturz ist der ganze
+  Durchlauf weg. Scheitert das Schreiben (etwa weil die Datei unter Windows in
+  Excel offen ist), bleibt die alte Fassung stehen; die Oberfläche meldet es
+  und versucht es nach der nächsten Aufgabe wieder
+- Ein sehr langes Pseudonym wird **im Dateinamen** auf 40 Zeichen gekürzt
+  (in der Spalte steht es vollständig) – sonst sprengt es die 255-Byte-Grenze
+  des Dateisystems
 - **Kein Klarname** – nur eine ID, die du separat zuordnest (Datenschutz)
 
 ---
@@ -226,6 +322,20 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.1 Fenstergerüst und Screen-Wechsel
 - Ein Hauptfenster, Screens werden ausgetauscht
 - Erst das Wechsel-Gerüst bauen, dann die einzelnen Screens füllen
+- **Anschluss an Phase 5** – das Gerüst übernimmt, was der Spielstand bewusst
+  der Oberfläche überlässt:
+  - `spielstand.pruefe_zeitfenster()` über `after()` regelmässig aufrufen
+    (mindestens einmal pro Sekunde – die Restzeitanzeige braucht den Takt
+    ohnehin) und bei `True` zum nächsten Level wechseln. Ohne diesen Takt
+    läuft kein Zeitfenster ab (Projektregel 1)
+  - `ZeitIstUm` abfangen, wenn eine Aufgabe gestellt werden soll, und dann
+    ebenfalls `pruefe_zeitfenster()` aufrufen
+  - `Protokoll.schreiben()` nach jeder abgeschlossenen Aufgabe, nach jedem
+    Levelwechsel und am Spielende. Einen `OSError` (etwa: Datei unter Windows
+    in Excel offen) melden, nicht verschlucken – beim nächsten Schreiben wird
+    alles nachgeholt
+  - `naechste_uebung()` / `stelle_funkspruch()` erst aufrufen, wenn die
+    Aufgabe auf dem Bildschirm steht – dort beginnt ihre Uhr
 
 ### 6.2 Startbildschirm + Charakterauswahl
 ### 6.3 Story-Intro (Absturz-Szene)

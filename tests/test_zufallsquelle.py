@@ -155,7 +155,11 @@ def test_die_aufgabe_eines_levels_haengt_nicht_am_verlauf_der_anderen():
 
 
 def test_die_rekonstruktion_findet_die_richtige_aufgabennummer():
-    """Aus Seed und Aufgabennummer im Log folgt genau eine Aufgabe."""
+    """Aus Seed und Übungsnummer folgt genau eine Aufgabe.
+
+    Die Übungsnummer steht in der Kennung; wie man sie aus einer echten
+    Logzeile holt, prüft ``tests/test_protokoll.py``.
+    """
     generator = Aufgabengenerator(Zufallsquelle(2024))
     im_spiel = [generator.naechste_uebung(2) for _ in range(6)]
     nachgebaut = wiederhole_uebungen(2024, 2, 6)

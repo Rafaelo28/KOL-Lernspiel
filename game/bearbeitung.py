@@ -59,11 +59,26 @@ Merkmale: :attr:`ist_beendet` heisst "die Prüfung ist vorbei",
 :attr:`ist_abgeschlossen` heisst "auch der Rest liegt vor". Bei Aufgaben ohne
 Teilaufgabe fallen beide zusammen.
 
+Die Bearbeitungszeit (Arbeitsplan 5.3)
+──────────────────────────────────────
+Gemessen wird **pro Aufgabe**, nicht über die Gesamtdauer des offenen
+Fensters. Die Uhr beginnt, wenn die Aufgabe gestellt wird, und hält an, sobald
+sie entschieden ist – gelöst oder nach drei Versuchen ohne Fortschritt
+aufgelöst. Was danach passiert (die Lösung lesen, den Weiterrechnen-Knopf
+drücken, den Erzähltext lesen) zählt nicht mehr mit: Das ist keine
+Rechenarbeit und würde die Zeiten zwischen kurzen und langen Funksprüchen
+unvergleichbar machen.
+
+Wie beim Level-Zeitfenster kommt die Uhr von aussen und ist ``time.monotonic``
+– aus denselben Gründen (siehe :mod:`game.zeitfenster`).
+
 Was für das Log herausfällt (Arbeitsplan 5.5)
 ─────────────────────────────────────────────
 :attr:`Bearbeitung.versuche` (alle falschen Eingaben),
 :attr:`Bearbeitung.versuche_ohne_fortschritt` (davon die, die gegen das
-Kontingent zählten), :attr:`Bearbeitung.loesung_angezeigt` und
+Kontingent zählten), :attr:`Bearbeitung.loesung_angezeigt`,
+:attr:`Bearbeitung.abgebrochen` (das Level endete mitten in der Aufgabe),
+:attr:`Bearbeitung.gerechnete_buchstaben` und
 :attr:`game.aufgabe.Aufgabe.laenge_in_buchstaben`.
 
 Beide Zahlen zu haben lohnt sich für die Auswertung: "acht Versuche, davon
@@ -72,6 +87,8 @@ Fortschritt", auch wenn beide am Ende gelöst haben.
 """
 
 from typing import NamedTuple
+
+import time
 
 from game.pruefung import pruefe
 from game.rueckmeldung import fehlerzahl_der_aufgabe, rueckmeldung
@@ -112,6 +129,7 @@ class Versuchsergebnis(NamedTuple):
     ``fortschritt``          War sie besser als alles bisher?
     ``hinweis_fortschritt``  Satz dazu, sonst leer.
     ``fehlerzahl``           Wie viele Buchstaben noch nicht stimmen.
+    ``benoetigte_sekunden``  Wie lange die Aufgabe bisher gedauert hat.
     ``versuche``             Wie viele falsche Eingaben es bisher gab.
     ``verbleibende_versuche``Wie viele Versuche ohne Fortschritt noch bleiben.
     ``loesung_angezeigt``    Die Lösung steht jetzt auf dem Bildschirm.
@@ -127,6 +145,7 @@ class Versuchsergebnis(NamedTuple):
     fortschritt: bool
     hinweis_fortschritt: str
     fehlerzahl: int
+    benoetigte_sekunden: float
     versuche: int
     verbleibende_versuche: int
     loesung_angezeigt: bool
@@ -170,8 +189,11 @@ class Bearbeitung:
     (3, 0, False)
     """
 
-    def __init__(self, aufgabe):
+    def __init__(self, aufgabe, zeitgeber=None):
         self.aufgabe = aufgabe
+        self._zeitgeber = zeitgeber if zeitgeber is not None else time.monotonic
+        self._beginn = self._zeitgeber()
+        self._ende = None
         self._versuche = 0
         self._geloest = False
         self._loesung_angezeigt = False
@@ -179,6 +201,7 @@ class Bearbeitung:
         self._rest_freigegeben = False
         self._ohne_fortschritt = 0
         self._beste_fehlerzahl = None
+        self._abgebrochen = False
 
     # ── Zustand ────────────────────────────────────────────────────────────
 
@@ -230,6 +253,19 @@ class Bearbeitung:
         return self._loesung_angezeigt
 
     @property
+    def abgebrochen(self):
+        """Wurde die Aufgabe beendet, bevor sie entschieden war?
+
+        Das passiert, wenn das Level endet, während sie noch läuft
+        (:meth:`aufgeben`). Die Lösung ist dann zwar eingeblendet, aber nicht
+        wegen drei Versuchen ohne Fortschritt – und :attr:`benoetigte_sekunden`
+        ist die Zeit bis zum Levelwechsel, keine Rechenzeit. Fürs Log muss
+        sich das unterscheiden lassen, sonst wandern diese Zeiten in jeden
+        Mittelwert.
+        """
+        return self._abgebrochen
+
+    @property
     def angezeigte_loesung(self):
         """Die Lösung, solange sie eingeblendet ist – sonst leer.
 
@@ -249,6 +285,48 @@ class Bearbeitung:
         Buchstaben, ist auch das nach oben begrenzt.
         """
         return self._geloest or self._loesung_angezeigt
+
+    @property
+    def benoetigte_sekunden(self):
+        """Wie lange die Aufgabe gedauert hat – die Zahl fürs Log.
+
+        Solange sie läuft, ist das die bisher verstrichene Zeit; danach steht
+        sie fest. Der Weiterrechnen-Knopf und das Lesen der Lösung zählen
+        nicht mehr mit.
+        """
+        ende = self._ende if self._ende is not None else self._zeitgeber()
+        return max(0.0, ende - self._beginn)
+
+    @property
+    def laeuft_noch(self):
+        """Läuft die Uhr dieser Aufgabe noch?"""
+        return self._ende is None
+
+    @property
+    def gerechnete_buchstaben(self):
+        """Wie viele Buchstaben tatsächlich von Hand gerechnet wurden.
+
+        Normalerweise die Länge der Teilaufgabe. Wer bei einem langen
+        Funkspruch von sich aus die **ganze** Nachricht gerechnet hat, hat
+        mehr geleistet – seine Zeit gehört dann zur ganzen Länge. Sonst
+        stünden im Log die Sekunden für 78 Buchstaben neben einer 15.
+        """
+        if self._vollstaendig_geloest:
+            return self.aufgabe.laenge_vollstaendig_in_buchstaben
+        return self.aufgabe.laenge_in_buchstaben
+
+    @property
+    def sekunden_je_buchstabe(self):
+        """Bearbeitungszeit geteilt durch die Zahl der gerechneten Buchstaben.
+
+        Vier Buchstaben in dreissig Sekunden sind langsam, fünfundzwanzig in
+        derselben Zeit sind sehr schnell. (Für die Zusatzaufgaben aus 5.4
+        reicht dieser Wert allein nicht – siehe :mod:`game.zusatzaufgaben`.)
+        """
+        buchstaben = self.gerechnete_buchstaben
+        if not buchstaben:
+            return 0.0
+        return self.benoetigte_sekunden / buchstaben
 
     @property
     def rest_freigegeben(self):
@@ -335,6 +413,8 @@ class Bearbeitung:
             # Nach dem Auflösen darf man die Lösung natürlich noch eintippen.
             self._geloest = True
 
+        self._uhr_anhalten()
+
         return Versuchsergebnis(
             richtig=ergebnis.richtig,
             meldung=rueckmeldung(self.aufgabe, eingabe),
@@ -342,6 +422,7 @@ class Bearbeitung:
             fortschritt=fortschritt,
             hinweis_fortschritt=HINWEIS_FORTSCHRITT if fortschritt else "",
             fehlerzahl=fehler,
+            benoetigte_sekunden=self.benoetigte_sekunden,
             versuche=self._versuche,
             verbleibende_versuche=self.verbleibende_versuche,
             loesung_angezeigt=self._loesung_angezeigt,
@@ -379,9 +460,26 @@ class Bearbeitung:
 
         Gebraucht, wenn das Zeitfenster eines Levels abläuft (Projektregel 1):
         Dann wird weitergeschaltet, egal was offen ist – die Aufgabe darf dann
-        nicht als "noch offen" im Log stehen bleiben.
+        nicht als "noch offen" im Log stehen bleiben. Sie gilt danach als
+        :attr:`abgebrochen`.
+
+        Bei einer schon entschiedenen Aufgabe ändert das nichts. Sonst stünde
+        eine gelöste Aufgabe im Log zugleich als "Lösung angezeigt".
         """
+        if self.ist_beendet:
+            return
+        self._abgebrochen = True
         self._loesung_angezeigt = True
+        self._uhr_anhalten()
+
+    def _uhr_anhalten(self):
+        """Hält die Uhr an, sobald die Aufgabe entschieden ist.
+
+        Beim ersten Mal – ein zweiter Aufruf ändert nichts mehr, sonst würde
+        das Lesen der Lösung nachträglich zur Bearbeitungszeit gezählt.
+        """
+        if self._ende is None and self.ist_beendet:
+            self._ende = self._zeitgeber()
 
     def __repr__(self):
         return (

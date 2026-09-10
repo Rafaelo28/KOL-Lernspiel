@@ -25,8 +25,10 @@ globale ``random`` zu benutzen. Zwei Gründe:
 
 Im Spiel wird eine :class:`game.zufallsquelle.Zufallsquelle` übergeben. Sie
 führt je Level einen eigenen Zufallsstrom, damit zur Rekonstruktion einer
-Aufgabe der Seed und ihre Nummer *innerhalb des Levels* genügen – unabhängig
-davon, wie viele Zusatzaufgaben in den Leveln davor angefallen sind.
+Übung der Seed und ihre Nummer *unter den Übungen dieses Levels* genügen –
+unabhängig davon, wie viele Zusatzaufgaben in den Leveln davor angefallen
+sind. Diese Nummer steht in der Kennung (``uebung_l2_3`` ist die dritte Übung
+in Level 2); :func:`uebung_nachbauen` liest sie dort heraus.
 
 Für kleine Prüfungen genügt auch eine schlichte ``random.Random``-Instanz;
 dann teilen sich alle Level einen Strom.
@@ -269,8 +271,10 @@ def wiederhole_uebungen(seed, level, anzahl):
     """Baut die ersten ``anzahl`` Übungsaufgaben eines Levels noch einmal nach.
 
     Das ist der eigentliche Zweck von Aufgabe 3.3: Aus dem Seed im Log und der
-    Aufgabennummer lässt sich später feststellen, welches Wort jemand
-    bekommen hat – ohne den ganzen Durchlauf nachzuspielen.
+    Übungsnummer lässt sich später feststellen, welches Wort jemand bekommen
+    hat – ohne den ganzen Durchlauf nachzuspielen. Gezählt werden dabei nur
+    die Übungen; Funksprüche ziehen keinen Zufall. Für eine einzelne Logzeile
+    ist :func:`uebung_nachbauen` bequemer.
 
     >>> aufgaben = wiederhole_uebungen(4711, 1, 2)
     >>> [a.anzeigetext for a in aufgaben] == [
@@ -280,3 +284,36 @@ def wiederhole_uebungen(seed, level, anzahl):
     """
     generator = Aufgabengenerator(Zufallsquelle(seed))
     return [generator.naechste_uebung(level) for _ in range(anzahl)]
+
+
+def uebung_nachbauen(seed, kennung):
+    """Baut die Übung zu einer Logzeile nach – aus Seed und Kennung.
+
+    Die Kennung einer Übung trägt Level und Übungsnummer (``uebung_l2_3``).
+    Die Spalte ``aufgabennummer`` im Log taugt dafür **nicht**: Sie zählt die
+    Funksprüche mit, der Zufallsstrom aber nicht.
+
+    Zusatzaufgaben lassen sich genauso nachbauen – sie kommen aus demselben
+    Strom, das Merkmal selbst zieht keinen Zufall. Nur ``zusatzaufgabe``
+    steht in der nachgebauten Aufgabe immer auf ``False``; das steht ja
+    ohnehin in der Logzeile.
+
+    >>> a = uebung_nachbauen(4711, "uebung_l1_2")
+    >>> a.kennung == "uebung_l1_2", a == wiederhole_uebungen(4711, 1, 2)[1]
+    (True, True)
+    """
+    teile = str(kennung).split("_")
+    if (
+        len(teile) != 3
+        or teile[0] != "uebung"
+        or not teile[1].startswith("l")
+        or not teile[1][1:].isdecimal()
+        or not teile[2].isdecimal()
+        or int(teile[2]) < 1
+    ):
+        raise ValueError(
+            f"{kennung!r} ist keine Übungskennung wie 'uebung_l2_3'. "
+            "Funksprüche stehen fest in content/story.py und brauchen keinen Seed."
+        )
+    level, nummer = int(teile[1][1:]), int(teile[2])
+    return wiederhole_uebungen(seed, level, nummer)[-1]

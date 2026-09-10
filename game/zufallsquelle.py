@@ -19,8 +19,11 @@ verbraucht wurden, hinge dann davon ab, wie viele Zusatzaufgaben jemand in den
 Leveln davor bekommen hat (Arbeitsplan 5.4). Man müsste den ganzen Durchlauf
 nachspielen, um an Level 3 heranzukommen.
 
-Mit einem eigenen Strom je Level genügen **Seed und die Nummer der Aufgabe in
-diesem Level** – und genau beides steht in jeder Logzeile (Arbeitsplan 5.5).
+Mit einem eigenen Strom je Level genügen **Seed und die Nummer der Übung in
+diesem Level** – und genau beides steht in jeder Logzeile (Arbeitsplan 5.5):
+der Seed in seiner Spalte, die Übungsnummer in der Kennung (``uebung_l2_3``).
+:func:`game.generator.uebung_nachbauen` erledigt den Rest. Die Spalte
+``aufgabennummer`` ist dafür die falsche – sie zählt die Funksprüche mit.
 
 Der Strom wird aus Seed und Level abgeleitet, nicht neu gewürfelt: Dieselbe
 Zufallsquelle liefert für dasselbe Level immer denselben Strom, für

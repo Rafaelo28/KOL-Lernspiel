@@ -112,6 +112,10 @@ sofort, wo Text und Code auseinanderlaufen.
 | `pruefung.py` | Vergleicht Eingabe und Lösung, tolerant nach der Textkonvention |
 | `rueckmeldung.py` | Baut die konkrete Fehlermeldung statt eines blossen „falsch" |
 | `bearbeitung.py` | Versuchszähler, Lösungsanzeige, Weiterrechnen-Knopf |
+| `spielstand.py` | Der zentrale Zustand eines Durchlaufs: Figur, Level, laufende Aufgabe |
+| `zeitfenster.py` | Die 15/20/25-Minuten-Fenster der drei Level |
+| `zusatzaufgaben.py` | Entscheidet, wer eine Extraaufgabe bekommt |
+| `protokoll.py` | Schreibt das CSV eines Durchlaufs |
 
 Der Seed wird einmal je Durchlauf gezogen und ins Log geschrieben. Damit lässt
 sich nach dem Experiment rekonstruieren, welche Übungswörter eine bestimmte
@@ -177,6 +181,33 @@ vollständig in [CLAUDE.md](CLAUDE.md):
 
 ---
 
+## Die Messdaten
+
+Pro Aufgabe entsteht eine Zeile in `logs/durchlauf_<Pseudonym>_<Zeitstempel>.csv`:
+
+| Spalte | Bedeutung |
+|--------|-----------|
+| `pseudonym`, `seed`, `figur` | Wer, mit welcher Zufallsfolge und mit welcher Spielfigur (nur deren Kennung, z. B. `vic_moreno`) |
+| `level`, `levelende`, `level_sekunden` | Wie lange das Level lief und ob es am Timer endete (`zeitablauf`), vorher (`vorzeitig`) oder noch läuft (`laeuft`) – gleich in jeder Zeile des Levels |
+| `aufgabennummer`, `kennung`, `quelle` | Welche Aufgabe, in welcher Reihenfolge |
+| `verfahren`, `richtung`, `zusatzaufgabe` | Was verlangt war |
+| `laenge_in_buchstaben`, `gerechnete_buchstaben`, `sekunden` | Wie viel Arbeit und wie lange – erst zusammen vergleichbar. `gerechnete_buchstaben` ist grösser, wenn jemand von sich aus die ganze Nachricht gerechnet hat |
+| `versuche`, `versuche_ohne_fortschritt` | „Acht Eingaben, keine ohne Fortschritt" ist etwas anderes als „drei Eingaben, alle ohne Fortschritt" |
+| `loesung_angezeigt`, `abgebrochen`, `geloest`, `vollstaendig_geloest` | Wie es ausging |
+
+Gelesen wird sie mit `pandas.read_csv(datei, sep=";", encoding="utf-8-sig")` –
+oder per Doppelklick in Excel.
+
+Zwei Dinge sind bei der Auswertung wichtig:
+
+- **Zeilen mit `abgebrochen = ja` gehören in keine Zeitauswertung.** Dort
+  endete das Level mitten in der Aufgabe; in `sekunden` steht die Zeit bis
+  zum Levelwechsel, keine Rechenzeit.
+- **Welches Wort jemand bekommen hat,** baut
+  `game.generator.uebung_nachbauen(seed, kennung)` aus einer Übungszeile
+  nach. Die Übungsnummer steckt in der Kennung (`uebung_l2_3`). Die Spalte
+  `aufgabennummer` taugt dafür nicht – sie zählt die Funksprüche mit.
+
 ## Datenschutz
 
 Das Spiel protokolliert pro Aufgabe Versuchszahl, benötigte Zeit und ob die
@@ -195,7 +226,7 @@ Teilnehmenden dürfen nicht im Repository landen.
 | 2     | Inhalte als Daten (Handbuch, Wortlisten, Story, Figuren) | fertig |
 | 3     | Aufgaben-Generator                           | fertig  |
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
-| 5     | Zustand, Timer, CSV-Logging                  | offen   |
+| 5     | Zustand, Timer, CSV-Logging                  | fertig  |
 | 6     | Tkinter-Oberfläche                           | offen   |
 | 7     | Level zusammensetzen                         | offen   |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
