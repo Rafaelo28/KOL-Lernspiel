@@ -46,7 +46,8 @@ Gelöst wird das **nicht durch Kürzen**, sondern durch eine Teilaufgabe:
 * ``selbst_zu_loesen`` ist der Anfang der Nachricht, den die Spielenden
   wirklich rechnen. Er endet immer an einer Wortgrenze – ein halbes Wort zu
   entschlüsseln fühlt sich willkürlich an.
-* Ist dieser Teil richtig (oder wurde die Lösung nach drei Versuchen
+* Ist dieser Teil richtig (oder wurde die Lösung nach drei Versuchen ohne
+  Fortschritt
   angezeigt), erscheint ein Knopf, siehe :data:`BESCHRIFTUNG_REST`.
 * Der Knopf zeigt ``weiterrechnen`` – einen kurzen Erzähltext, in dem die
   Figur die Arbeit zu Ende bringt – und gibt danach die vollständige

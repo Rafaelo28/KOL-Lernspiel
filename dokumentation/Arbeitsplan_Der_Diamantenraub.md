@@ -145,7 +145,13 @@ Schlüssel, erwartete Lösung, Level.
   nochmal die Verschiebung"
 
 ### 4.3 Versuchszähler und Lösungsanzeige
-- Nach 3 erfolglosen Versuchen wird die Lösung eingeblendet
+- Nach 3 erfolglosen Versuchen **ohne Fortschritt** wird die Lösung
+  eingeblendet. Eine Eingabe mit weniger falschen Buchstaben als die beste
+  bisher kostet keinen Versuch – sonst bekommt jemand, der vier Verzähler
+  einzeln ausbessert, nach der dritten Ausbesserung die Lösung vorgesetzt
+  (siehe CLAUDE.md, Regel 2)
+- Ins Log gehören beide Zahlen: alle falschen Eingaben und davon die ohne
+  Fortschritt
 - **Auch bei Bobs beiden Funksprüchen** – sonst blockiert das Spiel dort
 - Bei Funksprüchen mit Teilaufgabe: Der Knopf "Den Rest entschlüsseln"
   erscheint, sobald der geprüfte Teil richtig ist **oder** die Lösung
@@ -163,9 +169,15 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   vollständige Nachricht frei
 - Die Erzählzeit darin ist Fiktion – der Level-Timer läuft weiter
 
-### 4.5 Optional: "Fast richtig"-Markierung
+### 4.5 Optional: "Fast richtig"-Markierung — *zurückgestellt*
 - Falsche Buchstaben farblich hervorheben
 - Bewusst als *letzte* Aufgabe eingeplant, weil Zusatzaufwand
+- **Entscheidung: wird vorerst nicht gebaut.** Die Rückmeldung aus 4.2 nennt
+  bereits Stelle, Anzahl und Verfahrenshinweis; Projektregel 6 ist damit
+  erfüllt. Alle falschen Stellen zu markieren würde verraten, welche
+  Buchstaben stimmen, und aus dem Nachrechnen ein mechanisches Ausbessern
+  machen. Ausserdem änderte es die Bedeutung der Versuchszahl in den
+  Messdaten – wenn überhaupt, dann vor dem Pilotdurchlauf und begründet.
 
 ---
 
@@ -193,9 +205,17 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
 ### 5.5 CSV-Logging
 Pro Aufgabe eine Zeile: Pseudonym-ID, Level, Aufgabennummer, Richtung, Anzahl
 Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/nein).
+- **Zusätzlich: Versuche ohne Fortschritt**, getrennt von der Gesamtzahl der
+  falschen Eingaben (siehe 4.3).
 - **Zusätzlich: Länge des tatsächlich geprüften Textes in Buchstaben.** Bei
   Funksprüchen mit Teilaufgabe wird nicht die ganze Nachricht gerechnet – ohne
   diese Spalte sind die Bearbeitungszeiten später nicht vergleichbar.
+- **Der Seed des Durchlaufs gehört einmal pro Logdatei hinein**
+  (`game/zufallsquelle.py`, Feld `protokollwert`). Zusammen mit Level und
+  Aufgabennummer lässt sich damit später nachbauen, welches Wort jemand
+  bekommen hat – siehe `game.generator.wiederhole_uebungen()`. Ohne ihn ist
+  eine lange Bearbeitungszeit nicht davon zu unterscheiden, dass jemand den
+  längsten Übungssatz erwischt hat.
 - Dateiname mit Zeitstempel, damit nichts überschrieben wird
 - **Kein Klarname** – nur eine ID, die du separat zuordnest (Datenschutz)
 

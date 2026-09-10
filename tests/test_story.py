@@ -301,11 +301,11 @@ def test_jeder_funkspruch_sagt_das_worum_es_geht(funkspruch, stichwoerter):
 # content/story.py. Diese Tests halten die Eigenschaften fest, auf die sich
 # Phase 4 (Prüfung), 5 (Logging) und 6 (Anzeige) verlassen.
 
-@pytest.mark.parametrize("funkspruch", story.FUNKSPRUECHE, ids=FUNKSPRUCH_IDS)
+@pytest.mark.parametrize(
+    "funkspruch", MIT_TEILAUFGABE, ids=[f.kennung for f in MIT_TEILAUFGABE]
+)
 def test_die_teilaufgabe_ist_der_anfang_der_nachricht(funkspruch):
     """Phase 4 schneidet den Rest als ``klartext[len(selbst_zu_loesen):]`` ab."""
-    if not funkspruch.selbst_zu_loesen:
-        return
     assert funkspruch.klartext.startswith(funkspruch.selbst_zu_loesen), (
         f"{funkspruch.kennung}: {funkspruch.selbst_zu_loesen!r} ist kein "
         "Anfang des Klartexts."

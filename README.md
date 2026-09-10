@@ -102,6 +102,22 @@ Alle Texte stammen aus `dokumentation/`, und Tests vergleichen sie Zeile für
 Zeile mit der Quelle – wer eine Handbuchseite ändert, sieht am roten Test
 sofort, wo Text und Code auseinanderlaufen.
 
+### Was in `game/` steckt
+
+| Modul | Inhalt |
+|-------|--------|
+| `aufgabe.py` | Das Aufgabenobjekt – trägt Übungen und echte Funksprüche gleichermaßen |
+| `generator.py` | Zieht Übungsaufgaben aus dem Pool, baut Funksprüche zu Aufgaben um |
+| `zufallsquelle.py` | Der Seed des Durchlaufs, je Level ein eigener Zufallsstrom |
+| `pruefung.py` | Vergleicht Eingabe und Lösung, tolerant nach der Textkonvention |
+| `rueckmeldung.py` | Baut die konkrete Fehlermeldung statt eines blossen „falsch" |
+| `bearbeitung.py` | Versuchszähler, Lösungsanzeige, Weiterrechnen-Knopf |
+
+Der Seed wird einmal je Durchlauf gezogen und ins Log geschrieben. Damit lässt
+sich nach dem Experiment rekonstruieren, welche Übungswörter eine bestimmte
+Person bekommen hat – sonst wäre eine lange Bearbeitungszeit nicht davon zu
+unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
+
 ### Was in `crypto/` steckt
 
 | Modul                  | Inhalt                                                              |
@@ -148,9 +164,11 @@ vollständig in [CLAUDE.md](CLAUDE.md):
 - **Die Zeitfenster sind fix.** Zusatzaufgaben verlängern ein Level nie. Läuft
   die Zeit ab, geht es weiter – sonst ist der Vergleich mit der
   Frontalunterrichts-Gruppe nicht mehr sauber.
-- **Nach drei Fehlversuchen wird die Lösung gezeigt** – auch bei den beiden
-  Funksprüchen, die die Geschichte tragen. Ohne diese Regel bliebe das Spiel
-  genau dort hängen.
+- **Nach drei Fehlversuchen ohne Fortschritt wird die Lösung gezeigt** – auch
+  bei den beiden Funksprüchen, die die Geschichte tragen. Ohne diese Regel
+  bliebe das Spiel genau dort hängen. Eine Eingabe mit weniger Fehlern als
+  zuvor kostet keinen Versuch: Wer sich Buchstabe für Buchstabe herantastet,
+  soll nicht dafür bestraft werden.
 - **Kein Klartext-Funkverkehr.** Jede gesendete Nachricht wird verschlüsselt,
   jede empfangene muss entschlüsselt werden.
 - **Level 2 ist monoalphabetische Substitution**, nicht Transposition.
@@ -175,8 +193,8 @@ Teilnehmenden dürfen nicht im Repository landen.
 | 0     | Projektgerüst, Textkonvention                | fertig  |
 | 1     | Verschlüsselungslogik samt Tests             | fertig  |
 | 2     | Inhalte als Daten (Handbuch, Wortlisten, Story, Figuren) | fertig |
-| 3     | Aufgaben-Generator                           | offen   |
-| 4     | Prüfung und Fehlerhandling                   | offen   |
+| 3     | Aufgaben-Generator                           | fertig  |
+| 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | offen   |
 | 6     | Tkinter-Oberfläche                           | offen   |
 | 7     | Level zusammensetzen                         | offen   |

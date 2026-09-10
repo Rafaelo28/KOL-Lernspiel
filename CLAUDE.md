@@ -33,10 +33,31 @@ Aufgaben noch offen sind.
 
 ### 2. 3-Versuche-Regel gilt für **alle** Aufgaben
 
-Nach drei erfolglosen Versuchen wird die Lösung angezeigt. Das gilt für
-Handbuch-Übungen **und** für die echten Funksprüche, insbesondere für Bobs
-zwei Nachrichten (Ende Level 1, Ende Level 3). Ohne diese Regel blockiert das
-Spiel genau an den zwei story-tragenden Stellen.
+Nach drei erfolglosen Versuchen **ohne Fortschritt** wird die Lösung
+angezeigt. Das gilt für Handbuch-Übungen **und** für die echten Funksprüche,
+insbesondere für Bobs zwei Nachrichten (Ende Level 1, Ende Level 3). Ohne
+diese Regel blockiert das Spiel genau an den zwei story-tragenden Stellen.
+
+**Was "ohne Fortschritt" heisst:** Eine Eingabe, die weniger falsche
+Buchstaben hat als die beste bisher, kostet keinen Versuch – die Strähne
+beginnt von vorn. Wer bei einem 25-Buchstaben-Funkspruch vier Stellen
+verzählt hat und sie einzeln ausbessert, braucht vier Eingaben; mit einem
+harten Limit von drei bekäme ausgerechnet diese Person die Lösung vorgesetzt,
+obwohl sie die Methode verstanden hat. In den Messdaten sähe das aus wie
+"nicht gekonnt".
+
+Verglichen wird gegen das bisher beste Ergebnis, nicht gegen den letzten
+Versuch – sonst liesse sich die Strähne durch abwechselndes Verschlechtern und
+Verbessern beliebig zurücksetzen. Endlos läuft das nicht: Jeder Fortschritt
+senkt die Fehlerzahl um mindestens eins, und mehr Fehler als Buchstaben kann
+eine Antwort nicht haben.
+
+Der Schwellenwert steht als `HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT` an genau
+einer Stelle in `game/bearbeitung.py`.
+
+**Fürs Log (5.5) gehören beide Zahlen hinein:** alle falschen Eingaben *und*
+davon die ohne Fortschritt. "Acht Eingaben, keine ohne Fortschritt" ist etwas
+ganz anderes als "drei Eingaben, alle ohne Fortschritt".
 
 ### 3. Kein Klartext-Funkverkehr
 
@@ -95,7 +116,8 @@ Die Aufteilung steht als `selbst_zu_loesen` in `content/story.py`.
 
 - **Phase 4:** Geprüft wird `selbst_zu_loesen`, nicht der ganze Klartext. Die
   3-Versuche-Regel gilt für diesen Teil. Der Knopf muss **auch dann**
-  erscheinen, wenn die Lösung nach drei Versuchen angezeigt wurde – sonst
+  erscheinen, wenn die Lösung nach drei Versuchen ohne Fortschritt
+  angezeigt wurde – sonst
   blockiert das Spiel genau an den story-tragenden Stellen (siehe Regel 2).
 - **Phase 5:** Die Länge des geprüften Teils gehört ins Log, sonst sind die
   Bearbeitungszeiten später nicht vergleichbar.

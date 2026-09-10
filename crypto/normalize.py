@@ -108,8 +108,11 @@ stimmen nicht überein:
 
 Für "CHLW ZLUG NQDSS" ist der letzte Buchstabe die 13. der Buchstaben, steht
 aber an 15. Stelle auf dem Bildschirm. Wer die Meldung aus der falschen Zählung
-baut, schickt die Spielenden an die falsche Stelle. Die Umrechnung gehört in
-Phase 4.2 und existiert hier bewusst noch nicht.
+baut, schickt die Spielenden an eine Stelle, an der gar nichts falsch ist.
+
+Die Umrechnung steht seit Aufgabe 4.2 in ``game/rueckmeldung.py``
+(:func:`~game.rueckmeldung.erste_abweichung`). Sie führt beide Positionen mit
+und nennt zusätzlich Wort und Buchstabe im Wort.
 """
 
 import unicodedata
