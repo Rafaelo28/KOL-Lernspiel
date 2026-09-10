@@ -28,9 +28,12 @@ Zeilen, bei denen Vorsicht geboten ist
 * ``abgebrochen = ja``: Das Level endete, während die Aufgabe noch lief. In
   ``sekunden`` steht dann die Zeit bis zum Levelwechsel, keine Rechenzeit.
   Für Zeitauswertungen herausfiltern.
-* ``vollstaendig_geloest = ja``: Jemand hat von sich aus die ganze Nachricht
-  gerechnet, nicht nur den Anfang. Die Zeit gehört dann zu
-  ``gerechnete_buchstaben``, nicht zu ``laenge_in_buchstaben``.
+* Für alles, was mit Tempo zu tun hat, ``gerechnete_buchstaben`` nehmen,
+  nicht ``laenge_in_buchstaben``. Die beiden unterscheiden sich nur, wenn
+  jemand bei einem Funkspruch mit Teilaufgabe von sich aus die ganze
+  Nachricht gerechnet hat. ``vollstaendig_geloest`` allein zeigt das nicht
+  an: Bei Übungen und bei Funksprüchen ohne Teilaufgabe steht es bei jeder
+  gelösten Aufgabe auf ``ja`` – dort ist der Teil schon das Ganze.
 
 Die Levelzeit
 ─────────────

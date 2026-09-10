@@ -157,7 +157,11 @@ def test_der_seed_steht_in_jeder_zeile(tmp_path):
 
 
 def test_die_aufgabennummer_zaehlt_je_level_ab_eins(tmp_path):
-    """Zusammen mit dem Seed macht sie die Aufgabe rekonstruierbar (3.3)."""
+    """Sie gibt die Reihenfolge im Level an, Funksprüche eingeschlossen.
+
+    Welche Übung es war, sagt sie nicht – dafür gibt es die Kennung und
+    ``uebung_nachbauen`` (siehe Abschnitt 5 unten).
+    """
     stand = _durchlauf()
     pfad = Protokoll(stand, ordner=tmp_path, zeitpunkt=ZEITPUNKT).schreiben()
     gesehen = {}
@@ -601,3 +605,16 @@ def test_im_dateinamen_wird_das_pseudonym_gekuerzt():
     teil = name.removeprefix("durchlauf_").removesuffix("_2026-09-10_140530.csv")
     assert len(teil) == protokollmodul.HOECHSTLAENGE_PSEUDONYM_IM_DATEINAMEN
     assert len(name.encode("utf-8")) < 255
+
+
+def test_bei_uebungen_heisst_geloest_auch_vollstaendig_geloest(tmp_path):
+    """Dort ist der Teil schon das Ganze – ``vollstaendig_geloest`` allein
+    kennzeichnet also nicht, wer mehr gerechnet hat. Das tut
+    ``gerechnete_buchstaben`` (siehe Modulkopf von game/protokoll.py)."""
+    stand = _durchlauf()
+    reihen = _gelesen(Protokoll(stand, ordner=tmp_path, zeitpunkt=ZEITPUNKT).schreiben())
+    geloeste_uebungen = [r for r in reihen if r["quelle"] == "uebung" and r["geloest"] == "ja"]
+    assert geloeste_uebungen
+    for reihe in geloeste_uebungen:
+        assert reihe["vollstaendig_geloest"] == "ja"
+        assert reihe["gerechnete_buchstaben"] == reihe["laenge_in_buchstaben"]
