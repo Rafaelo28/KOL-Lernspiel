@@ -2,29 +2,18 @@
 
 Aufruf:  python main.py
 
-Stand Phase 0: öffnet nur das leere Hauptfenster. Die Screens
-(Charakterauswahl, Handbuch, Aufgaben, Funk) kommen in Phase 6 dazu und
-werden dann aus dem Paket ``ui`` heraus in dieses Fenster gehängt.
+main.py öffnet nur das Hauptfenster und fängt die zwei Startfehler ab
+(Tkinter fehlt, keine Bildschirmanzeige). Alles Weitere steht in ``ui/`` –
+welcher Screen wann kommt, in ``ui/ablauf.py``.
 """
 
 import sys
+from pathlib import Path
 
-FENSTER_TITEL = "Der Diamantenraub"
-FENSTER_BREITE = 1000
-FENSTER_HOEHE = 700
-# Untergrenze: auf kleinen Schulmonitoren muss das Vigenère-Quadrat (26x26)
-# noch vollständig lesbar sein – siehe Arbeitsplan 6.7.
-MIN_BREITE = 800
-MIN_HOEHE = 600
-
-
-def _zentriere(fenster, breite, hoehe):
-    """Setzt das Fenster mittig auf den Bildschirm."""
-    bildschirm_breite = fenster.winfo_screenwidth()
-    bildschirm_hoehe = fenster.winfo_screenheight()
-    x = max(0, (bildschirm_breite - breite) // 2)
-    y = max(0, (bildschirm_hoehe - hoehe) // 3)
-    fenster.geometry(f"{breite}x{hoehe}+{x}+{y}")
+#: Hierhin schreibt das Spiel die Messdaten: neben main.py, nicht in das
+#: Verzeichnis, aus dem gestartet wurde. Wer das Spiel per Doppelklick oder aus
+#: einem anderen Ordner startet, fände die Logs sonst an einem zufälligen Ort.
+PROTOKOLLORDNER = Path(__file__).resolve().parent / "logs"
 
 
 def starte_spiel():
@@ -42,8 +31,11 @@ def starte_spiel():
         )
         return 1
 
+    # Erst nach der Prüfung oben: ui/ braucht Tkinter schon beim Import.
+    from ui import ablauf
+
     try:
-        fenster = tk.Tk()
+        wurzel = tk.Tk()
     except tk.TclError as fehler:
         # Tritt auf, wenn kein Bildschirm zur Verfuegung steht, etwa bei einer
         # SSH-Sitzung ohne Weiterleitung oder auf einem Server. Ohne diesen
@@ -57,10 +49,8 @@ def starte_spiel():
         )
         return 1
 
-    fenster.title(FENSTER_TITEL)
-    fenster.minsize(MIN_BREITE, MIN_HOEHE)
-    _zentriere(fenster, FENSTER_BREITE, FENSTER_HOEHE)
-    fenster.mainloop()
+    ablauf.oeffnen(wurzel, protokollordner=PROTOKOLLORDNER)
+    wurzel.mainloop()
     return 0
 
 

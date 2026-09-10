@@ -340,8 +340,30 @@ def test_es_gibt_ueberhaupt_module_zu_pruefen():
         "content/story.py",
         "content/charaktere.py",
         "game/__init__.py",
+        "game/durchlauf.py",
         "ui/__init__.py",
+        "ui/hauptfenster.py",
+        "ui/screen.py",
     } <= namen
+
+
+@pytest.mark.parametrize("paket", [crypto, game, content, ui], ids=lambda p: p.__name__)
+def test_die_pakete_haben_keine_unterordner_mit_quelltext(paket):
+    """Die Prüfungen hier lesen nur die oberste Ebene jedes Pakets.
+
+    Ein Unterordner wie ``ui/screens/`` würde deshalb stillschweigend nicht
+    geprüft – ein Tkinter-Import in ``game/irgendwas/`` fiele niemandem auf.
+    Wer einen Unterordner braucht, muss vorher ``_quelldateien`` erweitern.
+    """
+    wurzel = Path(paket.__file__).parent
+    unterordner = sorted(
+        str(ordner.relative_to(wurzel))
+        for ordner in wurzel.iterdir()
+        if ordner.is_dir() and any(ordner.rglob("*.py"))
+    )
+    assert unterordner == [], (
+        f"{paket.__name__}/ hat Unterordner mit Python-Dateien: {unterordner}"
+    )
 
 
 @pytest.mark.parametrize(

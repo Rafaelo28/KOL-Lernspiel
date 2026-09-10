@@ -336,6 +336,32 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     alles nachgeholt
   - `naechste_uebung()` / `stelle_funkspruch()` erst aufrufen, wenn die
     Aufgabe auf dem Bildschirm steht – dort beginnt ihre Uhr
+- **Umgesetzt:**
+  - `ui/hauptfenster.py` – das eine Fenster: Kopfzeile (Titel, Level,
+    Restzeit), Meldungszeile, dazwischen der Screen. `zeige(Klasse, …)` baut
+    den neuen Screen **frisch** auf und reisst den alten ab. Kein `tkraise`:
+    Sonst stünde eine alte Eingabe oder Rückmeldung plötzlich bei der
+    nächsten Aufgabe
+  - `ui/screen.py` – Grundform der Screens. Aufgaben erst in
+    `beim_anzeigen()` stellen; verzögerte Aufrufe über `spaeter()` statt
+    `after()`, dann meldet der Wechsel sie ab
+  - `game/durchlauf.py` – Spielstand und Protokoll in einer Hand, ohne
+    Tkinter und deshalb ohne Bildschirm testbar. Was eine Aufgabe stellt,
+    abschliesst oder das Level wechselt, geht hier durch, und gespeichert wird
+    dabei von selbst. So kann kein Screen das Speichern vergessen
+  - `ui/ablauf.py` – welcher Screen wann kommt; hier setzt Phase 7 die Level
+    zusammen. Bis dahin stehen dort die Platzhalter aus `ui/platzhalter.py`,
+    die mit 6.2–6.8 wieder verschwinden
+  - Der Takt wird im `finally` neu angemeldet – ein Fehler im Takt hält die
+    Uhr nicht an
+  - Fehler in Knöpfen erscheinen in der Meldungszeile. Tkinter schriebe sie
+    nur auf die Konsole, und die sieht im Klassenzimmer niemand
+  - Das Kreuz am Fenster fragt während eines Levels nach. Beim Schliessen wird
+    die offene Aufgabe als abgebrochen gespeichert; scheitert das Speichern,
+    lässt es sich wiederholen
+  - Ein Fenster, ein Durchlauf – für die nächste Person wird neu gestartet
+  - Die Logs landen neben `main.py` (`main.PROTOKOLLORDNER`), nicht im
+    Verzeichnis, aus dem gestartet wurde
 
 ### 6.2 Startbildschirm + Charakterauswahl
 ### 6.3 Story-Intro (Absturz-Szene)
@@ -372,6 +398,10 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 7.1 Level 1 (Caesar)
 Handbuch → Übungen → Sendeaufgabe "Hallo, hört mich jemand? [Initialen]" →
 Bobs erste verschlüsselte Antwort entschlüsseln
+- **Zu entscheiden: Wann beginnt die Uhr von Level 1?** Die Platzhalter aus
+  6.1 starten sie nach dem Story-Intro. Dafür spricht: Die Kontrollgruppe hat
+  15 Minuten reine Caesar-Zeit, und die Absturz-Szene ist Geschichte, kein
+  Unterricht. Der Ablauf dafür steht in `ui/ablauf.py`
 
 ### 7.2 Level 2 (Substitution)
 Handbuch → Übungen mit steigender Textlänge → Hinweis auf Häufigkeitsanalyse →
@@ -401,6 +431,10 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 - Falls nein: PyInstaller-Build erstellen und **auf einem echten Schulrechner**
   testen, nicht nur auf dem eigenen
 - **Früh machen** – das ist das größte Ausfallrisiko
+- **Beim PyInstaller-Build auf den Log-Ordner achten:** `main.PROTOKOLLORDNER`
+  hängt an `__file__`. In einer Einzeldatei-.exe zeigt das in ein temporäres
+  Entpackverzeichnis, das beim Beenden gelöscht wird – mit den Messdaten.
+  Im Build muss der Ordner neben der .exe liegen (`sys.executable`)
 
 ### 8.4 Logdateien einsammeln und Auswertung vorbereiten
 - Wo landen die CSVs? Wie kommst du nach dem Experiment an alle heran?

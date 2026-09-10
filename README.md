@@ -43,14 +43,17 @@ python3 main.py
 
 Das Spiel braucht **keine** externen Pakete – wichtig für Schulrechner ohne
 Internetzugang oder Administratorrechte. Der Aufruf funktioniert aus jedem
-Arbeitsverzeichnis heraus.
+Arbeitsverzeichnis heraus; die Messdaten landen immer in `logs/` neben
+`main.py`.
 
 Fehlt Tkinter, meldet `main.py` das im Klartext mit Installationshinweis,
 statt mit einem Stacktrace abzubrechen.
 
 ### Tests
 
-Einzige Entwicklungsabhängigkeit ist `pytest`:
+Einzige Entwicklungsabhängigkeit ist `pytest`. Die Fenstertests in
+`tests/test_hauptfenster.py` brauchen eine Bildschirmanzeige; ohne eine
+werden sie übersprungen.
 
 ```bash
 sudo apt install python3-venv     # nur unter Debian/Ubuntu nötig
@@ -116,11 +119,22 @@ sofort, wo Text und Code auseinanderlaufen.
 | `zeitfenster.py` | Die 15/20/25-Minuten-Fenster der drei Level |
 | `zusatzaufgaben.py` | Entscheidet, wer eine Extraaufgabe bekommt |
 | `protokoll.py` | Schreibt das CSV eines Durchlaufs |
+| `durchlauf.py` | Spielstand und Protokoll in einer Hand – speichert von selbst, fängt den Zeitablauf ab |
 
 Der Seed wird einmal je Durchlauf gezogen und ins Log geschrieben. Damit lässt
 sich nach dem Experiment rekonstruieren, welche Übungswörter eine bestimmte
 Person bekommen hat – sonst wäre eine lange Bearbeitungszeit nicht davon zu
 unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
+
+### Was in `ui/` steckt
+
+| Modul | Inhalt |
+|-------|--------|
+| `hauptfenster.py` | Das eine Fenster: Kopfzeile mit Level und Restzeit, Screen-Wechsel, Takt |
+| `screen.py` | Die Grundform aller Screens |
+| `ablauf.py` | Welcher Screen wann kommt – hier setzt Phase 7 die Level zusammen |
+| `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.2–6.8 da sind |
+| `stil.py` | Schriften, Farben und Abstände an einer Stelle |
 
 ### Was in `crypto/` steckt
 
@@ -227,11 +241,13 @@ Teilnehmenden dürfen nicht im Repository landen.
 | 3     | Aufgaben-Generator                           | fertig  |
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
-| 6     | Tkinter-Oberfläche                           | offen   |
+| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1 fertig) |
 | 7     | Level zusammensetzen                         | offen   |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
-`main.py` öffnet derzeit ein leeres Fenster; die Screens entstehen in Phase 6.
+`main.py` öffnet das Fenstergerüst mit Platzhalter-Screens, durch die sich
+schon klicken lässt – vom Start über alle drei Level bis zum Abschluss. Die
+echten Screens entstehen in 6.2–6.8.
 
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).
