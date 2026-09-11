@@ -1,0 +1,538 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"
+     data-breite="960" data-schleife-ms="4000" data-bilder="40" data-bereiche="526 280 627 549">
+<!--
+  Das Wrack in der Wüste – Szene für den Story-Intro (Arbeitsplan 6.3).
+
+  Im Browser öffnen, um die Animation zu sehen. Fürs Spiel vorrendern mit:
+      python3 grafik/rendern.py grafik/wrack.svg
+  data-bereiche: der Ausschnitt, in dem sich etwas bewegt (SVG-Einheiten).
+  Alle Animationsdauern teilen data-schleife-ms – siehe dokumentation/Animationen.md.
+-->
+<title>Das Wrack in der Wüste</title>
+<desc>Ein zweimotoriges Propellerflugzeug liegt in der Dämmerung bruchgelandet in den Dünen. An mehreren
+Stellen brennt es, eine Rauchsäule zieht in den Himmel. Unter der offenen Tür liegt ein Sack, in dem ein
+Diamant aufblitzt; Fußspuren führen vom Wrack weg.</desc>
+<style>
+  /* Alle Dauern teilen 4 s – so wiederholt die vorgerenderte Bildfolge ohne Sprung. */
+  .zunge { transform-box: fill-box; transform-origin: 50% 100%; animation: flackern 1s ease-in-out infinite alternate; }
+  .z1 { animation-duration: .5s; }
+  .z3 { animation-duration: .5s; }
+  @keyframes flackern {
+    0%   { transform: scale(1, 1) skewX(0deg); }
+    50%  { transform: scale(1.08, .9) skewX(-6deg); }
+    100% { transform: scale(.94, 1.1) skewX(4deg); }
+  }
+  .puff { transform-box: fill-box; transform-origin: center; opacity: 0; animation: aufsteigen 4s linear infinite; }
+  @keyframes aufsteigen {
+    0%   { transform: translate(0, 0) scale(.6); opacity: 0; }
+    15%  { opacity: .38; }
+    70%  { opacity: 0; }
+    100% { transform: translate(var(--px), var(--py)) scale(2.2); opacity: 0; }
+  }
+  .funke { animation: funkenflug 2s ease-out infinite; }
+  .funke.lang { animation-duration: 4s; }
+  @keyframes funkenflug {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    12%  { opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+  }
+  .fenster-licht { animation: stromausfall 4s steps(1) infinite; }
+  @keyframes stromausfall { 0%, 88%, 100% { opacity: 1; } 90% { opacity: .15; } 93% { opacity: .85; } 96% { opacity: .25; } }
+  .diamant { transform-box: fill-box; transform-origin: center; animation: blitzen 2s ease-in-out infinite; }
+  @keyframes blitzen { 0%, 100% { transform: scale(.55); opacity: .5; } 45% { transform: scale(1.15); opacity: 1; } }
+</style>
+<defs>
+  <linearGradient id="himmel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#0a0c24"/><stop offset=".25" stop-color="#171640"/>
+    <stop offset=".45" stop-color="#33204f"/><stop offset=".58" stop-color="#6a2d52"/>
+    <stop offset=".66" stop-color="#a84346"/><stop offset=".72" stop-color="#e0693a"/>
+    <stop offset=".78" stop-color="#f5a34f"/><stop offset="1" stop-color="#f8c173"/>
+  </linearGradient>
+  <radialGradient id="sonnenrest" cx="330" cy="610" r="470" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ffe0a0" stop-opacity=".6"/><stop offset=".35" stop-color="#ffb35c" stop-opacity=".28"/>
+    <stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="dunst" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffc27a" stop-opacity="0"/><stop offset=".5" stop-color="#ffc27a" stop-opacity=".28"/>
+    <stop offset="1" stop-color="#ffc27a" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="tafelberge" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#5a3354"/><stop offset="1" stop-color="#3e2440"/>
+  </linearGradient>
+  <linearGradient id="duene-fern" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#a0603f"/><stop offset="1" stop-color="#6a3b33"/>
+  </linearGradient>
+  <linearGradient id="duene-mitte" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d69058"/><stop offset=".45" stop-color="#b06c43"/><stop offset="1" stop-color="#874d32"/>
+  </linearGradient>
+  <linearGradient id="duene-nah" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#bf7c4c"/><stop offset="1" stop-color="#553020"/>
+  </linearGradient>
+  <linearGradient id="huegel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e2a064"/><stop offset="1" stop-color="#a8653e"/>
+  </linearGradient>
+  <linearGradient id="rumpf" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f1f2f6"/><stop offset=".35" stop-color="#cbced8"/>
+    <stop offset=".72" stop-color="#8e92a1"/><stop offset="1" stop-color="#4a4d5b"/>
+  </linearGradient>
+  <linearGradient id="rumpf-glut" x1="0" y1="0" x2="0" y2="1">
+    <stop offset=".3" stop-color="#ff8a3c" stop-opacity="0"/><stop offset="1" stop-color="#ff8a3c" stop-opacity=".5"/>
+  </linearGradient>
+  <linearGradient id="russ" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#15110f" stop-opacity=".75"/><stop offset="1" stop-color="#15110f" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="fluegel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c7cad4"/><stop offset="1" stop-color="#767a8a"/>
+  </linearGradient>
+  <linearGradient id="gondel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9a9eab"/><stop offset="1" stop-color="#3a3d48"/>
+  </linearGradient>
+  <linearGradient id="glas" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#34405f"/><stop offset="1" stop-color="#121829"/>
+  </linearGradient>
+  <linearGradient id="flamme-aussen" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ff5a14"/><stop offset=".55" stop-color="#ff3d10" stop-opacity=".85"/>
+    <stop offset="1" stop-color="#c81e0a" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="flamme-mitte" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ffb238"/><stop offset=".6" stop-color="#ff8a1c" stop-opacity=".9"/>
+    <stop offset="1" stop-color="#ff6a14" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="flamme-innen" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#fff0b0"/><stop offset=".5" stop-color="#ffd45c"/>
+    <stop offset="1" stop-color="#ffb030" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="flamme-kern" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#fff6d6" stop-opacity=".9"/>
+    <stop offset="1" stop-color="#ffe28a" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="glut-gross">
+    <stop offset="0" stop-color="#ffb24a" stop-opacity=".7"/><stop offset=".4" stop-color="#ff7a22" stop-opacity=".28"/>
+    <stop offset="1" stop-color="#ff5a14" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="glut-klein">
+    <stop offset="0" stop-color="#fff0c0" stop-opacity=".85"/><stop offset=".45" stop-color="#ffa13a" stop-opacity=".4"/>
+    <stop offset="1" stop-color="#ff6a14" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="vignette" cx=".5" cy=".55" r=".75">
+    <stop offset=".6" stop-color="#060512" stop-opacity="0"/><stop offset="1" stop-color="#060512" stop-opacity=".62"/>
+  </radialGradient>
+  <filter id="weich1" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2"/></filter>
+  <filter id="weich3" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="weich6" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="weich8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+  <filter id="weich20" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20"/></filter>
+  <filter id="rauch-weich" x="-40%" y="-30%" width="180%" height="160%"><feGaussianBlur stdDeviation="19"/></filter>
+</defs>
+
+<rect width="1600" height="900" fill="url(#himmel)"/>
+<circle cx="533.2" cy="114.3" r="1.2" fill="#fff6e6" opacity="0.47"/>
+<circle cx="720.6" cy="312.8" r="1.7" fill="#fff6e6" opacity="0.91"/>
+<circle cx="115.5" cy="15.1" r="1" fill="#fff6e6" opacity="0.40"/>
+<circle cx="1511.8" cy="50.2" r="1.4" fill="#fff6e6" opacity="0.67"/>
+<circle cx="83.1" cy="144.8" r="0.8" fill="#fff6e6" opacity="0.71"/>
+<circle cx="713.2" cy="126.1" r="1.4" fill="#fff6e6" opacity="1.00"/>
+<circle cx="989" cy="119.6" r="1" fill="#fff6e6" opacity="0.54"/>
+<circle cx="702.2" cy="222.1" r="0.8" fill="#fff6e6" opacity="0.35"/>
+<circle cx="58.2" cy="73.5" r="1.6" fill="#fff6e6" opacity="0.49"/>
+<circle cx="594.1" cy="311.9" r="1.7" fill="#fff6e6" opacity="0.58"/>
+<circle cx="120.8" cy="69.6" r="0.9" fill="#fff6e6" opacity="0.88"/>
+<circle cx="309.9" cy="316.8" r="1.6" fill="#fff6e6" opacity="0.38"/>
+<circle cx="1096.9" cy="31.2" r="1.3" fill="#fff6e6" opacity="0.79"/>
+<circle cx="1516" cy="203" r="1.6" fill="#fff6e6" opacity="0.45"/>
+<circle cx="488.3" cy="118.3" r="1.8" fill="#fff6e6" opacity="1.00"/>
+<circle cx="1218.9" cy="122.9" r="1.2" fill="#fff6e6" opacity="0.89"/>
+<circle cx="1079.7" cy="96.4" r="1.5" fill="#fff6e6" opacity="0.83"/>
+<circle cx="812.2" cy="321.2" r="1.3" fill="#fff6e6" opacity="0.71"/>
+<circle cx="1535.2" cy="48.2" r="1.1" fill="#fff6e6" opacity="0.74"/>
+<circle cx="1558.5" cy="96" r="1.3" fill="#fff6e6" opacity="0.46"/>
+<circle cx="1175.5" cy="195.1" r="1.8" fill="#fff6e6" opacity="0.41"/>
+<circle cx="270.6" cy="273.2" r="1" fill="#fff6e6" opacity="0.56"/>
+<circle cx="212.4" cy="240.2" r="1.5" fill="#fff6e6" opacity="0.47"/>
+<circle cx="1340.4" cy="48.8" r="1.9" fill="#fff6e6" opacity="0.51"/>
+<circle cx="1222.3" cy="84.1" r="1.5" fill="#fff6e6" opacity="0.49"/>
+<circle cx="747.3" cy="203.8" r="0.7" fill="#fff6e6" opacity="0.48"/>
+<circle cx="898.8" cy="316.2" r="1.3" fill="#fff6e6" opacity="0.93"/>
+<circle cx="106.6" cy="24.7" r="1.2" fill="#fff6e6" opacity="0.57"/>
+<circle cx="432" cy="332.3" r="1" fill="#fff6e6" opacity="0.49"/>
+<circle cx="278.8" cy="243.9" r="1.3" fill="#fff6e6" opacity="0.46"/>
+<circle cx="1283.3" cy="167.2" r="1.5" fill="#fff6e6" opacity="0.70"/>
+<circle cx="1431.3" cy="211.5" r="0.9" fill="#fff6e6" opacity="0.72"/>
+<circle cx="387" cy="181.7" r="1.2" fill="#fff6e6" opacity="0.81"/>
+<circle cx="1239.5" cy="15.1" r="1.7" fill="#fff6e6" opacity="0.97"/>
+<circle cx="1362" cy="333.3" r="1.6" fill="#fff6e6" opacity="0.99"/>
+<circle cx="1344.6" cy="110.5" r="1.4" fill="#fff6e6" opacity="0.98"/>
+<circle cx="286.3" cy="70.6" r="1.8" fill="#fff6e6" opacity="0.82"/>
+<circle cx="509.8" cy="59.5" r="1.3" fill="#fff6e6" opacity="0.54"/>
+<circle cx="1106.9" cy="241.3" r="1.1" fill="#fff6e6" opacity="0.53"/>
+<circle cx="849.3" cy="47.8" r="1.5" fill="#fff6e6" opacity="0.57"/>
+<circle cx="1176.1" cy="54.1" r="1.7" fill="#fff6e6" opacity="0.80"/>
+<circle cx="580.8" cy="318.3" r="1" fill="#fff6e6" opacity="0.54"/>
+<rect width="1600" height="900" fill="url(#sonnenrest)"/>
+<rect y="500" width="1600" height="140" fill="url(#dunst)"/>
+<!-- Tafelberge am Horizont -->
+<path d="M0,600 L0,574 C40,570 70,566 95,560 L118,532 L262,530 L286,556 C330,566 380,570 420,572
+         L520,576 L548,552 L600,550 L622,574 C700,580 760,582 820,584 L1180,586 C1230,586 1260,580 1290,572
+         L1312,540 L1420,537 L1446,566 C1500,576 1560,580 1600,582 L1600,600 Z" fill="url(#tafelberge)"/>
+<path d="M0,640 C200,605 380,612 560,628 C760,645 900,618 1080,610 C1260,602 1420,626 1600,618 L1600,900 L0,900 Z"
+      fill="url(#duene-fern)"/>
+<path d="M0,640 C200,605 380,612 560,628 C760,645 900,618 1080,610 C1260,602 1420,626 1600,618"
+      fill="none" stroke="#eaa465" stroke-width="2" opacity=".35"/>
+<!-- die Rauchsäule, die man von weitem sieht -->
+<g filter="url(#rauch-weich)">
+<circle cx="829.5" cy="516.1" r="37.4" fill="#2a2226" opacity="0.94"/>
+<circle cx="821.2" cy="504.4" r="30.3" fill="#2b2327" opacity="0.93"/>
+<circle cx="821.4" cy="487.8" r="35.2" fill="#2c2429" opacity="0.92"/>
+<circle cx="822.1" cy="471.6" r="41.1" fill="#2d252a" opacity="0.91"/>
+<circle cx="809" cy="462.1" r="35.3" fill="#2e262b" opacity="0.90"/>
+<circle cx="805.4" cy="452.8" r="43.8" fill="#2f272c" opacity="0.89"/>
+<circle cx="797.5" cy="441.6" r="42.9" fill="#30282e" opacity="0.88"/>
+<circle cx="785.8" cy="414.8" r="54.8" fill="#31292f" opacity="0.87"/>
+<circle cx="771.1" cy="409.6" r="63.8" fill="#322a30" opacity="0.85"/>
+<circle cx="764.5" cy="408.6" r="59.1" fill="#332b31" opacity="0.84"/>
+<circle cx="763.1" cy="375.1" r="69" fill="#342c33" opacity="0.83"/>
+<circle cx="755.9" cy="369.1" r="72.3" fill="#352d34" opacity="0.82"/>
+<circle cx="745.7" cy="353.5" r="76" fill="#372d35" opacity="0.81"/>
+<circle cx="727.2" cy="336.7" r="71.3" fill="#382e37" opacity="0.80"/>
+<circle cx="713" cy="341.3" r="90.6" fill="#392f38" opacity="0.78"/>
+<circle cx="698.6" cy="309.9" r="83.8" fill="#3a3039" opacity="0.77"/>
+<circle cx="700.1" cy="303.2" r="98.5" fill="#3b313a" opacity="0.76"/>
+<circle cx="681.1" cy="299" r="88.4" fill="#3c323c" opacity="0.75"/>
+<circle cx="673.3" cy="269.9" r="107" fill="#3d333d" opacity="0.73"/>
+<circle cx="662.8" cy="272.7" r="97.8" fill="#3e343e" opacity="0.72"/>
+<circle cx="656" cy="246.5" r="100.8" fill="#3f3540" opacity="0.71"/>
+<circle cx="637.1" cy="231.5" r="114.4" fill="#403641" opacity="0.70"/>
+<circle cx="631.2" cy="229.5" r="114.3" fill="#413742" opacity="0.68"/>
+<circle cx="621.2" cy="216.5" r="128.9" fill="#423843" opacity="0.67"/>
+<circle cx="589.8" cy="194.2" r="126.9" fill="#433945" opacity="0.65"/>
+<circle cx="574.1" cy="170.7" r="122.3" fill="#443a46" opacity="0.64"/>
+<circle cx="563.5" cy="166.3" r="127.3" fill="#453b47" opacity="0.63"/>
+<circle cx="569" cy="162.6" r="140.9" fill="#463c48" opacity="0.61"/>
+<circle cx="542.8" cy="128.8" r="144.6" fill="#473d4a" opacity="0.59"/>
+<circle cx="515.6" cy="135.7" r="150.2" fill="#483e4b" opacity="0.58"/>
+<circle cx="507.4" cy="107.2" r="153.4" fill="#493f4c" opacity="0.56"/>
+<circle cx="501.6" cy="102" r="151.7" fill="#4a404e" opacity="0.55"/>
+<circle cx="487.4" cy="80.2" r="157" fill="#4b414f" opacity="0.53"/>
+<circle cx="487.7" cy="67.6" r="173.3" fill="#4c4250" opacity="0.51"/>
+<circle cx="445.2" cy="62.2" r="174" fill="#4d4351" opacity="0.49"/>
+<circle cx="447" cy="32.5" r="179" fill="#4e4453" opacity="0.48"/>
+<circle cx="433.4" cy="35.4" r="180.7" fill="#504454" opacity="0.46"/>
+<circle cx="409.3" cy="25.9" r="186.5" fill="#514555" opacity="0.44"/>
+<circle cx="413.9" cy="6.4" r="192.5" fill="#524657" opacity="0.41"/>
+<circle cx="369" cy="-21.6" r="195.6" fill="#534758" opacity="0.39"/>
+<circle cx="377.3" cy="-31.1" r="195.7" fill="#544859" opacity="0.37"/>
+<circle cx="330.2" cy="-27.5" r="205.1" fill="#55495a" opacity="0.34"/>
+<circle cx="337.4" cy="-43.4" r="200.9" fill="#564a5c" opacity="0.32"/>
+<circle cx="294.8" cy="-71.4" r="210.5" fill="#574b5d" opacity="0.29"/>
+<circle cx="300.8" cy="-83.9" r="217.8" fill="#584c5e" opacity="0.25"/>
+<circle cx="301.6" cy="-85.2" r="217.6" fill="#594d5f" opacity="0.22"/>
+<circle cx="269.2" cy="-112.7" r="233" fill="#5a4e61" opacity="0.17"/>
+<circle cx="245.7" cy="-116.2" r="230.8" fill="#5b4f62" opacity="0.06"/>
+<circle cx="690" cy="540" r="14" fill="#3b3338" opacity="0.55"/>
+<circle cx="668.9" cy="523.3" r="18.2" fill="#3b3338" opacity="0.49"/>
+<circle cx="647.8" cy="506.7" r="22.4" fill="#3b3338" opacity="0.44"/>
+<circle cx="626.7" cy="490" r="26.7" fill="#3b3338" opacity="0.38"/>
+<circle cx="605.6" cy="473.3" r="30.9" fill="#3b3338" opacity="0.33"/>
+<circle cx="584.4" cy="456.7" r="35.1" fill="#3b3338" opacity="0.27"/>
+<circle cx="563.3" cy="440" r="39.3" fill="#3b3338" opacity="0.22"/>
+<circle cx="542.2" cy="423.3" r="43.6" fill="#3b3338" opacity="0.16"/>
+<circle cx="521.1" cy="406.7" r="47.8" fill="#3b3338" opacity="0.11"/>
+<circle cx="1110" cy="610" r="14" fill="#3b3338" opacity="0.55"/>
+<circle cx="1091" cy="595" r="17.8" fill="#3b3338" opacity="0.50"/>
+<circle cx="1072" cy="580" r="21.6" fill="#3b3338" opacity="0.45"/>
+<circle cx="1053" cy="565" r="25.4" fill="#3b3338" opacity="0.40"/>
+<circle cx="1034" cy="550" r="29.2" fill="#3b3338" opacity="0.35"/>
+<circle cx="1015" cy="535" r="33" fill="#3b3338" opacity="0.30"/>
+<circle cx="996" cy="520" r="36.8" fill="#3b3338" opacity="0.25"/>
+<circle cx="977" cy="505" r="40.6" fill="#3b3338" opacity="0.20"/>
+<circle cx="958" cy="490" r="44.4" fill="#3b3338" opacity="0.15"/>
+<circle cx="939" cy="475" r="48.2" fill="#3b3338" opacity="0.10"/>
+</g>
+<path d="M0,700 C160,670 320,662 480,672 C640,684 760,700 900,696 C1020,692 1120,660 1240,650
+         C1380,640 1500,660 1600,672 L1600,900 L0,900 Z" fill="url(#duene-mitte)"/>
+<path d="M0,700 C160,670 320,662 480,672 C640,684 760,700 900,696 C1020,692 1120,660 1240,650
+         C1380,640 1500,660 1600,672" fill="none" stroke="#f2b777" stroke-width="2" opacity=".45"/>
+<!-- Schleifspur der Bruchlandung und Trümmer -->
+<path d="M10,722 C190,704 370,690 590,676 L596,694 C380,712 200,728 16,738 Z" fill="#6a3b28" opacity=".45" filter="url(#weich8)"/>
+<path d="M10,716 C190,698 370,684 590,670" fill="none" stroke="#f0b87a" stroke-width="4" opacity=".35" filter="url(#weich3)"/>
+<g fill="#2b2a30">
+  <path d="M322,690 l14,-4 l6,8 l-15,5 Z"/><path d="M430,682 l10,-2 l3,6 l-11,3 Z"/>
+  <path d="M505,672 l18,-6 l5,9 l-19,6 Z"/><path d="M1010,714 l12,-5 l4,7 l-13,4 Z"/>
+</g>
+<path d="M512,670 l9,-3" stroke="#dfe3ea" stroke-width="1.5" opacity=".7"/>
+<!-- das Wrack, um 20 % vergrößert -->
+<g transform="translate(860 690) scale(1.2) translate(-860 -690)">
+  <ellipse cx="850" cy="704" rx="300" ry="18" fill="#2a160f" opacity=".45" filter="url(#weich8)"/>
+  <ellipse cx="870" cy="768" rx="150" ry="26" fill="#2a1a14" opacity=".5" filter="url(#weich8)"/>
+  
+  <g transform="translate(860 640) rotate(9)">
+    <!-- Leitwerk mit Kennzeichen und Raute -->
+    <path d="M-252,-22 L-342,-34 L-348,-22 L-262,-6 Z" fill="#9ea2ae"/>
+    <path d="M-268,-42 L-332,-168 C-326,-174 -306,-176 -292,-176 L-196,-44 Z" fill="url(#rumpf)"/>
+    <path d="M-318,-140 L-332,-168 C-326,-174 -306,-176 -292,-176 L-258,-128 Z" fill="#1e5c6a"/>
+    <path d="M-280,-116 L-268,-100 L-280,-84 L-292,-100 Z" fill="#e0b44f"/>
+    <path d="M-280,-116 L-268,-100 L-280,-100 Z" fill="#f7dc93"/>
+    <text x="-262" y="-54" font-family="DejaVu Sans Mono, monospace" font-size="12.5" font-weight="bold"
+          fill="#2b2f3c" letter-spacing="1">D-IAMT</text>
+    <!-- Rumpf -->
+    <path d="M-280,-44 L-150,-40 C30,-46 170,-46 222,-34 C258,-26 278,-10 282,4
+             C278,20 256,30 220,32 L-150,30 C-205,28 -250,12 -285,-14 L-290,-38 Z" fill="url(#rumpf)"/>
+    <path d="M-272,-2 L230,-4 C246,-2 258,2 266,8 L262,14 C250,10 238,8 226,8 L-268,10 Z" fill="#1e5c6a"/>
+    <path d="M-268,13 L226,11" stroke="#d6ad55" stroke-width="2"/>
+    <rect x="-178" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M-175,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect x="-149" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M-146,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect class="fenster-licht" x="-120" y="-25" width="12" height="15" rx="5" fill="#ffc978"/>
+    <rect x="-91" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M-88,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect x="-62" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M-59,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect class="fenster-licht" x="-33" y="-25" width="12" height="15" rx="5" fill="#ffc978"/>
+    <rect x="-4" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M-1,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect x="25" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M28,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect x="54" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M57,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect class="fenster-licht" x="83" y="-25" width="12" height="15" rx="5" fill="#ffc978"/>
+    <rect x="112" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M115,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <rect x="141" y="-25" width="12" height="15" rx="5" fill="url(#glas)"/><path d="M144,-22 l3,0" stroke="#c9d6f2" stroke-width="1.4" opacity=".55"/>
+    <path d="M196,-33 L234,-26 C244,-22 250,-18 252,-14 L214,-16 Z" fill="url(#glas)"/>
+    <path d="M204,-30 L230,-25" stroke="#e8eefc" stroke-width="1.5" opacity=".5"/>
+    <g stroke="#6d7180" stroke-width="1" opacity=".45">
+      <path d="M-150,-40 L-150,30"/><path d="M-60,-43 L-60,30"/><path d="M40,-45 L40,31"/><path d="M150,-43 L150,31"/>
+    </g>
+    <path d="M-250,-40 L-150,-38 C30,-44 160,-44 212,-33" stroke="#ffffff" stroke-width="3" fill="none" opacity=".35"/>
+    <!-- Ruß über den Brandstellen im Dach -->
+    <ellipse cx="-160" cy="-38" rx="34" ry="14" fill="url(#russ)" filter="url(#weich3)"/>
+    <ellipse cx="-40" cy="-40" rx="46" ry="16" fill="url(#russ)" filter="url(#weich3)"/>
+    <ellipse cx="205" cy="-30" rx="26" ry="10" fill="url(#russ)" filter="url(#weich3)"/>
+    <!-- offene Tür hinten -->
+    <rect x="-226" y="-32" width="28" height="52" rx="5" fill="#0d1020"/>
+    <path d="M-226,-32 L-250,-38 L-252,22 L-226,20 Z" fill="#b1b4bf" stroke="#6c7080" stroke-width="1"/>
+    <path d="M-280,-44 L-150,-40 C30,-46 170,-46 222,-34 C258,-26 278,-10 282,4
+             C278,20 256,30 220,32 L-150,30 C-205,28 -250,12 -285,-14 L-290,-38 Z" fill="url(#rumpf-glut)"/>
+    <!-- linker Flügel, zur Kamera hin in den Sand gebohrt -->
+    <path d="M95,26 L-35,28 L-112,168 L-42,176 Z" fill="url(#fluegel)"/>
+    <path d="M95,26 L-42,176" stroke="#eef0f4" stroke-width="2" opacity=".6"/>
+    <path d="M-20,40 L-98,162" stroke="#5d6170" stroke-width="1.2"/>
+    <ellipse cx="45" cy="44" rx="40" ry="12" fill="url(#russ)" filter="url(#weich3)"/>
+    <!-- Triebwerk 1 mit stehendem, verbogenem Propeller -->
+    <path d="M-45,80 C-45,74 -38,72 -30,72 L70,72 C86,72 98,80 98,92 C98,104 86,112 70,112
+             L-30,112 C-38,112 -45,108 -45,102 Z" fill="url(#gondel)"/>
+    <path d="M-45,80 C-45,74 -38,72 -30,72 L10,72 L10,112 L-30,112 C-38,112 -45,108 -45,102 Z"
+          fill="#140f10" opacity=".55"/>
+    <path d="M104,86 L108,52 L96,26 L104,24 L116,52 L112,86 Z" fill="#22242b"/>
+    <path d="M104,98 L100,150 L110,152 L112,98 Z" fill="#22242b"/>
+    <path d="M110,90 L140,96 L138,102 L110,96 Z" fill="#2c2f38"/>
+    <path d="M98,84 C110,86 116,90 118,92 C116,94 110,98 98,100 Z" fill="#dcdee5"/>
+  </g>
+  <path d="M1050,735 C1085,690 1120,672 1165,668 C1215,664 1265,684 1310,735 Z" fill="url(#huegel)"/>
+  <path d="M1085,695 C1120,674 1160,668 1200,670" fill="none" stroke="#f6c287" stroke-width="2" opacity=".5"/>
+  <ellipse cx="860" cy="680" rx="430" ry="260" fill="url(#glut-gross)" opacity=".4" style="mix-blend-mode:screen"/>
+  <g filter="url(#rauch-weich)"><circle class="puff" cx="700.5" cy="537.5" r="20" fill="#3a3035" style="--px:-72px;--py:-112px;animation-delay:0.000s"/>
+<circle class="puff" cx="700.5" cy="537.5" r="20" fill="#3a3035" style="--px:-72px;--py:-112px;animation-delay:-1.333s"/>
+<circle class="puff" cx="700.5" cy="537.5" r="20" fill="#3a3035" style="--px:-72px;--py:-112px;animation-delay:-2.667s"/><circle class="puff" cx="816.2" cy="539.9" r="28" fill="#3a3035" style="--px:-101px;--py:-157px;animation-delay:0.000s"/>
+<circle class="puff" cx="816.2" cy="539.9" r="28" fill="#3a3035" style="--px:-101px;--py:-157px;animation-delay:-1.333s"/>
+<circle class="puff" cx="816.2" cy="539.9" r="28" fill="#3a3035" style="--px:-101px;--py:-157px;animation-delay:-2.667s"/><circle class="puff" cx="890.6" cy="652.3" r="19" fill="#3a3035" style="--px:-68px;--py:-106px;animation-delay:0.000s"/>
+<circle class="puff" cx="890.6" cy="652.3" r="19" fill="#3a3035" style="--px:-68px;--py:-106px;animation-delay:-1.333s"/>
+<circle class="puff" cx="890.6" cy="652.3" r="19" fill="#3a3035" style="--px:-68px;--py:-106px;animation-delay:-2.667s"/><circle class="puff" cx="855.8" cy="660.4" r="31" fill="#3a3035" style="--px:-112px;--py:-174px;animation-delay:0.000s"/>
+<circle class="puff" cx="855.8" cy="660.4" r="31" fill="#3a3035" style="--px:-112px;--py:-174px;animation-delay:-1.333s"/>
+<circle class="puff" cx="855.8" cy="660.4" r="31" fill="#3a3035" style="--px:-112px;--py:-174px;animation-delay:-2.667s"/><circle class="puff" cx="1060.4" cy="611.8" r="17" fill="#3a3035" style="--px:-61px;--py:-95px;animation-delay:0.000s"/>
+<circle class="puff" cx="1060.4" cy="611.8" r="17" fill="#3a3035" style="--px:-61px;--py:-95px;animation-delay:-1.333s"/>
+<circle class="puff" cx="1060.4" cy="611.8" r="17" fill="#3a3035" style="--px:-61px;--py:-95px;animation-delay:-2.667s"/></g>
+  <!-- Brand: Heck -->
+<ellipse cx="708.5" cy="575.9" rx="24.8" ry="6.4" fill="#ff6a1f" opacity=".85" filter="url(#weich6)"/>
+<circle cx="708.5" cy="565.5" r="68" fill="url(#glut-klein)" opacity=".6" filter="url(#weich20)" style="mix-blend-mode:screen"/>
+<g filter="url(#weich3)">
+<path class="zunge z3" style="animation-delay:-0.32s" d="M708.4,573.3 C707.1,565.1 709,557.2 706.9,547.1 C716.3,558.4 730.5,566.6 729.5,573.3 Q718.9,578.4 708.4,573.3 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z2" style="animation-delay:-0.46s" d="M698.9,575.1 C697.6,560.5 700.3,550.7 701.3,539.9 C707.8,552.3 721.6,566 720.6,575.1 Q709.7,580.3 698.9,575.1 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.75s" d="M699.7,572 C698.3,560.3 705.8,546.5 707.6,533.8 C711.5,551.6 724.1,558 722.9,572 Q711.3,577.6 699.7,572 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z0" style="animation-delay:-0.68s" d="M686.4,574.5 C685,564 688.4,552.9 688.4,542.6 C695.9,554.1 710.7,563.3 709.6,574.5 Q698,580.1 686.4,574.5 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z0" style="animation-delay:-0.41s" d="M705,575.5 C703.8,566.2 706.2,558.3 707,547 C712.7,557.6 726,566.3 725,575.5 Q715,580.3 705,575.5 Z" fill="url(#flamme-aussen)"/>
+</g>
+<g filter="url(#weich1)">
+<path class="zunge z1" style="animation-delay:-0.70s" d="M704.8,575.8 C703.7,568.7 707,559.7 705.2,551.1 C711.8,560.5 723.3,569.8 722.4,575.8 Q713.6,580 704.8,575.8 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z1" style="animation-delay:-0.76s" d="M703.6,572.7 C702.4,562.9 706.6,557.7 704.4,548 C712.8,558.3 724.6,566.5 723.6,572.7 Q713.6,577.5 703.6,572.7 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z2" style="animation-delay:-0.12s" d="M684,572.4 C682.9,566.3 687.2,559.5 687.5,553.1 C694,560.7 704.8,567.5 703.8,572.4 Q693.9,577.2 684,572.4 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z1" style="animation-delay:-0.62s" d="M699.2,575.8 C698.3,563.8 698.8,558.1 694.4,546 C703,557 714.7,567.3 714,575.8 Q706.6,579.3 699.2,575.8 Z" fill="url(#flamme-mitte)"/>
+</g>
+<g>
+<path class="zunge z2" style="animation-delay:-0.55s" d="M701,572.3 C700.1,566.7 701.3,562.3 695.8,557.5 C704.6,564.1 716.5,567.6 715.8,572.3 Q708.4,575.8 701,572.3 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z2" style="animation-delay:-0.01s" d="M714.7,572.2 C714.1,564.3 713.4,558.1 711,552.5 C717.4,561.8 725.6,565.9 725.1,572.2 Q719.9,574.7 714.7,572.2 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z2" style="animation-delay:-0.76s" d="M688.6,574.9 C687.8,568 690.6,561.4 691,554.6 C695.1,564.3 702.8,568.5 702.1,574.9 Q695.4,578.1 688.6,574.9 Z" fill="url(#flamme-innen)"/>
+</g>
+<g>
+<path class="zunge z3" style="animation-delay:-0.06s" d="M701.9,574 C701.4,569.9 701.2,566.9 699.4,563.6 C703.8,567.9 710.4,570.5 710,574 Q706,576 701.9,574 Z" fill="url(#flamme-kern)"/>
+<path class="zunge z0" style="animation-delay:-0.55s" d="M720,572.2 C719.6,569.2 719.2,567.3 715,564.1 C720.4,567.6 727.6,569.3 727.2,572.2 Q723.6,574 720,572.2 Z" fill="url(#flamme-kern)"/>
+</g><!-- Brand: Kabinendach -->
+<ellipse cx="827.4" cy="593.6" rx="34.7" ry="9" fill="#ff6a1f" opacity=".85" filter="url(#weich6)"/>
+<circle cx="827.4" cy="579.1" r="95.2" fill="url(#glut-klein)" opacity=".6" filter="url(#weich20)" style="mix-blend-mode:screen"/>
+<g filter="url(#weich3)">
+<path class="zunge z2" style="animation-delay:-0.41s" d="M828.8,589.6 C827.3,578.3 828.3,567.6 827.8,552.1 C837,568.4 855.9,579.5 854.6,589.6 Q841.7,595.8 828.8,589.6 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z0" style="animation-delay:-0.53s" d="M821.8,591.9 C819.9,572.5 827,559.8 831.4,542.7 C838.5,563.9 854.9,574.7 853.3,591.9 Q837.5,599.4 821.8,591.9 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z2" style="animation-delay:-0.77s" d="M830.6,590.1 C828.5,577.5 834.5,568.3 830.9,554.9 C844,568.3 867.4,577.9 865.6,590.1 Q848.1,598.6 830.6,590.1 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.56s" d="M830.4,589 C828.3,575.8 832.4,564 832.6,550.4 C845.6,566.4 865.9,576.5 864.2,589 Q847.3,597.1 830.4,589 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z3" style="animation-delay:-0.55s" d="M794.5,588.2 C792.4,572 802.2,563.4 802,549.5 C811.9,565.5 831.5,575.9 829.7,588.2 Q812.1,596.7 794.5,588.2 Z" fill="url(#flamme-aussen)"/>
+</g>
+<g filter="url(#weich1)">
+<path class="zunge z0" style="animation-delay:-0.91s" d="M813.7,588.5 C812.2,577.9 813.8,569.1 814.3,557.1 C823.6,569.1 839.7,576.8 838.5,588.5 Q826.1,594.4 813.7,588.5 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z2" style="animation-delay:-0.07s" d="M792,593.3 C790.5,577.3 795.8,566 799.6,554.3 C806.8,570.4 818,578.7 816.8,593.3 Q804.4,599.3 792,593.3 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z2" style="animation-delay:-0.93s" d="M807.2,593.1 C806.1,581.8 809.2,571.9 808.1,563.2 C815.1,573.9 827.3,582.2 826.3,593.1 Q816.8,597.7 807.2,593.1 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z3" style="animation-delay:-0.86s" d="M812.9,590.1 C811.7,579 811.3,570.9 808.2,558.6 C819.3,573.3 834,582.1 833,590.1 Q823,595 812.9,590.1 Z" fill="url(#flamme-mitte)"/>
+</g>
+<g>
+<path class="zunge z1" style="animation-delay:-0.59s" d="M799.4,589.2 C798.5,580.1 799.6,574.4 794.6,564.4 C802.1,573.1 814.3,582.2 813.6,589.2 Q806.5,592.6 799.4,589.2 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z1" style="animation-delay:-0.41s" d="M837.6,592.1 C836.7,584 835,574.7 827.6,567.2 C837.9,578.6 852.5,584.5 851.8,592.1 Q844.7,595.5 837.6,592.1 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z1" style="animation-delay:-0.56s" d="M815.6,593.2 C814.6,583.6 817.5,576.6 818.8,569.5 C823.6,578 834.6,585.1 833.7,593.2 Q824.7,597.5 815.6,593.2 Z" fill="url(#flamme-innen)"/>
+</g>
+<g>
+<path class="zunge z3" style="animation-delay:-0.04s" d="M823.8,589.7 C823.1,585.9 822.9,582.5 820.8,577.5 C826.4,582.2 836.3,586.2 835.7,589.7 Q829.8,592.5 823.8,589.7 Z" fill="url(#flamme-kern)"/>
+<path class="zunge z3" style="animation-delay:-0.35s" d="M818.5,589.6 C817.8,585.3 816.3,579.7 808,575.5 C818.5,580.6 830.7,585 830.1,589.6 Q824.3,592.3 818.5,589.6 Z" fill="url(#flamme-kern)"/>
+</g><!-- Brand: Flügelwurzel -->
+<ellipse cx="898.2" cy="688.8" rx="23.6" ry="6.1" fill="#ff6a1f" opacity=".85" filter="url(#weich6)"/>
+<circle cx="898.2" cy="678.9" r="64.6" fill="url(#glut-klein)" opacity=".6" filter="url(#weich20)" style="mix-blend-mode:screen"/>
+<g filter="url(#weich3)">
+<path class="zunge z1" style="animation-delay:-0.06s" d="M902.4,688.2 C901.3,679.9 905.7,671.7 905.8,662.1 C910.2,673.7 921.7,680.1 920.8,688.2 Q911.6,692.6 902.4,688.2 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.41s" d="M887.1,688.3 C886.2,676 887.5,664.5 888,654.2 C895.4,667.2 904,676.3 903.2,688.3 Q895.1,692.1 887.1,688.3 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.66s" d="M894,687.1 C892.7,678 897,667.3 894.5,656.7 C904.7,669.9 916.9,678.3 915.8,687.1 Q904.9,692.3 894,687.1 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.73s" d="M887.4,685.2 C886.1,675.7 889.9,668.4 892.4,659.3 C897.8,670.4 911.4,676.6 910.2,685.2 Q898.8,690.6 887.4,685.2 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z3" style="animation-delay:-0.40s" d="M884.2,687.1 C883.1,677.2 886.5,667.7 888.6,656.2 C894.4,669.2 903.6,677.5 902.7,687.1 Q893.4,691.6 884.2,687.1 Z" fill="url(#flamme-aussen)"/>
+</g>
+<g filter="url(#weich1)">
+<path class="zunge z1" style="animation-delay:-0.71s" d="M882,687.6 C881,680.1 884.3,670.7 887,663.1 C893,674.8 900.2,681.3 899.3,687.6 Q890.7,691.8 882,687.6 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z3" style="animation-delay:-0.90s" d="M898.7,688.6 C897.6,680 902.7,672 903.4,661.8 C908,674 917.3,681 916.4,688.6 Q907.5,692.8 898.7,688.6 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z3" style="animation-delay:-0.39s" d="M879.3,688.6 C878.2,679.8 883.2,667.8 883.2,659.3 C888.8,671.3 897.9,679.1 897.1,688.6 Q888.2,692.8 879.3,688.6 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z1" style="animation-delay:-0.01s" d="M901.9,686 C901,675.3 902.6,665.2 901.7,657 C908.4,670.3 918.9,675.5 918.1,686 Q910,689.9 901.9,686 Z" fill="url(#flamme-mitte)"/>
+</g>
+<g>
+<path class="zunge z3" style="animation-delay:-0.67s" d="M885.2,687.9 C884.6,682.4 885.1,679.2 884.9,674.1 C889.8,680.4 895.6,683.9 895.1,687.9 Q890.2,690.3 885.2,687.9 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z0" style="animation-delay:-0.72s" d="M881.5,687.3 C880.7,681.6 881.9,674.8 882.6,668.4 C887.5,677.4 894.5,682.7 893.9,687.3 Q887.7,690.3 881.5,687.3 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z3" style="animation-delay:-0.22s" d="M902.2,688.5 C901.4,684 904.2,679.9 904.9,676.3 C910.2,681.1 916.8,684.8 916.1,688.5 Q909.1,691.8 902.2,688.5 Z" fill="url(#flamme-innen)"/>
+</g>
+<g>
+<path class="zunge z0" style="animation-delay:-0.79s" d="M905,685.6 C904.6,682.5 903.6,680.3 900.5,677.4 C905.1,681 911.8,682.9 911.5,685.6 Q908.2,687.2 905,685.6 Z" fill="url(#flamme-kern)"/>
+<path class="zunge z2" style="animation-delay:-0.95s" d="M879.8,687 C879.5,684 878,681.8 873.6,679.1 C878.7,681.9 885.5,684.9 885.2,687 Q882.5,688.3 879.8,687 Z" fill="url(#flamme-kern)"/>
+</g><!-- Brand: Triebwerk -->
+<ellipse cx="868.2" cy="719.9" rx="38.4" ry="9.9" fill="#ff6a1f" opacity=".85" filter="url(#weich6)"/>
+<circle cx="868.2" cy="703.8" r="105.4" fill="url(#glut-klein)" opacity=".6" filter="url(#weich20)" style="mix-blend-mode:screen"/>
+<g filter="url(#weich3)">
+<path class="zunge z0" style="animation-delay:-0.34s" d="M862.6,716.6 C860.6,695.1 865.1,680.2 870.2,665.3 C877.9,690.9 897.1,704.1 895.4,716.6 Q879,724.5 862.6,716.6 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z2" style="animation-delay:-0.61s" d="M852.6,717.6 C850.5,701.8 858.8,688.6 865,673.6 C872.2,689.1 890.1,704.8 888.4,717.6 Q870.5,726.2 852.6,717.6 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z3" style="animation-delay:-0.49s" d="M831.3,717.6 C829,695.7 837.2,682.1 834,664.2 C847.2,682.8 871.5,702 869.6,717.6 Q850.5,726.8 831.3,717.6 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.63s" d="M829.6,714.6 C827.5,694.6 836.7,684.2 836.1,663.1 C849.5,683.9 866.3,696.3 864.5,714.6 Q847.1,722.9 829.6,714.6 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z2" style="animation-delay:-0.42s" d="M838.3,716.3 C835.9,699.3 843.5,676.8 852.3,655.6 C859,679.5 880.1,698.9 878.1,716.3 Q858.2,725.8 838.3,716.3 Z" fill="url(#flamme-aussen)"/>
+</g>
+<g filter="url(#weich1)">
+<path class="zunge z3" style="animation-delay:-0.42s" d="M831.2,719.2 C829.3,701.3 833.3,691.7 829.8,676 C845.4,696.3 864.1,708.4 862.6,719.2 Q846.9,726.7 831.2,719.2 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z0" style="animation-delay:-0.74s" d="M878.8,714.2 C877.1,700.8 881.4,689.6 881.5,675 C892.9,690 908.8,701.4 907.4,714.2 Q893.1,721 878.8,714.2 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z2" style="animation-delay:-0.99s" d="M847.9,717.5 C846.4,701.8 848.3,689.5 845.4,670.7 C855.5,691.3 875.1,703.2 873.8,717.5 Q860.9,723.7 847.9,717.5 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z3" style="animation-delay:-0.07s" d="M839.2,715.5 C837.8,701.9 840,686.3 839.5,669.8 C847.4,688.5 864.2,704.1 863,715.5 Q851.1,721.2 839.2,715.5 Z" fill="url(#flamme-mitte)"/>
+</g>
+<g>
+<path class="zunge z0" style="animation-delay:-0.94s" d="M865.2,718.3 C864,712.2 864.6,703.9 863.1,696.6 C871.8,705.7 886.4,712.2 885.4,718.3 Q875.3,723.2 865.2,718.3 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z2" style="animation-delay:-0.76s" d="M867.1,718.4 C866,707.8 867.7,697.7 862.3,688.3 C871.7,701.8 886.9,707.5 886,718.4 Q876.5,722.9 867.1,718.4 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z1" style="animation-delay:-0.77s" d="M853.6,714.3 C852.4,704.9 851.8,697 845.6,685.7 C856.4,697.8 874.6,706.4 873.6,714.3 Q863.6,719.1 853.6,714.3 Z" fill="url(#flamme-innen)"/>
+</g>
+<g>
+<path class="zunge z2" style="animation-delay:-0.19s" d="M865.4,716.2 C864.8,710.6 863.7,707.8 859.1,702.8 C865.7,709.4 874.9,712.4 874.5,716.2 Q869.9,718.4 865.4,716.2 Z" fill="url(#flamme-kern)"/>
+<path class="zunge z3" style="animation-delay:-0.45s" d="M841,714.4 C840.2,708.1 838.7,704.5 832.4,697.5 C843.1,705.1 855.3,708 854.6,714.4 Q847.8,717.6 841,714.4 Z" fill="url(#flamme-kern)"/>
+</g><!-- Brand: Cockpit -->
+<ellipse cx="1067.2" cy="644.5" rx="21.1" ry="5.4" fill="#ff6a1f" opacity=".85" filter="url(#weich6)"/>
+<circle cx="1067.2" cy="635.6" r="57.8" fill="url(#glut-klein)" opacity=".6" filter="url(#weich20)" style="mix-blend-mode:screen"/>
+<g filter="url(#weich3)">
+<path class="zunge z0" style="animation-delay:-0.48s" d="M1071.4,641.2 C1070.4,631.3 1072.4,624.2 1069.3,615.8 C1078,624.6 1087.9,633.3 1087.1,641.2 Q1079.3,645 1071.4,641.2 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z0" style="animation-delay:-0.16s" d="M1048.2,643 C1047.3,635.3 1048.6,626.4 1049.6,616.6 C1054.1,629.3 1064.4,633.8 1063.6,643 Q1055.9,646.6 1048.2,643 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.61s" d="M1067.5,643.7 C1066.3,632.7 1071.1,625.5 1073.3,615.2 C1079.5,626.3 1087.3,635.6 1086.3,643.7 Q1076.9,648.2 1067.5,643.7 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.87s" d="M1059.9,641.9 C1059,633.4 1060.8,624.1 1057.4,613.4 C1065.6,627.4 1076.2,634.6 1075.4,641.9 Q1067.6,645.6 1059.9,641.9 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.14s" d="M1055,641.4 C1053.7,630.9 1056.6,624.4 1055.6,612.2 C1063.5,625.1 1077.9,634.1 1076.8,641.4 Q1065.9,646.6 1055,641.4 Z" fill="url(#flamme-aussen)"/>
+</g>
+<g filter="url(#weich1)">
+<path class="zunge z0" style="animation-delay:-0.48s" d="M1062.4,641.3 C1061.6,632.2 1063.2,626.8 1059.6,616.6 C1066,628.3 1078,634 1077.3,641.3 Q1069.9,644.8 1062.4,641.3 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z2" style="animation-delay:-0.68s" d="M1048.3,644.2 C1047.3,637.2 1049.7,631.2 1051.4,625 C1057.7,633.1 1065.7,639.1 1064.9,644.2 Q1056.6,648.2 1048.3,644.2 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z0" style="animation-delay:-0.52s" d="M1054.5,644.3 C1053.7,638.3 1055.1,631.6 1051.9,623.7 C1057.8,631.4 1069,639.1 1068.3,644.3 Q1061.4,647.7 1054.5,644.3 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z2" style="animation-delay:-0.61s" d="M1068,643.5 C1067.3,635.2 1070.8,626.7 1071,617.8 C1075,627.5 1080.6,634 1080,643.5 Q1074,646.4 1068,643.5 Z" fill="url(#flamme-mitte)"/>
+</g>
+<g>
+<path class="zunge z1" style="animation-delay:-0.91s" d="M1048.3,642.8 C1047.6,638.3 1048.8,635.2 1049.6,631.6 C1053.8,635.5 1059.9,638.9 1059.4,642.8 Q1053.8,645.5 1048.3,642.8 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z1" style="animation-delay:-0.92s" d="M1068,643.2 C1067.4,639.2 1070.3,633.3 1070.2,629.3 C1073.5,635.2 1079.6,639.8 1079.1,643.2 Q1073.6,645.9 1068,643.2 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z0" style="animation-delay:-0.85s" d="M1062.2,643.5 C1061.7,639.4 1062.3,634.7 1061.4,629.4 C1064.5,635.2 1070.9,638.8 1070.5,643.5 Q1066.3,645.5 1062.2,643.5 Z" fill="url(#flamme-innen)"/>
+</g>
+<g>
+<path class="zunge z1" style="animation-delay:-0.20s" d="M1066.2,642.6 C1065.8,639.3 1064.3,637.3 1059,634.2 C1064.8,637.6 1073,639.6 1072.7,642.6 Q1069.4,644.1 1066.2,642.6 Z" fill="url(#flamme-kern)"/>
+<path class="zunge z2" style="animation-delay:-0.73s" d="M1072.3,644.3 C1071.9,640.4 1071.6,637.6 1069.9,634.8 C1074.4,639.2 1079.6,641.1 1079.3,644.3 Q1075.8,646 1072.3,644.3 Z" fill="url(#flamme-kern)"/>
+</g><!-- Brand: Treibstoff im Sand -->
+<ellipse cx="706" cy="793.3" rx="13.6" ry="3.5" fill="#ff6a1f" opacity=".85" filter="url(#weich6)"/>
+<circle cx="706" cy="787.6" r="37.4" fill="url(#glut-klein)" opacity=".6" filter="url(#weich20)" style="mix-blend-mode:screen"/>
+<g filter="url(#weich3)">
+<path class="zunge z1" style="animation-delay:-0.03s" d="M693.1,792 C692.3,787.7 694.6,782.8 697.9,778.2 C701.4,784.3 707,787.2 706.4,792 Q699.8,795.1 693.1,792 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z2" style="animation-delay:-0.21s" d="M702.2,791.2 C701.5,785.1 703.2,781.9 703.2,776.4 C707.5,782.4 714.3,786.9 713.7,791.2 Q708,793.9 702.2,791.2 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z0" style="animation-delay:-0.24s" d="M694.6,791.6 C693.9,785.8 695.4,780.6 697.3,776.1 C700.8,782.8 706.8,787.3 706.2,791.6 Q700.4,794.4 694.6,791.6 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z1" style="animation-delay:-0.43s" d="M703.4,791.6 C702.8,785.7 704,780.7 702.2,774.3 C706.8,780.4 713.8,785.1 713.3,791.6 Q708.4,794 703.4,791.6 Z" fill="url(#flamme-aussen)"/>
+<path class="zunge z0" style="animation-delay:-0.69s" d="M690.7,791.4 C690,786.5 693.3,781.7 693,775.1 C697.2,782.8 704.4,786.7 703.8,791.4 Q697.3,794.6 690.7,791.4 Z" fill="url(#flamme-aussen)"/>
+</g>
+<g filter="url(#weich1)">
+<path class="zunge z0" style="animation-delay:-0.91s" d="M705.1,792.8 C704.5,789.3 705.1,785.4 703.2,781.5 C707.9,786 715.6,789.9 715.1,792.8 Q710.1,795.2 705.1,792.8 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z1" style="animation-delay:-0.56s" d="M706.2,791.6 C705.6,787.6 706.5,784 704.3,780.7 C709,785.6 716.1,788.3 715.7,791.6 Q710.9,793.9 706.2,791.6 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z0" style="animation-delay:-0.71s" d="M695.9,793 C695.3,787.9 697,785.6 698,780.4 C700.8,786.6 707,789.2 706.5,793 Q701.2,795.5 695.9,793 Z" fill="url(#flamme-mitte)"/>
+<path class="zunge z1" style="animation-delay:-0.96s" d="M695,793.2 C694.5,788.1 695.1,782.9 695.5,777.3 C698.4,782.8 705,788.8 704.5,793.2 Q699.8,795.5 695,793.2 Z" fill="url(#flamme-mitte)"/>
+</g>
+<g>
+<path class="zunge z0" style="animation-delay:-0.63s" d="M695,792.3 C694.5,790.2 696.1,787.1 695.8,785 C698.2,788.6 703.5,790.4 703.1,792.3 Q699,794.2 695,792.3 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z2" style="animation-delay:-0.03s" d="M704.1,793 C703.7,789.6 704.3,787.4 702.1,784.5 C706,788.1 712.2,790 711.8,793 Q707.9,794.8 704.1,793 Z" fill="url(#flamme-innen)"/>
+<path class="zunge z1" style="animation-delay:-0.57s" d="M694.4,792.4 C694,789.8 694.5,787.2 694.9,783.5 C697,787.9 701.3,789.7 701,792.4 Q697.7,794 694.4,792.4 Z" fill="url(#flamme-innen)"/>
+</g>
+<g>
+<path class="zunge z2" style="animation-delay:-0.65s" d="M707.3,791.1 C707.1,789.2 706.6,788.3 704.9,786.6 C707.8,788.6 711.3,790 711.1,791.1 Q709.2,792 707.3,791.1 Z" fill="url(#flamme-kern)"/>
+<path class="zunge z2" style="animation-delay:-0.83s" d="M700.8,792.9 C700.6,791.8 700.1,790.3 697.9,788.9 C701,790.8 704.4,791.8 704.3,792.9 Q702.5,793.8 700.8,792.9 Z" fill="url(#flamme-kern)"/>
+</g>
+  <circle class="funke" cx="707.3" cy="548.8" r="2.3" fill="#ffd27a" style="--dx:-49px;--dy:-102px;animation-delay:-2.11s"/>
+<circle class="funke" cx="695.1" cy="562.5" r="1.4" fill="#ffd27a" style="--dx:-50px;--dy:-84px;animation-delay:-3.26s"/>
+<circle class="funke" cx="711.9" cy="558.4" r="1.9" fill="#ffd27a" style="--dx:-22px;--dy:-86px;animation-delay:-1.11s"/><circle class="funke lang" cx="831.4" cy="552.9" r="1.7" fill="#ffd27a" style="--dx:-22px;--dy:-123px;animation-delay:-2.97s"/>
+<circle class="funke" cx="841.2" cy="571.5" r="1.6" fill="#ffd27a" style="--dx:-31px;--dy:-107px;animation-delay:-1.31s"/>
+<circle class="funke lang" cx="835.3" cy="576.3" r="2.2" fill="#ffd27a" style="--dx:-50px;--dy:-147px;animation-delay:-1.72s"/>
+<circle class="funke lang" cx="842.5" cy="562.3" r="1.6" fill="#ffd27a" style="--dx:-50px;--dy:-120px;animation-delay:-2.50s"/><circle class="funke lang" cx="886" cy="660.3" r="2.2" fill="#ffd27a" style="--dx:-2px;--dy:-84px;animation-delay:-3.69s"/>
+<circle class="funke" cx="910.7" cy="665.3" r="2.4" fill="#ffd27a" style="--dx:-44px;--dy:-90px;animation-delay:-2.85s"/>
+<circle class="funke lang" cx="904.9" cy="658.7" r="1.7" fill="#ffd27a" style="--dx:-17px;--dy:-110px;animation-delay:-0.28s"/><circle class="funke lang" cx="850.8" cy="690" r="2.2" fill="#ffd27a" style="--dx:-6px;--dy:-128px;animation-delay:-0.54s"/>
+<circle class="funke" cx="875.8" cy="696.4" r="2.4" fill="#ffd27a" style="--dx:-43px;--dy:-119px;animation-delay:-3.92s"/>
+<circle class="funke" cx="867.1" cy="671.5" r="1.4" fill="#ffd27a" style="--dx:3px;--dy:-147px;animation-delay:-1.19s"/>
+<circle class="funke lang" cx="863.1" cy="702.5" r="2.1" fill="#ffd27a" style="--dx:-43px;--dy:-116px;animation-delay:-0.70s"/>
+<circle class="funke" cx="849.2" cy="682.7" r="2.1" fill="#ffd27a" style="--dx:-37px;--dy:-126px;animation-delay:-3.08s"/><circle class="funke lang" cx="1073.8" cy="625.6" r="2.3" fill="#ffd27a" style="--dx:-40px;--dy:-72px;animation-delay:-1.65s"/>
+<circle class="funke lang" cx="1059.1" cy="627.7" r="1.8" fill="#ffd27a" style="--dx:-41px;--dy:-78px;animation-delay:-1.13s"/>
+<circle class="funke lang" cx="1064.5" cy="634.6" r="1.7" fill="#ffd27a" style="--dx:-23px;--dy:-95px;animation-delay:-3.98s"/><circle class="funke" cx="710.2" cy="785.9" r="1.6" fill="#ffd27a" style="--dx:-24px;--dy:-62px;animation-delay:-0.67s"/>
+<circle class="funke lang" cx="713.7" cy="784.6" r="1.6" fill="#ffd27a" style="--dx:-3px;--dy:-54px;animation-delay:-0.43s"/>
+  <!-- der zurückgelassene Diamantensack unter der offenen Tür -->
+  <path d="M612,712 C606,694 612,682 622,678 L620,670 C625,667 633,667 636,670 L634,678 C646,682 652,694 646,712 Z"
+        fill="#a57c4b"/>
+  <path d="M614,706 C622,712 638,712 646,704 L646,712 L612,712 Z" fill="#6f5130"/>
+  <path d="M620,677 C626,680 632,680 636,677" stroke="#5a3f24" stroke-width="2.5" fill="none"/>
+  <circle cx="641" cy="684" r="7" fill="#ffffff" opacity=".35" filter="url(#weich3)"/>
+  <path class="diamant" d="M641,674 L643,682 L651,684 L643,686 L641,694 L639,686 L631,684 L639,682 Z" fill="#ffffff"/>
+</g>
+<!-- abgerissenes Flügelstück mit grünem Positionslicht (rechte Tragfläche) -->
+<g transform="translate(1340 800) rotate(-8)">
+  <path d="M-120,-14 L110,-10 L126,4 L104,18 L-118,16 L-126,6 L-114,-2 L-124,-8 Z" fill="url(#fluegel)"/>
+  <path d="M-116,-12 L110,-9" stroke="#eef0f4" stroke-width="2" opacity=".55"/>
+  <path d="M-60,6 L92,8" stroke="#5f6370" stroke-width="1.2"/>
+  <circle cx="116" cy="2" r="8" fill="#3dd27a" opacity=".45" filter="url(#weich3)"/>
+  <circle cx="116" cy="2" r="4" fill="#7dffb0"/>
+</g>
+<path d="M0,822 C200,792 420,800 620,812 C860,828 1100,808 1320,798 C1460,792 1540,800 1600,806
+         L1600,900 L0,900 Z" fill="url(#duene-nah)"/>
+<path d="M0,822 C200,792 420,800 620,812 C860,828 1100,808 1320,798 C1460,792 1540,800 1600,806"
+      fill="none" stroke="#e0a268" stroke-width="2" opacity=".4"/>
+<!-- Fußspuren: vom Wrack weg, "in sicherer Entfernung" -->
+<ellipse cx="577.8" cy="723.4" rx="6.4" ry="3.2" transform="rotate(170.5 577.8 723.4)" fill="#4f2c1d" opacity="0.36"/>
+<ellipse cx="560.9" cy="742.3" rx="6.9" ry="3.4" transform="rotate(168.6 560.9 742.3)" fill="#4f2c1d" opacity="0.38"/>
+<ellipse cx="537" cy="730.6" rx="7.3" ry="3.6" transform="rotate(166.9 537 730.6)" fill="#4f2c1d" opacity="0.39"/>
+<ellipse cx="520.1" cy="752.8" rx="7.8" ry="3.8" transform="rotate(165.3 520.1 752.8)" fill="#4f2c1d" opacity="0.41"/>
+<ellipse cx="493.4" cy="741" rx="8.2" ry="4" transform="rotate(163.9 493.4 741)" fill="#4f2c1d" opacity="0.42"/>
+<ellipse cx="476.6" cy="766.4" rx="8.7" ry="4.2" transform="rotate(162.5 476.6 766.4)" fill="#4f2c1d" opacity="0.43"/>
+<ellipse cx="447" cy="754.5" rx="9.1" ry="4.4" transform="rotate(161.3 447 754.5)" fill="#4f2c1d" opacity="0.45"/>
+<ellipse cx="430.3" cy="783.2" rx="9.6" ry="4.6" transform="rotate(160.1 430.3 783.2)" fill="#4f2c1d" opacity="0.46"/>
+<ellipse cx="397.9" cy="771.3" rx="10" ry="4.8" transform="rotate(159 397.9 771.3)" fill="#4f2c1d" opacity="0.47"/>
+<ellipse cx="381.3" cy="803.1" rx="10.4" ry="4.9" transform="rotate(158 381.3 803.1)" fill="#4f2c1d" opacity="0.49"/>
+<ellipse cx="346" cy="791.2" rx="10.9" ry="5.1" transform="rotate(157 346 791.2)" fill="#4f2c1d" opacity="0.50"/>
+<ellipse cx="329.5" cy="826.1" rx="11.3" ry="5.3" transform="rotate(156.1 329.5 826.1)" fill="#4f2c1d" opacity="0.52"/>
+<ellipse cx="291.3" cy="814.3" rx="11.8" ry="5.5" transform="rotate(155.3 291.3 814.3)" fill="#4f2c1d" opacity="0.53"/>
+<ellipse cx="274.9" cy="852.3" rx="12.2" ry="5.7" transform="rotate(154.5 274.9 852.3)" fill="#4f2c1d" opacity="0.54"/>
+<ellipse cx="233.8" cy="840.5" rx="12.7" ry="5.9" transform="rotate(153.8 233.8 840.5)" fill="#4f2c1d" opacity="0.56"/>
+<ellipse cx="217.6" cy="881.6" rx="13.1" ry="6.1" transform="rotate(153.1 217.6 881.6)" fill="#4f2c1d" opacity="0.57"/>
+<ellipse cx="173.6" cy="870" rx="13.6" ry="6.3" transform="rotate(152.4 173.6 870)" fill="#4f2c1d" opacity="0.59"/>
+<rect width="1600" height="900" fill="url(#vignette)"/>
+
+</svg>

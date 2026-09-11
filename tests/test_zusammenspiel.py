@@ -344,6 +344,7 @@ def test_es_gibt_ueberhaupt_module_zu_pruefen():
         "ui/__init__.py",
         "ui/hauptfenster.py",
         "ui/screen.py",
+        "ui/animation.py",
     } <= namen
 
 

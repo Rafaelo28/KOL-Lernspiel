@@ -77,7 +77,8 @@ auseinanderlaufen.
 crypto/          Verschlüsselungslogik – reine Funktionen, kein GUI
 game/            Spiellogik, Zustand, Timer, Logging
 ui/              Tkinter-Oberfläche (baut als einzige Schicht Bedienelemente)
-content/         Handbuchtexte, Wortlisten, Story-Texte als Python-Daten
+content/         Handbuchtexte, Wortlisten, Story-Texte als Python-Daten, fertige Animationen
+grafik/          Quellen der Animationen (SVG) und das Werkzeug, das sie vorrendert
 tests/           pytest
 logs/            Messdaten der Durchläufe (Inhalt steht in .gitignore)
 dokumentation/   Konzept, Arbeitsplan, Handbuchtexte, Commit-Regeln
@@ -135,6 +136,21 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `ablauf.py` | Welcher Screen wann kommt – hier setzt Phase 7 die Level zusammen |
 | `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.2–6.8 da sind |
 | `stil.py` | Schriften, Farben und Abstände an einer Stelle |
+| `animation.py` | Spielt vorgerenderte Animationen ab |
+
+### Animationen
+
+Tkinter kann keine SVG-Animationen abspielen. Die Szenen entstehen deshalb als SVG in
+`grafik/` und werden einmal vorgerendert:
+
+```bash
+python3 grafik/rendern.py grafik/wrack.svg
+```
+
+Firefox rechnet dabei die Animation in Bilder um (nur auf dem Entwicklungsrechner),
+das Spiel blättert die fertigen Bilder aus `content/animationen/` nur noch durch – ohne
+Zusatzpaket. Wie man eine neue Animation anlegt und welche Regeln sie einhalten muss,
+steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 
 ### Was in `crypto/` steckt
 
@@ -265,3 +281,4 @@ Die vollständige Aufgabenzerlegung steht in
 | [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md) | Aufgabenzerlegung, Phasen 0–8 |
 | [dokumentation/Tipps-und-Tricks.md](dokumentation/Tipps-und-Tricks.md) | Hinweise zu Tkinter, Normalisierung, Logging |
 | [dokumentation/Commit_Regeln.md](dokumentation/Commit_Regeln.md) | Wann und wie committet wird |
+| [dokumentation/Animationen.md](dokumentation/Animationen.md) | Wie Animationen entstehen und ins Spiel kommen |

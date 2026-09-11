@@ -11,6 +11,7 @@ durchlesen:
 - `dokumentation/Arbeitsplan_Der_Diamantenraub.md` – Aufgabenzerlegung, Phasen 0–8
 - `dokumentation/Tipps-und-Tricks.md` – Hinweise zu Tkinter, Normalisierung, Logging
 - `dokumentation/Commit_Regeln.md` – wann und wie committet wird
+- `dokumentation/Animationen.md` – wie Animationen entstehen und ins Spiel kommen
 
 ## Sprache
 
@@ -144,6 +145,12 @@ Die Aufteilung steht als `selbst_zu_loesen` in `content/story.py`.
   Standardbibliothek – keine pip-Abhängigkeiten für das Spiel selbst, das ist
   auf Schulrechnern ohne Adminrechte entscheidend. Einzige Dev-Abhängigkeit:
   `pytest`.
+- **Animationen werden vorgerendert.** Szenen entstehen als SVG in `grafik/`,
+  Firefox rechnet sie mit `grafik/rendern.py` in Bilder um (nur auf dem
+  Entwicklungsrechner), das Spiel blättert die fertigen PNGs aus
+  `content/animationen/` nur durch. Regeln dafür in
+  `dokumentation/Animationen.md` – vor allem: jede Animationsdauer teilt die
+  Schleife, und bewegt wird nur im angegebenen Ausschnitt.
 - **Zeitmessung pro Level und pro Aufgabe**, nicht über die gesamte
   Fensteröffnungsdauer (sonst verfälschen Pausen die Daten).
 - **Schwellenwert für Zusatzaufgaben** ist genau *eine* Konstante an *einer*
@@ -192,7 +199,9 @@ Ausführliche Begründungen stehen im Kopf von `crypto/normalize.py`.
 crypto/        – reine Verschlüsselungslogik, kein GUI
 game/          – Spiellogik, Zustand, Timer, Logging
 ui/            – Tkinter-Oberfläche (baut als einzige Schicht Bedienelemente)
-content/       – Handbuchtexte, Wortlisten, Story-Texte, Charaktere (als Python-Daten)
+content/       – Handbuchtexte, Wortlisten, Story-Texte, Charaktere (als Python-Daten),
+                 vorgerenderte Animationen (content/animationen/)
+grafik/        – Quellen der Animationen (SVG) und das Render-Werkzeug (nur Entwicklung)
 tests/         – pytest
 logs/          – Messdaten der Durchläufe (Inhalt in .gitignore!)
 dokumentation/ – Konzept, Arbeitsplan, Handbuchtexte, Tipps, Commit-Regeln (keine Programmdateien)
