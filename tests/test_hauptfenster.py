@@ -120,6 +120,7 @@ def _klick(fenster, anfang):
 
 
 def _bis_zum_handbuch(fenster):
+    fenster.aktueller_screen._feld.insert(0, "1-12")          # die ID von der Lehrkraft
     _klick(fenster, "Spiel starten")
     fenster.aktueller_screen.waehle(charaktere.VIC_MORENO)   # was ein Klick auf die Karte tut
     _klick(fenster, "Als Vic Moreno")          # Figur bestätigen, der Durchlauf beginnt
@@ -596,6 +597,8 @@ def test_der_platzhalterweg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, 
     assert fenster.kopfzeile == ("Geschafft", "")
 
     zeilen = _zeilen(fenster)
+    assert {z["pseudonym"] for z in zeilen} == {"ID 1-12"}   # so macht Excel kein Datum daraus
+    assert fenster.durchlauf.protokoll.dateiname.startswith("durchlauf_1-12_")
     assert [z["level"] for z in zeilen] == ["1", "1", "2", "3"]
     assert [z["levelende"] for z in zeilen] == ["zeitablauf", "zeitablauf", "vorzeitig", "vorzeitig"]
     assert [z["geloest"] for z in zeilen] == ["ja", "nein", "nein", "nein"]

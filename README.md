@@ -121,6 +121,7 @@ sofort, wo Text und Code auseinanderlaufen.
 | `zusatzaufgaben.py` | Entscheidet, wer eine Extraaufgabe bekommt |
 | `protokoll.py` | Schreibt das CSV eines Durchlaufs |
 | `durchlauf.py` | Spielstand und Protokoll in einer Hand – speichert von selbst, fängt den Zeitablauf ab |
+| `spieler_id.py` | Die ID der Lehrkraft (`1-12`): prüft die Form X-XX und sagt genau, was fehlt |
 
 Der Seed wird einmal je Durchlauf gezogen und ins Log geschrieben. Damit lässt
 sich nach dem Experiment rekonstruieren, welche Übungswörter eine bestimmte
@@ -137,7 +138,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.4–6.8 da sind |
 | `stil.py` | Schriften, Farben und Abstände an einer Stelle |
 | `animation.py` | Spielt vorgerenderte Animationen ab |
-| `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, „Spiel starten“ |
+| `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
 | `figurwahl.py` | Die Figurwahl: Vorgeschichte und fünf Karten mit Rollen-Symbol; erst wählen, dann bestätigen |
 | `intro.py` | Der Story-Intro: die Absturz-Szene mit dem Erzähltext, Absatz für Absatz |
 
@@ -222,11 +223,12 @@ vollständig in [CLAUDE.md](CLAUDE.md):
 
 ## Die Messdaten
 
-Pro Aufgabe entsteht eine Zeile in `logs/durchlauf_<Pseudonym>_<Zeitstempel>.csv`:
+Pro Aufgabe entsteht eine Zeile in `logs/durchlauf_<ID>_<Zeitstempel>.csv`, etwa
+`durchlauf_1-12_2026-09-14_101500.csv`:
 
 | Spalte | Bedeutung |
 |--------|-----------|
-| `pseudonym`, `seed`, `figur` | Wer, mit welcher Zufallsfolge und mit welcher Spielfigur (nur deren Kennung, z. B. `vic_moreno`) |
+| `pseudonym`, `seed`, `figur` | Wer (die ID mit „ID “ davor, etwa `ID 1-12` – siehe unten), mit welcher Zufallsfolge und mit welcher Spielfigur (nur deren Kennung, z. B. `vic_moreno`) |
 | `level`, `levelende`, `level_sekunden` | Wie lange das Level lief und ob es am Timer endete (`zeitablauf`), vorher (`vorzeitig`) oder noch läuft (`laeuft`) – gleich in jeder Zeile des Levels |
 | `aufgabennummer`, `kennung`, `quelle` | Welche Aufgabe, in welcher Reihenfolge |
 | `verfahren`, `richtung`, `zusatzaufgabe` | Was verlangt war |
@@ -237,7 +239,7 @@ Pro Aufgabe entsteht eine Zeile in `logs/durchlauf_<Pseudonym>_<Zeitstempel>.csv
 Gelesen wird sie mit `pandas.read_csv(datei, sep=";", encoding="utf-8-sig")` –
 oder per Doppelklick in Excel.
 
-Zwei Dinge sind bei der Auswertung wichtig:
+Drei Dinge sind bei der Auswertung wichtig:
 
 - **Zeilen mit `abgebrochen = ja` gehören in keine Zeitauswertung.** Dort
   endete das Level mitten in der Aufgabe; in `sekunden` steht die Zeit bis
@@ -246,13 +248,20 @@ Zwei Dinge sind bei der Auswertung wichtig:
   `game.generator.uebung_nachbauen(seed, kennung)` aus einer Übungszeile
   nach. Die Übungsnummer steckt in der Kennung (`uebung_l2_3`). Die Spalte
   `aufgabennummer` taugt dafür nicht – sie zählt die Funksprüche mit.
+- **Vor der ID steht „ID “.** Deutsches Excel machte aus `1-12` beim Öffnen
+  sonst den 1. Dezember, und nach dem Speichern wäre die ID verloren. Die reine
+  ID liefert `tabelle["pseudonym"].str.removeprefix("ID ")`.
 
 ## Datenschutz
 
 Das Spiel protokolliert pro Aufgabe Versuchszahl, benötigte Zeit und ob die
 Lösung angezeigt wurde. In den CSV-Dateien steht **kein Klarname**, nur eine
-Pseudonym-ID. Der Ordner `logs/` ist in `.gitignore`; die Messdaten der
-Teilnehmenden dürfen nicht im Repository landen.
+ID. Die IDs verteilt die Lehrkraft auf Papier, in der Form `X-XX`: Klasse,
+Strich, Nummer – `1-12` ist das zwölfte Kind der 7/1. Das Feld auf dem
+Startbildschirm nimmt nur genau diese Form an; einen Namen kann man dort gar
+nicht erst eintippen. Wer hinter einer ID steckt, weiss nur die Lehrkraft.
+Der Ordner `logs/` ist in `.gitignore`; die Messdaten der Teilnehmenden
+dürfen nicht im Repository landen.
 
 ---
 

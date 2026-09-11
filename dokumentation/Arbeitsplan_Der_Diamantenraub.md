@@ -316,7 +316,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 - Ein sehr langes Pseudonym wird **im Dateinamen** auf 40 Zeichen gekürzt
   (in der Spalte steht es vollständig) – sonst sprengt es die 255-Byte-Grenze
   des Dateisystems
-- **Kein Klarname** – nur eine ID, die du separat zuordnest (Datenschutz)
+- **Kein Klarname** – nur eine ID, die du separat zuordnest (Datenschutz).
+  Seit 6.2 ist das die ID der Lehrkraft (`1-12`); in der Spalte steht sie als
+  `ID 1-12`, damit Excel kein Datum daraus macht
 
 ---
 
@@ -378,8 +380,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 - **Umgesetzt:**
   - `ui/startbildschirm.py` – Titelbild als Animation (`grafik/titel.svg`):
     ein großer Diamant im Nachthimmel über der Wüste, Lichtreflexe wandern
-    über die Facetten, danach glänzt der Schriftzug auf. Darunter nur
-    "Spiel starten" – zu lesen gibt es hier noch nichts
+    über die Facetten, danach glänzt der Schriftzug auf. Darunter das Feld
+    für die ID (siehe unten) und "Spiel starten" – die Geschichte beginnt
+    erst auf dem nächsten Screen
   - `ui/figurwahl.py` – oben die **Vorgeschichte** (`story.VORGESCHICHTE`,
     die Prämisse aus dem Konzept: Raub in Antwerpen, Flucht, Absturz). Sie
     stand bisher in keinem Spieltext, und der Intro setzt sie voraus – er
@@ -397,13 +400,24 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     und Enter gehen auch
   - Die Initialen stehen als Siegel auf jeder Karte, mit dem Hinweis, dass sie
     später jeden Funkspruch unterschreiben
-  - Der Weg Start → Figurwahl → Intro → Level 1 steht jetzt vollständig in
-    `ui/ablauf.py`; die Screens bekommen ihr "danach" von dort und wissen
+  - Der Weg Start (mit ID) → Figurwahl → Intro → Level 1 steht jetzt
+    vollständig in `ui/ablauf.py`; die Screens bekommen ihr "danach" von dort und wissen
     nichts vom Ablauf. Die Platzhalter `Start` und `Figurwahl` sind entfernt
-  - Keine Eingabe für ein Pseudonym: Die ID erzeugt das Spiel selbst (siehe
-    5.1). Ein Eingabefeld lüde dazu ein, den eigenen Namen einzutippen
-    (Projektregel 7) – offen bleibt, wie die ID zur Person findet, siehe
-    "Offene Punkte" unten
+  - **ID-Feld auf dem Startbildschirm** (nachträglich entschieden): Die
+    Lehrkraft verteilt IDs der Form `X-XX` – Klasse, Strich, Nummer; `1-12`
+    ist das zwölfte Kind der 7/1. Das Feld nimmt nur Ziffern und den Strich
+    an seiner Stelle an (`game/spieler_id.py`), einen Namen kann man also gar
+    nicht erst eintippen – auch nicht per Einfügen. Wer nach der Klasse gleich
+    die Nummer tippt, bekommt den Strich dazu. Ohne vollständige ID geht es
+    nicht weiter, und der Hinweis sagt genau, was fehlt ("Deine Nummer hat
+    zwei Ziffern … 1-02"). Löschen bleibt immer erlaubt, sonst liesse sich
+    nichts ausbessern
+  - Die ID wird bis zur Figurwahl mitgereicht und beim Bestätigen zum
+    Pseudonym des Durchlaufs: Dateiname `durchlauf_1-12_<Zeitstempel>.csv`
+  - **In der CSV steht `ID 1-12`, nicht `1-12`:** Deutsches Excel liest `1-12`
+    beim Öffnen als 1. Dezember (und `1-45` als Januar 1945); wer die Datei
+    danach speichert, hat die ID verloren. Mit einem Buchstaben vorn bleibt es
+    Text. Für pandas: `tabelle["pseudonym"].str.removeprefix("ID ")`
   - In der Standardgrösse (1000 × 700) passt alles; ein Test prüft das. Wird
     das Fenster schmaler als etwa 960 Pixel gezogen, wird die rechte Karte
     abgeschnitten – wie die Szenen in 6.3
@@ -560,15 +574,11 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
       auch im Übungsumfang. Entweder die Papieraufgaben entsprechend
       zuschneiden oder die Abweichung in der Arbeit begründen.
 - [ ] Einverständnis/Datenschutz für die Datenerhebung klären
-- [ ] **Wie findet die Pseudonym-ID zur Person?** Das Spiel erzeugt sie
-      selbst (`P` + Seed, siehe 5.1) und fragt nach keinem Namen – mit Absicht
-      (Projektregel 7). Sollen die Logs später mit Vor- und Nachtest
-      zusammengeführt werden, braucht es einen Weg dorthin. Möglich wären: die
-      Lehrkraft vergibt Codes (etwa "S07"), die am Start eingetippt werden –
-      dann nur Codes in genau dieser Form annehmen, damit niemand seinen Namen
-      einträgt; oder das Spiel zeigt die ID am Ende an, und sie wird auf dem
-      Testbogen notiert. `Hauptfenster.starte_durchlauf(figur, pseudonym=…)`
-      nimmt eine ID schon heute entgegen
+- [x] **Wie findet die Pseudonym-ID zur Person?** Entschieden: Die
+      Lehrkraft verteilt IDs der Form `X-XX` (Klasse, Strich, Nummer) auf
+      Papier, die Spielenden tragen sie auf dem Startbildschirm ein. Das Spiel
+      nimmt nichts anderes an – umgesetzt in 6.2. Die Liste, wer welche ID hat,
+      bleibt bei der Lehrkraft und gehört nicht ins Repository
 - [ ] Ablauf für den Vortest/Nachtest festlegen: im Spiel integriert oder auf
       Papier? (Muss identisch zur Kontrollgruppe sein.)
 

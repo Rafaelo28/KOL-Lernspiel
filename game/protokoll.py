@@ -69,6 +69,20 @@ Für die Auswertung mit pandas::
 
     pandas.read_csv(datei, sep=";", encoding="utf-8-sig")
 
+Warum vor der ID "ID " steht
+────────────────────────────
+Die IDs der Lehrkraft haben die Form ``1-12`` (siehe :mod:`game.spieler_id`).
+Deutsches Excel liest so etwas beim Öffnen als Datum: aus ``1-12`` wird der
+1. Dezember, aus ``1-45`` der Januar 1945 – und wer die Datei danach
+speichert, hat die ID verloren. In der Spalte ``pseudonym`` steht deshalb
+``ID 1-12``; mit einem Buchstaben vorn lässt Excel den Text in Ruhe. Das
+betrifft jedes Pseudonym, das mit einer Ziffer beginnt (siehe
+:func:`pseudonym_fuer_tabelle`). Im Dateinamen steht die ID ohne Zusatz –
+den liest Excel nicht.
+
+In pandas bekommt man die reine ID mit
+``tabelle["pseudonym"].str.removeprefix("ID ")``.
+
 Wann geschrieben wird
 ─────────────────────
 :meth:`Protokoll.schreiben` wird nach jeder abgeschlossenen Aufgabe und nach
@@ -133,6 +147,22 @@ def _ja_nein(wert):
     return "ja" if wert else "nein"
 
 
+#: Steht vor einem Pseudonym, das mit einer Ziffer beginnt – siehe Modulkopf.
+VORSATZ_ID = "ID "
+
+
+def pseudonym_fuer_tabelle(pseudonym):
+    """Das Pseudonym so, wie es in der Spalte steht – Excel darf es nicht umdeuten.
+
+    >>> pseudonym_fuer_tabelle("1-12")
+    'ID 1-12'
+    >>> pseudonym_fuer_tabelle("P004711000")
+    'P004711000'
+    """
+    text = str(pseudonym)
+    return VORSATZ_ID + text if text[:1].isdigit() else text
+
+
 def zeile(spielstand, bearbeitung, aufgabennummer):
     """Baut die Logzeile zu einer erledigten Aufgabe.
 
@@ -140,7 +170,7 @@ def zeile(spielstand, bearbeitung, aufgabennummer):
     """
     aufgabe = bearbeitung.aufgabe
     return {
-        "pseudonym": spielstand.pseudonym,
+        "pseudonym": pseudonym_fuer_tabelle(spielstand.pseudonym),
         "seed": spielstand.zufallsquelle.protokollwert,
         "figur": spielstand.figur.kennung,
         "level": aufgabe.level,

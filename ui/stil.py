@@ -57,6 +57,9 @@ FARBE_KARTENRAND = "#363d7a"
 FARBE_KARTENRAND_HELL = "#7078c0"
 #: Gold – die gewählte Karte und die Initialen.
 FARBE_GOLD = "#e2b651"
+#: Hinweis auf dem Nachthimmel, dass noch etwas fehlt (etwa an der ID) –
+#: hell genug, um auf dem dunklen Grund lesbar zu sein.
+FARBE_WARNUNG = "#ff9a76"
 
 
 def schriften_einrichten(wurzel):

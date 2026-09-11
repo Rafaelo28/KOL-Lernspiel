@@ -5,7 +5,10 @@ kommt – der erste Screen und das, was auf ein Level folgt –, steht hier.
 Die Screens selbst bekommen ihr "danach" von hier mitgegeben; so bleibt der
 ganze Weg an einer Stelle lesbar:
 
-    Startbildschirm → Figurwahl → Story-Intro → Level 1 → Level 2 → Level 3 → Abschluss
+    Startbildschirm (ID) → Figurwahl → Story-Intro → Level 1 → Level 2 → Level 3 → Abschluss
+
+Die ID vom Startbildschirm reist bis zur Figurwahl mit; mit der Figur beginnt
+der Durchlauf, und die ID wird sein Pseudonym.
 
 Wo die echten Screens noch fehlen, stehen die Platzhalter aus
 :mod:`ui.platzhalter`; in Phase 7 werden hier die Level zusammengesetzt.
@@ -24,14 +27,23 @@ from ui.hauptfenster import Hauptfenster
 STARTSCREEN = startbildschirm.Startbildschirm
 
 
-def figurwahl_zeigen(fenster):
-    """Nach dem Startbildschirm: Wer aus der Crew bist du?"""
-    fenster.zeige(figurwahl.Figurwahl, danach=figur_gewaehlt)
+def figurwahl_zeigen(fenster, spieler_id):
+    """Nach dem Startbildschirm: Wer aus der Crew bist du?
+
+    ``spieler_id`` ist die ID vom Startbildschirm. Sie wird bis zur Wahl der
+    Figur mitgereicht – erst dann beginnt der Durchlauf, der sie braucht.
+    """
+    fenster.zeige(figurwahl.Figurwahl, danach=partial(figur_gewaehlt, spieler_id=spieler_id))
 
 
-def figur_gewaehlt(fenster, figur):
-    """Mit der Figur beginnt der Durchlauf – dann kommt der Absturz."""
-    fenster.starte_durchlauf(figur)
+def figur_gewaehlt(fenster, figur, spieler_id=None):
+    """Mit der Figur beginnt der Durchlauf – dann kommt der Absturz.
+
+    Unter ``spieler_id`` steht der Durchlauf im Log. Ohne sie erzeugt der
+    Spielstand selbst eine (``P`` und der Seed) – das kommt nur in Tests vor,
+    im Spiel verlangt der Startbildschirm eine ID.
+    """
+    fenster.starte_durchlauf(figur, pseudonym=spieler_id)
     fenster.zeige(intro.Intro, danach=level_1_beginnen)
 
 

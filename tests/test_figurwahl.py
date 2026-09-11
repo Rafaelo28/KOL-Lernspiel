@@ -289,25 +289,32 @@ def test_die_figurwahl_passt_ins_fenster(screen, wurzel):
 # 3. Im Ablauf: erst das Bestätigen beginnt den Durchlauf
 # ───────────────────────────────────────────────────────────────────────────
 
-def test_der_startbildschirm_fuehrt_zur_figurwahl(fenster):
+def _mit_id_starten(fenster, spieler_id="1-12"):
+    """Trägt auf dem Startbildschirm eine ID ein und startet."""
+    fenster.aktueller_screen._feld.insert(0, spieler_id)
     fenster.aktueller_screen.starten()
+
+
+def test_der_startbildschirm_fuehrt_zur_figurwahl(fenster):
+    _mit_id_starten(fenster)
     assert isinstance(fenster.aktueller_screen, figurwahl.Figurwahl)
 
 
 def test_mit_der_bestaetigung_beginnt_der_durchlauf(fenster):
-    fenster.aktueller_screen.starten()
+    _mit_id_starten(fenster, "2-07")
     screen = fenster.aktueller_screen
     screen.waehle(charaktere.AMARA_NWOSU)
     assert fenster.durchlauf is None
     screen.bestaetigen()
     assert fenster.durchlauf.spielstand.figur == charaktere.AMARA_NWOSU
+    assert fenster.durchlauf.spielstand.pseudonym == "2-07"   # die ID vom Startbildschirm
     assert isinstance(fenster.aktueller_screen, intro.Intro)
     assert fenster.durchlauf.spielstand.aktuelles_level is None   # die Uhr läuft noch nicht
 
 
 def test_ein_zweites_bestaetigen_startet_keinen_zweiten_durchlauf(fenster):
     """Ein Doppelklick darf nicht als Fehler in der Meldungszeile landen."""
-    fenster.aktueller_screen.starten()
+    _mit_id_starten(fenster)
     screen = fenster.aktueller_screen
     screen.waehle(charaktere.VIC_MORENO)
     screen.bestaetigen()

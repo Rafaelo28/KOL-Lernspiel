@@ -90,6 +90,11 @@ Nachricht lässt sich nicht abschicken.
 In den CSV-Logs steht **kein Klarname**, nur eine Pseudonym-ID. Der Ordner
 `logs/` ist in `.gitignore` und darf nie eingecheckt werden.
 
+Die ID vergibt die Lehrkraft, in der Form `X-XX` (Klasse, Strich, Nummer –
+etwa `1-12`). Das Spiel nimmt **nur** diese Form an (`game/spieler_id.py`):
+Ein Feld, in das man einen Namen tippen könnte, gibt es nicht. In der CSV steht
+sie als `ID 1-12` – ohne das "ID " machte Excel ein Datum daraus.
+
 ---
 
 ## Lange Funksprüche: Teilaufgabe statt Kürzen
