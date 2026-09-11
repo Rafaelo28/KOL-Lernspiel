@@ -130,7 +130,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 
 | Modul | Inhalt |
 |-------|--------|
-| `hauptfenster.py` | Das eine Fenster: Kopfzeile mit Level und Restzeit, Screen-Wechsel, Takt |
+| `hauptfenster.py` | Das eine Fenster: Kopfzeile mit Level, Screen-Wechsel, Takt. Zeigt bewusst keinen Countdown (Zeitdruck-Stress) |
 | `screen.py` | Die Grundform aller Screens |
 | `ablauf.py` | Welcher Screen wann kommt – hier setzt Phase 7 die Level zusammen |
 | `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.2–6.8 da sind |

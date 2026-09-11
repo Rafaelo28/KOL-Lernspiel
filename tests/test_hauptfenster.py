@@ -173,7 +173,7 @@ def test_das_fenster_traegt_titel_und_mindestgroesse(fenster, wurzel):
 
 def test_es_beginnt_mit_dem_startscreen(fenster):
     assert isinstance(fenster.aktueller_screen, ablauf.STARTSCREEN)
-    assert fenster.kopfzeile == ("Der Diamantenraub", "", "")
+    assert fenster.kopfzeile == ("Der Diamantenraub", "")
     assert fenster.durchlauf is None
 
 
@@ -278,12 +278,26 @@ def test_der_takt_ist_von_anfang_an_angemeldet(fenster):
     assert fenster._takt_auftrag is not None
 
 
-def test_level_und_restzeit_stehen_in_der_kopfzeile(fenster, uhr):
+def test_das_level_steht_in_der_kopfzeile(fenster):
     _bis_zum_handbuch(fenster)
-    assert fenster.kopfzeile == ("Handbuch – Level 1", "Level 1 · Caesar-Verschlüsselung", "15:00")
+    assert fenster.kopfzeile == ("Handbuch – Level 1", "Level 1 · Caesar-Verschlüsselung")
+
+
+def test_es_gibt_keine_sichtbare_restzeit(fenster, uhr):
+    """Ein mitzählender Countdown erzeugt Zeitdruck – bewusst nicht gezeigt.
+
+    Die Uhr läuft trotzdem im Hintergrund weiter: Projektregel 1 gilt auch
+    ohne sichtbare Anzeige.
+    """
+    _bis_zum_handbuch(fenster)
+    assert not hasattr(fenster, "_zeitanzeige")
+    vorher = fenster.kopfzeile
     uhr.weiter(60.5)
     fenster._takt()
-    assert fenster.kopfzeile[2] == "14:00"
+    assert fenster.kopfzeile == vorher                     # unverändert sichtbar
+    assert fenster.durchlauf.spielstand.verbleibende_sekunden == pytest.approx(
+        DAUER_JE_LEVEL_SEKUNDEN[1] - 60.5
+    )
 
 
 def test_der_takt_schaltet_nach_ablauf_weiter(fenster, uhr):
@@ -291,9 +305,7 @@ def test_der_takt_schaltet_nach_ablauf_weiter(fenster, uhr):
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1])
     fenster._takt()
     assert fenster.durchlauf.spielstand.aktuelles_level == 2
-    assert fenster.kopfzeile == (
-        "Handbuch – Level 2", "Level 2 · monoalphabetische Substitution", "20:00",
-    )
+    assert fenster.kopfzeile == ("Handbuch – Level 2", "Level 2 · monoalphabetische Substitution")
 
 
 def test_der_takt_laeuft_wirklich_ueber_after(fenster, wurzel, uhr, monkeypatch):
@@ -572,7 +584,7 @@ def test_der_platzhalterweg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, 
     _klick(fenster, "Level vorzeitig")                # Level 3 ebenso
     assert isinstance(fenster.aktueller_screen, platzhalter.Abschluss)
     assert fenster.durchlauf.spielstand.ist_durchgespielt
-    assert fenster.kopfzeile == ("Geschafft", "", "")
+    assert fenster.kopfzeile == ("Geschafft", "")
 
     zeilen = _zeilen(fenster)
     assert [z["level"] for z in zeilen] == ["1", "1", "2", "3"]

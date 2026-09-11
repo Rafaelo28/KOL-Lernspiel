@@ -179,7 +179,12 @@ class Spielstand:
 
     @property
     def restzeit_text(self):
-        """Die sichtbare Restzeit als "MM:SS" – leer ausserhalb eines Levels."""
+        """Die Restzeit als "MM:SS" – leer ausserhalb eines Levels.
+
+        Das Fenster zeigt das bewusst nicht an (Entscheidung nach 6.1: ein
+        mitzählender Countdown erzeugt Zeitdruck-Stress). Das Feld bleibt für
+        Tests und eine mögliche spätere Lehrkraft-Ansicht erhalten.
+        """
         return self._zeitfenster.restzeit_text if self._zeitfenster else ""
 
     @property

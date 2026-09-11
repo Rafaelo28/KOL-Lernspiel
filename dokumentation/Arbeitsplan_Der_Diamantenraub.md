@@ -215,7 +215,10 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
 - 15 / 20 / 25 Minuten pro Level
 - Bei Ablauf: automatisch weiter zum nächsten Level, unabhängig davon, was
   gerade offen ist
-- Sichtbare Restzeit für die Spielenden (`spielstand.restzeit_text`, "MM:SS")
+- `spielstand.restzeit_text` liefert die Restzeit als "MM:SS" – **wird aber
+  bewusst nicht angezeigt** (Entscheidung bei 6.1, siehe dort): Ein
+  mitzählender Countdown erzeugt Zeitdruck-Stress. Das Feld bleibt für Log
+  und Tests nützlich
 - **Die Uhr wird eingespeist** (`zeitgeber`), sonst liessen sich fünfzehn
   Minuten nur durch fünfzehn Minuten Warten prüfen
 - **`time.monotonic`, nicht `time.time`:** Ein Zeitserverabgleich oder ein
@@ -325,9 +328,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 - **Anschluss an Phase 5** – das Gerüst übernimmt, was der Spielstand bewusst
   der Oberfläche überlässt:
   - `spielstand.pruefe_zeitfenster()` über `after()` regelmässig aufrufen
-    (mindestens einmal pro Sekunde – die Restzeitanzeige braucht den Takt
-    ohnehin) und bei `True` zum nächsten Level wechseln. Ohne diesen Takt
-    läuft kein Zeitfenster ab (Projektregel 1)
+    (mehrmals pro Sekunde) und bei `True` zum nächsten Level wechseln. Ohne
+    diesen Takt läuft kein Zeitfenster ab (Projektregel 1) – auch ohne
+    sichtbare Uhr im Fenster
   - `ZeitIstUm` abfangen, wenn eine Aufgabe gestellt werden soll, und dann
     ebenfalls `pruefe_zeitfenster()` aufrufen
   - `Protokoll.schreiben()` nach jeder abgeschlossenen Aufgabe, nach jedem
@@ -337,11 +340,19 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
   - `naechste_uebung()` / `stelle_funkspruch()` erst aufrufen, wenn die
     Aufgabe auf dem Bildschirm steht – dort beginnt ihre Uhr
 - **Umgesetzt:**
-  - `ui/hauptfenster.py` – das eine Fenster: Kopfzeile (Titel, Level,
-    Restzeit), Meldungszeile, dazwischen der Screen. `zeige(Klasse, …)` baut
-    den neuen Screen **frisch** auf und reisst den alten ab. Kein `tkraise`:
-    Sonst stünde eine alte Eingabe oder Rückmeldung plötzlich bei der
-    nächsten Aufgabe
+  - `ui/hauptfenster.py` – das eine Fenster: Kopfzeile (Titel, Level),
+    Meldungszeile, dazwischen der Screen. `zeige(Klasse, …)` baut den neuen
+    Screen **frisch** auf und reisst den alten ab. Kein `tkraise`: Sonst
+    stünde eine alte Eingabe oder Rückmeldung plötzlich bei der nächsten
+    Aufgabe
+  - **Kein Countdown im Fenster** (nachträgliche Entscheidung, nach 6.1):
+    Ein sichtbar mitzählender Timer erzeugt Zeitdruck-Stress, besonders in
+    der letzten Minute – und genau das braucht eine Verschlüsselungsaufgabe
+    nicht. Das Zeitfenster läuft unverändert im Hintergrund (Projektregel 1
+    ist nicht verhandelbar); läuft die Zeit ab, schaltet das Spiel weiter
+    und zeigt einen Hinweistext ("Die Zeit für Level X ist abgelaufen …").
+    Wie viel Zeit ein Level wirklich brauchte, steht im Log
+    (`level_sekunden`, `levelende`), nicht im Fenster
   - `ui/screen.py` – Grundform der Screens. Aufgaben erst in
     `beim_anzeigen()` stellen; verzögerte Aufrufe über `spaeter()` statt
     `after()`, dann meldet der Wechsel sie ab

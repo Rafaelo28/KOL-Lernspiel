@@ -3,9 +3,20 @@
 Ein Fenster, darin wechselnde Screens
 ─────────────────────────────────────
 Das Spiel hat genau ein Fenster. Oben steht die Kopfzeile (Titel des Screens,
-Level, Restzeit), unten erscheint bei Bedarf eine Meldungszeile, dazwischen
-steht der Screen, der gerade dran ist. :meth:`Hauptfenster.zeige` baut den
-neuen Screen frisch auf und reisst den alten ab.
+Level), unten erscheint bei Bedarf eine Meldungszeile, dazwischen steht der
+Screen, der gerade dran ist. :meth:`Hauptfenster.zeige` baut den neuen Screen
+frisch auf und reisst den alten ab.
+
+Keine sichtbare Restzeit
+────────────────────────
+Absichtlich: Ein mitzählender Countdown erzeugt Zeitdruck-Stress, gerade in
+der letzten Minute, und genau das soll eine Verschlüsselungsaufgabe nicht
+brauchen. Das Zeitfenster läuft trotzdem exakt wie in Projektregel 1
+verlangt – es wird nur nicht vorgeführt. Läuft die Zeit ab, schaltet
+:mod:`ui.ablauf` automatisch weiter und zeigt einen Hinweistext ("Die Zeit
+für Level X ist abgelaufen – weiter geht es mit …"). Wer wissen will, wie
+viel Zeit ein Level tatsächlich brauchte, findet es im Log
+(``level_sekunden``, ``levelende``), nicht im Fenster.
 
 Warum neu aufbauen statt verstecken
 ───────────────────────────────────
@@ -20,8 +31,8 @@ Der Takt
 ────────
 Der Spielstand prüft sein Zeitfenster nicht selbst (siehe
 :mod:`game.spielstand`). Das Hauptfenster ruft deshalb viermal pro Sekunde
-:meth:`game.durchlauf.Durchlauf.takt` auf und frischt die Restzeit auf. Ohne
-diesen Takt liefe kein Zeitfenster ab – Projektregel 1 hinge dann an nichts.
+:meth:`game.durchlauf.Durchlauf.takt` auf. Ohne diesen Takt liefe kein
+Zeitfenster ab – Projektregel 1 hinge dann an nichts, auch ohne sichtbare Uhr.
 
 Der nächste Takt wird im ``finally`` angemeldet. Wirft ein Takt einen Fehler,
 läuft die Uhr trotzdem weiter; sonst stünde nach einem einzigen Fehler die
@@ -123,8 +134,6 @@ class Hauptfenster:
         kopf.pack(side="top", fill="x")
         self._titelanzeige = tk.Label(kopf, font=stil.SCHRIFT_TITEL, anchor="w")
         self._titelanzeige.pack(side="left")
-        self._zeitanzeige = tk.Label(kopf, font=stil.SCHRIFT_TITEL)
-        self._zeitanzeige.pack(side="right")
         self._levelanzeige = tk.Label(kopf)
         self._levelanzeige.pack(side="right", padx=stil.ABSTAND)
         tk.Frame(self.wurzel, height=1, bg=stil.FARBE_LINIE).pack(side="top", fill="x")
@@ -233,21 +242,18 @@ class Hauptfenster:
         self._titelanzeige.config(text=self._screen.titel if self._screen else "")
         stand = self.durchlauf.spielstand if self.durchlauf else None
         if stand is None or stand.aktuelles_level is None:
-            leveltext = zeittext = ""
+            leveltext = ""
         else:
             bezeichnung = _verfahren.BEZEICHNUNG[stand.aktuelles_verfahren]
             leveltext = f"Level {stand.aktuelles_level} · {bezeichnung}"
-            zeittext = stand.restzeit_text
         self._levelanzeige.config(text=leveltext)
-        self._zeitanzeige.config(text=zeittext)
 
     @property
     def kopfzeile(self):
-        """Was in der Kopfzeile steht: (Titel, Level, Restzeit)."""
+        """Was in der Kopfzeile steht: (Titel, Level). Keine Restzeit – siehe Modulkopf."""
         return (
             self._titelanzeige.cget("text"),
             self._levelanzeige.cget("text"),
-            self._zeitanzeige.cget("text"),
         )
 
     # ── Meldungen ──────────────────────────────────────────────────────────
