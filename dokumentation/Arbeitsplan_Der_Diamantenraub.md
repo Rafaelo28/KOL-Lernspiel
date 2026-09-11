@@ -406,6 +406,46 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 
 ## Phase 7 – Level zusammensetzen
 
+### Vorrang: Die Funksprüche kommen auf jeden Fall dran
+Zwei bereits feststehende Regeln beissen sich hier: Regel 1 wechselt starr
+zum nächsten Level, egal was offen ist. Regel 2 begrenzt eine einzelne
+Aufgabe **nicht** über die Zeit, nur über Versuche ohne Fortschritt – wer
+sich mit echtem Fortschritt langsam herantastet, bekommt beliebig viele
+Eingaben. In Kombination kann ein langsames oder unsicheres Kind schon an
+den zwei Basis-Übungen eines Levels so viel Zeit verlieren, dass die
+Funksprüche – Level 1 und 3 haben je zwei (`erster_ruf`/`bob_erste_antwort`
+bzw. `standort`/`bob_zweite_antwort`), Level 2 einen (`verfolger`) – nie
+drankommen. Ab dem Punkt ergibt die Geschichte keinen Sinn mehr.
+
+**Entscheidung:** Innerhalb eines Levels haben die noch ausstehenden
+Funksprüche Vorrang vor weiteren Übungen. Sobald die verbleibende Levelzeit
+nicht mehr für **alle** noch offenen Funksprüche dieses Levels reicht
+(Summe von `zusatzaufgaben.erwartete_dauer(laenge)` über deren
+`selbst_zu_loesen`-Länge, plus Sicherheitspuffer – Vorbild ist
+`zusatzaufgaben.zeit_reicht_noch`, das denselben Puffer heute nur für *eine*
+Zusatzaufgabe reserviert):
+
+- Es wird keine weitere Zusatzaufgabe und keine zweite Basis-Übung mehr
+  angeboten.
+- Eine schon laufende Übung wird nicht abgebrochen, aber danach geht es
+  direkt zum nächsten fälligen Funkspruch – auch wenn dafür eine
+  Basis-Übung ausfällt.
+
+Das verlängert kein Zeitfenster (Regel 1 bleibt unangetastet) und ändert am
+Ablauf schneller Kinder nichts – es sortiert nur um, was in der
+verbleibenden Zeit zuerst drankommt. Ist selbst dafür keine Zeit mehr (Level
+endet, während die letzte Übung noch läuft), greift weiterhin Regel 1: Die
+Übung wird abgebrochen, das Level endet. Ein Funkspruch kann also immer noch
+ausfallen – deutlich seltener als heute, aber nicht ausgeschlossen. Sobald
+ein Funkspruch einmal begonnen hat, sorgt Regel 2 dafür, dass er auch bei
+sehr wenig Restzeit meist noch zu Ende kommt: Drei falsche Eingaben reichen
+für die Lösungsanzeige, unabhängig davon, wie viele Sekunden das dauert.
+
+Wird zusammen mit dem jeweiligen Levelablauf bei 7.1–7.3 gebaut, nicht
+vorab – die genaue Aufgabenfolge steht erst dort fest. 7.4 prüft den Fall
+gezielt: ein Durchlauf, der bei den Übungen bewusst trödelt, muss trotzdem
+bei allen Funksprüchen ankommen.
+
 ### 7.1 Level 1 (Caesar)
 Handbuch → Übungen → Sendeaufgabe "Hallo, hört mich jemand? [Initialen]" →
 Bobs erste verschlüsselte Antwort entschlüsseln
@@ -425,6 +465,10 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 ### 7.4 Kompletter Durchlauf am Stück
 - Einmal von Start bis Ende ohne Abbruch durchspielen
 - Prüfen: Bleibt man nirgends hängen? Passen die Übergänge?
+- **Zusätzlich ein Trödel-Durchlauf:** in jedem Level bei den Basis-Übungen
+  absichtlich viele Fehlversuche mit Fortschritt eingeben, bis die Zeit
+  knapp wird – alle Funksprüche des Levels müssen trotzdem drankommen (siehe
+  "Vorrang" oben)
 
 ---
 
