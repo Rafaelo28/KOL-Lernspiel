@@ -93,7 +93,9 @@ class Hauptfenster:
     """Das eine Fenster des Spiels.
 
     ``wurzel``            das ``tk.Tk()``, das ``main.py`` angelegt hat
-    ``startscreen``       die Screen-Klasse, mit der es losgeht
+    ``startscreen``       die Screen-Klasse, mit der es losgeht – oder etwas,
+                          das sie baut: ``startscreen(fenster)``, etwa ein
+                          ``functools.partial`` mit weiteren Angaben
     ``bei_levelwechsel``  ``funktion(fenster, levelwechsel)`` – zeigt, was
                           nach einem Level kommt
     ``zeitgeber``         die Uhr für Zeitfenster und Aufgaben (Tests)

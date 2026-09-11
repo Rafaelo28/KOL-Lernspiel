@@ -2,7 +2,12 @@
 
 Das Hauptfenster weiss nur, *wie* umgeschaltet wird. *Was* als Nächstes
 kommt – der erste Screen und das, was auf ein Level folgt –, steht hier.
-Solange die echten Screens fehlen, sind es die Platzhalter aus
+Die Screens selbst bekommen ihr "danach" von hier mitgegeben; so bleibt der
+ganze Weg an einer Stelle lesbar:
+
+    Startbildschirm → Figurwahl → Story-Intro → Level 1 → Level 2 → Level 3 → Abschluss
+
+Wo die echten Screens noch fehlen, stehen die Platzhalter aus
 :mod:`ui.platzhalter`; in Phase 7 werden hier die Level zusammengesetzt.
 
 Nach einem Levelwechsel wird sofort umgeschaltet, egal was gerade offen ist
@@ -10,11 +15,30 @@ Nach einem Levelwechsel wird sofort umgeschaltet, egal was gerade offen ist
 abgebrochen abgelegt und der Durchlauf gespeichert.
 """
 
-from ui import platzhalter
+from functools import partial
+
+from ui import figurwahl, intro, platzhalter, startbildschirm
 from ui.hauptfenster import Hauptfenster
 
 #: Mit diesem Screen beginnt das Spiel.
-STARTSCREEN = platzhalter.Start
+STARTSCREEN = startbildschirm.Startbildschirm
+
+
+def figurwahl_zeigen(fenster):
+    """Nach dem Startbildschirm: Wer aus der Crew bist du?"""
+    fenster.zeige(figurwahl.Figurwahl, danach=figur_gewaehlt)
+
+
+def figur_gewaehlt(fenster, figur):
+    """Mit der Figur beginnt der Durchlauf – dann kommt der Absturz."""
+    fenster.starte_durchlauf(figur)
+    fenster.zeige(intro.Intro, danach=level_1_beginnen)
+
+
+def level_1_beginnen(fenster):
+    """Nach dem Intro: Level 1 beginnt, ab jetzt läuft die Uhr."""
+    fenster.durchlauf.starte_level()
+    fenster.zeige(platzhalter.Handbuch, level=fenster.durchlauf.spielstand.aktuelles_level)
 
 
 def nach_levelwechsel(fenster, wechsel):
@@ -35,7 +59,7 @@ def oeffnen(wurzel, zeitgeber=None, protokollordner=None):
     """Baut das Hauptfenster in ``wurzel`` und zeigt den ersten Screen."""
     return Hauptfenster(
         wurzel,
-        STARTSCREEN,
+        partial(STARTSCREEN, danach=figurwahl_zeigen),
         nach_levelwechsel,
         zeitgeber=zeitgeber,
         protokollordner=protokollordner,

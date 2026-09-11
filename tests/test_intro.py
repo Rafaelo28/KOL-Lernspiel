@@ -12,7 +12,7 @@ import pytest
 tk = pytest.importorskip("tkinter")
 
 from content import charaktere, story  # noqa: E402
-from ui import ablauf, intro, platzhalter  # noqa: E402
+from ui import ablauf, figurwahl, intro, platzhalter  # noqa: E402
 
 
 @pytest.fixture
@@ -87,7 +87,7 @@ def test_der_schatten_zeigt_denselben_text(screen):
 def test_nach_dem_wechsel_laeuft_die_szene_nicht_weiter(screen, fenster, wurzel):
     """Sonst liefe ein after() ins Leere."""
     auftrag = screen.buehne._auftrag
-    fenster.zeige(platzhalter.Start)
+    fenster.zeige(ablauf.STARTSCREEN, danach=lambda _fenster: None)
     assert auftrag not in wurzel.tk.splitlist(wurzel.tk.call("after", "info"))
 
 
@@ -105,8 +105,9 @@ def test_jeder_absatz_passt_in_den_nachthimmel(screen, nr):
 
 def test_der_intro_kostet_keine_levelzeit(fenster):
     """Die Uhr von Level 1 beginnt erst mit dem letzten Klick (Arbeitsplan 7.1)."""
-    fenster.zeige(platzhalter.Figurwahl)
-    fenster.aktueller_screen._waehlen(charaktere.ELENA_DUARTE)
+    fenster.zeige(figurwahl.Figurwahl, danach=ablauf.figur_gewaehlt)
+    fenster.aktueller_screen.waehle(charaktere.ELENA_DUARTE)
+    fenster.aktueller_screen.bestaetigen()
     assert isinstance(fenster.aktueller_screen, intro.Intro)
     assert fenster.durchlauf.spielstand.aktuelles_level is None
     for _ in story.INTRO.absaetze:

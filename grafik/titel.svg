@@ -1,0 +1,306 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"
+     data-breite="960" data-schleife-ms="4000" data-bilder="40"
+     data-bereiche="540 112 520 440; 196 616 1208 124">
+<!--
+  Titelszene für den Startbildschirm (Arbeitsplan 6.2).
+
+  Im Browser öffnen, um die Animation zu sehen. Fürs Spiel vorrendern mit:
+      python3 grafik/rendern.py grafik/titel.svg
+  data-bereiche: zwei bewegte Ausschnitte – der Diamant mit seinem Funkeln
+  und der Schriftzug, über den ein Glanz läuft (SVG-Einheiten).
+  Alle Animationsdauern teilen data-schleife-ms – siehe dokumentation/Animationen.md.
+
+  Schrift: Noto Serif Display, sonst DejaVu Serif. Sie wird nur beim Rendern
+  gebraucht; im Spiel steht der Schriftzug schon als Bild.
+-->
+<title>Der Diamantenraub – Titel</title>
+<desc>Ein großer, funkelnder Diamant schwebt im Nachthimmel über dunklen Wüstendünen, darunter der
+Schriftzug „Der Diamantenraub“ in Gold. Lichtreflexe wandern über die Facetten, danach glänzt der
+Schriftzug auf.</desc>
+<style>
+  /* Ein Lichtstreifen fährt über den Diamanten, danach einer über den Schriftzug.
+     -2s: Das Spiel beginnt bei 10 s (grafik/rendern.py, T0_MS) – so fängt der Streifen mit Bild 0 an. */
+  .streifen { animation: streifen 4s ease-in-out -2s infinite; }
+  @keyframes streifen { 0% { transform: translateX(-620px); } 34%, 100% { transform: translateX(620px); } }
+  .titelglanz { animation: titelglanz 4s ease-in-out -2s infinite; }
+  @keyframes titelglanz { 0%, 38% { transform: translateX(-820px); } 78%, 100% { transform: translateX(820px); } }
+  /* Einzelne Facetten blitzen auf – als drehte sich der Stein ein wenig. */
+  .glanz { opacity: 0; animation: glanz 2s ease-in-out infinite; }
+  @keyframes glanz { 0%, 100% { opacity: 0; } 50% { opacity: var(--staerke); } }
+  .feuer { opacity: 0; animation: feuer 4s ease-in-out infinite; }
+  @keyframes feuer { 0%, 60%, 100% { opacity: 0; } 30% { opacity: .7; } }
+  .funkeln { transform-box: fill-box; transform-origin: center; animation: funkeln 2s ease-in-out infinite; }
+  @keyframes funkeln {
+    0%, 34%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+    17% { transform: scale(1) rotate(45deg); opacity: 1; }
+  }
+</style>
+<defs>
+  <linearGradient id="himmel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#05071a"/><stop offset=".45" stop-color="#11132a"/>
+    <stop offset=".78" stop-color="#231b40"/><stop offset="1" stop-color="#2d1f45"/>
+  </linearGradient>
+  <radialGradient id="schein" cx="800" cy="302" r="400" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#a8e2ff" stop-opacity=".34"/>
+    <stop offset=".45" stop-color="#5a78d6" stop-opacity=".12"/>
+    <stop offset="1" stop-color="#3a3f9a" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="strahl" cx="800" cy="302" r="520" gradientUnits="userSpaceOnUse">
+    <stop offset=".15" stop-color="#cdefff" stop-opacity=".16"/><stop offset="1" stop-color="#cdefff" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="mondschein" cx="232" cy="150" r="150" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#fff4d6" stop-opacity=".2"/><stop offset="1" stop-color="#fff4d6" stop-opacity="0"/>
+  </radialGradient>
+  <mask id="sichel">
+    <rect x="150" y="70" width="170" height="170" fill="#fff"/>
+    <circle cx="252" cy="136" r="44" fill="#000"/>
+  </mask>
+  <linearGradient id="duene-fern" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#30264f"/><stop offset="1" stop-color="#1b1633"/>
+  </linearGradient>
+  <linearGradient id="duene-nah" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1b1631"/><stop offset="1" stop-color="#0b0918"/>
+  </linearGradient>
+  <linearGradient id="tiefe" gradientUnits="userSpaceOnUse"
+                  x1="800" y1="158" x2="800" y2="508">
+    <stop offset="0" stop-color="#0a2150" stop-opacity="0"/>
+    <stop offset=".5" stop-color="#0a2150" stop-opacity=".08"/>
+    <stop offset="1" stop-color="#0a2150" stop-opacity=".3"/>
+  </linearGradient>
+  <radialGradient id="glanzlicht" cx="710" cy="192" r="210" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="streifen" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/>
+    <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="gold" gradientUnits="userSpaceOnUse"
+                  x1="0" y1="634" x2="0" y2="722">
+    <stop offset="0" stop-color="#fff7da"/><stop offset=".38" stop-color="#ffd978"/>
+    <stop offset=".62" stop-color="#e2a331"/><stop offset="1" stop-color="#9c6212"/>
+  </linearGradient>
+  <linearGradient id="silber" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f4e6c4"/><stop offset="1" stop-color="#c9a877"/>
+  </linearGradient>
+  <clipPath id="umriss"><path d="M682.0,158.0 L918.0,158.0 L1010.0,262.0 L800.0,508.0 L590.0,262.0 Z"/></clipPath>
+  <clipPath id="schrift">
+    <text x="800" y="718" text-anchor="middle" font-family="'Noto Serif Display', 'DejaVu Serif', serif"
+          font-weight="700" font-size="112" letter-spacing="6">DIAMANTENRAUB</text>
+  </clipPath>
+  <filter id="weich" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>
+  <filter id="leuchten" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="schatten" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>
+</defs>
+
+<!-- Nachthimmel mit Mond und Sternen (steht still) -->
+<rect width="1600" height="900" fill="url(#himmel)"/>
+<circle cx="232" cy="150" r="150" fill="url(#mondschein)"/>
+<circle cx="232" cy="150" r="46" fill="#f3e9cc" mask="url(#sichel)"/>
+<g fill="#f4f1ff">
+    <circle cx="1289" cy="279" r="1.5" opacity="0.89"/>
+    <circle cx="1304" cy="249" r="1.3" opacity="0.43"/>
+    <circle cx="1215" cy="573" r="0.9" opacity="0.61"/>
+    <circle cx="200" cy="410" r="1.8" opacity="0.64"/>
+    <circle cx="1538" cy="574" r="1.1" opacity="0.60"/>
+    <circle cx="1509" cy="653" r="1.5" opacity="0.36"/>
+    <circle cx="96" cy="184" r="1.8" opacity="0.46"/>
+    <circle cx="34" cy="468" r="0.9" opacity="0.68"/>
+    <circle cx="1095" cy="503" r="1.1" opacity="0.85"/>
+    <circle cx="413" cy="129" r="1.5" opacity="0.83"/>
+    <circle cx="1224" cy="136" r="0.9" opacity="0.76"/>
+    <circle cx="536" cy="576" r="1.5" opacity="0.94"/>
+    <circle cx="427" cy="390" r="1.8" opacity="0.74"/>
+    <circle cx="334" cy="224" r="1.8" opacity="0.38"/>
+    <circle cx="326" cy="524" r="1.8" opacity="0.69"/>
+    <circle cx="1352" cy="305" r="0.9" opacity="0.55"/>
+    <circle cx="506" cy="571" r="1.3" opacity="0.52"/>
+    <circle cx="1070" cy="89" r="1.5" opacity="0.63"/>
+    <circle cx="1230" cy="211" r="1.8" opacity="0.86"/>
+    <circle cx="15" cy="687" r="1.3" opacity="0.67"/>
+    <circle cx="1286" cy="254" r="1.5" opacity="0.86"/>
+    <circle cx="67" cy="516" r="1.8" opacity="0.73"/>
+    <circle cx="1461" cy="41" r="0.9" opacity="0.39"/>
+    <circle cx="130" cy="394" r="1.3" opacity="0.75"/>
+    <circle cx="300" cy="429" r="0.9" opacity="0.54"/>
+    <circle cx="1298" cy="452" r="2.2" opacity="0.86"/>
+    <circle cx="1386" cy="224" r="1.5" opacity="0.66"/>
+    <circle cx="1280" cy="558" r="1.3" opacity="0.47"/>
+    <circle cx="100" cy="651" r="1.3" opacity="0.77"/>
+    <circle cx="148" cy="383" r="1.3" opacity="0.85"/>
+    <circle cx="30" cy="95" r="1.8" opacity="0.76"/>
+    <circle cx="1394" cy="355" r="2.2" opacity="0.42"/>
+    <circle cx="285" cy="495" r="1.1" opacity="0.87"/>
+    <circle cx="204" cy="33" r="1.1" opacity="0.36"/>
+    <circle cx="21" cy="326" r="1.3" opacity="0.64"/>
+    <circle cx="1290" cy="450" r="1.1" opacity="0.80"/>
+    <circle cx="1518" cy="43" r="0.9" opacity="0.47"/>
+    <circle cx="84" cy="404" r="2.2" opacity="0.67"/>
+    <circle cx="1498" cy="289" r="1.3" opacity="0.37"/>
+    <circle cx="1504" cy="592" r="2.2" opacity="0.81"/>
+    <circle cx="1471" cy="131" r="0.9" opacity="0.46"/>
+    <circle cx="1209" cy="170" r="1.1" opacity="0.61"/>
+    <circle cx="65" cy="660" r="1.1" opacity="0.88"/>
+    <circle cx="1532" cy="374" r="1.5" opacity="0.95"/>
+    <circle cx="20" cy="340" r="1.3" opacity="0.76"/>
+    <circle cx="439" cy="273" r="2.2" opacity="0.46"/>
+    <circle cx="1346" cy="310" r="1.3" opacity="0.39"/>
+    <circle cx="1496" cy="466" r="2.2" opacity="0.77"/>
+    <circle cx="14" cy="142" r="1.3" opacity="0.37"/>
+    <circle cx="1482" cy="538" r="1.3" opacity="0.46"/>
+    <circle cx="1557" cy="188" r="1.5" opacity="0.90"/>
+    <circle cx="178" cy="216" r="2.2" opacity="0.62"/>
+    <circle cx="1211" cy="326" r="0.9" opacity="0.47"/>
+    <circle cx="179" cy="48" r="1.1" opacity="0.59"/>
+    <circle cx="357" cy="304" r="1.1" opacity="0.70"/>
+    <circle cx="1486" cy="219" r="2.2" opacity="0.67"/>
+    <circle cx="445" cy="195" r="1.5" opacity="0.94"/>
+    <circle cx="1196" cy="579" r="1.5" opacity="0.69"/>
+    <circle cx="429" cy="540" r="0.9" opacity="0.87"/>
+    <circle cx="1141" cy="421" r="1.3" opacity="0.95"/>
+    <circle cx="348" cy="465" r="0.9" opacity="0.53"/>
+    <circle cx="131" cy="479" r="1.8" opacity="0.51"/>
+    <circle cx="1321" cy="499" r="2.2" opacity="0.62"/>
+    <circle cx="330" cy="25" r="1.8" opacity="0.58"/>
+    <circle cx="1532" cy="432" r="1.1" opacity="0.80"/>
+    <circle cx="1287" cy="176" r="1.5" opacity="0.42"/>
+    <circle cx="332" cy="439" r="1.3" opacity="0.55"/>
+    <circle cx="1081" cy="69" r="1.3" opacity="0.91"/>
+    <circle cx="111" cy="413" r="1.8" opacity="0.61"/>
+    <circle cx="1335" cy="383" r="1.3" opacity="0.63"/>
+    <circle cx="352" cy="70" r="1.8" opacity="0.72"/>
+    <circle cx="1464" cy="635" r="1.3" opacity="0.74"/>
+    <circle cx="175" cy="319" r="1.1" opacity="0.38"/>
+    <circle cx="438" cy="144" r="1.3" opacity="0.52"/>
+    <circle cx="389" cy="504" r="1.8" opacity="0.59"/>
+    <circle cx="1354" cy="13" r="2.2" opacity="0.85"/>
+    <circle cx="352" cy="222" r="0.9" opacity="0.88"/>
+    <circle cx="1293" cy="559" r="2.2" opacity="0.40"/>
+    <circle cx="1435" cy="267" r="1.3" opacity="0.91"/>
+    <circle cx="1239" cy="101" r="1.5" opacity="0.71"/>
+    <circle cx="169" cy="332" r="2.2" opacity="0.52"/>
+    <circle cx="1293" cy="405" r="2.2" opacity="0.66"/>
+    <circle cx="314" cy="322" r="1.3" opacity="0.78"/>
+</g>
+<g>
+    <g transform="translate(1290,120) scale(1.0)"><circle r="3.2" fill="#fff"/><path d="M0,-16 L1.3,-1.3 L16,0 L1.3,1.3 L0,16 L-1.3,1.3 L-16,0 L-1.3,-1.3 Z" fill="#dfe9ff" opacity=".75"/></g>
+    <g transform="translate(430,330) scale(0.8)"><circle r="3.2" fill="#fff"/><path d="M0,-16 L1.3,-1.3 L16,0 L1.3,1.3 L0,16 L-1.3,1.3 L-16,0 L-1.3,-1.3 Z" fill="#dfe9ff" opacity=".75"/></g>
+    <g transform="translate(1440,420) scale(0.7)"><circle r="3.2" fill="#fff"/><path d="M0,-16 L1.3,-1.3 L16,0 L1.3,1.3 L0,16 L-1.3,1.3 L-16,0 L-1.3,-1.3 Z" fill="#dfe9ff" opacity=".75"/></g>
+    <g transform="translate(140,520) scale(0.6)"><circle r="3.2" fill="#fff"/><path d="M0,-16 L1.3,-1.3 L16,0 L1.3,1.3 L0,16 L-1.3,1.3 L-16,0 L-1.3,-1.3 Z" fill="#dfe9ff" opacity=".75"/></g>
+    <g transform="translate(1060,70) scale(0.6)"><circle r="3.2" fill="#fff"/><path d="M0,-16 L1.3,-1.3 L16,0 L1.3,1.3 L0,16 L-1.3,1.3 L-16,0 L-1.3,-1.3 Z" fill="#dfe9ff" opacity=".75"/></g>
+</g>
+
+<!-- Schein und Strahlen hinter dem Diamanten (stehen still) -->
+<g fill="url(#strahl)">
+    <path d="M800,302 L1319,327 L1316,367 Z"/>
+    <path d="M800,302 L1279,504 L1262,540 Z"/>
+    <path d="M800,302 L1182,655 L1153,684 Z"/>
+    <path d="M800,302 L1038,764 L1002,781 Z"/>
+    <path d="M800,302 L865,818 L825,821 Z"/>
+    <path d="M800,302 L685,809 L646,799 Z"/>
+    <path d="M800,302 L518,739 L486,716 Z"/>
+    <path d="M800,302 L386,616 L363,584 Z"/>
+    <path d="M800,302 L303,456 L293,417 Z"/>
+    <path d="M800,302 L281,277 L284,237 Z"/>
+    <path d="M800,302 L321,100 L338,64 Z"/>
+    <path d="M800,302 L418,-51 L447,-80 Z"/>
+    <path d="M800,302 L562,-160 L598,-177 Z"/>
+    <path d="M800,302 L735,-214 L775,-217 Z"/>
+    <path d="M800,302 L915,-205 L954,-195 Z"/>
+    <path d="M800,302 L1082,-135 L1114,-112 Z"/>
+    <path d="M800,302 L1214,-12 L1237,20 Z"/>
+    <path d="M800,302 L1297,148 L1307,187 Z"/>
+</g>
+<circle cx="800" cy="302" r="400" fill="url(#schein)"/>
+
+<!-- Dünen -->
+<path d="M0,808 C180,770 330,776 520,800 C700,822 860,784 1040,770 C1230,756 1420,786 1600,772 L1600,900 L0,900 Z"
+      fill="url(#duene-fern)"/>
+<path d="M0,808 C180,770 330,776 520,800 C700,822 860,784 1040,770 C1230,756 1420,786 1600,772"
+      fill="none" stroke="#8a78b4" stroke-opacity=".5" stroke-width="2"/>
+<path d="M0,862 C240,826 420,836 640,858 C860,880 1020,836 1250,832 C1400,830 1520,846 1600,850 L1600,900 L0,900 Z"
+      fill="url(#duene-nah)"/>
+<path d="M0,862 C240,826 420,836 640,858 C860,880 1020,836 1250,832 C1400,830 1520,846 1600,850"
+      fill="none" stroke="#5d4d86" stroke-opacity=".3" stroke-width="2"/>
+
+<!-- Der Diamant -->
+<path d="M682.0,158.0 L918.0,158.0 L1010.0,262.0 L800.0,508.0 L590.0,262.0 Z" fill="#bfeaff" opacity=".55" filter="url(#weich)"/>
+<g stroke="#f2faff" stroke-opacity=".6" stroke-width="1.6" stroke-linejoin="round">
+  <path d="M682.0,158.0 L741.0,158.0 L642.5,262.0 Z" fill="#f2fbff"/>
+  <path d="M682.0,158.0 L642.5,262.0 L590.0,262.0 Z" fill="#a6d8f6"/>
+  <path d="M741.0,158.0 L695.0,262.0 L642.5,262.0 Z" fill="#6fb0e0"/>
+  <path d="M741.0,158.0 L800.0,158.0 L747.5,262.0 Z" fill="#ffffff"/>
+  <path d="M741.0,158.0 L747.5,262.0 L695.0,262.0 Z" fill="#e6f7ff"/>
+  <path d="M800.0,158.0 L800.0,262.0 L747.5,262.0 Z" fill="#bfe6fb"/>
+  <path d="M800.0,158.0 L859.0,158.0 L852.5,262.0 Z" fill="#cfeeff"/>
+  <path d="M800.0,158.0 L852.5,262.0 L800.0,262.0 Z" fill="#7ab9e6"/>
+  <path d="M859.0,158.0 L905.0,262.0 L852.5,262.0 Z" fill="#5b9dd6"/>
+  <path d="M859.0,158.0 L918.0,158.0 L957.5,262.0 Z" fill="#8fcaf0"/>
+  <path d="M859.0,158.0 L957.5,262.0 L905.0,262.0 Z" fill="#3f7fc0"/>
+  <path d="M918.0,158.0 L1010.0,262.0 L957.5,262.0 Z" fill="#2a5a9e"/>
+  <path d="M590.0,262.0 L642.5,262.0 L710.2,367.8 Z" fill="#2c5a9c"/>
+  <path d="M642.5,262.0 L695.0,262.0 L710.2,367.8 Z" fill="#6aa9dc"/>
+  <path d="M590.0,262.0 L710.2,367.8 L800.0,508.0 Z" fill="#1a3d7c"/>
+  <path d="M710.2,367.8 L695.0,262.0 L800.0,508.0 Z" fill="#4f8fcf"/>
+  <path d="M695.0,262.0 L747.5,262.0 L770.1,367.8 Z" fill="#b3e1fb"/>
+  <path d="M747.5,262.0 L800.0,262.0 L770.1,367.8 Z" fill="#ffffff"/>
+  <path d="M695.0,262.0 L770.1,367.8 L800.0,508.0 Z" fill="#8fcbf2"/>
+  <path d="M770.1,367.8 L800.0,262.0 L800.0,508.0 Z" fill="#d7f1ff"/>
+  <path d="M800.0,262.0 L852.5,262.0 L829.9,367.8 Z" fill="#e8f7ff"/>
+  <path d="M852.5,262.0 L905.0,262.0 L829.9,367.8 Z" fill="#8cc6ee"/>
+  <path d="M800.0,262.0 L829.9,367.8 L800.0,508.0 Z" fill="#f7fdff"/>
+  <path d="M829.9,367.8 L905.0,262.0 L800.0,508.0 Z" fill="#6eaee0"/>
+  <path d="M905.0,262.0 L957.5,262.0 L889.8,367.8 Z" fill="#4b89c8"/>
+  <path d="M957.5,262.0 L1010.0,262.0 L889.8,367.8 Z" fill="#1f4a8a"/>
+  <path d="M905.0,262.0 L889.8,367.8 L800.0,508.0 Z" fill="#3a78bb"/>
+  <path d="M889.8,367.8 L1010.0,262.0 L800.0,508.0 Z" fill="#132f66"/>
+</g>
+<g clip-path="url(#umriss)">
+  <rect x="590.0" y="158" width="420" height="350" fill="url(#tiefe)"/>
+  <circle cx="710" cy="192" r="210" fill="url(#glanzlicht)"/>
+  <!-- Farbfeuer und Glanz auf einzelnen Facetten -->
+  <path class="feuer" d="M747.5,262.0 L800.0,262.0 L770.1,367.8 Z" fill="#ffc6ee" style="animation-duration: 4s; animation-delay: -0.9s"/>
+  <path class="feuer" d="M800.0,158.0 L859.0,158.0 L852.5,262.0 Z" fill="#fff0b8" style="animation-duration: 4s; animation-delay: -2.9s"/>
+  <path class="feuer" d="M829.9,367.8 L905.0,262.0 L800.0,508.0 Z" fill="#d5c8ff" style="animation-duration: 2s; animation-delay: -0.4s"/>
+  <path class="feuer" d="M741.0,158.0 L747.5,262.0 L695.0,262.0 Z" fill="#c6fff0" style="animation-duration: 4s; animation-delay: -3.7s"/>
+  <path class="glanz" d="M741.0,158.0 L800.0,158.0 L747.5,262.0 Z" fill="#fff" style="--staerke: 0.75; animation-duration: 2s; animation-delay: -0.2s"/>
+  <path class="glanz" d="M800.0,158.0 L852.5,262.0 L800.0,262.0 Z" fill="#fff" style="--staerke: 0.6; animation-duration: 4s; animation-delay: -1.3s"/>
+  <path class="glanz" d="M741.0,158.0 L695.0,262.0 L642.5,262.0 Z" fill="#fff" style="--staerke: 0.55; animation-duration: 2s; animation-delay: -1.1s"/>
+  <path class="glanz" d="M695.0,262.0 L770.1,367.8 L800.0,508.0 Z" fill="#fff" style="--staerke: 0.6; animation-duration: 4s; animation-delay: -2.6s"/>
+  <path class="glanz" d="M852.5,262.0 L905.0,262.0 L829.9,367.8 Z" fill="#fff" style="--staerke: 0.55; animation-duration: 2s; animation-delay: -0.6s"/>
+  <path class="glanz" d="M889.8,367.8 L1010.0,262.0 L800.0,508.0 Z" fill="#fff" style="--staerke: 0.5; animation-duration: 4s; animation-delay: -3.4s"/>
+  <path class="glanz" d="M859.0,158.0 L918.0,158.0 L957.5,262.0 Z" fill="#fff" style="--staerke: 0.6; animation-duration: 4s; animation-delay: -2.0s"/>
+  <path class="glanz" d="M590.0,262.0 L642.5,262.0 L710.2,367.8 Z" fill="#fff" style="--staerke: 0.5; animation-duration: 2s; animation-delay: -1.6s"/>
+  <!-- Der Lichtstreifen -->
+  <g transform="translate(800,322) rotate(22)"><rect class="streifen" x="-95" y="-420" width="190" height="840" fill="url(#streifen)"/></g>
+</g>
+<path d="M682.0,158.0 L918.0,158.0 L1010.0,262.0 L800.0,508.0 L590.0,262.0 Z" fill="none" stroke="#ffffff" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
+<!-- Funkeln an Ecken und Kanten -->
+<g transform="translate(682,158)"><g class="funkeln" style="animation-duration: 2s; animation-delay: -0.15s"><circle r="15" fill="#bfeaff" opacity=".6" filter="url(#leuchten)"/><path d="M0,-34 C2.6,-7.5 7.5,-2.6 34,0 C7.5,2.6 2.6,7.5 0,34 C-2.6,7.5 -7.5,2.6 -34,0 C-7.5,-2.6 -2.6,-7.5 0,-34 Z" fill="#fff"/></g></g>
+<g transform="translate(1010,262)"><g class="funkeln" style="animation-duration: 4s; animation-delay: -1.9s"><circle r="19" fill="#bfeaff" opacity=".6" filter="url(#leuchten)"/><path d="M0,-42 C3.2,-9.2 9.2,-3.2 42,0 C9.2,3.2 3.2,9.2 0,42 C-3.2,9.2 -9.2,3.2 -42,0 C-9.2,-3.2 -3.2,-9.2 0,-42 Z" fill="#fff"/></g></g>
+<g transform="translate(800,508)"><g class="funkeln" style="animation-duration: 4s; animation-delay: -3.1s"><circle r="14" fill="#bfeaff" opacity=".6" filter="url(#leuchten)"/><path d="M0,-30 C2.3,-6.6 6.6,-2.3 30,0 C6.6,2.3 2.3,6.6 0,30 C-2.3,6.6 -6.6,2.3 -30,0 C-6.6,-2.3 -2.3,-6.6 0,-30 Z" fill="#fff"/></g></g>
+<g transform="translate(858,158)"><g class="funkeln" style="animation-duration: 4s; animation-delay: -2.55s"><circle r="12" fill="#bfeaff" opacity=".6" filter="url(#leuchten)"/><path d="M0,-26 C2.0,-5.7 5.7,-2.0 26,0 C5.7,2.0 2.0,5.7 0,26 C-2.0,5.7 -5.7,2.0 -26,0 C-5.7,-2.0 -2.0,-5.7 0,-26 Z" fill="#fff"/></g></g>
+<g transform="translate(696,330)"><g class="funkeln" style="animation-duration: 2s; animation-delay: -1.2s"><circle r="11" fill="#bfeaff" opacity=".6" filter="url(#leuchten)"/><path d="M0,-24 C1.8,-5.3 5.3,-1.8 24,0 C5.3,1.8 1.8,5.3 0,24 C-1.8,5.3 -5.3,1.8 -24,0 C-5.3,-1.8 -1.8,-5.3 0,-24 Z" fill="#fff"/></g></g>
+<g transform="translate(928,302)"><g class="funkeln" style="animation-duration: 4s; animation-delay: -0.7s"><circle r="9" fill="#bfeaff" opacity=".6" filter="url(#leuchten)"/><path d="M0,-20 C1.5,-4.4 4.4,-1.5 20,0 C4.4,1.5 1.5,4.4 0,20 C-1.5,4.4 -4.4,1.5 -20,0 C-4.4,-1.5 -1.5,-4.4 0,-20 Z" fill="#fff"/></g></g>
+
+<!-- Schriftzug -->
+<g font-family="'Noto Serif Display', 'DejaVu Serif', serif" text-anchor="middle">
+  <text x="800" y="600" font-size="44" font-weight="700" letter-spacing="26" fill="url(#silber)"
+        opacity=".92">DER</text>
+  <g stroke="#c9a877" stroke-opacity=".7" stroke-width="2">
+    <line x1="560" y1="585" x2="700" y2="585"/>
+    <line x1="928" y1="585" x2="1068" y2="585"/>
+  </g>
+  <g fill="#e8cf98">
+    <path d="M546,585 l8,-8 l8,8 l-8,8 Z"/>
+    <path d="M1054,585 l8,-8 l8,8 l-8,8 Z"/>
+  </g>
+  <text x="800" y="724" font-size="112" font-weight="700" letter-spacing="6" fill="#020308"
+        opacity=".8" filter="url(#schatten)">DIAMANTENRAUB</text>
+  <text x="800" y="718" font-size="112" font-weight="700" letter-spacing="6" fill="url(#gold)"
+        stroke="#4a2c06" stroke-width="2" paint-order="stroke">DIAMANTENRAUB</text>
+</g>
+<g clip-path="url(#schrift)">
+  <g transform="translate(800,678) rotate(20)"><rect class="titelglanz" x="-85" y="-200" width="170"
+     height="400" fill="url(#streifen)"/></g>
+</g>
+</svg>

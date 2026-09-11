@@ -235,6 +235,34 @@ def test_erzaehltexte_sind_normale_sprache_und_keine_funksprueche():
         assert any(zeichen in gesamt for zeichen in ".!?")
 
 
+def test_die_vorgeschichte_kommt_vor_dem_intro():
+    """Der Intro beginnt am brennenden Wrack – wie es dazu kam, steht davor."""
+    assert story.ERZAEHLTEXTE.index(story.VORGESCHICHTE) < story.ERZAEHLTEXTE.index(story.INTRO)
+    text = " ".join(story.VORGESCHICHTE.absaetze)
+    for stichwort in ("Crew", "Antwerpen", "Diamanten", "Singapur", "Wüste"):
+        assert stichwort in text
+
+
+def test_die_vorgeschichte_stammt_aus_dem_konzept():
+    """Die Prämisse aus dokumentation/Konzept_Spiel.md – nur die Klammer ist geglättet."""
+    from pathlib import Path
+
+    konzept = (
+        Path(__file__).resolve().parent.parent / "dokumentation" / "Konzept_Spiel.md"
+    ).read_text(encoding="utf-8")
+    konzept = " ".join(konzept.split())
+    text = " ".join(story.VORGESCHICHTE.absaetze)
+    for stelle in (
+        "Der Raub ist geglückt: Deine Crew hat aus einem gesicherten Tresor in",
+        "Diamanten im Wert mehrerer Milliarden Euro erbeutet.",
+        "Die Flucht per Charterflugzeug Richtung Singapur läuft zunächst glatt",
+        "bis CIA, Interpol und die belgische Polizei die Maschine auf dem Radar haben",
+        "Der Pilot muss ausweichen, verliert die Kontrolle – das Flugzeug stürzt über der afghanischen Wüste ab.",
+    ):
+        assert stelle in text, f"{stelle!r} fehlt in der Vorgeschichte."
+        assert stelle in konzept, f"{stelle!r} steht so nicht im Konzept."
+
+
 def test_der_abschluss_laesst_die_diamanten_zurueck():
     """Die Kernaussage des Endes – kein reiches Ende (Konzept, Punkt 4)."""
     text = " ".join(story.ABSCHLUSS.absaetze).lower()

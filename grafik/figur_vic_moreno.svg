@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"
+     data-breite="150" data-schleife-ms="4000" data-bilder="40" data-bereiche="84 38 132 190">
+<!--
+  Rollen-Symbol für die Figurwahl (Arbeitsplan 6.2): Vic Moreno – Tresorknacker.
+
+  Fürs Spiel vorrendern mit:
+      python3 grafik/rendern.py grafik/figur_vic_moreno.svg
+  Die Animation läuft im Spiel nur auf der gewählten Karte; die anderen
+  zeigen Bild 0. Der Grund (#1a1d3a) ist die Farbe der Karten (ui/stil.py,
+  FARBE_KARTE) – sonst stünde ein Rechteck auf der Karte.
+  Alle Animationsdauern teilen data-schleife-ms – siehe dokumentation/Animationen.md.
+-->
+<title>Vic Moreno – Tresorknacker</title>
+<desc>Eine runde Tresortür aus Stahl mit Bolzen am Rand und einem großen Zahlenschloss in der Mitte. Das Schloss dreht sich hin und her, dann leuchtet eine Lampe grün.</desc>
+<style>
+  /* Das Zahlenschloss wird hin und her gedreht, dann springt die Lampe auf Grün. */
+  .skala { transform-origin: 150px 156px; animation: drehen 4s ease-in-out infinite; }
+  @keyframes drehen {
+    0%, 6%   { transform: rotate(0deg); }
+    26%, 36% { transform: rotate(-110deg); }
+    58%, 66% { transform: rotate(60deg); }
+    82%, 100% { transform: rotate(0deg); }
+  }
+  .lampe { opacity: 0; animation: lampe 4s linear infinite; }
+  @keyframes lampe { 0%, 82% { opacity: 0; } 85%, 96% { opacity: 1; } 99%, 100% { opacity: 0; } }
+</style>
+<defs>
+  <radialGradient id="medaille" cx="150" cy="115" r="175" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#303770"/><stop offset="1" stop-color="#1d2044"/>
+  </radialGradient>
+  <filter id="weich" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="schatten" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+  <linearGradient id="stahl" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#c3c9d6"/><stop offset=".5" stop-color="#7f8799"/><stop offset="1" stop-color="#434959"/>
+  </linearGradient>
+  <linearGradient id="stahl-innen" x1="1" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#a3aabb"/><stop offset="1" stop-color="#565d6f"/>
+  </linearGradient>
+  <radialGradient id="skala" cx=".38" cy=".32" r=".85">
+    <stop offset="0" stop-color="#f6f7fb"/><stop offset=".7" stop-color="#bcc2cf"/><stop offset="1" stop-color="#8d94a5"/>
+  </radialGradient>
+  <radialGradient id="knauf" cx=".35" cy=".3" r=".8">
+    <stop offset="0" stop-color="#8b93a6"/><stop offset="1" stop-color="#3b4150"/>
+  </radialGradient>
+</defs>
+<rect width="300" height="300" fill="#1a1d3a"/>
+<circle cx="150" cy="150" r="136" fill="url(#medaille)"/>
+<circle cx="150" cy="150" r="136" fill="none" stroke="#363d7a" stroke-width="3"/>
+<circle cx="150" cy="150" r="127" fill="none" stroke="#e2b651" stroke-opacity=".28" stroke-width="1.5"/>
+
+<!-- Tresortür -->
+<circle cx="152" cy="161" r="104" fill="#0c0e1c" opacity=".55" filter="url(#schatten)"/>
+<circle cx="150" cy="156" r="100" fill="url(#stahl)" stroke="#262a36" stroke-width="3"/>
+<circle cx="150" cy="156" r="82" fill="url(#stahl-innen)" stroke="#373d4c" stroke-width="2"/>
+<circle cx="150" cy="156" r="82" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"
+        stroke-dasharray="120 400" transform="rotate(200 150 156)"/>
+<g fill="#e1e5ec" stroke="#373d4c" stroke-width="1.5">
+  <circle cx="234.1" cy="190.8" r="5.5"/>
+  <circle cx="184.8" cy="240.1" r="5.5"/>
+  <circle cx="115.2" cy="240.1" r="5.5"/>
+  <circle cx="65.9" cy="190.8" r="5.5"/>
+  <circle cx="65.9" cy="121.2" r="5.5"/>
+  <circle cx="115.2" cy="71.9" r="5.5"/>
+  <circle cx="184.8" cy="71.9" r="5.5"/>
+  <circle cx="234.1" cy="121.2" r="5.5"/>
+</g>
+<!-- Lampe: aus, darüber die grüne -->
+<circle cx="150" cy="65" r="6.5" fill="#1d3325" stroke="#262a36" stroke-width="2"/>
+<g class="lampe"><circle cx="150" cy="65" r="14" fill="#5dff95" opacity=".55" filter="url(#weich)"/><circle cx="150" cy="65" r="6.5" fill="#7dffab" stroke="#262a36" stroke-width="2"/></g>
+<!-- Zeiger -->
+<path d="M141,93 L159,93 L150,105 Z" fill="#e2b651" stroke="#6b4f12" stroke-width="1.5"/>
+<!-- Zahlenschloss (dreht sich) -->
+<g class="skala">
+  <circle cx="150" cy="156" r="50" fill="url(#skala)" stroke="#262a36" stroke-width="3"/>
+  <g stroke="#2d3240" stroke-linecap="round">
+    <line x1="150.0" y1="112.0" x2="150.0" y2="120.0" stroke-width="3"/>
+    <line x1="156.9" y1="112.5" x2="156.3" y2="116.5" stroke-width="1.6"/>
+    <line x1="163.6" y1="114.2" x2="162.4" y2="118.0" stroke-width="1.6"/>
+    <line x1="170.0" y1="116.8" x2="168.2" y2="120.4" stroke-width="1.6"/>
+    <line x1="175.9" y1="120.4" x2="173.5" y2="123.6" stroke-width="1.6"/>
+    <line x1="181.1" y1="124.9" x2="175.5" y2="130.5" stroke-width="3"/>
+    <line x1="185.6" y1="130.1" x2="182.4" y2="132.5" stroke-width="1.6"/>
+    <line x1="189.2" y1="136.0" x2="185.6" y2="137.8" stroke-width="1.6"/>
+    <line x1="191.8" y1="142.4" x2="188.0" y2="143.6" stroke-width="1.6"/>
+    <line x1="193.5" y1="149.1" x2="189.5" y2="149.7" stroke-width="1.6"/>
+    <line x1="194.0" y1="156.0" x2="186.0" y2="156.0" stroke-width="3"/>
+    <line x1="193.5" y1="162.9" x2="189.5" y2="162.3" stroke-width="1.6"/>
+    <line x1="191.8" y1="169.6" x2="188.0" y2="168.4" stroke-width="1.6"/>
+    <line x1="189.2" y1="176.0" x2="185.6" y2="174.2" stroke-width="1.6"/>
+    <line x1="185.6" y1="181.9" x2="182.4" y2="179.5" stroke-width="1.6"/>
+    <line x1="181.1" y1="187.1" x2="175.5" y2="181.5" stroke-width="3"/>
+    <line x1="175.9" y1="191.6" x2="173.5" y2="188.4" stroke-width="1.6"/>
+    <line x1="170.0" y1="195.2" x2="168.2" y2="191.6" stroke-width="1.6"/>
+    <line x1="163.6" y1="197.8" x2="162.4" y2="194.0" stroke-width="1.6"/>
+    <line x1="156.9" y1="199.5" x2="156.3" y2="195.5" stroke-width="1.6"/>
+    <line x1="150.0" y1="200.0" x2="150.0" y2="192.0" stroke-width="3"/>
+    <line x1="143.1" y1="199.5" x2="143.7" y2="195.5" stroke-width="1.6"/>
+    <line x1="136.4" y1="197.8" x2="137.6" y2="194.0" stroke-width="1.6"/>
+    <line x1="130.0" y1="195.2" x2="131.8" y2="191.6" stroke-width="1.6"/>
+    <line x1="124.1" y1="191.6" x2="126.5" y2="188.4" stroke-width="1.6"/>
+    <line x1="118.9" y1="187.1" x2="124.5" y2="181.5" stroke-width="3"/>
+    <line x1="114.4" y1="181.9" x2="117.6" y2="179.5" stroke-width="1.6"/>
+    <line x1="110.8" y1="176.0" x2="114.4" y2="174.2" stroke-width="1.6"/>
+    <line x1="108.2" y1="169.6" x2="112.0" y2="168.4" stroke-width="1.6"/>
+    <line x1="106.5" y1="162.9" x2="110.5" y2="162.3" stroke-width="1.6"/>
+    <line x1="106.0" y1="156.0" x2="114.0" y2="156.0" stroke-width="3"/>
+    <line x1="106.5" y1="149.1" x2="110.5" y2="149.7" stroke-width="1.6"/>
+    <line x1="108.2" y1="142.4" x2="112.0" y2="143.6" stroke-width="1.6"/>
+    <line x1="110.8" y1="136.0" x2="114.4" y2="137.8" stroke-width="1.6"/>
+    <line x1="114.4" y1="130.1" x2="117.6" y2="132.5" stroke-width="1.6"/>
+    <line x1="118.9" y1="124.9" x2="124.5" y2="130.5" stroke-width="3"/>
+    <line x1="124.1" y1="120.4" x2="126.5" y2="123.6" stroke-width="1.6"/>
+    <line x1="130.0" y1="116.8" x2="131.8" y2="120.4" stroke-width="1.6"/>
+    <line x1="136.4" y1="114.2" x2="137.6" y2="118.0" stroke-width="1.6"/>
+    <line x1="143.1" y1="112.5" x2="143.7" y2="116.5" stroke-width="1.6"/>
+  </g>
+  <circle cx="150" cy="156" r="24" fill="url(#knauf)" stroke="#262a36" stroke-width="2.5"/>
+  <rect x="146" y="134" width="8" height="18" rx="3" fill="#d5dae3" stroke="#262a36" stroke-width="1.5"/>
+  <circle cx="150" cy="113" r="3.5" fill="#c0392b"/>
+</g>
+</svg>

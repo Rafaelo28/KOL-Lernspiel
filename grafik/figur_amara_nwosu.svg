@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"
+     data-breite="150" data-schleife-ms="4000" data-bilder="40" data-bereiche="58 64 190 172">
+<!--
+  Rollen-Symbol für die Figurwahl (Arbeitsplan 6.2): Amara Nwosu – Fluchtplanerin.
+
+  Fürs Spiel vorrendern mit:
+      python3 grafik/rendern.py grafik/figur_amara_nwosu.svg
+  Die Animation läuft im Spiel nur auf der gewählten Karte; die anderen
+  zeigen Bild 0. Der Grund (#1a1d3a) ist die Farbe der Karten (ui/stil.py,
+  FARBE_KARTE) – sonst stünde ein Rechteck auf der Karte.
+  Alle Animationsdauern teilen data-schleife-ms – siehe dokumentation/Animationen.md.
+-->
+<title>Amara Nwosu – Fluchtplanerin</title>
+<desc>Eine gefaltete Landkarte mit Fluss, Wald und Höhenlinien. Eine rot gestrichelte Route führt zu einer Stecknadel am Ziel; die Route läuft, die Nadel wippt.</desc>
+<style>
+  /* Die Route läuft zum Ziel, die Stecknadel wippt. */
+  .route { animation: route 1s linear infinite; }
+  @keyframes route { 0% { stroke-dashoffset: 24; } 100% { stroke-dashoffset: 0; } }
+  .nadel { animation: nadel 2s ease-in-out infinite; }
+  @keyframes nadel { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+  .nadelschatten { transform-box: fill-box; transform-origin: center;
+                   animation: nadelschatten 2s ease-in-out infinite; }
+  @keyframes nadelschatten { 0%, 100% { transform: scale(1); opacity: .45; } 50% { transform: scale(.7); opacity: .25; } }
+</style>
+<defs>
+  <radialGradient id="medaille" cx="150" cy="115" r="175" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#303770"/><stop offset="1" stop-color="#1d2044"/>
+  </radialGradient>
+  <filter id="weich" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="schatten" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+  <linearGradient id="papier-hell" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#f3e8cc"/><stop offset="1" stop-color="#e6d6b0"/>
+  </linearGradient>
+  <linearGradient id="papier-dunkel" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#cdb98f"/><stop offset="1" stop-color="#e2d0a8"/>
+  </linearGradient>
+  <radialGradient id="nadelkopf" cx=".35" cy=".3" r=".75">
+    <stop offset="0" stop-color="#ff8a7c"/><stop offset="1" stop-color="#b3261e"/>
+  </radialGradient>
+  <clipPath id="karte"><path d="M50,92 L110,80 L170,94 L236,80 L236,212 L170,226 L110,212 L50,224 Z"/></clipPath>
+</defs>
+<rect width="300" height="300" fill="#1a1d3a"/>
+<circle cx="150" cy="150" r="136" fill="url(#medaille)"/>
+<circle cx="150" cy="150" r="136" fill="none" stroke="#363d7a" stroke-width="3"/>
+<circle cx="150" cy="150" r="127" fill="none" stroke="#e2b651" stroke-opacity=".28" stroke-width="1.5"/>
+
+<!-- Karte -->
+<path d="M54,98 L114,86 L174,100 L240,86 L240,218 L174,232 L114,218 L54,230 Z" fill="#0b0d18" opacity=".5"
+      filter="url(#schatten)"/>
+<path d="M50,92 L110,80 L110,212 L50,224 Z" fill="url(#papier-hell)"/>
+<path d="M110,80 L170,94 L170,226 L110,212 Z" fill="url(#papier-dunkel)"/>
+<path d="M170,94 L236,80 L236,212 L170,226 Z" fill="url(#papier-hell)"/>
+<g clip-path="url(#karte)">
+  <!-- Wald, Fluss, Höhenlinien, Wege -->
+  <path d="M62,120 C80,104 104,112 106,128 C110,146 86,156 70,150 C56,144 52,130 62,120 Z" fill="#9bbf7a" opacity=".85"/>
+  <path d="M188,176 C204,164 228,170 230,186 C232,202 212,210 198,204 C186,198 180,186 188,176 Z" fill="#9bbf7a" opacity=".85"/>
+  <path d="M40,188 C80,176 96,196 128,184 C160,172 170,150 206,150 C226,150 236,140 250,130" fill="none"
+        stroke="#6fa8dc" stroke-width="7" stroke-linecap="round"/>
+  <g fill="none" stroke="#b08a5a" stroke-opacity=".55" stroke-width="1.6">
+    <ellipse cx="150" cy="122" rx="30" ry="16"/><ellipse cx="150" cy="122" rx="18" ry="9"/>
+    <ellipse cx="150" cy="122" rx="7" ry="3.5"/>
+  </g>
+  <path d="M50,150 L236,112 M84,212 L130,80" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3"/>
+  <path d="M50,150 L236,112 M84,212 L130,80" fill="none" stroke="#c9b48a" stroke-width="1" stroke-dasharray="4 4"/>
+</g>
+<!-- Falzkanten -->
+<path d="M110,80 L110,212 M170,94 L170,226" stroke="#a88f63" stroke-opacity=".6" stroke-width="1.5"/>
+<!-- Start: Kreis, Route, Ziel -->
+<circle cx="72" cy="200" r="7" fill="#fff" stroke="#b3261e" stroke-width="3.5"/>
+<path d="M72,200 C98,196 104,172 124,168 C150,162 142,136 166,130 C184,126 190,146 208,136" fill="none"
+      stroke="#fff" stroke-opacity=".75" stroke-width="7" stroke-linecap="round"/>
+<path class="route" d="M72,200 C98,196 104,172 124,168 C150,162 142,136 166,130 C184,126 190,146 208,136" fill="none"
+      stroke="#d8352a" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="12 12"/>
+<!-- Stecknadel am Ziel -->
+<ellipse class="nadelschatten" cx="210" cy="136" rx="9" ry="4" fill="#3a2a14"/>
+<g class="nadel">
+  <path d="M210,134 L204,104 L216,104 Z" fill="#8c9099" stroke="#4a4e57" stroke-width="1"/>
+  <circle cx="210" cy="96" r="15" fill="url(#nadelkopf)" stroke="#7a1712" stroke-width="2"/>
+  <circle cx="205" cy="91" r="4.5" fill="#fff" opacity=".7"/>
+</g>
+<!-- Kompassrose -->
+<g transform="translate(72 108)">
+  <circle r="15" fill="#f3e8cc" stroke="#7d6644" stroke-width="1.5"/>
+  <path d="M0,-12 L4,0 L0,12 L-4,0 Z" fill="#7d6644"/>
+  <path d="M0,-12 L4,0 L-4,0 Z" fill="#b3261e"/>
+</g>
+</svg>

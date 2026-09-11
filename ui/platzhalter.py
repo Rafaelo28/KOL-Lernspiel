@@ -4,11 +4,10 @@ Das Gerüst aus 6.1 braucht etwas, zwischen dem es umschalten kann. Jeder
 Platzhalter nennt die Aufgabe, die ihn ersetzt, und fliegt dort wieder
 heraus.
 
-Sie sind nur so weit ausgebaut, dass sich das Gerüst durchklicken lässt:
+Startbildschirm, Figurwahl (6.2) und Story-Intro (6.3) sind schon die echten
+Screens. Von hier an sind die Platzhalter nur so weit ausgebaut, dass sich
+das Gerüst durchklicken lässt:
 
-* eine Figur wählen – damit ein Durchlauf entsteht,
-* nach dem Story-Intro (schon der echte Screen aus 6.3, :mod:`ui.intro`)
-  Level 1 beginnen – damit die Uhr läuft,
 * eine Übung stellen und mit der Musterlösung abschliessen – damit das
   Protokoll geschrieben wird,
 * ein Level vorzeitig beenden – damit man für den Weg bis zum Abschluss nicht
@@ -20,8 +19,7 @@ in 6.5.
 
 import tkinter as tk
 
-from content import charaktere, verfahren
-from ui import intro
+from content import verfahren
 from ui.screen import Screen
 from ui.stil import ABSTAND, SCHRIFT_TITEL
 
@@ -43,37 +41,6 @@ def _vermerk(screen, aufgabe):
 
 def _knopf(screen, text, befehl):
     tk.Button(screen, text=text, command=befehl).pack(anchor="w", pady=(ABSTAND, 0))
-
-
-class Start(Screen):
-    titel = "Der Diamantenraub"
-
-    def __init__(self, fenster):
-        super().__init__(fenster)
-        _ueberschrift(self, "Der Diamantenraub")
-        _vermerk(self, "6.2")
-        _knopf(self, "Spiel starten", lambda: fenster.zeige(Figurwahl))
-
-
-class Figurwahl(Screen):
-    titel = "Wähle deine Figur"
-
-    def __init__(self, fenster):
-        super().__init__(fenster)
-        _ueberschrift(self, "Wer bist du?")
-        _vermerk(self, "6.2")
-        for figur in charaktere.SPIELBARE_CHARAKTERE:
-            _knopf(self, f"{figur.name} – {figur.rolle}", lambda f=figur: self._waehlen(f))
-
-    def _waehlen(self, figur):
-        self.fenster.starte_durchlauf(figur)
-        self.fenster.zeige(intro.Intro, danach=level_1_beginnen)
-
-
-def level_1_beginnen(fenster):
-    """Nach dem Intro: Level 1 beginnt, ab jetzt läuft die Uhr."""
-    fenster.durchlauf.starte_level()
-    fenster.zeige(Handbuch, level=fenster.durchlauf.spielstand.aktuelles_level)
 
 
 class Handbuch(Screen):

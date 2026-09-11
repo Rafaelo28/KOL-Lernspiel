@@ -23,6 +23,7 @@ tk = pytest.importorskip("tkinter")
 from tkinter import font as tkfont  # noqa: E402
 
 import main  # noqa: E402
+from content import charaktere  # noqa: E402
 from game.protokoll import KODIERUNG, TRENNZEICHEN  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
 from ui import ablauf, hauptfenster, platzhalter, stil  # noqa: E402
@@ -120,7 +121,8 @@ def _klick(fenster, anfang):
 
 def _bis_zum_handbuch(fenster):
     _klick(fenster, "Spiel starten")
-    _klick(fenster, "Vic Moreno")
+    fenster.aktueller_screen.waehle(charaktere.VIC_MORENO)   # was ein Klick auf die Karte tut
+    _klick(fenster, "Als Vic Moreno")          # Figur bestätigen, der Durchlauf beginnt
     _klick(fenster, "Weiter")                 # Intro, Absatz 1 → 2
     _klick(fenster, "Weiter")                 # Absatz 2 → 3
     _klick(fenster, "Handbuch aufschlagen")   # Level 1 beginnt
@@ -175,7 +177,7 @@ def test_das_fenster_traegt_titel_und_mindestgroesse(fenster, wurzel):
 
 def test_es_beginnt_mit_dem_startscreen(fenster):
     assert isinstance(fenster.aktueller_screen, ablauf.STARTSCREEN)
-    assert fenster.kopfzeile == ("Der Diamantenraub", "")
+    assert fenster.kopfzeile == ("Willkommen", "")
     assert fenster.durchlauf is None
 
 
@@ -187,6 +189,8 @@ def test_die_schriften_sind_eingerichtet(fenster, wurzel):
     assert tkfont.nametofont("TkDefaultFont", root=wurzel).cget("size") == stil.SCHRIFTGROESSE
     erzaehlung = tkfont.nametofont(stil.SCHRIFT_ERZAEHLUNG, root=wurzel)
     assert erzaehlung.cget("size") == stil.ERZAEHLGROESSE
+    fett = tkfont.nametofont(stil.SCHRIFT_FETT, root=wurzel)
+    assert (fett.cget("size"), fett.cget("weight")) == (stil.SCHRIFTGROESSE, "bold")
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -339,6 +343,7 @@ def test_ein_fehler_im_takt_haelt_die_uhr_nicht_an(fenster, monkeypatch):
 
 
 def test_ein_direkter_takt_startet_keinen_zweiten_daneben(fenster, wurzel):
+    fenster.zeige(Probe)   # ein Screen ohne Animation – sonst zählte deren Takt mit
     for _ in range(5):
         fenster._takt()
     angemeldet = wurzel.tk.splitlist(wurzel.tk.call("after", "info"))

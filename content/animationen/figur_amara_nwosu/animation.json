@@ -1,0 +1,18 @@
+{
+  "quelle": "grafik/figur_amara_nwosu.svg",
+  "breite": 150,
+  "hoehe": 150,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 29,
+      "y": 32,
+      "breite": 95,
+      "hoehe": 86,
+      "spalten": 40
+    }
+  ]
+}

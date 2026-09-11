@@ -184,8 +184,24 @@ class Funkspruch(NamedTuple):
 
 
 # ───────────────────────────────────────────────────────────────────────────
-# Vor Level 1 – der Absturz
+# Vor Level 1 – der Raub und der Absturz
 # ───────────────────────────────────────────────────────────────────────────
+
+#: Die Prämisse aus dem Konzept. Steht in der Figurwahl über den fünf
+#: Figuren: Erst mit ihr ergibt "Wer aus der Crew bist du?" einen Sinn, und
+#: der Intro danach setzt sie voraus – er beginnt schon am brennenden Wrack.
+VORGESCHICHTE = Erzaehltext(
+    kennung="vorgeschichte",
+    absaetze=(
+        "Der Raub ist geglückt: Deine Crew hat aus einem gesicherten Tresor in "
+        "Antwerpen, der Diamantenstadt Belgiens, Diamanten im Wert mehrerer "
+        "Milliarden Euro erbeutet.",
+        "Die Flucht per Charterflugzeug Richtung Singapur läuft zunächst glatt – "
+        "bis CIA, Interpol und die belgische Polizei die Maschine auf dem Radar "
+        "haben und Jäger aufsteigen lassen. Der Pilot muss ausweichen, verliert "
+        "die Kontrolle – das Flugzeug stürzt über der afghanischen Wüste ab.",
+    ),
+)
 
 INTRO = Erzaehltext(
     kennung="intro",
@@ -442,6 +458,7 @@ FUNKSPRUECHE_NACH_LEVEL = {
 
 #: Alle Erzähltexte in Spielreihenfolge.
 ERZAEHLTEXTE = (
+    VORGESCHICHTE,
     INTRO,
     EINSTIEG_LEVEL_1,
     EINSTIEG_LEVEL_2,

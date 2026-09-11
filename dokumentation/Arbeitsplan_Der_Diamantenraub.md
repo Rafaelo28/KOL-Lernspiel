@@ -375,6 +375,38 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     Verzeichnis, aus dem gestartet wurde
 
 ### 6.2 Startbildschirm + Charakterauswahl
+- **Umgesetzt:**
+  - `ui/startbildschirm.py` – Titelbild als Animation (`grafik/titel.svg`):
+    ein großer Diamant im Nachthimmel über der Wüste, Lichtreflexe wandern
+    über die Facetten, danach glänzt der Schriftzug auf. Darunter nur
+    "Spiel starten" – zu lesen gibt es hier noch nichts
+  - `ui/figurwahl.py` – oben die **Vorgeschichte** (`story.VORGESCHICHTE`,
+    die Prämisse aus dem Konzept: Raub in Antwerpen, Flucht, Absturz). Sie
+    stand bisher in keinem Spieltext, und der Intro setzt sie voraus – er
+    beginnt schon am brennenden Wrack. Darunter "Wer aus der Crew bist du?"
+    und die fünf Figuren als Karten: Symbol, Initialen, Name, Rolle
+  - **Rollen-Symbole statt Gesichter** (Tresor, Lupe, Chip, Landkarte, Pass):
+    Ein gezeichnetes Gesicht legt Aussehen, Geschlecht und Herkunft fest und
+    wirkt schnell wie ein Klischee – mit einem Symbol kann sich jedes Kind
+    jede Figur aussuchen. Die Symbole sind kleine Animationen
+    (`grafik/figur_<kennung>.svg`); es bewegt sich nur das der gewählten Karte
+  - **Erst wählen, dann bestätigen:** Ein Klick auf eine Karte wählt nur aus,
+    erst "Als … spielen" legt die Figur fest und beginnt den Durchlauf.
+    Danach lässt sie sich nicht mehr wechseln (ein Fenster, ein Durchlauf) –
+    ein versehentlicher Klick soll deshalb noch nichts festlegen. Pfeiltasten
+    und Enter gehen auch
+  - Die Initialen stehen als Siegel auf jeder Karte, mit dem Hinweis, dass sie
+    später jeden Funkspruch unterschreiben
+  - Der Weg Start → Figurwahl → Intro → Level 1 steht jetzt vollständig in
+    `ui/ablauf.py`; die Screens bekommen ihr "danach" von dort und wissen
+    nichts vom Ablauf. Die Platzhalter `Start` und `Figurwahl` sind entfernt
+  - Keine Eingabe für ein Pseudonym: Die ID erzeugt das Spiel selbst (siehe
+    5.1). Ein Eingabefeld lüde dazu ein, den eigenen Namen einzutippen
+    (Projektregel 7) – offen bleibt, wie die ID zur Person findet, siehe
+    "Offene Punkte" unten
+  - In der Standardgrösse (1000 × 700) passt alles; ein Test prüft das. Wird
+    das Fenster schmaler als etwa 960 Pixel gezogen, wird die rechte Karte
+    abgeschnitten – wie die Szenen in 6.3
 ### 6.3 Story-Intro (Absturz-Szene)
 - **Umgesetzt** (vor 6.2 gezogen – die Platzhalter aus 6.1 überbrücken die
   Lücke):
@@ -469,7 +501,7 @@ Bobs erste verschlüsselte Antwort entschlüsseln
   mit dem letzten Knopf des Story-Intros ("Handbuch aufschlagen"). Dafür
   spricht: Die Kontrollgruppe hat 15 Minuten reine Caesar-Zeit, und die
   Absturz-Szene ist Geschichte, kein Unterricht. Der Ablauf dafür steht in
-  `ui/ablauf.py` und `ui/platzhalter.py`
+  `ui/ablauf.py` (`level_1_beginnen`)
 
 ### 7.2 Level 2 (Substitution)
 Handbuch → Übungen mit steigender Textlänge → Hinweis auf Häufigkeitsanalyse →
@@ -528,6 +560,15 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
       auch im Übungsumfang. Entweder die Papieraufgaben entsprechend
       zuschneiden oder die Abweichung in der Arbeit begründen.
 - [ ] Einverständnis/Datenschutz für die Datenerhebung klären
+- [ ] **Wie findet die Pseudonym-ID zur Person?** Das Spiel erzeugt sie
+      selbst (`P` + Seed, siehe 5.1) und fragt nach keinem Namen – mit Absicht
+      (Projektregel 7). Sollen die Logs später mit Vor- und Nachtest
+      zusammengeführt werden, braucht es einen Weg dorthin. Möglich wären: die
+      Lehrkraft vergibt Codes (etwa "S07"), die am Start eingetippt werden –
+      dann nur Codes in genau dieser Form annehmen, damit niemand seinen Namen
+      einträgt; oder das Spiel zeigt die ID am Ende an, und sie wird auf dem
+      Testbogen notiert. `Hauptfenster.starte_durchlauf(figur, pseudonym=…)`
+      nimmt eine ID schon heute entgegen
 - [ ] Ablauf für den Vortest/Nachtest festlegen: im Spiel integriert oder auf
       Papier? (Muss identisch zur Kontrollgruppe sein.)
 

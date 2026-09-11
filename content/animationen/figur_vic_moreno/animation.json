@@ -1,0 +1,18 @@
+{
+  "quelle": "grafik/figur_vic_moreno.svg",
+  "breite": 150,
+  "hoehe": 150,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 42,
+      "y": 19,
+      "breite": 66,
+      "hoehe": 95,
+      "spalten": 40
+    }
+  ]
+}

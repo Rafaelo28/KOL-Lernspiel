@@ -24,6 +24,21 @@ Gespeichert wird also nicht die ganze Szene für jedes Bild, sondern nur der
 Ausschnitt, in dem sich etwas bewegt. Beim Wrack sind das 377 × 330 Pixel
 statt 960 × 540 – rund 20 MB Arbeitsspeicher statt 80.
 
+## Was es schon gibt
+
+Gute Vorlagen für neue Animationen:
+
+| Quelle | Wo im Spiel | Besonderheit |
+|--------|-------------|--------------|
+| `grafik/wrack.svg` | Story-Intro (6.3) | eine große Szene, ein Ausschnitt; der Text liegt im Spiel darüber |
+| `grafik/titel.svg` | Startbildschirm (6.2) | **zwei** Ausschnitte (Diamant, Schriftzug); der Schriftzug steckt im Bild |
+| `grafik/figur_<kennung>.svg` | Figurwahl (6.2) | fünf kleine Symbole, 150 × 150 Pixel; der Grund ist die Kartenfarbe |
+
+Die Symbole der Figurwahl sind auf `FARBE_KARTE` aus `ui/stil.py` gemalt,
+sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe. Wer die
+Farbe ändert, muss die SVGs mitziehen und neu rendern – ein Test in
+`tests/test_figurwahl.py` prüft die Ecken.
+
 ---
 
 ## Eine neue Animation anlegen
@@ -66,7 +81,23 @@ Szene oder funkelnde Sterne im ganzen Himmel deshalb stillhalten.
 **Keine Schriften aus dem Netz.** Firefox rendert mit den Schriften, die auf
 dem Rechner installiert sind. Für Text in der Szene eine verbreitete Schrift
 angeben (etwa `DejaVu Sans`) – oder Text lieber im Spiel über die Szene legen,
-wie beim Story-Intro.
+wie beim Story-Intro. Der Schriftzug im Titelbild nennt zuerst
+`Noto Serif Display` und dann `DejaVu Serif` als Ersatz. Das betrifft nur
+das Rendern: Im Spiel steht er schon als Bild, die Schulrechner brauchen die
+Schrift nicht.
+
+### Wann Bild 0 kommt
+
+Das Werkzeug rendert ab der **10. Sekunde** (`T0_MS` in `grafik/rendern.py`),
+damit alles eingeschwungen ist. Bild 0 im Spiel ist also der Zeitpunkt 10 s
+der Animation – bei einer Schleife von 4 s die Mitte der Schleife
+(10 s = 2 × 4 s + 2 s). Für Feuer und Rauch spielt das keine Rolle.
+
+Soll eine Bewegung aber genau mit Bild 0 anfangen, etwa ein Lichtstreifen,
+der gleich beim Erscheinen des Screens über den Titel läuft, verzögert man
+sie um den Rest, der bei 10 s geteilt durch die Schleifenlänge bleibt: bei
+4 s Schleife `animation-delay: 2s` (gleichwertig `-2s`, so steht es in
+`grafik/titel.svg`), bei 3 s Schleife `1s`.
 
 ### 3. Rendern
 
@@ -107,7 +138,9 @@ class MeinScreen(Screen):
 
 Die Bühne hält beim Screen-Wechsel von selbst an. Text lässt sich mit
 `self.buehne.create_text(...)` über die Szene legen – so macht es
-`ui/intro.py`.
+`ui/intro.py`. Eine Bühne, die erst auf einen Klick hin laufen soll, zeigt
+bis dahin Bild 0; `anhalten()` und `zeige_bild(0)` setzen sie wieder zurück
+(so die Karten in `ui/figurwahl.py`).
 
 ---
 

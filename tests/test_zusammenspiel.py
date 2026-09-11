@@ -346,6 +346,8 @@ def test_es_gibt_ueberhaupt_module_zu_pruefen():
         "ui/screen.py",
         "ui/animation.py",
         "ui/intro.py",
+        "ui/startbildschirm.py",
+        "ui/figurwahl.py",
     } <= namen
 
 
