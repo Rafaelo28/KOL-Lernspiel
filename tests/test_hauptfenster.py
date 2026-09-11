@@ -121,7 +121,9 @@ def _klick(fenster, anfang):
 def _bis_zum_handbuch(fenster):
     _klick(fenster, "Spiel starten")
     _klick(fenster, "Vic Moreno")
-    _klick(fenster, "Weiter")
+    _klick(fenster, "Weiter")                 # Intro, Absatz 1 → 2
+    _klick(fenster, "Weiter")                 # Absatz 2 → 3
+    _klick(fenster, "Handbuch aufschlagen")   # Level 1 beginnt
 
 
 def _bis_zur_uebung(fenster):
@@ -183,6 +185,8 @@ def test_die_schriften_sind_eingerichtet(fenster, wurzel):
     titel = tkfont.nametofont(stil.SCHRIFT_TITEL, root=wurzel)
     assert titel.cget("size") == stil.TITELGROESSE
     assert tkfont.nametofont("TkDefaultFont", root=wurzel).cget("size") == stil.SCHRIFTGROESSE
+    erzaehlung = tkfont.nametofont(stil.SCHRIFT_ERZAEHLUNG, root=wurzel)
+    assert erzaehlung.cget("size") == stil.ERZAEHLGROESSE
 
 
 # ───────────────────────────────────────────────────────────────────────────

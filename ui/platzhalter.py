@@ -7,7 +7,8 @@ heraus.
 Sie sind nur so weit ausgebaut, dass sich das Gerüst durchklicken lässt:
 
 * eine Figur wählen – damit ein Durchlauf entsteht,
-* Level 1 beginnen – damit die Uhr in der Kopfzeile läuft,
+* nach dem Story-Intro (schon der echte Screen aus 6.3, :mod:`ui.intro`)
+  Level 1 beginnen – damit die Uhr läuft,
 * eine Übung stellen und mit der Musterlösung abschliessen – damit das
   Protokoll geschrieben wird,
 * ein Level vorzeitig beenden – damit man für den Weg bis zum Abschluss nicht
@@ -20,6 +21,7 @@ in 6.5.
 import tkinter as tk
 
 from content import charaktere, verfahren
+from ui import intro
 from ui.screen import Screen
 from ui.stil import ABSTAND, SCHRIFT_TITEL
 
@@ -65,22 +67,13 @@ class Figurwahl(Screen):
 
     def _waehlen(self, figur):
         self.fenster.starte_durchlauf(figur)
-        self.fenster.zeige(Intro)
+        self.fenster.zeige(intro.Intro, danach=level_1_beginnen)
 
 
-class Intro(Screen):
-    titel = "Der Absturz"
-
-    def __init__(self, fenster):
-        super().__init__(fenster)
-        _ueberschrift(self, "Der Absturz")
-        _vermerk(self, "6.3")
-        _text(self, "Mit „Weiter“ beginnt Level 1 – ab dann läuft die Uhr oben rechts.")
-        _knopf(self, "Weiter", self._weiter)
-
-    def _weiter(self):
-        self.durchlauf.starte_level()
-        self.fenster.zeige(Handbuch, level=self.durchlauf.spielstand.aktuelles_level)
+def level_1_beginnen(fenster):
+    """Nach dem Intro: Level 1 beginnt, ab jetzt läuft die Uhr."""
+    fenster.durchlauf.starte_level()
+    fenster.zeige(Handbuch, level=fenster.durchlauf.spielstand.aktuelles_level)
 
 
 class Handbuch(Screen):

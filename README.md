@@ -137,6 +137,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.2–6.8 da sind |
 | `stil.py` | Schriften, Farben und Abstände an einer Stelle |
 | `animation.py` | Spielt vorgerenderte Animationen ab |
+| `intro.py` | Der Story-Intro: die Absturz-Szene mit dem Erzähltext, Absatz für Absatz |
 
 ### Animationen
 
@@ -257,13 +258,14 @@ Teilnehmenden dürfen nicht im Repository landen.
 | 3     | Aufgaben-Generator                           | fertig  |
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
-| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1 fertig) |
+| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1 und 6.3 fertig) |
 | 7     | Level zusammensetzen                         | offen   |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
-`main.py` öffnet das Fenstergerüst mit Platzhalter-Screens, durch die sich
-schon klicken lässt – vom Start über alle drei Level bis zum Abschluss. Die
-echten Screens entstehen in 6.2–6.8.
+`main.py` öffnet das Fenstergerüst, durch das sich schon klicken lässt – vom
+Start über den Story-Intro mit der animierten Absturz-Szene und alle drei Level
+bis zum Abschluss. Bis auf den Intro sind die Screens noch Platzhalter; die
+echten entstehen in 6.2 und 6.4–6.8.
 
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).

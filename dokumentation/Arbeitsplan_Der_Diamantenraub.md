@@ -376,6 +376,22 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 
 ### 6.2 Startbildschirm + Charakterauswahl
 ### 6.3 Story-Intro (Absturz-Szene)
+- **Umgesetzt** (vor 6.2 gezogen – die Platzhalter aus 6.1 überbrücken die
+  Lücke):
+  - Die Szene läuft als Animation: das brennende Wrack in den Dünen, mit
+    sechs kleineren Bränden über das ganze Flugzeug verteilt, Rauchsäule,
+    Funken, dem zurückgelassenen Diamantensack und Fußspuren, die vom Wrack
+    wegführen (`grafik/wrack.svg`). Wie Animationen entstehen:
+    `dokumentation/Animationen.md`
+  - `ui/intro.py` zeigt die drei Absätze aus `story.INTRO` nacheinander im
+    Nachthimmel oben rechts – dort bewegt sich nichts, und der Text liegt nicht
+    über dem Feuer. Ein Absatz auf einmal: Neunzig Wörter am Stück über einer
+    bewegten Szene wären zu viel
+  - Der letzte Knopf heisst "Handbuch aufschlagen" und startet Level 1 – der
+    Intro kostet keine Levelzeit (siehe 7.1)
+  - Die Szene ist 960 × 540 Pixel gross und passt in das Fenster in seiner
+    Standardgrösse (1000 × 700). Wird das Fenster schmaler als etwa 1000
+    Pixel gezogen, wird sie rechts abgeschnitten
 ### 6.4 Handbuch-Screen
 - Scrollbarer Text, Tabellen als Grid
 - Muss während der Aufgaben erreichbar bleiben (Nachschlagen ist erlaubt)
@@ -449,10 +465,11 @@ bei allen Funksprüchen ankommen.
 ### 7.1 Level 1 (Caesar)
 Handbuch → Übungen → Sendeaufgabe "Hallo, hört mich jemand? [Initialen]" →
 Bobs erste verschlüsselte Antwort entschlüsseln
-- **Zu entscheiden: Wann beginnt die Uhr von Level 1?** Die Platzhalter aus
-  6.1 starten sie nach dem Story-Intro. Dafür spricht: Die Kontrollgruppe hat
-  15 Minuten reine Caesar-Zeit, und die Absturz-Szene ist Geschichte, kein
-  Unterricht. Der Ablauf dafür steht in `ui/ablauf.py`
+- **Zu bestätigen: Wann beginnt die Uhr von Level 1?** Seit 6.3 startet sie
+  mit dem letzten Knopf des Story-Intros ("Handbuch aufschlagen"). Dafür
+  spricht: Die Kontrollgruppe hat 15 Minuten reine Caesar-Zeit, und die
+  Absturz-Szene ist Geschichte, kein Unterricht. Der Ablauf dafür steht in
+  `ui/ablauf.py` und `ui/platzhalter.py`
 
 ### 7.2 Level 2 (Substitution)
 Handbuch → Übungen mit steigender Textlänge → Hinweis auf Häufigkeitsanalyse →
@@ -490,6 +507,10 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
   hängt an `__file__`. In einer Einzeldatei-.exe zeigt das in ein temporäres
   Entpackverzeichnis, das beim Beenden gelöscht wird – mit den Messdaten.
   Im Build muss der Ordner neben der .exe liegen (`sys.executable`)
+- **Die Animationen mit einpacken:** `content/animationen/` enthält PNG- und
+  JSON-Dateien, keine Python-Module. PyInstaller nimmt sie nur mit, wenn sie
+  als Daten angegeben sind (`--add-data`). `grafik/` gehört nicht in den
+  Build – das ist Werkzeug für den Entwicklungsrechner
 
 ### 8.4 Logdateien einsammeln und Auswertung vorbereiten
 - Wo landen die CSVs? Wie kommst du nach dem Experiment an alle heran?

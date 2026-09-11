@@ -74,9 +74,9 @@ FENSTER_HOEHE = 700
 MIN_BREITE = 800
 MIN_HOEHE = 600
 
-#: So oft wird das Zeitfenster geprüft und die Restzeit aufgefrischt. Viermal
-#: pro Sekunde: Bei einem Takt pro Sekunde übersprünge die Anzeige ab und zu
-#: eine Sekunde, weil ``after()`` nie ganz pünktlich ist.
+#: So oft wird das Zeitfenster geprüft. Viermal pro Sekunde: Der Levelwechsel
+#: kommt dann höchstens eine Viertelsekunde nach Ablauf – bei einem Takt pro
+#: Sekunde bis zu einer ganzen, weil ``after()`` nie ganz pünktlich ist.
 TAKT_MILLISEKUNDEN = 250
 
 
@@ -121,7 +121,7 @@ class Hauptfenster:
         wurzel.title(FENSTER_TITEL)
         wurzel.minsize(MIN_BREITE, MIN_HOEHE)
         _zentriere(wurzel, FENSTER_BREITE, FENSTER_HOEHE)
-        self._titelschrift = stil.schriften_einrichten(wurzel)
+        self._schriften = stil.schriften_einrichten(wurzel)
         self._rahmen_bauen()
         wurzel.protocol("WM_DELETE_WINDOW", self.schliessen_anfragen)
         wurzel.report_callback_exception = self._unerwarteter_fehler
