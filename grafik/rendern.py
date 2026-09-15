@@ -41,6 +41,25 @@ Was die SVG mitbringen muss – Attribute am <svg>-Element
 
 Fehlt data-bereiche, schlägt das Werkzeug einen Ausschnitt vor.
 
+Drei Schalter für Bilder, die keine Schleife sind (Wert jeweils "ja")
+────────────────────────────────────────────────────────────────────
+    data-standbild     Nichts bewegt sich – es entsteht nur hintergrund.png.
+                       data-schleife-ms und data-bilder entfallen. (Das Buch
+                       im Handbuch, der Stempel.)
+    data-durchsichtig  Das Bild bekommt einen Alphakanal: Wo die SVG nichts
+                       malt, scheint im Spiel durch, was darunterliegt – etwa
+                       der Text einer Buchseite unter einem Stempel.
+    data-einmalig      Die Bildfolge läuft einmal von vorn bis hinten, statt
+                       sich zu wiederholen (das Umblättern). Sie beginnt bei
+                       0 ms, und die Nahtstelle wird nicht geprüft. Ist sie
+                       zugleich durchsichtig, gibt es keinen Hintergrund – sie
+                       wird über etwas gelegt, das schon dasteht.
+
+Durchsichtig wird es so: Firefox fotografiert jede Seite zweimal, einmal auf
+schwarzem und einmal auf weissem Grund. Wo beide gleich sind, ist das Bild
+deckend; wo sie sich unterscheiden, scheint der Grund durch – und der
+Unterschied sagt, wie stark (:func:`durchsichtig_machen`).
+
 Was es prüft, bevor es etwas schreibt
 ─────────────────────────────────────
 * Wiederholt sich die Animation nach data-schleife-ms genau? Sonst springt das
@@ -117,6 +136,10 @@ class Einstellungen(NamedTuple):
     bereiche: tuple
     #: Die Größe relativ zu data-breite – siehe :data:`MASSSTAEBE`.
     faktor: float = 1
+    #: Die drei Schalter aus dem Modulkopf.
+    standbild: bool = False
+    durchsichtig: bool = False
+    einmalig: bool = False
 
     @property
     def massstab(self):
@@ -160,6 +183,20 @@ def _ganze_zahl(kopf, name):
     if zahl <= 0:
         raise ValueError(f'{name} muss grösser als null sein, ist aber {zahl}.')
     return zahl
+
+
+def _schalter(kopf, name):
+    """Ein Ja/Nein-Attribut: data-standbild="ja" und so weiter."""
+    wert = (_attribut(kopf, name, pflicht=False) or "").lower()
+    if wert not in ("", "ja", "nein"):
+        raise ValueError(f'{name}="{wert}" – erlaubt sind "ja" und "nein".')
+    return wert == "ja"
+
+
+def startzeit(einstellungen):
+    """Ab wann die Bilder genommen werden: eine Schleife eingeschwungen, ein
+    einmaliger Ablauf von Anfang an."""
+    return 0 if einstellungen.einmalig or einstellungen.standbild else T0_MS
 
 
 def bereich_in_pixeln(werte, viewbox, massstab, breite, hoehe):
@@ -214,6 +251,16 @@ def einstellungen_lesen(svg_text, name, faktor=1):
             f"data-breite={grundbreite} passt nicht zur viewBox: Die Höhe wäre {hoehe_genau:.3f} Pixel"
             f"{groesse}. Wähle eine Breite, bei der eine ganze Zahl herauskommt."
         )
+    standbild = _schalter(kopf, "data-standbild")
+    durchsichtig = _schalter(kopf, "data-durchsichtig")
+    einmalig = _schalter(kopf, "data-einmalig")
+    if standbild and einmalig:
+        raise ValueError("Ein Standbild läuft nicht ab – data-standbild und data-einmalig schliessen sich aus.")
+    if standbild:
+        if _attribut(kopf, "data-bereiche", pflicht=False):
+            raise ValueError("Ein Standbild hat keine bewegten Ausschnitte – data-bereiche weglassen.")
+        return Einstellungen(name, viewbox, breite, hoehe, 1, 1, 1, (), faktor,
+                             standbild=True, durchsichtig=durchsichtig)
     schleife_ms = _ganze_zahl(kopf, "data-schleife-ms")
     bilder = _ganze_zahl(kopf, "data-bilder")
     if schleife_ms % bilder:
@@ -232,8 +279,11 @@ def einstellungen_lesen(svg_text, name, faktor=1):
         if len(werte) != 4:
             raise ValueError(f'data-bereiche: "{teil.strip()}" braucht genau vier Zahlen: x y b h.')
         bereiche.append(bereich_in_pixeln(werte, viewbox, massstab, breite, hoehe))
+    if einmalig and not bereiche:
+        raise ValueError("Ein einmaliger Ablauf braucht data-bereiche – meist die ganze Fläche.")
     return Einstellungen(name, viewbox, breite, hoehe, schleife_ms, bilder,
-                         schleife_ms // bilder, tuple(bereiche), faktor)
+                         schleife_ms // bilder, tuple(bereiche), faktor,
+                         durchsichtig=durchsichtig, einmalig=einmalig)
 
 
 # ── Die Seite, die Firefox abfotografiert ─────────────────────────────────
@@ -273,10 +323,11 @@ def kopie(innen, einstellungen, t_ms, bereich=None, faktor=1.0):
             f'preserveAspectRatio="none">{innen}</svg>')
 
 
-def seite(kopien, spalten):
+def seite(kopien, spalten, grund="#000"):
+    """Die HTML-Seite mit den Kopien im Raster, auf dem Grund ``grund``."""
     return (
         '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'
-        "html, body { margin: 0; padding: 0; overflow: hidden; background: #000; }"
+        f"html, body {{ margin: 0; padding: 0; overflow: hidden; background: {grund}; }}"
         f".raster {{ display: grid; grid-template-columns: repeat({spalten}, max-content); }}"
         "svg.kopie { display: block; }"
         f'</style></head><body><div class="raster">{"".join(kopien)}</div>'
@@ -377,6 +428,58 @@ def png_lesen(daten):
         zeilen.append(bytes(zeile))
         vorher = zeile
     return Bild(breite, hoehe, kanaele, zeilen)
+
+
+def png_schreiben(breite, hoehe, zeilen, kanaele=4):
+    """Baut ein 8-Bit-PNG aus Zeilen (RGB bei ``kanaele=3``, RGBA bei 4)."""
+    def stueck(art, inhalt):
+        return struct.pack(">I", len(inhalt)) + art + inhalt + struct.pack(">I", zlib.crc32(art + inhalt))
+
+    farbtyp = 2 if kanaele == 3 else 6
+    roh = b"".join(b"\x00" + bytes(zeile) for zeile in zeilen)
+    return (b"\x89PNG\r\n\x1a\n" + stueck(b"IHDR", struct.pack(">IIBBBBB", breite, hoehe, 8, farbtyp, 0, 0, 0))
+            + stueck(b"IDAT", zlib.compress(roh, 6)) + stueck(b"IEND", b""))
+
+
+def durchsichtig_machen(auf_schwarz, auf_weiss):
+    """Rechnet aus zwei Fotos derselben Seite ein PNG mit Alphakanal.
+
+    Das eine Foto ist auf schwarzem, das andere auf weissem Grund entstanden.
+    Wo die SVG nichts malt, zeigt das eine Schwarz, das andere Weiss – der
+    Unterschied ist 255, das Bild dort ganz durchsichtig. Wo sie deckend malt,
+    sind beide gleich. Dazwischen (Schatten, weiche Kanten) verrät der
+    Unterschied, wie viel vom Grund durchscheint; die Farbe ergibt sich aus
+    dem Foto auf Schwarz, geteilt durch die Deckkraft.
+    """
+    schwarz, weiss = png_lesen(auf_schwarz), png_lesen(auf_weiss)
+    if (schwarz.breite, schwarz.hoehe) != (weiss.breite, weiss.hoehe):
+        raise ValueError("Die beiden Fotos für die Durchsichtigkeit sind verschieden gross.")
+    breite = schwarz.breite
+    zeilen = []
+    for zs, zw in zip(ausschneiden(schwarz, 0, 0, breite, schwarz.hoehe),
+                      ausschneiden(weiss, 0, 0, breite, weiss.hoehe)):
+        aus = bytearray(4 * breite)
+        for x in range(breite):
+            i = 3 * x
+            rs, gs, bs = zs[i], zs[i + 1], zs[i + 2]
+            deckkraft = 255 - max(zw[i] - rs, zw[i + 1] - gs, zw[i + 2] - bs, 0)
+            if deckkraft <= 0:
+                continue                       # ganz durchsichtig: bleibt 0, 0, 0, 0
+            j = 4 * x
+            aus[j] = min(255, rs * 255 // deckkraft)
+            aus[j + 1] = min(255, gs * 255 // deckkraft)
+            aus[j + 2] = min(255, bs * 255 // deckkraft)
+            aus[j + 3] = deckkraft
+        zeilen.append(bytes(aus))
+    return png_schreiben(breite, schwarz.hoehe, zeilen, kanaele=4)
+
+
+def foto(kopien, spalten, breite, hoehe, bild_machen, durchsichtig=False):
+    """Lässt Firefox die Kopien fotografieren – bei Bedarf zweimal, für den Alphakanal."""
+    if not durchsichtig:
+        return bild_machen(seite(kopien, spalten), breite, hoehe)
+    return durchsichtig_machen(bild_machen(seite(kopien, spalten, "#000"), breite, hoehe),
+                               bild_machen(seite(kopien, spalten, "#fff"), breite, hoehe))
 
 
 def ausschneiden(bild, x, y, breite, hoehe):
@@ -488,7 +591,10 @@ def rendern(svg_datei, zielordner=ZIELORDNER, pruefung=True, bild_machen=firefox
     einstellungen = einstellungen_lesen(svg_text, svg_datei.stem)
     saetze = [einstellungen_lesen(svg_text, svg_datei.stem, faktor) for faktor in massstaebe]
 
-    if pruefung or not einstellungen.bereiche:
+    # Standbilder bewegen sich nicht, einmalige Abläufe haben keine Nahtstelle
+    # und decken mit ihrem Ausschnitt ohnehin alles ab – beide ohne Prüfung.
+    schleife = not (einstellungen.standbild or einstellungen.einmalig)
+    if schleife and (pruefung or not einstellungen.bereiche):
         ausgabe("Prüfe Nahtstelle und Bewegung …")
         fehler, vorschlag = pruefen(svg_text, einstellungen, bild_machen)
         if vorschlag:
@@ -518,33 +624,43 @@ def _satz_schreiben(svg_text, einstellungen, ordner, quelle, bild_machen, ausgab
         alt.unlink()
 
     innen = svg_innen(svg_text)
-    groesse = "" if einstellungen.faktor == 1 else f" (Maßstab {einstellungen.faktor:g})"
-    ausgabe(f"Hintergrund {einstellungen.breite}×{einstellungen.hoehe}{groesse} …")
-    (ordner / "hintergrund.png").write_bytes(
-        bild_machen(seite([kopie(innen, einstellungen, T0_MS)], 1), einstellungen.breite, einstellungen.hoehe)
-    )
+    e = einstellungen
+    start = startzeit(e)
+    groesse = "" if e.faktor == 1 else f" (Maßstab {e.faktor:g})"
+    # Ein durchsichtiger einmaliger Ablauf wird über etwas gelegt, das schon
+    # dasteht – er braucht keinen eigenen Hintergrund.
+    hintergrund = None if (e.durchsichtig and e.einmalig) else "hintergrund.png"
+    if hintergrund:
+        ausgabe(f"Hintergrund {e.breite}×{e.hoehe}{groesse} …")
+        (ordner / hintergrund).write_bytes(
+            foto([kopie(innen, e, start)], 1, e.breite, e.hoehe, bild_machen, e.durchsichtig))
+    else:
+        (ordner / "hintergrund.png").unlink(missing_ok=True)
     bereiche = []
-    for nr, bereich in enumerate(einstellungen.bereiche, 1):
-        spalten, zeilen = blattmasse(bereich, einstellungen.bilder)
-        ausgabe(f"Ausschnitt {nr}: {einstellungen.bilder} Bilder à {bereich.breite}×{bereich.hoehe} …")
-        kopien = [kopie(innen, einstellungen, T0_MS + i * einstellungen.takt_ms, bereich)
-                  for i in range(einstellungen.bilder)]
+    for nr, bereich in enumerate(e.bereiche, 1):
+        spalten, zeilen = blattmasse(bereich, e.bilder)
+        ausgabe(f"Ausschnitt {nr}: {e.bilder} Bilder à {bereich.breite}×{bereich.hoehe}{groesse} …")
+        kopien = [kopie(innen, e, start + i * e.takt_ms, bereich) for i in range(e.bilder)]
         datei = f"bereich_{nr}.png"
         (ordner / datei).write_bytes(
-            bild_machen(seite(kopien, spalten), bereich.breite * spalten, bereich.hoehe * zeilen)
-        )
+            foto(kopien, spalten, bereich.breite * spalten, bereich.hoehe * zeilen, bild_machen, e.durchsichtig))
         bereiche.append({"datei": datei, "x": bereich.x, "y": bereich.y, "breite": bereich.breite,
                          "hoehe": bereich.hoehe, "spalten": spalten})
 
     beschreibung = {
         "quelle": quelle,
-        "breite": einstellungen.breite,
-        "hoehe": einstellungen.hoehe,
-        "bilder": einstellungen.bilder,
-        "takt_ms": einstellungen.takt_ms,
-        "hintergrund": "hintergrund.png",
+        "breite": e.breite,
+        "hoehe": e.hoehe,
+        "bilder": e.bilder,
+        "takt_ms": e.takt_ms,
+        "hintergrund": hintergrund,
         "bereiche": bereiche,
     }
+    # Die Schalter nur, wenn sie gesetzt sind – so bleiben die Beschreibungen
+    # der gewöhnlichen Schleifen, wie sie sind.
+    for schalter in ("standbild", "durchsichtig", "einmalig"):
+        if getattr(e, schalter):
+            beschreibung[schalter] = True
     (ordner / "animation.json").write_text(json.dumps(beschreibung, indent=2, ensure_ascii=False) + "\n",
                                            encoding="utf-8")
 

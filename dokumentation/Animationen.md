@@ -161,6 +161,36 @@ macht es `ui/intro.py`. Eine Bühne, die erst auf einen Klick hin laufen soll, z
 bis dahin Bild 0; `anhalten()` und `zeige_bild(0)` setzen sie wieder zurück
 (so die Karten in `ui/figurwahl.py`).
 
+### 5. Standbilder, Durchsichtiges, einmalige Abläufe
+
+Nicht alles ist eine Schleife. Drei Schalter am `<svg>`-Element (Wert `"ja"`):
+
+| Schalter | Wofür | Was entsteht |
+|----------|-------|--------------|
+| `data-standbild` | ein Bild, das sich nicht bewegt (das Buch im Handbuch) | nur `hintergrund.png`; `data-schleife-ms`, `data-bilder` und `data-bereiche` entfallen |
+| `data-durchsichtig` | ein Bild, unter dem etwas durchscheinen soll (ein Stempel über Text) | PNGs mit Alphakanal |
+| `data-einmalig` | ein Ablauf, der einmal abläuft statt sich zu wiederholen (das Umblättern) | Bilder ab 0 ms, keine Prüfung der Nahtstelle |
+
+Durchsichtig wird es, indem Firefox jede Seite zweimal fotografiert – auf
+schwarzem und auf weissem Grund. Wo die SVG nichts malt, unterscheiden sich
+die beiden Fotos, und genau das wird zur Durchsichtigkeit. Die SVG darf
+deshalb **keinen eigenen Hintergrund** malen. Das Umrechnen läuft in reinem
+Python und dauert bei großen Bildern ein paar Sekunden.
+
+Ist ein einmaliger Ablauf zugleich durchsichtig, bekommt er keinen
+Hintergrund: Er wird über etwas gelegt, das schon dasteht. Im Spiel spielt
+ihn `Ablauf` ab:
+
+```python
+from ui.animation import Ablauf, Animation
+
+umblaettern = Ablauf(leinwand, Animation("umblaettern", massstab=self.massstab), x, y)
+umblaettern.abspielen(rueckwaerts=False, bei_bild=..., danach=...)
+```
+
+`bei_bild(nr, anzahl)` kommt nach jedem Bild – beim Umblättern wird damit in
+der Mitte der Text darunter ausgetauscht.
+
 ---
 
 ## Größe im Blick behalten

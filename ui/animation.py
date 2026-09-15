@@ -31,6 +31,15 @@ Benutzung in einem Screen::
         self.buehne.starten()
 
 Die Bühne hält beim Abriss selbst an – ein Screen muss daran nicht denken.
+
+Standbilder und einmalige Abläufe
+─────────────────────────────────
+Ein Standbild (``data-standbild`` in der SVG) ist eine :class:`Buehne` ohne
+bewegte Ausschnitte – etwa das aufgeschlagene Buch im Handbuch. Ein
+einmaliger, durchsichtiger Ablauf (``data-einmalig``, ``data-durchsichtig``)
+hat keinen eigenen Hintergrund: :class:`Ablauf` legt seine Bilder über eine
+Leinwand, die schon dasteht, spielt sie einmal ab und räumt sie wieder weg –
+so blättert die Seite um, während darunter der Text der Buchseiten liegt.
 """
 
 import json
@@ -87,7 +96,11 @@ class Animation:
             self.hoehe = int(daten["hoehe"])
             self.bilder = int(daten["bilder"])
             self.takt_ms = int(daten["takt_ms"])
-            self.hintergrund = str(daten["hintergrund"])
+            # Ein durchsichtiger einmaliger Ablauf hat keinen eigenen Hintergrund.
+            self.hintergrund = None if daten["hintergrund"] is None else str(daten["hintergrund"])
+            self.standbild = bool(daten.get("standbild", False))
+            self.durchsichtig = bool(daten.get("durchsichtig", False))
+            self.einmalig = bool(daten.get("einmalig", False))
             self.ausschnitte = tuple(
                 Ausschnitt(str(a["datei"]), int(a["x"]), int(a["y"]), int(a["breite"]),
                            int(a["hoehe"]), int(a["spalten"]))
@@ -105,6 +118,19 @@ class Animation:
 
     def __repr__(self):
         return f"Animation({self.name!r}, {self.breite}×{self.hoehe}, {self.bilder} Bilder)"
+
+
+def _folge_laden(master, animation, ausschnitt):
+    """Lädt das Bildblatt eines Ausschnitts und schneidet es in seine Einzelbilder."""
+    blatt = tk.PhotoImage(master=master, file=str(animation.ordner / ausschnitt.datei))
+    erwartet = (ausschnitt.spalten * ausschnitt.breite,
+                -(-animation.bilder // ausschnitt.spalten) * ausschnitt.hoehe)
+    if (blatt.width(), blatt.height()) != erwartet:
+        raise ValueError(
+            f"{ausschnitt.datei} ist {blatt.width()}×{blatt.height()} Pixel gross, "
+            f"erwartet sind {erwartet[0]}×{erwartet[1]} – neu rendern mit grafik/rendern.py."
+        )
+    return _zerschneiden(master, blatt, ausschnitt, animation.bilder)
 
 
 def _zerschneiden(master, blatt, ausschnitt, anzahl):
@@ -142,18 +168,12 @@ class Buehne(tk.Canvas):
 
     def _laden(self):
         animation = self.animation
-        self._hintergrund = tk.PhotoImage(master=self, file=str(animation.ordner / animation.hintergrund))
-        self.create_image(0, 0, image=self._hintergrund, anchor="nw")
+        self._hintergrund = None
+        if animation.hintergrund is not None:
+            self._hintergrund = tk.PhotoImage(master=self, file=str(animation.ordner / animation.hintergrund))
+            self.create_image(0, 0, image=self._hintergrund, anchor="nw")
         for ausschnitt in animation.ausschnitte:
-            blatt = tk.PhotoImage(master=self, file=str(animation.ordner / ausschnitt.datei))
-            erwartet = (ausschnitt.spalten * ausschnitt.breite,
-                        -(-animation.bilder // ausschnitt.spalten) * ausschnitt.hoehe)
-            if (blatt.width(), blatt.height()) != erwartet:
-                raise ValueError(
-                    f"{ausschnitt.datei} ist {blatt.width()}×{blatt.height()} Pixel gross, "
-                    f"erwartet sind {erwartet[0]}×{erwartet[1]} – neu rendern mit grafik/rendern.py."
-                )
-            folge = _zerschneiden(self, blatt, ausschnitt, animation.bilder)
+            folge = _folge_laden(self, animation, ausschnitt)
             self._folgen.append(folge)
             self._elemente.append(self.create_image(ausschnitt.x, ausschnitt.y, image=folge[0], anchor="nw"))
 
@@ -167,8 +187,11 @@ class Buehne(tk.Canvas):
         return self._auftrag is not None
 
     def starten(self):
-        """Spielt die Animation in Schleife ab. Ein zweiter Aufruf ändert nichts."""
-        if self._auftrag is None:
+        """Spielt die Animation in Schleife ab. Ein zweiter Aufruf ändert nichts.
+
+        Bei einem Standbild gibt es nichts abzuspielen – dann auch keinen Takt.
+        """
+        if self._auftrag is None and self._folgen:
             self._auftrag = self.after(self.animation.takt_ms, self._weiter)
 
     def anhalten(self):
@@ -195,3 +218,75 @@ class Buehne(tk.Canvas):
         # grossen Maßstab belegt eine Szene um die 50 MB.
         self._folgen = []
         self._hintergrund = None
+
+
+class Ablauf:
+    """Spielt eine einmalige Animation einmal über einer vorhandenen Leinwand ab.
+
+    Gedacht für durchsichtige Abläufe ohne Hintergrund (``data-einmalig`` und
+    ``data-durchsichtig``): Die Bilder liegen über allem, was auf der Leinwand
+    steht, und verschwinden am Ende wieder. ``x`` und ``y`` sind die Stelle
+    der linken oberen Ecke der Animation auf der Leinwand.
+
+    Die Bilder werden beim Bauen geladen. Wer das nicht beim Öffnen eines
+    Screens bezahlen will, baut den Ablauf etwas später (siehe das Handbuch).
+    """
+
+    TAG = "ablauf"
+
+    def __init__(self, leinwand, animation, x=0, y=0):
+        self.leinwand = leinwand
+        self.animation = animation
+        self._x, self._y = x, y
+        self._auftrag = None
+        self._elemente = []
+        self._folgen = [(ausschnitt, _folge_laden(leinwand, animation, ausschnitt))
+                        for ausschnitt in animation.ausschnitte]
+
+    @property
+    def laeuft(self):
+        return self._auftrag is not None or bool(self._elemente)
+
+    def abspielen(self, rueckwaerts=False, bei_bild=None, danach=None):
+        """Zeigt die Bilder nacheinander im Takt, rückwärts auf Wunsch.
+
+        ``bei_bild(i, anzahl)`` kommt nach jedem Bild – etwa um in der Mitte
+        des Umblätterns den Text darunter auszutauschen. ``danach()`` kommt,
+        wenn das letzte Bild wieder weg ist. Läuft schon ein Ablauf, geschieht
+        nichts: Zweimal übereinander sähe wirr aus.
+        """
+        if self.laeuft:
+            return False
+        reihenfolge = list(range(self.animation.bilder))
+        if rueckwaerts:
+            reihenfolge.reverse()
+        for ausschnitt, folge in self._folgen:
+            self._elemente.append(self.leinwand.create_image(
+                self._x + ausschnitt.x, self._y + ausschnitt.y, image=folge[reihenfolge[0]], anchor="nw",
+                tags=(self.TAG,)))
+        self._schritt(reihenfolge, 0, bei_bild, danach)
+        return True
+
+    def _schritt(self, reihenfolge, i, bei_bild, danach):
+        self._auftrag = None
+        if i >= len(reihenfolge):
+            self.abbrechen()
+            if danach is not None:
+                danach()
+            return
+        for element, (_, folge) in zip(self._elemente, self._folgen):
+            self.leinwand.itemconfigure(element, image=folge[reihenfolge[i]])
+        self.leinwand.tag_raise(self.TAG)
+        if bei_bild is not None:
+            bei_bild(i, len(reihenfolge))
+        self._auftrag = self.leinwand.after(
+            self.animation.takt_ms, lambda: self._schritt(reihenfolge, i + 1, bei_bild, danach))
+
+    def abbrechen(self):
+        """Hält an und räumt die Bilder von der Leinwand."""
+        if self._auftrag is not None:
+            self.leinwand.after_cancel(self._auftrag)
+            self._auftrag = None
+        for element in self._elemente:
+            self.leinwand.delete(element)
+        self._elemente = []

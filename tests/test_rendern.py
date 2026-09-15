@@ -82,12 +82,19 @@ class FalscherFirefox:
     HINTERGRUND = (40, 60, 90)
     PUNKT = (250, 200, 50)
 
-    def __init__(self, bewegung):
+    def __init__(self, bewegung, szene_ohne_grund=False):
+        """``szene_ohne_grund``: Die Szene malt nur den Punkt – drumherum
+        scheint der Grund der Seite durch (für durchsichtige Bilder)."""
         self.bewegung = bewegung
+        self.szene_ohne_grund = szene_ohne_grund
         self.aufrufe = []
 
     def __call__(self, html, breite, hoehe):
         self.aufrufe.append((breite, hoehe, html.count('class="kopie"')))
+        grund = self.HINTERGRUND
+        if self.szene_ohne_grund:
+            farbe = re.search(r"background: #([0-9a-f]{3});", html).group(1)
+            grund = (0, 0, 0) if farbe == "000" else (255, 255, 255)
         spalten = int(re.search(r"repeat\((\d+), max-content\)", html).group(1))
         kopien = re.findall(
             r'class="kopie" data-t="(\d+)" viewBox="([^"]+)" width="(\d+)" height="(\d+)"', html)
@@ -102,7 +109,7 @@ class FalscherFirefox:
             mx, my = (px - vx) * w / vb, (py - vy) * h / vh
             for y in range(h):
                 for x in range(w):
-                    farbe = self.PUNKT if abs(x + .5 - mx) <= 3 and abs(y + .5 - my) <= 3 else self.HINTERGRUND
+                    farbe = self.PUNKT if abs(x + .5 - mx) <= 3 and abs(y + .5 - my) <= 3 else grund
                     if y0 + y < hoehe and x0 + x < breite:
                         bild[y0 + y][3 * (x0 + x):3 * (x0 + x) + 3] = bytes(farbe)
             x0 += w
@@ -377,3 +384,136 @@ def test_main_meldet_fehler_und_gibt_eins_zurueck(tmp_path, capsys):
     datei.write_text("<svg></svg>", encoding="utf-8")
     assert rendern.main([str(datei)]) == 1
     assert "Fehler:" in capsys.readouterr().err
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 6. Standbild, durchsichtig, einmalig
+# ───────────────────────────────────────────────────────────────────────────
+
+def _svg_mit(schalter, bereiche="85 15 50 50", schleife=800, bilder=8):
+    teile = ['viewBox="0 0 200 100"', 'data-breite="200"']
+    if schleife is not None:
+        teile += [f'data-schleife-ms="{schleife}"', f'data-bilder="{bilder}"']
+    if bereiche is not None:
+        teile.append(f'data-bereiche="{bereiche}"')
+    teile += [f'{name}="ja"' for name in schalter]
+    return f'<svg xmlns="http://www.w3.org/2000/svg" {" ".join(teile)}><rect width="200" height="100"/></svg>'
+
+
+def _datei(tmp_path, text):
+    datei = tmp_path / "probe.svg"
+    datei.write_text(text, encoding="utf-8")
+    return datei
+
+
+def test_ein_standbild_braucht_weder_schleife_noch_ausschnitt():
+    e = rendern.einstellungen_lesen(_svg_mit(["data-standbild"], bereiche=None, schleife=None), "p")
+    assert e.standbild and (e.bilder, e.takt_ms, e.bereiche) == (1, 1, ())
+    assert rendern.startzeit(e) == 0
+
+
+def test_ein_standbild_mit_ausschnitt_ist_ein_widerspruch():
+    with pytest.raises(ValueError) as fehler:
+        rendern.einstellungen_lesen(_svg_mit(["data-standbild"], schleife=None), "p")
+    assert "keine bewegten Ausschnitte" in str(fehler.value)
+
+
+def test_standbild_und_einmalig_schliessen_sich_aus():
+    with pytest.raises(ValueError):
+        rendern.einstellungen_lesen(_svg_mit(["data-standbild", "data-einmalig"], bereiche=None), "p")
+
+
+def test_ein_schalter_kennt_nur_ja_und_nein():
+    svg = _svg_mit([]).replace("<svg ", '<svg data-standbild="vielleicht" ')
+    with pytest.raises(ValueError) as fehler:
+        rendern.einstellungen_lesen(svg, "p")
+    assert "ja" in str(fehler.value)
+
+
+def test_ein_einmaliger_ablauf_braucht_einen_ausschnitt():
+    with pytest.raises(ValueError) as fehler:
+        rendern.einstellungen_lesen(_svg_mit(["data-einmalig"], bereiche=None), "p")
+    assert "data-bereiche" in str(fehler.value)
+
+
+def test_ein_standbild_wird_ohne_pruefung_als_hintergrund_geschrieben(tmp_path):
+    firefox = FalscherFirefox(lambda t: (50, 50))
+    ziel = rendern.rendern(_datei(tmp_path, _svg_mit(["data-standbild"], bereiche=None, schleife=None)),
+                           tmp_path / "aus", bild_machen=firefox, ausgabe=lambda *_: None, massstaebe=(1,))
+    assert sorted(p.name for p in ziel.iterdir()) == ["animation.json", "hintergrund.png"]
+    beschreibung = json.loads((ziel / "animation.json").read_text(encoding="utf-8"))
+    assert beschreibung["standbild"] is True and beschreibung["bereiche"] == []
+    assert "einmalig" not in beschreibung and "durchsichtig" not in beschreibung
+    assert len(firefox.aufrufe) == 1                      # keine Prüfbilder
+
+
+def test_durchsichtig_machen_rechnet_den_alphakanal_aus():
+    """Nichts gemalt → ganz durchsichtig; deckend → wie gemalt; ein Schatten → halb."""
+    def zeile(*pixel):
+        return bytes(wert for p in pixel for wert in p)
+
+    schwarz = _png(3, 1, [zeile((0, 0, 0), (200, 50, 10), (0, 0, 0))])
+    weiss = _png(3, 1, [zeile((255, 255, 255), (200, 50, 10), (128, 128, 128))])
+    bild = rendern.png_lesen(rendern.durchsichtig_machen(schwarz, weiss))
+    assert bild.kanaele == 4
+    pixel = [tuple(bild.zeilen[0][4 * x:4 * x + 4]) for x in range(3)]
+    assert pixel == [(0, 0, 0, 0), (200, 50, 10, 255), (0, 0, 0, 127)]
+
+
+def test_verschieden_grosse_fotos_lassen_sich_nicht_verrechnen():
+    with pytest.raises(ValueError):
+        rendern.durchsichtig_machen(_png(2, 1, [bytes(6)]), _png(3, 1, [bytes(9)]))
+
+
+def test_ein_durchsichtiges_standbild_hat_einen_alphakanal(tmp_path):
+    firefox = FalscherFirefox(lambda t: (50, 50), szene_ohne_grund=True)
+    svg = _svg_mit(["data-standbild", "data-durchsichtig"], bereiche=None, schleife=None)
+    ziel = rendern.rendern(_datei(tmp_path, svg), tmp_path / "aus", bild_machen=firefox,
+                           ausgabe=lambda *_: None, massstaebe=(1,))
+    bild = rendern.png_lesen((ziel / "hintergrund.png").read_bytes())
+    assert bild.kanaele == 4
+    assert bild.zeilen[50][4 * 50 + 3] == 255              # der Punkt ist deckend
+    assert bild.zeilen[5][4 * 5 + 3] == 0                  # drumherum durchsichtig
+    assert len(firefox.aufrufe) == 2                       # einmal auf Schwarz, einmal auf Weiss
+
+
+def geradeaus(t_ms):
+    """Ein Punkt, der von links nach rechts läuft und nicht zurückkommt."""
+    return 90 + t_ms / 20, 40
+
+
+def test_ein_einmaliger_ablauf_beginnt_bei_null_und_wird_nicht_auf_die_naht_geprueft(tmp_path):
+    zeiten = []
+
+    def merken(t_ms):
+        zeiten.append(t_ms)
+        return geradeaus(t_ms)
+
+    ziel = rendern.rendern(_datei(tmp_path, _svg_mit(["data-einmalig"], bereiche="80 20 100 40")),
+                           tmp_path / "aus", bild_machen=FalscherFirefox(merken), ausgabe=lambda *_: None,
+                           massstaebe=(1,))
+    assert zeiten[-8:] == [i * 100 for i in range(8)]     # das Blatt, ab 0 ms
+    beschreibung = json.loads((ziel / "animation.json").read_text(encoding="utf-8"))
+    assert beschreibung["einmalig"] is True and beschreibung["hintergrund"] == "hintergrund.png"
+
+
+def test_ein_durchsichtiger_einmaliger_ablauf_kommt_ohne_hintergrund(tmp_path):
+    ziel = tmp_path / "aus" / "probe"
+    ziel.mkdir(parents=True)
+    (ziel / "hintergrund.png").write_bytes(b"alt")        # von einem früheren Rendern
+    firefox = FalscherFirefox(geradeaus, szene_ohne_grund=True)
+    rendern.rendern(_datei(tmp_path, _svg_mit(["data-einmalig", "data-durchsichtig"], bereiche="80 20 100 40")),
+                    tmp_path / "aus", bild_machen=firefox, ausgabe=lambda *_: None, massstaebe=(1,))
+    assert sorted(p.name for p in ziel.iterdir()) == ["animation.json", "bereich_1.png"]
+    beschreibung = json.loads((ziel / "animation.json").read_text(encoding="utf-8"))
+    assert beschreibung["hintergrund"] is None
+    assert beschreibung["durchsichtig"] is True and beschreibung["einmalig"] is True
+    assert rendern.png_lesen((ziel / "bereich_1.png").read_bytes()).kanaele == 4
+
+
+def test_gewoehnliche_schleifen_behalten_ihre_beschreibung(tmp_path):
+    """Keine neuen Schlüssel in den Beschreibungen, die es schon gibt."""
+    ziel = rendern.rendern(_svg_datei(tmp_path, bereiche="85 15 50 50"), tmp_path / "aus",
+                           bild_machen=FalscherFirefox(im_kreis), ausgabe=lambda *_: None, massstaebe=(1,))
+    beschreibung = json.loads((ziel / "animation.json").read_text(encoding="utf-8"))
+    assert set(beschreibung) == {"quelle", "breite", "hoehe", "bilder", "takt_ms", "hintergrund", "bereiche"}

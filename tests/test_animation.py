@@ -63,8 +63,15 @@ def test_jede_animation_gibt_es_in_jedem_massstab(ordner):
 def test_die_dateien_einer_animation_passen_zusammen(satz):
     ordner, _ = satz
     beschreibung = json.loads((ordner / "animation.json").read_text(encoding="utf-8"))
-    assert _png_groesse(ordner / beschreibung["hintergrund"]) == (beschreibung["breite"], beschreibung["hoehe"])
-    assert beschreibung["bereiche"], "Eine Animation ohne bewegten Ausschnitt ist ein Standbild."
+    if beschreibung["hintergrund"] is None:
+        # Ein durchsichtiger einmaliger Ablauf wird über etwas gelegt – ohne eigenen Hintergrund.
+        assert beschreibung.get("durchsichtig") and beschreibung.get("einmalig")
+    else:
+        assert _png_groesse(ordner / beschreibung["hintergrund"]) == (beschreibung["breite"], beschreibung["hoehe"])
+    if beschreibung.get("standbild"):
+        assert beschreibung["bereiche"] == [], "Ein Standbild hat keine bewegten Ausschnitte."
+    else:
+        assert beschreibung["bereiche"], "Eine Animation ohne bewegten Ausschnitt ist ein Standbild."
     for bereich in beschreibung["bereiche"]:
         zeilen = -(-beschreibung["bilder"] // bereich["spalten"])
         assert _png_groesse(ordner / bereich["datei"]) == (
@@ -117,7 +124,7 @@ def test_spiel_und_werkzeug_kennen_dieselben_massstaebe():
 # ───────────────────────────────────────────────────────────────────────────
 
 tk = pytest.importorskip("tkinter")
-from ui.animation import Animation, Buehne  # noqa: E402
+from ui.animation import Ablauf, Animation, Buehne  # noqa: E402
 
 FARBEN = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff"]
 
@@ -131,6 +138,28 @@ def wurzel():
     wurzel.withdraw()
     yield wurzel
     wurzel.destroy()
+
+
+def _probe_ablauf(wurzel, ordner, bilder=4):
+    """Ein durchsichtiger einmaliger Ablauf ohne Hintergrund: 10×8 Pixel an (5, 3),
+    Bild i in FARBEN[i] – mit einem durchsichtigen Pixel in der Ecke."""
+    ziel = ordner / "blaettern"
+    ziel.mkdir(parents=True)
+    zeilen = []
+    for y in range(8):
+        zeile = bytearray()
+        for nr in range(bilder):
+            farbe = bytes.fromhex(FARBEN[nr][1:])
+            for x in range(10):
+                zeile += bytes(4) if (x, y) == (0, 0) else farbe + b"\xff"
+        zeilen.append(bytes(zeile))
+    (ziel / "bereich_1.png").write_bytes(rendern.png_schreiben(10 * bilder, 8, zeilen, kanaele=4))
+    (ziel / "animation.json").write_text(json.dumps({
+        "quelle": "blaettern.svg", "breite": 40, "hoehe": 30, "bilder": bilder, "takt_ms": 20,
+        "hintergrund": None, "durchsichtig": True, "einmalig": True,
+        "bereiche": [{"datei": "bereich_1.png", "x": 5, "y": 3, "breite": 10, "hoehe": 8, "spalten": bilder}],
+    }), encoding="utf-8")
+    return Animation("blaettern", ordner)
 
 
 def _probeanimation(wurzel, ordner, spalten=2, bilder=5, blatt_zu_klein=False):
@@ -261,3 +290,80 @@ def test_beim_abriss_gibt_die_buehne_ihre_bilder_frei(wurzel, tmp_path):
     assert all(name in wurzel.image_names() for name in bilder)
     buehne.destroy()
     assert not any(name in wurzel.image_names() for name in bilder)
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 3. Standbilder und einmalige Abläufe
+# ───────────────────────────────────────────────────────────────────────────
+
+def test_ein_standbild_hat_nichts_abzuspielen(wurzel, tmp_path):
+    ziel = tmp_path / "bild"
+    ziel.mkdir()
+    grund = tk.PhotoImage(master=wurzel, width=20, height=10)
+    grund.put("#335577", to=(0, 0, 20, 10))
+    grund.write(str(ziel / "hintergrund.png"), format="png")
+    (ziel / "animation.json").write_text(json.dumps({
+        "quelle": "bild.svg", "breite": 20, "hoehe": 10, "bilder": 1, "takt_ms": 1,
+        "hintergrund": "hintergrund.png", "bereiche": [], "standbild": True}), encoding="utf-8")
+    animation = Animation("bild", tmp_path)
+    assert animation.standbild and not animation.einmalig
+    buehne = Buehne(wurzel, animation)
+    buehne.starten()
+    assert not buehne.laeuft
+    assert wurzel.tk.call("after", "info") == ""
+
+
+def test_ein_ablauf_ohne_hintergrund_wird_gelesen(wurzel, tmp_path):
+    animation = _probe_ablauf(wurzel, tmp_path)
+    assert animation.hintergrund is None
+    assert animation.durchsichtig and animation.einmalig
+
+
+def _farbe_von(leinwand, element):
+    bild = leinwand.itemcget(element, "image")
+    return "#%02x%02x%02x" % tuple(leinwand.tk.call(bild, "get", 5, 4))
+
+
+def test_ein_ablauf_zeigt_seine_bilder_der_reihe_nach_und_raeumt_dann_auf(wurzel, tmp_path):
+    import time
+
+    leinwand = tk.Canvas(wurzel, width=40, height=30)
+    ablauf = Ablauf(leinwand, _probe_ablauf(wurzel, tmp_path), x=2, y=1)
+    gesehen, fertig = [], []
+
+    def bei_bild(nr, anzahl):
+        (element,) = leinwand.find_withtag(Ablauf.TAG)
+        gesehen.append((_farbe_von(leinwand, element), nr, anzahl))
+
+    assert ablauf.abspielen(bei_bild=bei_bild, danach=lambda: fertig.append(True))
+    assert leinwand.coords(leinwand.find_withtag(Ablauf.TAG)[0]) == [7.0, 4.0]   # 2 + 5, 1 + 3
+    ende = time.monotonic() + 2
+    while not fertig and time.monotonic() < ende:
+        wurzel.update()
+        time.sleep(0.005)
+    assert gesehen == [(farbe, nr, 4) for nr, farbe in enumerate(FARBEN[:4])]
+    assert fertig == [True]
+    assert leinwand.find_withtag(Ablauf.TAG) == ()
+    assert not ablauf.laeuft
+
+
+def test_ein_ablauf_laeuft_rueckwaerts_und_nicht_doppelt(wurzel, tmp_path):
+    leinwand = tk.Canvas(wurzel, width=40, height=30)
+    ablauf = Ablauf(leinwand, _probe_ablauf(wurzel, tmp_path))
+    farben = []
+    ablauf.abspielen(rueckwaerts=True,
+                     bei_bild=lambda nr, anzahl: farben.append(_farbe_von(leinwand, leinwand.find_withtag(Ablauf.TAG)[0])))
+    assert not ablauf.abspielen()                          # läuft schon – kein zweiter darüber
+    assert farben == [FARBEN[3]]
+    ablauf.abbrechen()
+    assert leinwand.find_withtag(Ablauf.TAG) == () and not ablauf.laeuft
+    assert wurzel.tk.call("after", "info") == ""
+
+
+def test_die_durchsichtigkeit_bleibt_beim_zerschneiden_erhalten(wurzel, tmp_path):
+    """Sonst läge beim Umblättern ein Rechteck über dem Text."""
+    leinwand = tk.Canvas(wurzel, width=40, height=30)
+    ablauf = Ablauf(leinwand, _probe_ablauf(wurzel, tmp_path))
+    (_, folge), = ablauf._folgen
+    assert folge[0].transparency_get(0, 0)
+    assert not folge[0].transparency_get(5, 4)
