@@ -132,11 +132,11 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 
 | Modul | Inhalt |
 |-------|--------|
-| `hauptfenster.py` | Das eine Fenster: Kopfzeile mit Level, Screen-Wechsel, Takt. Zeigt bewusst keinen Countdown (Zeitdruck-Stress) |
+| `hauptfenster.py` | Das eine Fenster: öffnet maximiert (F11 Vollbild), Kopfzeile mit Level, Screen-Wechsel, Takt. Zeigt bewusst keinen Countdown (Zeitdruck-Stress) |
 | `screen.py` | Die Grundform aller Screens |
 | `ablauf.py` | Welcher Screen wann kommt – hier setzt Phase 7 die Level zusammen |
 | `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.4–6.8 da sind |
-| `stil.py` | Schriften, Farben und Abstände an einer Stelle |
+| `stil.py` | Schriften, Farben und Abstände an einer Stelle – und der Maßstab: auf 1080p-Monitoren alles 1,5-mal so groß |
 | `animation.py` | Spielt vorgerenderte Animationen ab |
 | `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
 | `figurwahl.py` | Die Figurwahl: Vorgeschichte und fünf Karten mit Rollen-Symbol; erst wählen, dann bestätigen |
@@ -153,7 +153,8 @@ python3 grafik/rendern.py grafik/wrack.svg
 
 Firefox rechnet dabei die Animation in Bilder um (nur auf dem Entwicklungsrechner),
 das Spiel blättert die fertigen Bilder aus `content/animationen/` nur noch durch – ohne
-Zusatzpaket. Wie man eine neue Animation anlegt und welche Regeln sie einhalten muss,
+Zusatzpaket. Jede Animation gibt es in zwei Größen: 960 × 540 für kleine Bildschirme
+und 1440 × 810 (Unterordner `1.5x/`) für die 1080p-Schulmonitore. Wie man eine neue Animation anlegt und welche Regeln sie einhalten muss,
 steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 
 | Animation | Wo | Was sich bewegt |

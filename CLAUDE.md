@@ -153,9 +153,16 @@ Die Aufteilung steht als `selbst_zu_loesen` in `content/story.py`.
 - **Animationen werden vorgerendert.** Szenen entstehen als SVG in `grafik/`,
   Firefox rechnet sie mit `grafik/rendern.py` in Bilder um (nur auf dem
   Entwicklungsrechner), das Spiel blättert die fertigen PNGs aus
-  `content/animationen/` nur durch. Regeln dafür in
-  `dokumentation/Animationen.md` – vor allem: jede Animationsdauer teilt die
-  Schleife, und bewegt wird nur im angegebenen Ausschnitt.
+  `content/animationen/` nur durch – in zwei Größen, die große im Unterordner
+  `1.5x/`. Regeln dafür in `dokumentation/Animationen.md` – vor allem: jede
+  Animationsdauer teilt die Schleife, und bewegt wird nur im angegebenen
+  Ausschnitt.
+- **Die Oberfläche hat einen Maßstab.** Auf 1080p-Schulmonitoren zeichnet das
+  Spiel alles 1,5-mal so groß (`ui/stil.py`, "Der Maßstab"). Feste
+  Pixelangaben in Screens gelten für den Maßstab 1 und gehen **immer** durch
+  `self.px(…)`; Animationen werden mit `massstab=self.massstab` geladen.
+  Jeder Screen muss in beiden Maßstäben ins Fenster passen – die Tests
+  prüfen das mit der Fixture `platz`.
 - **Zeitmessung pro Level und pro Aufgabe**, nicht über die gesamte
   Fensteröffnungsdauer (sonst verfälschen Pausen die Daten).
 - **Schwellenwert für Zusatzaufgaben** ist genau *eine* Konstante an *einer*

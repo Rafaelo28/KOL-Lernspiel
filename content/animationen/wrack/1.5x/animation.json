@@ -1,0 +1,18 @@
+{
+  "quelle": "grafik/wrack.svg",
+  "breite": 1440,
+  "hoehe": 810,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 473,
+      "y": 252,
+      "breite": 565,
+      "hoehe": 495,
+      "spalten": 7
+    }
+  ]
+}

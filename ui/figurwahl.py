@@ -47,7 +47,8 @@ HINWEIS_INITIALEN = "Mit deinen Initialen unterschreibst du später jeden Funksp
 #: Aufschrift des Knopfes, solange keine Karte gewählt ist.
 KNOPF_OHNE_WAHL = "Wähle zuerst eine Figur"
 
-#: So breit darf die Vorgeschichte werden, in Pixeln.
+#: So breit darf die Vorgeschichte werden – in Pixeln im Maßstab 1, wie alle
+#: festen Grössen hier (siehe ui/stil.py, "Der Maßstab").
 TEXTBREITE = 920
 
 #: Innenbreite einer Karte in Pixeln – alle Karten gleich breit. Fünf müssen
@@ -74,14 +75,21 @@ def knopftext(figur):
 
 
 class Karte(tk.Frame):
-    """Eine Figur zum Anklicken: Symbol mit Initialen, Name, Rolle."""
+    """Eine Figur zum Anklicken: Symbol mit Initialen, Name, Rolle.
 
-    def __init__(self, master, figur, beim_klick):
+    ``massstab`` ist der des Fensters – er bestimmt, welcher Bildsatz geladen
+    wird und wie gross Siegel, Rahmen und Zeilen werden.
+    """
+
+    def __init__(self, master, figur, beim_klick, massstab=1):
+        def px(wert):
+            return stil.skaliert(wert, massstab)
+
         super().__init__(
             master,
             bg=stil.FARBE_KARTE,
-            pady=stil.ABSTAND // 2,
-            highlightthickness=RAHMEN,
+            pady=px(stil.ABSTAND // 2),
+            highlightthickness=px(RAHMEN),
             highlightbackground=stil.FARBE_KARTENRAND,
             highlightcolor=stil.FARBE_KARTENRAND,
             cursor="hand2",
@@ -89,20 +97,21 @@ class Karte(tk.Frame):
         self.figur = figur
         self._gewaehlt = False
 
-        self.buehne = Buehne(self, Animation(animation_fuer(figur)), bg=stil.FARBE_KARTE)
+        self.buehne = Buehne(self, Animation(animation_fuer(figur), massstab=massstab), bg=stil.FARBE_KARTE)
         self.buehne.pack()
         # Die Initialen als Siegel unten rechts auf dem Symbol.
-        x = self.buehne.animation.breite - 22
-        y = self.buehne.animation.hoehe - 22
-        self.buehne.create_oval(x - 18, y - 18, x + 18, y + 18, fill=stil.FARBE_NACHT,
-                                outline=stil.FARBE_GOLD, width=2)
+        x = self.buehne.animation.breite - px(22)
+        y = self.buehne.animation.hoehe - px(22)
+        r = px(18)
+        self.buehne.create_oval(x - r, y - r, x + r, y + r, fill=stil.FARBE_NACHT,
+                                outline=stil.FARBE_GOLD, width=px(2))
         self._siegel = self.buehne.create_text(x, y, text=figur.initialen, fill=stil.FARBE_GOLD,
                                                font=stil.SCHRIFT_FETT)
 
-        zeile = KARTENBREITE - stil.ABSTAND // 2
+        zeile = px(KARTENBREITE - stil.ABSTAND // 2)
         self._name = tk.Label(self, text=figur.name, font=stil.SCHRIFT_FETT, bg=stil.FARBE_KARTE,
                               fg=stil.FARBE_SAND, wraplength=zeile)
-        self._name.pack(pady=(stil.ABSTAND // 2, 0))
+        self._name.pack(pady=(px(stil.ABSTAND // 2), 0))
         self._rolle = tk.Label(self, text=figur.rolle, bg=stil.FARBE_KARTE, fg=stil.FARBE_DUENE,
                                wraplength=zeile, justify="center")
         self._rolle.pack()
@@ -175,25 +184,27 @@ class Figurwahl(Screen):
 
         for absatz in story.VORGESCHICHTE.absaetze:
             tk.Label(self, text=absatz, font=stil.SCHRIFT_ERZAEHLUNG, bg=stil.FARBE_NACHT, fg=stil.FARBE_SAND,
-                     wraplength=TEXTBREITE, justify="left", anchor="w").pack(fill="x", pady=(0, stil.ABSTAND // 2))
+                     wraplength=self.px(TEXTBREITE), justify="left",
+                     anchor="w").pack(fill="x", pady=(0, self.px(stil.ABSTAND // 2)))
         tk.Label(self, text=FRAGE, font=stil.SCHRIFT_TITEL, bg=stil.FARBE_NACHT, fg=stil.FARBE_SAND,
-                 anchor="w").pack(fill="x", pady=(stil.ABSTAND // 2, stil.ABSTAND))
+                 anchor="w").pack(fill="x", pady=(self.px(stil.ABSTAND // 2), self.px(stil.ABSTAND)))
 
         reihe = tk.Frame(self, bg=stil.FARBE_NACHT)
         reihe.pack()
         self.karten = []
+        # Die Spaltenbreite zählt Rahmen und Lücke mit.
+        spaltenbreite = self.px(KARTENBREITE) + 2 * (self.px(RAHMEN) + self.px(LUECKE))
         for spalte, figur in enumerate(figuren):
-            karte = Karte(reihe, figur, self.waehle)
-            karte.grid(row=0, column=spalte, padx=LUECKE, sticky="nsew")
-            # Die Spaltenbreite zählt Rahmen und Lücke mit.
-            reihe.grid_columnconfigure(spalte, uniform="karte", minsize=KARTENBREITE + 2 * (RAHMEN + LUECKE))
+            karte = Karte(reihe, figur, self.waehle, self.massstab)
+            karte.grid(row=0, column=spalte, padx=self.px(LUECKE), sticky="nsew")
+            reihe.grid_columnconfigure(spalte, uniform="karte", minsize=spaltenbreite)
             self.karten.append(karte)
 
         leiste = tk.Frame(self, bg=stil.FARBE_NACHT)
-        leiste.pack(fill="x", pady=(stil.ABSTAND, 0))
+        leiste.pack(fill="x", pady=(self.px(stil.ABSTAND), 0))
         tk.Label(leiste, text=HINWEIS_INITIALEN, bg=stil.FARBE_NACHT, fg=stil.FARBE_DUENE).pack(side="left")
-        self._knopf = tk.Button(leiste, command=self.bestaetigen, font=stil.SCHRIFT_FETT, padx=stil.ABSTAND,
-                                highlightbackground=stil.FARBE_NACHT)
+        self._knopf = tk.Button(leiste, command=self.bestaetigen, font=stil.SCHRIFT_FETT,
+                                padx=self.px(stil.ABSTAND), highlightbackground=stil.FARBE_NACHT)
         self._knopf.pack(side="right")
         self._knopf.bind("<Return>", lambda _ereignis: self._knopf.invoke())
         self._knopf.bind("<Left>", lambda _ereignis: self.blaettern(-1))

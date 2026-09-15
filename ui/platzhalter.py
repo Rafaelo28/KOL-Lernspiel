@@ -29,8 +29,8 @@ def _ueberschrift(screen, text):
 
 
 def _text(screen, text):
-    tk.Label(screen, text=text, anchor="w", justify="left", wraplength=700).pack(
-        fill="x", pady=(ABSTAND // 2, 0)
+    tk.Label(screen, text=text, anchor="w", justify="left", wraplength=screen.px(700)).pack(
+        fill="x", pady=(screen.px(ABSTAND // 2), 0)
     )
 
 
@@ -40,7 +40,7 @@ def _vermerk(screen, aufgabe):
 
 
 def _knopf(screen, text, befehl):
-    tk.Button(screen, text=text, command=befehl).pack(anchor="w", pady=(ABSTAND, 0))
+    tk.Button(screen, text=text, command=befehl).pack(anchor="w", pady=(screen.px(ABSTAND), 0))
 
 
 class Handbuch(Screen):
@@ -62,7 +62,7 @@ class Uebung(Screen):
         _ueberschrift(self, "Übung")
         _vermerk(self, "6.5")
         self._aufgabentext = tk.Label(self, anchor="w", justify="left")
-        self._aufgabentext.pack(fill="x", pady=(ABSTAND, 0))
+        self._aufgabentext.pack(fill="x", pady=(self.px(ABSTAND), 0))
         erledigt = len(fenster.durchlauf.spielstand.erledigte_aufgaben)
         _text(self, f"Erledigte Aufgaben: {erledigt} – gespeichert in {fenster.durchlauf.protokoll.pfad}")
         _knopf(self, "Musterlösung eintragen", self._musterloesung)

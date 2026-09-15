@@ -24,6 +24,14 @@ Gespeichert wird also nicht die ganze Szene für jedes Bild, sondern nur der
 Ausschnitt, in dem sich etwas bewegt. Beim Wrack sind das 377 × 330 Pixel
 statt 960 × 540 – rund 20 MB Arbeitsspeicher statt 80.
 
+**Zwei Größen.** Dieselben drei Dateien entstehen noch einmal 1,5-mal so groß
+im Unterordner `1.5x/` (beim Wrack 1440 × 810 statt 960 × 540). Auf einem
+1080p-Schulmonitor zeichnet das Spiel alles 1,5-mal so groß und lädt diesen
+Satz; auf kleineren Bildschirmen den kleinen (siehe `ui/stil.py`, „Der
+Maßstab“). Vergrößern ließe sich das kleine Bild im Spiel nicht sauber –
+Tkinter kann nur Pixel verdoppeln, das sähe grob aus. Deshalb rechnet Firefox
+beide Größen direkt aus der SVG.
+
 ## Was es schon gibt
 
 Gute Vorlagen für neue Animationen:
@@ -105,6 +113,10 @@ sie um den Rest, der bei 10 s geteilt durch die Schleifenlänge bleibt: bei
 python3 grafik/rendern.py grafik/<name>.svg
 ```
 
+Das rendert beide Größen. Nur eine davon: `--massstab 1.5` (oder `1`). Damit
+die große Größe aufgeht, muss `data-breite` × 1,5 eine ganze Zahl ergeben –
+also eine gerade Breite wählen.
+
 Bevor das Werkzeug etwas schreibt, prüft es die Regeln an echten Bildern:
 
 | Meldung | Was zu tun ist |
@@ -129,16 +141,23 @@ from ui.animation import Animation, Buehne
 class MeinScreen(Screen):
     def __init__(self, fenster):
         super().__init__(fenster)
-        self.buehne = Buehne(self, Animation("<name>"))
+        self.buehne = Buehne(self, Animation("<name>", massstab=self.massstab))
         self.buehne.pack()
+        # Positionen über der Szene im Maßstab 1 angeben und durch px() schicken:
+        self.buehne.create_text(self.px(480), self.px(30), text="…")
 
     def beim_anzeigen(self):
         self.buehne.starten()
 ```
 
-Die Bühne hält beim Screen-Wechsel von selbst an. Text lässt sich mit
-`self.buehne.create_text(...)` über die Szene legen – so macht es
-`ui/intro.py`. Eine Bühne, die erst auf einen Klick hin laufen soll, zeigt
+`massstab=self.massstab` wählt den Bildsatz, der zum Fenster passt. Ohne ihn
+käme auf dem Schulmonitor das kleine Bild in ein großes Fenster. Alle festen
+Pixelangaben – Positionen von Text über der Szene, Abstände, Textbreiten –
+gelten für den Maßstab 1 und gehen durch `self.px(…)`.
+
+Die Bühne hält beim Screen-Wechsel von selbst an und gibt ihre Bilder frei.
+Text lässt sich mit `self.buehne.create_text(...)` über die Szene legen – so
+macht es `ui/intro.py`. Eine Bühne, die erst auf einen Klick hin laufen soll, zeigt
 bis dahin Bild 0; `anhalten()` und `zeige_bild(0)` setzen sie wieder zurück
 (so die Karten in `ui/figurwahl.py`).
 
@@ -148,8 +167,9 @@ bis dahin Bild 0; `anhalten()` und `zeige_bild(0)` setzen sie wieder zurück
 
 Jedes Einzelbild kostet im Arbeitsspeicher Breite × Höhe × 4 Byte. Ein Test
 (`tests/test_animation.py`) schlägt Alarm, wenn eine Animation mehr als 40 MB
-Arbeitsspeicher oder 8 MB auf der Platte braucht. Stellschrauben, falls es zu
-viel wird:
+Arbeitsspeicher oder 8 MB auf der Platte braucht – in der großen Größe das
+2,25-Fache, weil jedes Bild 1,5 × 1,5-mal so viele Pixel hat (das Wrack
+braucht dort rund 50 MB). Stellschrauben, falls es zu viel wird:
 
 * den Ausschnitt enger fassen oder in zwei kleinere teilen,
 * weniger Bilder je Sekunde (`data-bilder` kleiner),

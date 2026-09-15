@@ -30,8 +30,8 @@ def wurzel():
 
 
 @pytest.fixture
-def fenster(wurzel, tmp_path):
-    fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path)
+def fenster(wurzel, tmp_path, massstab):
+    fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
 
@@ -91,6 +91,7 @@ def test_nach_dem_wechsel_laeuft_die_szene_nicht_weiter(screen, fenster, wurzel)
     assert auftrag not in wurzel.tk.splitlist(wurzel.tk.call("after", "info"))
 
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
 @pytest.mark.parametrize("nr", range(len(story.INTRO.absaetze)))
 def test_jeder_absatz_passt_in_den_nachthimmel(screen, nr):
     """Der Text darf nicht über das brennende Wrack laufen und nicht über den Rand."""
@@ -101,6 +102,14 @@ def test_jeder_absatz_passt_in_den_nachthimmel(screen, nr):
     breite, hoehe = screen.buehne.animation.breite, screen.buehne.animation.hoehe
     assert x1 <= breite and y0 >= 0
     assert y1 < hoehe * .62, f"Absatz {nr + 1} reicht bis y={y1} – in die brennende Szene."
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_der_intro_passt_ins_fenster(screen, wurzel, platz):
+    """Im kleinen Maßstab in 1000 × 700, im grossen auf den 1080p-Schulmonitor."""
+    wurzel.update_idletasks()
+    assert wurzel.winfo_reqwidth() <= platz[0]
+    assert wurzel.winfo_reqheight() <= platz[1]
 
 
 def test_der_intro_kostet_keine_levelzeit(fenster):

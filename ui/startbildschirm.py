@@ -41,8 +41,8 @@ ANIMATION = "titel"
 #: Steht unter dem Schriftzug, über den Dünen.
 UNTERTITEL = "Ein Lernspiel über Verschlüsselung"
 
-#: Höhe des Untertitels in der Szene (Pixel von oben) – unter dem Schriftzug,
-#: der bei 444 endet.
+#: Höhe des Untertitels in der Szene (Pixel von oben, im Maßstab 1) – unter
+#: dem Schriftzug, der bei 444 endet.
 UNTERTITEL_Y = 478
 
 #: Höhe der Hinweiszeile zur ID, ebenfalls über den Dünen. Sie steht im Bild
@@ -68,30 +68,31 @@ class Startbildschirm(Screen):
         self.configure(bg=stil.FARBE_NACHT)
         self._danach = danach
 
-        self.buehne = Buehne(self, Animation(ANIMATION), bg=stil.FARBE_NACHT)
+        self.buehne = Buehne(self, Animation(ANIMATION, massstab=self.massstab), bg=stil.FARBE_NACHT)
         self.buehne.pack()
         mitte = self.buehne.animation.breite // 2
+        untertitel_y, hinweis_y = self.px(UNTERTITEL_Y), self.px(HINWEIS_Y)
         schrift = dict(text=UNTERTITEL, font=stil.SCHRIFT_ERZAEHLUNG)
-        self.buehne.create_text(mitte + 2, UNTERTITEL_Y + 2, fill=stil.FARBE_SCHATTEN, **schrift)
-        self._untertitel = self.buehne.create_text(mitte, UNTERTITEL_Y, fill=stil.FARBE_SAND, **schrift)
-        self._hinweis_schatten = self.buehne.create_text(mitte + 1, HINWEIS_Y + 1, text=HINWEIS_ID,
-                                                         fill=stil.FARBE_SCHATTEN)
-        self._hinweis = self.buehne.create_text(mitte, HINWEIS_Y, text=HINWEIS_ID, fill=stil.FARBE_DUENE)
+        self.buehne.create_text(mitte + self.px(2), untertitel_y + self.px(2), fill=stil.FARBE_SCHATTEN, **schrift)
+        self._untertitel = self.buehne.create_text(mitte, untertitel_y, fill=stil.FARBE_SAND, **schrift)
+        self._hinweis_schatten = self.buehne.create_text(mitte + self.px(1), hinweis_y + self.px(1),
+                                                         text=HINWEIS_ID, fill=stil.FARBE_SCHATTEN)
+        self._hinweis = self.buehne.create_text(mitte, hinweis_y, text=HINWEIS_ID, fill=stil.FARBE_DUENE)
 
         formular = tk.Frame(self, bg=stil.FARBE_NACHT)
-        formular.pack(pady=(stil.ABSTAND // 2, 0))
+        formular.pack(pady=(self.px(stil.ABSTAND // 2), 0))
         tk.Label(formular, text=BESCHRIFTUNG_ID, font=stil.SCHRIFT_FETT, bg=stil.FARBE_NACHT,
                  fg=stil.FARBE_SAND).pack(side="left")
         self._feld = tk.Entry(
             formular,
             width=5,
             justify="center",
-            font=stil.SCHRIFT_TITEL,
+            font=stil.SCHRIFT_ERZAEHLUNG,
             bg=stil.FARBE_SAND,
             fg=stil.FARBE_NACHT,
             insertbackground=stil.FARBE_NACHT,
             relief="flat",
-            highlightthickness=2,
+            highlightthickness=self.px(2),
             highlightbackground=stil.FARBE_KARTENRAND,
             highlightcolor=stil.FARBE_GOLD,
             validate="key",
@@ -99,12 +100,12 @@ class Startbildschirm(Screen):
         # Tk fragt vor jeder Änderung am Feld nach: %d ist die Art (1 = Einfügen,
         # 0 = Löschen), %P der Inhalt danach.
         self._feld.config(validatecommand=(self.register(self._darf_rein), "%d", "%P"))
-        self._feld.pack(side="left", padx=(stil.ABSTAND // 2, stil.ABSTAND))
+        self._feld.pack(side="left", padx=(self.px(stil.ABSTAND // 2), self.px(stil.ABSTAND)))
         self._feld.bind("<KeyPress>", self._taste)
         self._feld.bind("<Return>", lambda _ereignis: self.starten())
 
         self._knopf = tk.Button(formular, text=KNOPF, command=self.starten, font=stil.SCHRIFT_FETT,
-                                padx=stil.ABSTAND, highlightbackground=stil.FARBE_NACHT)
+                                padx=self.px(stil.ABSTAND), highlightbackground=stil.FARBE_NACHT)
         self._knopf.pack(side="left")
         self._knopf.bind("<Return>", lambda _ereignis: self._knopf.invoke())
 

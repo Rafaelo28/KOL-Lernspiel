@@ -275,7 +275,7 @@ def test_rendern_schreibt_hintergrund_blatt_und_beschreibung(tmp_path):
     firefox = FalscherFirefox(im_kreis)
     ziel = rendern.rendern(_svg_datei(tmp_path, bereiche="85 15 50 50"), tmp_path / "aus",
                            bild_machen=firefox, ausgabe=lambda *_: None)
-    assert sorted(p.name for p in ziel.iterdir()) == ["animation.json", "bereich_1.png", "hintergrund.png"]
+    assert sorted(p.name for p in ziel.iterdir()) == ["1.5x", "animation.json", "bereich_1.png", "hintergrund.png"]
     beschreibung = json.loads((ziel / "animation.json").read_text(encoding="utf-8"))
     assert beschreibung["breite"] == 200 and beschreibung["hoehe"] == 100
     assert beschreibung["bilder"] == 8 and beschreibung["takt_ms"] == 100
@@ -285,6 +285,61 @@ def test_rendern_schreibt_hintergrund_blatt_und_beschreibung(tmp_path):
     assert (blatt.breite, blatt.hoehe) == (8 * 50, 50)
     hintergrund = rendern.png_lesen((ziel / "hintergrund.png").read_bytes())
     assert (hintergrund.breite, hintergrund.hoehe) == (200, 100)
+
+
+def test_derselbe_satz_entsteht_auch_anderthalbmal_so_gross(tmp_path):
+    """Für 1080p-Schulmonitore – aus der SVG gerechnet, nicht aus dem kleinen Bild vergrössert."""
+    ziel = rendern.rendern(_svg_datei(tmp_path, bereiche="85 15 50 50"), tmp_path / "aus",
+                           bild_machen=FalscherFirefox(im_kreis), ausgabe=lambda *_: None)
+    gross = ziel / "1.5x"
+    assert sorted(p.name for p in gross.iterdir()) == ["animation.json", "bereich_1.png", "hintergrund.png"]
+    beschreibung = json.loads((gross / "animation.json").read_text(encoding="utf-8"))
+    assert (beschreibung["breite"], beschreibung["hoehe"]) == (300, 150)
+    assert (beschreibung["bilder"], beschreibung["takt_ms"]) == (8, 100)
+    bereich = beschreibung["bereiche"][0]
+    # 85 15 50 50 in SVG-Einheiten, 1,5 Pixel je Einheit, nach außen gerundet
+    assert (bereich["x"], bereich["y"], bereich["breite"], bereich["hoehe"]) == (127, 22, 76, 76)
+    hintergrund = rendern.png_lesen((gross / "hintergrund.png").read_bytes())
+    assert (hintergrund.breite, hintergrund.hoehe) == (300, 150)
+    blatt = rendern.png_lesen((gross / "bereich_1.png").read_bytes())
+    zeilen = -(-8 // bereich["spalten"])
+    assert (blatt.breite, blatt.hoehe) == (bereich["spalten"] * 76, zeilen * 76)
+
+
+def test_die_einstellungen_im_grossen_massstab():
+    e = rendern.einstellungen_lesen(_svg(), "probe", 1.5)
+    assert (e.breite, e.hoehe, e.faktor) == (300, 150, 1.5)
+    assert (e.bilder, e.takt_ms) == (8, 100)
+    assert e.massstab == 1.5                     # Pixel je SVG-Einheit
+
+
+def test_eine_breite_die_im_grossen_massstab_nicht_aufgeht_wird_abgewiesen():
+    with pytest.raises(ValueError) as fehler:
+        rendern.einstellungen_lesen(_svg(breite=201, viewbox="0 0 201 100"), "probe", 1.5)
+    assert "Maßstab 1.5" in str(fehler.value)
+
+
+def test_passt_ein_massstab_nicht_wird_gar_nichts_geschrieben(tmp_path):
+    """Sonst läge ein kleiner Satz ohne grossen im Ordner – das Spiel fiele erst auf dem Schulmonitor um."""
+    datei = _svg_datei(tmp_path, breite=201, viewbox="0 0 201 100", bereiche="85 15 50 50")
+    with pytest.raises(ValueError):
+        rendern.rendern(datei, tmp_path / "aus", bild_machen=FalscherFirefox(im_kreis), ausgabe=lambda *_: None)
+    assert not (tmp_path / "aus").exists()
+
+
+def test_ein_einzelner_massstab_laesst_den_anderen_satz_in_ruhe(tmp_path):
+    ziel = rendern.rendern(_svg_datei(tmp_path, bereiche="85 15 50 50"), tmp_path / "aus",
+                           bild_machen=FalscherFirefox(im_kreis), ausgabe=lambda *_: None, massstaebe=(1.5,))
+    assert sorted(p.name for p in ziel.iterdir()) == ["1.5x"]
+
+
+def test_main_reicht_den_gewuenschten_massstab_weiter(tmp_path, monkeypatch):
+    aufrufe = []
+    monkeypatch.setattr(rendern, "rendern", lambda svg, **optionen: aufrufe.append(optionen) or tmp_path)
+    assert rendern.main([str(_svg_datei(tmp_path)), "--massstab", "1.5"]) == 0
+    assert aufrufe[0]["massstaebe"] == (1.5,)
+    assert rendern.main([str(_svg_datei(tmp_path))]) == 0
+    assert aufrufe[1]["massstaebe"] == rendern.MASSSTAEBE
 
 
 def test_die_einzelbilder_zeigen_die_zeitpunkte_der_reihe_nach(tmp_path):

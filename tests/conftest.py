@@ -34,3 +34,26 @@ def ereignis_ausloesen(widget, sequenz, x_root=0, y_root=0, zeichen=""):
 def ausloesen():
     """Die Funktion :func:`ereignis_ausloesen` – als Fixture, weil tests/ kein Paket ist."""
     return ereignis_ausloesen
+
+
+@pytest.fixture
+def massstab():
+    """Der Maßstab der Fenster in den Tests – fest 1, damit sie auf jedem Bildschirm gleich laufen.
+
+    Ohne Vorgabe richtete sich das Spiel nach dem Bildschirm, auf dem die Tests
+    gerade laufen. Ein Test, der den grossen Maßstab braucht, überschreibt die
+    Fixture mit ``@pytest.mark.parametrize("massstab", [1, 1.5])``.
+    """
+    return 1
+
+
+@pytest.fixture
+def platz(massstab):
+    """So viel Platz hat das Fenster im jeweiligen Maßstab: (Breite, Höhe).
+
+    Im kleinen die Standardgrösse, im grossen ein maximiertes Fenster auf einem
+    1080p-Schulmonitor: 1080 Pixel Höhe abzüglich Titelleiste und Taskleiste
+    lassen unter Windows 11 rund 1000. Verlangt werden 20 Pixel weniger – als
+    Luft, weil Schriften unter Windows etwas anders ausfallen als hier.
+    """
+    return (1000, 700) if massstab == 1 else (1920, 980)

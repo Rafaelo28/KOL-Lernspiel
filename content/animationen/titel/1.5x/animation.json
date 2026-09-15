@@ -1,0 +1,26 @@
+{
+  "quelle": "grafik/titel.svg",
+  "breite": 1440,
+  "hoehe": 810,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 486,
+      "y": 100,
+      "breite": 468,
+      "hoehe": 397,
+      "spalten": 8
+    },
+    {
+      "datei": "bereich_2.png",
+      "x": 176,
+      "y": 554,
+      "breite": 1088,
+      "hoehe": 112,
+      "spalten": 3
+    }
+  ]
+}

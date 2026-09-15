@@ -8,6 +8,16 @@ nicht – es liest nur, was hier herauskommt:
     content/animationen/<name>/hintergrund.png   die ganze Szene als Standbild
     content/animationen/<name>/bereich_1.png     Bildfolge des bewegten Ausschnitts
     content/animationen/<name>/animation.json    Größen, Positionen, Takt
+    content/animationen/<name>/1.5x/…            dasselbe noch einmal, 1,5-mal so groß
+
+Zwei Größen
+───────────
+Das Spiel zeichnet auf einem 1080p-Schulmonitor alles 1,5-mal so groß wie auf
+einem kleinen Bildschirm (siehe ``ui/stil.py``, ``massstab_fuer``). Ein
+fertiges Bild nachträglich zu vergrößern, sähe grob aus – Tkinter kann dabei
+nur Pixel verdoppeln. Deshalb rechnet Firefox jede Animation gleich in beiden
+Größen aus der SVG (:data:`MASSSTAEBE`); Maßstab 1 liegt direkt im Ordner der
+Animation, die anderen in einem Unterordner wie ``1.5x``.
 
 Warum vorrendern
 ────────────────
@@ -73,6 +83,19 @@ ERLAUBTE_AUSREISSER = 6
 #: Breiter wird ein Bildblatt nicht – danach beginnt eine neue Zeile.
 MAX_BLATTBREITE = 4096
 
+#: In diesen Größen wird jede Animation gerendert – relativ zu data-breite.
+#: Muss zu ``MASSSTAEBE`` in ``ui/stil.py`` passen; ein Test prüft das.
+MASSSTAEBE = (1, 1.5)
+
+
+def unterordner(massstab):
+    """Wo der Bildsatz eines Maßstabs liegt: 1 direkt im Ordner, sonst etwa in "1.5x".
+
+    >>> unterordner(1), unterordner(1.5)
+    ('', '1.5x')
+    """
+    return "" if massstab == 1 else f"{massstab:g}x"
+
 
 class Bereich(NamedTuple):
     """Ein bewegter Ausschnitt in Pixeln des fertigen Bildes."""
@@ -92,6 +115,8 @@ class Einstellungen(NamedTuple):
     bilder: int
     takt_ms: int
     bereiche: tuple
+    #: Die Größe relativ zu data-breite – siehe :data:`MASSSTAEBE`.
+    faktor: float = 1
 
     @property
     def massstab(self):
@@ -159,8 +184,12 @@ def bereich_in_pixeln(werte, viewbox, massstab, breite, hoehe):
     return Bereich(x0, y0, x1 - x0, y1 - y0)
 
 
-def einstellungen_lesen(svg_text, name):
-    """Liest die data-Attribute am <svg>-Element und prüft sie."""
+def einstellungen_lesen(svg_text, name, faktor=1):
+    """Liest die data-Attribute am <svg>-Element und prüft sie.
+
+    ``faktor`` ist der Maßstab (siehe :data:`MASSSTAEBE`): Bei 1,5 wird aus
+    data-breite="960" ein Bild mit 1440 Pixeln Breite.
+    """
     kopf = _kopf(svg_text).group(0)
     try:
         viewbox = tuple(float(v) for v in _attribut(kopf, "viewBox").replace(",", " ").split())
@@ -168,14 +197,22 @@ def einstellungen_lesen(svg_text, name):
         raise ValueError("Die viewBox muss aus vier Zahlen bestehen.") from None
     if len(viewbox) != 4 or viewbox[2] <= 0 or viewbox[3] <= 0:
         raise ValueError("Die viewBox muss aus vier Zahlen bestehen, Breite und Höhe grösser null.")
-    breite = _ganze_zahl(kopf, "data-breite")
+    grundbreite = _ganze_zahl(kopf, "data-breite")
+    breite_genau = grundbreite * faktor
+    breite = round(breite_genau)
+    if abs(breite_genau - breite) > 1e-6:
+        raise ValueError(
+            f"data-breite={grundbreite} ergibt im Maßstab {faktor:g} keine ganze Pixelzahl "
+            f"({breite_genau:g}). Eine gerade Breite wählen."
+        )
     massstab = breite / viewbox[2]
     hoehe_genau = viewbox[3] * massstab
     hoehe = round(hoehe_genau)
     if abs(hoehe_genau - hoehe) > 1e-6:
+        groesse = "" if faktor == 1 else f" (im Maßstab {faktor:g})"
         raise ValueError(
-            f"data-breite={breite} passt nicht zur viewBox: Die Höhe wäre {hoehe_genau:.3f} Pixel. "
-            "Wähle eine Breite, bei der eine ganze Zahl herauskommt."
+            f"data-breite={grundbreite} passt nicht zur viewBox: Die Höhe wäre {hoehe_genau:.3f} Pixel"
+            f"{groesse}. Wähle eine Breite, bei der eine ganze Zahl herauskommt."
         )
     schleife_ms = _ganze_zahl(kopf, "data-schleife-ms")
     bilder = _ganze_zahl(kopf, "data-bilder")
@@ -196,7 +233,7 @@ def einstellungen_lesen(svg_text, name):
             raise ValueError(f'data-bereiche: "{teil.strip()}" braucht genau vier Zahlen: x y b h.')
         bereiche.append(bereich_in_pixeln(werte, viewbox, massstab, breite, hoehe))
     return Einstellungen(name, viewbox, breite, hoehe, schleife_ms, bilder,
-                         schleife_ms // bilder, tuple(bereiche))
+                         schleife_ms // bilder, tuple(bereiche), faktor)
 
 
 # ── Die Seite, die Firefox abfotografiert ─────────────────────────────────
@@ -438,11 +475,18 @@ def pruefen(svg_text, einstellungen, bild_machen=firefox_bild):
 
 # ── Schreiben ──────────────────────────────────────────────────────────────
 
-def rendern(svg_datei, zielordner=ZIELORDNER, pruefung=True, bild_machen=firefox_bild, ausgabe=print):
-    """Rendert eine Animation. Rückgabe: der Ordner mit den fertigen Dateien."""
+def rendern(svg_datei, zielordner=ZIELORDNER, pruefung=True, bild_machen=firefox_bild, ausgabe=print,
+            massstaebe=MASSSTAEBE):
+    """Rendert eine Animation in allen ``massstaebe``. Rückgabe: der Ordner der Animation.
+
+    Geprüft wird einmal, im Maßstab 1 – Nahtstelle und Bewegung hängen an der
+    SVG, nicht an der Pixelgröße. Gelesen werden die Einstellungen aber für
+    jeden Maßstab vorab: Passt einer nicht, wird gar nichts geschrieben.
+    """
     svg_datei = pathlib.Path(svg_datei)
     svg_text = svg_datei.read_text(encoding="utf-8")
     einstellungen = einstellungen_lesen(svg_text, svg_datei.stem)
+    saetze = [einstellungen_lesen(svg_text, svg_datei.stem, faktor) for faktor in massstaebe]
 
     if pruefung or not einstellungen.bereiche:
         ausgabe("Prüfe Nahtstelle und Bewegung …")
@@ -457,14 +501,26 @@ def rendern(svg_datei, zielordner=ZIELORDNER, pruefung=True, bild_machen=firefox
         if fehler:
             raise ValueError("\n".join(fehler))
 
+    try:
+        quelle = svg_datei.resolve().relative_to(PROJEKT).as_posix()
+    except ValueError:
+        quelle = svg_datei.name
     ziel = pathlib.Path(zielordner) / einstellungen.name
-    ziel.mkdir(parents=True, exist_ok=True)
-    for alt in ziel.glob("bereich_*.png"):
+    for satz in saetze:
+        _satz_schreiben(svg_text, satz, ziel / unterordner(satz.faktor), quelle, bild_machen, ausgabe)
+    return ziel
+
+
+def _satz_schreiben(svg_text, einstellungen, ordner, quelle, bild_machen, ausgabe):
+    """Schreibt Hintergrund, Bildblätter und Beschreibung eines Maßstabs."""
+    ordner.mkdir(parents=True, exist_ok=True)
+    for alt in ordner.glob("bereich_*.png"):
         alt.unlink()
 
     innen = svg_innen(svg_text)
-    ausgabe(f"Hintergrund {einstellungen.breite}×{einstellungen.hoehe} …")
-    (ziel / "hintergrund.png").write_bytes(
+    groesse = "" if einstellungen.faktor == 1 else f" (Maßstab {einstellungen.faktor:g})"
+    ausgabe(f"Hintergrund {einstellungen.breite}×{einstellungen.hoehe}{groesse} …")
+    (ordner / "hintergrund.png").write_bytes(
         bild_machen(seite([kopie(innen, einstellungen, T0_MS)], 1), einstellungen.breite, einstellungen.hoehe)
     )
     bereiche = []
@@ -474,16 +530,12 @@ def rendern(svg_datei, zielordner=ZIELORDNER, pruefung=True, bild_machen=firefox
         kopien = [kopie(innen, einstellungen, T0_MS + i * einstellungen.takt_ms, bereich)
                   for i in range(einstellungen.bilder)]
         datei = f"bereich_{nr}.png"
-        (ziel / datei).write_bytes(
+        (ordner / datei).write_bytes(
             bild_machen(seite(kopien, spalten), bereich.breite * spalten, bereich.hoehe * zeilen)
         )
         bereiche.append({"datei": datei, "x": bereich.x, "y": bereich.y, "breite": bereich.breite,
                          "hoehe": bereich.hoehe, "spalten": spalten})
 
-    try:
-        quelle = svg_datei.resolve().relative_to(PROJEKT).as_posix()
-    except ValueError:
-        quelle = svg_datei.name
     beschreibung = {
         "quelle": quelle,
         "breite": einstellungen.breite,
@@ -493,9 +545,8 @@ def rendern(svg_datei, zielordner=ZIELORDNER, pruefung=True, bild_machen=firefox
         "hintergrund": "hintergrund.png",
         "bereiche": bereiche,
     }
-    (ziel / "animation.json").write_text(json.dumps(beschreibung, indent=2, ensure_ascii=False) + "\n",
-                                         encoding="utf-8")
-    return ziel
+    (ordner / "animation.json").write_text(json.dumps(beschreibung, indent=2, ensure_ascii=False) + "\n",
+                                           encoding="utf-8")
 
 
 def main(argumente=None):
@@ -503,13 +554,16 @@ def main(argumente=None):
     parser.add_argument("svg", type=pathlib.Path, help="die SVG-Datei, z. B. grafik/wrack.svg")
     parser.add_argument("--ohne-pruefung", action="store_true",
                         help="Nahtstelle und Ausschnitte nicht prüfen (schneller, riskanter)")
+    parser.add_argument("--massstab", type=float, action="append", choices=MASSSTAEBE,
+                        help="nur in diesem Maßstab rendern (mehrfach möglich); ohne: in allen")
     argumente = parser.parse_args(argumente)
     try:
-        ziel = rendern(argumente.svg, pruefung=not argumente.ohne_pruefung)
+        ziel = rendern(argumente.svg, pruefung=not argumente.ohne_pruefung,
+                       massstaebe=tuple(argumente.massstab or MASSSTAEBE))
     except (ValueError, RuntimeError, OSError) as fehler:
         print(f"Fehler: {fehler}", file=sys.stderr)
         return 1
-    groesse = sum(datei.stat().st_size for datei in ziel.iterdir()) / 1024
+    groesse = sum(datei.stat().st_size for datei in ziel.rglob("*") if datei.is_file()) / 1024
     print(f"Fertig: {ziel.relative_to(PROJEKT) if ziel.is_relative_to(PROJEKT) else ziel} ({groesse:.0f} KB)")
     return 0
 

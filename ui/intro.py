@@ -27,7 +27,8 @@ from ui.screen import Screen
 #: Die Animation hinter dem Text – content/animationen/wrack.
 ANIMATION = "wrack"
 
-#: Wo der Erzähltext steht: im Nachthimmel oben rechts der Szene.
+#: Wo der Erzähltext steht: im Nachthimmel oben rechts der Szene – in Pixeln
+#: im Maßstab 1, wie alle festen Grössen der Screens (siehe ui/stil.py).
 TEXT_X, TEXT_Y, TEXT_BREITE = 584, 24, 356
 
 #: Aufschrift auf dem letzten Knopf – danach liegt das Handbuch vor einem.
@@ -44,14 +45,15 @@ class Intro(Screen):
         self._absaetze = tuple(absaetze)
         self._nr = 0
 
-        self.buehne = Buehne(self, Animation(ANIMATION), bg=stil.FARBE_NACHT)
+        self.buehne = Buehne(self, Animation(ANIMATION, massstab=self.massstab), bg=stil.FARBE_NACHT)
         self.buehne.pack()
-        schrift = dict(anchor="nw", width=TEXT_BREITE, font=stil.SCHRIFT_ERZAEHLUNG)
-        self._schatten = self.buehne.create_text(TEXT_X + 2, TEXT_Y + 2, fill=stil.FARBE_SCHATTEN, **schrift)
-        self._text = self.buehne.create_text(TEXT_X, TEXT_Y, fill=stil.FARBE_SAND, **schrift)
+        x, y, versatz = self.px(TEXT_X), self.px(TEXT_Y), self.px(2)
+        schrift = dict(anchor="nw", width=self.px(TEXT_BREITE), font=stil.SCHRIFT_ERZAEHLUNG)
+        self._schatten = self.buehne.create_text(x + versatz, y + versatz, fill=stil.FARBE_SCHATTEN, **schrift)
+        self._text = self.buehne.create_text(x, y, fill=stil.FARBE_SAND, **schrift)
 
         leiste = tk.Frame(self, bg=stil.FARBE_NACHT)
-        leiste.pack(fill="x", pady=(stil.ABSTAND // 2, 0))
+        leiste.pack(fill="x", pady=(self.px(stil.ABSTAND // 2), 0))
         self._zaehler = tk.Label(leiste, bg=stil.FARBE_NACHT, fg=stil.FARBE_DUENE)
         self._zaehler.pack(side="left")
         self._knopf = tk.Button(leiste, command=self.weiter, highlightbackground=stil.FARBE_NACHT)

@@ -1,0 +1,18 @@
+{
+  "quelle": "grafik/figur_jonas_berg.svg",
+  "breite": 225,
+  "hoehe": 225,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 18,
+      "y": 18,
+      "breite": 189,
+      "hoehe": 189,
+      "spalten": 21
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "quelle": "grafik/figur_theo_lambert.svg",
+  "breite": 225,
+  "hoehe": 225,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 102,
+      "y": 88,
+      "breite": 104,
+      "hoehe": 89,
+      "spalten": 39
+    }
+  ]
+}

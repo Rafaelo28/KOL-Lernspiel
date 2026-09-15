@@ -4,9 +4,53 @@ Die Screens nennen Schriften beim Namen (``font=SCHRIFT_TITEL``), statt Grösse
 und Familie jedes Mal neu anzugeben. So lässt sich nach dem ersten Test auf
 einem Schulmonitor alles mit einem Handgriff grösser stellen – Arbeitsplan 6.7
 verlangt ausdrücklich, dass es dort lesbar bleibt.
+
+Der Maßstab
+───────────
+Alle Grössen hier gelten für ein Fenster von 1000 × 700 Pixeln. Auf einem
+1080p-Schulmonitor (1920 × 1080) stünde das Spiel darin klein oben in der
+Mitte. Dort wird deshalb alles 1,5-mal so gross gezeichnet: Schriften,
+Abstände und die vorgerenderten Bilder, für die es einen eigenen, schärferen
+Satz gibt (siehe ``grafik/rendern.py``). Welcher Maßstab gilt, entscheidet
+:func:`massstab_fuer` einmal beim Start nach der Bildschirmgrösse; die Screens
+rechnen ihre Pixelangaben mit ``self.px(…)`` um.
+
+Warum nicht jede beliebige Grösse: Die Bilder gibt es nur in den Maßstäben aus
+:data:`MASSSTAEBE`. Tkinter kann ein fertiges Bild nur um ganze Faktoren
+vergrössern, und das sähe grob aus.
 """
 
 from tkinter import font as tkfont
+
+#: Die Maßstäbe, in denen das Spiel gezeichnet werden kann. Für jeden gibt es
+#: einen Satz vorgerenderter Bilder; muss zu MASSSTAEBE in grafik/rendern.py
+#: passen – ein Test prüft das.
+MASSSTAEBE = (1, 1.5)
+
+#: Ab dieser Bildschirmgrösse (Breite, Höhe) wird alles 1,5-mal so gross
+#: gezeichnet. Ein 1080p-Schulmonitor liegt genau darauf, ein Laptop mit
+#: 1366 × 768 darunter. Im grossen Maßstab braucht das Spiel rund 985 Pixel
+#: Höhe – mit Titelzeile und Taskleiste passt das erst ab 1080.
+GROSSER_BILDSCHIRM = (1600, 1080)
+
+
+def massstab_fuer(breite, hoehe):
+    """Welcher Maßstab zu einem Bildschirm dieser Grösse passt.
+
+    >>> massstab_fuer(1920, 1080), massstab_fuer(1366, 768), massstab_fuer(1680, 1050)
+    (1.5, 1, 1)
+    """
+    gross = breite >= GROSSER_BILDSCHIRM[0] and hoehe >= GROSSER_BILDSCHIRM[1]
+    return 1.5 if gross else 1
+
+
+def skaliert(wert, massstab):
+    """Eine Pixelangabe im Maßstab – auf ganze Pixel gerundet.
+
+    >>> skaliert(16, 1.5), skaliert(16, 1)
+    (24, 16)
+    """
+    return round(wert * massstab)
 
 #: Grundgrösse aller Texte in Punkt. Auf Schulmonitoren lieber zu gross als
 #: zu klein.
@@ -62,17 +106,20 @@ FARBE_GOLD = "#e2b651"
 FARBE_WARNUNG = "#ff9a76"
 
 
-def schriften_einrichten(wurzel):
+def schriften_einrichten(wurzel, massstab=1):
     """Stellt die Grundschriften ein und legt die benannten Schriften an.
+
+    Die Grössen wachsen mit dem ``massstab`` – im grossen 18 statt 12 Punkt.
 
     Rückgabe sind die Schriftobjekte. Wer sie aufbewahrt, behält die Schriften:
     Tkinter löscht eine benannte Schrift, sobald ihr Objekt verschwindet.
     """
+    grund, titel, erzaehlung = (skaliert(g, massstab) for g in (SCHRIFTGROESSE, TITELGROESSE, ERZAEHLGROESSE))
     for name in ("TkDefaultFont", "TkTextFont", "TkFixedFont"):
-        tkfont.nametofont(name, root=wurzel).configure(size=SCHRIFTGROESSE)
+        tkfont.nametofont(name, root=wurzel).configure(size=grund)
     familie = tkfont.nametofont("TkDefaultFont", root=wurzel).actual("family")
     return (
-        tkfont.Font(root=wurzel, name=SCHRIFT_TITEL, family=familie, size=TITELGROESSE, weight="bold"),
-        tkfont.Font(root=wurzel, name=SCHRIFT_ERZAEHLUNG, family=familie, size=ERZAEHLGROESSE),
-        tkfont.Font(root=wurzel, name=SCHRIFT_FETT, family=familie, size=SCHRIFTGROESSE, weight="bold"),
+        tkfont.Font(root=wurzel, name=SCHRIFT_TITEL, family=familie, size=titel, weight="bold"),
+        tkfont.Font(root=wurzel, name=SCHRIFT_ERZAEHLUNG, family=familie, size=erzaehlung),
+        tkfont.Font(root=wurzel, name=SCHRIFT_FETT, family=familie, size=grund, weight="bold"),
     )

@@ -67,12 +67,17 @@ def nach_levelwechsel(fenster, wechsel):
     fenster.zeige(platzhalter.Handbuch, level=wechsel.neues_level, hinweis=hinweis)
 
 
-def oeffnen(wurzel, zeitgeber=None, protokollordner=None):
-    """Baut das Hauptfenster in ``wurzel`` und zeigt den ersten Screen."""
+def oeffnen(wurzel, zeitgeber=None, protokollordner=None, massstab=None):
+    """Baut das Hauptfenster in ``wurzel`` und zeigt den ersten Screen.
+
+    Ohne ``massstab`` richtet sich die Grösse nach dem Bildschirm (siehe
+    :mod:`ui.stil`); Tests geben ihn vor, damit sie überall gleich laufen.
+    """
     return Hauptfenster(
         wurzel,
         partial(STARTSCREEN, danach=figurwahl_zeigen),
         nach_levelwechsel,
         zeitgeber=zeitgeber,
         protokollordner=protokollordner,
+        massstab=massstab,
     )

@@ -46,10 +46,12 @@ def test_jede_figur_hat_ihr_symbol(figur):
     assert (PROJEKT / "grafik" / f"{name}.svg").exists()
 
 
+@pytest.mark.parametrize("groesse", rendern.MASSSTAEBE, ids=lambda m: f"massstab {m:g}")
 @pytest.mark.parametrize("figur", FIGUREN, ids=IDS)
-def test_die_symbole_sind_auf_die_kartenfarbe_gemalt(figur):
-    """Sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe."""
-    bild = rendern.png_lesen((ANIMATIONSORDNER / figurwahl.animation_fuer(figur) / "hintergrund.png").read_bytes())
+def test_die_symbole_sind_auf_die_kartenfarbe_gemalt(figur, groesse):
+    """Sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe – in jedem Maßstab."""
+    ordner = ANIMATIONSORDNER / figurwahl.animation_fuer(figur) / rendern.unterordner(groesse)
+    bild = rendern.png_lesen((ordner / "hintergrund.png").read_bytes())
     erwartet = bytes.fromhex(stil.FARBE_KARTE[1:])
     for x, y in ((0, 0), (bild.breite - 1, 0), (0, bild.hoehe - 1), (bild.breite - 1, bild.hoehe - 1)):
         ecke = rendern.ausschneiden(bild, x, y, 1, 1)[0]
@@ -75,8 +77,8 @@ def wurzel():
 
 
 @pytest.fixture
-def fenster(wurzel, tmp_path):
-    fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path)
+def fenster(wurzel, tmp_path, massstab):
+    fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
 
@@ -113,10 +115,12 @@ def test_fuenf_karten_in_der_reihenfolge_des_konzepts(screen):
     assert [karte.figur for karte in screen.karten] == list(FIGUREN)
 
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
 def test_jede_karte_zeigt_symbol_initialen_name_und_rolle(screen):
     for karte in screen.karten:
         figur = karte.figur
         assert karte.buehne.animation.name == figurwahl.animation_fuer(figur)
+        assert karte.buehne.animation.massstab == screen.massstab
         assert karte.initialen == figur.initialen
         assert karte._name.cget("text") == figur.name
         assert karte._rolle.cget("text") == figur.rolle
@@ -256,6 +260,7 @@ def test_bestaetigen_gibt_die_gewaehlte_figur_weiter(screen, gewaehlt):
 
 # ── Platz auf dem Bildschirm ───────────────────────────────────────────────
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
 def test_kein_wort_wird_mitten_im_wort_umbrochen(screen, wurzel):
     """"Diamantenhändlerin" ist breiter als das Symbol – Tk bräche es sonst mitten im Wort um."""
     grundschrift = tkfont.nametofont("TkDefaultFont", root=wurzel)
@@ -267,22 +272,25 @@ def test_kein_wort_wird_mitten_im_wort_umbrochen(screen, wurzel):
             assert fett.measure(wort) <= int(karte._name.cget("wraplength")), wort
 
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
 def test_die_zeilen_einer_karte_bleiben_in_der_karte(screen):
     for karte in screen.karten:
-        assert int(karte._rolle.cget("wraplength")) <= figurwahl.KARTENBREITE
+        assert int(karte._rolle.cget("wraplength")) <= screen.px(figurwahl.KARTENBREITE)
 
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
 def test_alle_karten_sind_gleich_breit(screen):
     screen.update_idletasks()
     assert len({karte.winfo_width() for karte in screen.karten}) == 1
-    assert screen.karten[0].winfo_width() == figurwahl.KARTENBREITE + 2 * figurwahl.RAHMEN
+    assert screen.karten[0].winfo_width() == screen.px(figurwahl.KARTENBREITE) + 2 * screen.px(figurwahl.RAHMEN)
 
 
-def test_die_figurwahl_passt_ins_fenster(screen, wurzel):
-    """In der Standardgrösse muss alles zu sehen sein – auch der Knopf ganz unten."""
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_die_figurwahl_passt_ins_fenster(screen, wurzel, platz):
+    """Alles muss zu sehen sein – auch der Knopf ganz unten, im kleinen wie im grossen Maßstab."""
     wurzel.update_idletasks()
-    assert wurzel.winfo_reqwidth() <= hauptfenster.FENSTER_BREITE
-    assert wurzel.winfo_reqheight() <= hauptfenster.FENSTER_HOEHE
+    assert wurzel.winfo_reqwidth() <= platz[0]
+    assert wurzel.winfo_reqheight() <= platz[1]
 
 
 # ───────────────────────────────────────────────────────────────────────────

@@ -7,7 +7,8 @@ richtigen Reihenfolge kommen.
 
 Die Tests zu den echten Animationen prüfen ohne Bildschirm, dass die Dateien
 zueinander und zu ihrer SVG-Quelle passen – sonst zeigte das Spiel verrutschte
-oder abgeschnittene Bilder.
+oder abgeschnittene Bilder. Das gilt für jeden Maßstab: Auf einem
+1080p-Schulmonitor lädt das Spiel den grossen Satz aus ``<name>/1.5x/``.
 """
 
 import importlib.util
@@ -34,15 +35,33 @@ def _png_groesse(datei):
 # 1. Die echten Animationen passen zu ihren Quellen (ohne Bildschirm)
 # ───────────────────────────────────────────────────────────────────────────
 
-ECHTE = sorted(p for p in ANIMATIONEN.iterdir() if p.is_dir()) if ANIMATIONEN.exists() else []
+ECHTE_ANIMATIONEN = sorted(p for p in ANIMATIONEN.iterdir() if p.is_dir()) if ANIMATIONEN.exists() else []
+
+#: Jeder Bildsatz: der Ordner der Animation im Maßstab 1, die anderen im Unterordner.
+ECHTE = [(ordner / rendern.unterordner(massstab), massstab)
+         for ordner in ECHTE_ANIMATIONEN for massstab in rendern.MASSSTAEBE]
+
+
+def _satz_id(satz):
+    ordner, massstab = satz
+    return ordner.name if massstab == 1 else f"{ordner.parent.name}@{massstab:g}"
 
 
 def test_es_gibt_die_wrack_animation():
     assert (ANIMATIONEN / "wrack" / "animation.json").exists()
 
 
-@pytest.mark.parametrize("ordner", ECHTE, ids=lambda p: p.name)
-def test_die_dateien_einer_animation_passen_zusammen(ordner):
+@pytest.mark.parametrize("ordner", ECHTE_ANIMATIONEN, ids=lambda p: p.name)
+def test_jede_animation_gibt_es_in_jedem_massstab(ordner):
+    """Sonst stürzte das Spiel erst auf dem Schulmonitor ab – dort gilt der grosse."""
+    for massstab in rendern.MASSSTAEBE:
+        assert (ordner / rendern.unterordner(massstab) / "animation.json").exists(), (
+            f"{ordner.name} fehlt im Maßstab {massstab:g}: python3 grafik/rendern.py grafik/{ordner.name}.svg")
+
+
+@pytest.mark.parametrize("satz", ECHTE, ids=_satz_id)
+def test_die_dateien_einer_animation_passen_zusammen(satz):
+    ordner, _ = satz
     beschreibung = json.loads((ordner / "animation.json").read_text(encoding="utf-8"))
     assert _png_groesse(ordner / beschreibung["hintergrund"]) == (beschreibung["breite"], beschreibung["hoehe"])
     assert beschreibung["bereiche"], "Eine Animation ohne bewegten Ausschnitt ist ein Standbild."
@@ -54,27 +73,43 @@ def test_die_dateien_einer_animation_passen_zusammen(ordner):
         assert 0 <= bereich["y"] and bereich["y"] + bereich["hoehe"] <= beschreibung["hoehe"]
 
 
-@pytest.mark.parametrize("ordner", ECHTE, ids=lambda p: p.name)
-def test_eine_animation_passt_zu_ihrer_svg_quelle(ordner):
-    """Wer die SVG ändert und das Rendern vergisst, merkt es hier."""
+@pytest.mark.parametrize("satz", ECHTE, ids=_satz_id)
+def test_eine_animation_passt_zu_ihrer_svg_quelle(satz):
+    """Wer die SVG ändert und das Rendern vergisst, merkt es hier – in jedem Maßstab."""
+    ordner, massstab = satz
     beschreibung = json.loads((ordner / "animation.json").read_text(encoding="utf-8"))
     quelle = PROJEKT / beschreibung["quelle"]
     assert quelle.exists(), f"Die Quelle {beschreibung['quelle']} fehlt."
-    e = rendern.einstellungen_lesen(quelle.read_text(encoding="utf-8"), ordner.name)
+    e = rendern.einstellungen_lesen(quelle.read_text(encoding="utf-8"), quelle.stem, massstab)
     assert (e.breite, e.hoehe, e.bilder, e.takt_ms) == (
         beschreibung["breite"], beschreibung["hoehe"], beschreibung["bilder"], beschreibung["takt_ms"])
     assert [tuple(b) for b in e.bereiche] == [
         (b["x"], b["y"], b["breite"], b["hoehe"]) for b in beschreibung["bereiche"]]
 
 
-@pytest.mark.parametrize("ordner", ECHTE, ids=lambda p: p.name)
-def test_eine_animation_bleibt_klein_genug_fuer_schulrechner(ordner):
-    """Grober Deckel: im Arbeitsspeicher unter 40 MB, auf der Platte unter 8 MB."""
+@pytest.mark.parametrize("satz", ECHTE, ids=_satz_id)
+def test_eine_animation_bleibt_klein_genug_fuer_schulrechner(satz):
+    """Grober Deckel: im Arbeitsspeicher unter 40 MB, auf der Platte unter 8 MB.
+
+    Im grossen Maßstab hat jedes Bild 1,5 × 1,5 = 2,25-mal so viele Pixel; der
+    Deckel wächst entsprechend mit.
+    """
+    ordner, massstab = satz
+    flaeche = massstab ** 2
     beschreibung = json.loads((ordner / "animation.json").read_text(encoding="utf-8"))
     speicher = beschreibung["breite"] * beschreibung["hoehe"] * 4 + sum(
         b["breite"] * b["hoehe"] * 4 * beschreibung["bilder"] for b in beschreibung["bereiche"])
-    assert speicher < 40 * 2**20
-    assert sum(p.stat().st_size for p in ordner.iterdir()) < 8 * 2**20
+    assert speicher < 40 * 2**20 * flaeche
+    assert sum(p.stat().st_size for p in ordner.iterdir() if p.is_file()) < 8 * 2**20 * flaeche
+
+
+def test_spiel_und_werkzeug_kennen_dieselben_massstaebe():
+    """Das Spiel wählt einen Maßstab, das Werkzeug rendert die Bilder dazu – beide Listen müssen passen."""
+    from ui import animation, stil
+
+    assert stil.MASSSTAEBE == rendern.MASSSTAEBE
+    for massstab in stil.MASSSTAEBE:
+        assert animation.unterordner(massstab) == rendern.unterordner(massstab)
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -203,7 +238,26 @@ def test_ein_blatt_in_falscher_groesse_wird_abgewiesen(wurzel, tmp_path):
     assert not [kind for kind in wurzel.winfo_children() if isinstance(kind, Buehne)]
 
 
-def test_die_echte_wrack_animation_laedt(wurzel):
-    buehne = Buehne(wurzel, Animation("wrack"))
-    assert (int(buehne.cget("width")), int(buehne.cget("height"))) == (960, 540)
+@pytest.mark.parametrize("massstab, groesse", [(1, (960, 540)), (1.5, (1440, 810))])
+def test_die_echte_wrack_animation_laedt(wurzel, massstab, groesse):
+    buehne = Buehne(wurzel, Animation("wrack", massstab=massstab))
+    assert (int(buehne.cget("width")), int(buehne.cget("height"))) == groesse
     assert len(buehne._folgen[0]) == buehne.animation.bilder
+
+
+def test_ein_fehlender_grosser_satz_nennt_den_massstab(tmp_path):
+    (tmp_path / "nur_klein").mkdir()
+    (tmp_path / "nur_klein" / "animation.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(FileNotFoundError) as fehler:
+        Animation("nur_klein", tmp_path, massstab=1.5)
+    assert "Maßstab 1.5" in str(fehler.value)
+    assert "grafik/rendern.py grafik/nur_klein.svg" in str(fehler.value)
+
+
+def test_beim_abriss_gibt_die_buehne_ihre_bilder_frei(wurzel, tmp_path):
+    """Im grossen Maßstab belegt eine Szene um die 50 MB – die sollen nicht bis zum nächsten Aufräumen liegen."""
+    buehne = Buehne(wurzel, _probeanimation(wurzel, tmp_path))
+    bilder = [str(bild) for bild in buehne._folgen[0]]
+    assert all(name in wurzel.image_names() for name in bilder)
+    buehne.destroy()
+    assert not any(name in wurzel.image_names() for name in bilder)

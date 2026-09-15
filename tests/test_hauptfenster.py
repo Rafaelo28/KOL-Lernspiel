@@ -96,8 +96,8 @@ def uhr():
 
 
 @pytest.fixture
-def fenster(wurzel, uhr, tmp_path):
-    fenster = ablauf.oeffnen(wurzel, zeitgeber=uhr, protokollordner=tmp_path)
+def fenster(wurzel, uhr, tmp_path, massstab):
+    fenster = ablauf.oeffnen(wurzel, zeitgeber=uhr, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = Rueckfrage()
     fenster.frage_nochmal = Rueckfrage()
     return fenster
@@ -164,6 +164,7 @@ def _probefenster(wurzel, ereignisse, uhr=None, tmp_path=None):
         lambda fenster, wechsel: ereignisse.append(("levelwechsel", wechsel)),
         zeitgeber=uhr,
         protokollordner=tmp_path,
+        massstab=1,
     )
 
 
@@ -192,6 +193,123 @@ def test_die_schriften_sind_eingerichtet(fenster, wurzel):
     assert erzaehlung.cget("size") == stil.ERZAEHLGROESSE
     fett = tkfont.nametofont(stil.SCHRIFT_FETT, root=wurzel)
     assert (fett.cget("size"), fett.cget("weight")) == (stil.SCHRIFTGROESSE, "bold")
+
+
+# ── Grösse, Maßstab und Vollbild ───────────────────────────────────────────
+
+class Fensterzustand:
+    """Ersetzt state() und attributes() eines versteckten Fensters.
+
+    Unter X11 bleiben Maximieren und Vollbild bei einem versteckten Fenster
+    wirkungslos – Tk meldet danach weiter 0. Die Attrappe merkt sich, was
+    das Hauptfenster verlangt hat.
+    """
+
+    def __init__(self, kennt_zoomed_zustand):
+        self.kennt_zoomed_zustand = kennt_zoomed_zustand
+        self.werte = {}
+        self.zustand = "normal"
+
+    def state(self, neu=None):
+        if neu is None:
+            return self.zustand
+        if neu == "zoomed" and not self.kennt_zoomed_zustand:
+            raise tk.TclError('bad argument "zoomed": must be normal, iconic, or withdrawn')
+        self.zustand = neu
+
+    def attributes(self, name, *wert):
+        if not wert:
+            return self.werte.get(name, 0)
+        self.werte[name] = int(bool(wert[0]))
+
+
+def _bildschirm(monkeypatch, wurzel, breite, hoehe):
+    monkeypatch.setattr(wurzel, "winfo_screenwidth", lambda: breite)
+    monkeypatch.setattr(wurzel, "winfo_screenheight", lambda: hoehe)
+
+
+@pytest.mark.parametrize("breite, hoehe, erwartet", [(1920, 1080, 1.5), (1366, 768, 1), (1680, 1050, 1)])
+def test_der_massstab_richtet_sich_nach_dem_bildschirm(wurzel, monkeypatch, tmp_path, breite, hoehe, erwartet):
+    """Ein 1080p-Schulmonitor bekommt alles 1,5-mal so gross, ein Laptop nicht."""
+    _bildschirm(monkeypatch, wurzel, breite, hoehe)
+    fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path)
+    assert fenster.massstab == erwartet
+
+
+@pytest.mark.parametrize("massstab", [1.5])
+def test_im_grossen_massstab_wachsen_schriften_und_abstaende(fenster, wurzel):
+    assert tkfont.nametofont("TkDefaultFont", root=wurzel).cget("size") == 18
+    assert tkfont.nametofont(stil.SCHRIFT_TITEL, root=wurzel).cget("size") == 27
+    assert tkfont.nametofont(stil.SCHRIFT_ERZAEHLUNG, root=wurzel).cget("size") == 21
+    assert fenster.px(stil.ABSTAND) == 24
+    assert fenster.aktueller_screen.px(stil.ABSTAND) == 24
+    assert fenster.aktueller_screen.buehne.animation.massstab == 1.5
+
+
+@pytest.mark.parametrize("kennt_zoomed_zustand, wie", [(True, "state"), (False, "attributes")])
+def test_das_fenster_oeffnet_maximiert(wurzel, monkeypatch, tmp_path, kennt_zoomed_zustand, wie):
+    """Windows kennt dafür den Zustand "zoomed", X11 nur das Attribut -zoomed."""
+    zustand = Fensterzustand(kennt_zoomed_zustand)
+    monkeypatch.setattr(wurzel, "state", zustand.state)
+    monkeypatch.setattr(wurzel, "attributes", zustand.attributes)
+    ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=1)
+    if wie == "state":
+        assert zustand.zustand == "zoomed"
+    else:
+        assert zustand.werte["-zoomed"] == 1
+
+
+def test_f11_schaltet_ins_vollbild_und_esc_zurueck(wurzel, monkeypatch, tmp_path, ausloesen):
+    zustand = Fensterzustand(kennt_zoomed_zustand=True)
+    monkeypatch.setattr(wurzel, "attributes", zustand.attributes)
+    fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=1)
+    assert not fenster.vollbild
+    ausloesen(wurzel, "<F11>")
+    assert fenster.vollbild
+    ausloesen(wurzel, "<Escape>")
+    assert not fenster.vollbild
+    ausloesen(wurzel, "<Escape>")                # Esc ohne Vollbild schadet nicht
+    assert not fenster.vollbild
+    ausloesen(wurzel, "<F11>")
+    ausloesen(wurzel, "<F11>")                   # F11 schaltet auch wieder zurück
+    assert not fenster.vollbild
+
+
+@pytest.mark.parametrize("bildschirm", [(1920, 1080), (900, 650)], ids=["1080p", "winzig"])
+def test_nicht_maximiert_wird_das_fenster_nie_groesser_als_der_bildschirm(wurzel, monkeypatch, tmp_path, bildschirm):
+    """Die Grösse, auf die das Fenster beim Verkleinern zurückspringt – und die Mindestgrösse."""
+    _bildschirm(monkeypatch, wurzel, *bildschirm)
+    verlangt = []
+    monkeypatch.setattr(wurzel, "geometry", lambda neu=None: verlangt.append(neu))
+    fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path)
+    breite, hoehe = (int(zahl) for zahl in verlangt[-1].split("+")[0].split("x"))
+    assert breite <= bildschirm[0] - hauptfenster.RAND_BILDSCHIRM[0]
+    assert hoehe <= bildschirm[1] - hauptfenster.RAND_BILDSCHIRM[1]
+    min_breite, min_hoehe = wurzel.minsize()
+    assert min_breite <= breite and min_hoehe <= hoehe
+    assert min_breite <= fenster.px(hauptfenster.MIN_BREITE) and min_hoehe <= fenster.px(hauptfenster.MIN_HOEHE)
+
+
+class Fuellend(Screen):
+    fuellt_fenster = True
+
+
+def test_ein_screen_steht_in_der_mitte_des_fensters(fenster):
+    """Auf einem grossen Bildschirm stünde er sonst oben am Rand."""
+    info = fenster.aktueller_screen.pack_info()
+    assert int(info["expand"]) == 1 and info["fill"] == "none"
+
+
+def test_ein_fuellender_screen_nimmt_den_ganzen_platz(fenster):
+    info = fenster.zeige(Fuellend).pack_info()
+    assert int(info["expand"]) == 1 and info["fill"] == "both"
+
+
+def test_der_rand_um_den_screen_hat_dessen_farbe(fenster):
+    """Sonst endete der Nachthimmel an einem grauen Rand."""
+    assert fenster.inhalt.cget("bg") == stil.FARBE_NACHT
+    probe = fenster.zeige(Probe)
+    assert fenster.inhalt.cget("bg") == probe.cget("bg")
 
 
 # ───────────────────────────────────────────────────────────────────────────

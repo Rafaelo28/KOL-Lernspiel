@@ -375,6 +375,22 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
   - Ein Fenster, ein Durchlauf – für die nächste Person wird neu gestartet
   - Die Logs landen neben `main.py` (`main.PROTOKOLLORDNER`), nicht im
     Verzeichnis, aus dem gestartet wurde
+  - **Bildschirmgrösse** (nachträglich, nach 6.2 – aufgefallen auf den
+    1080p-Schulmonitoren: maximiert stand das Spiel klein oben in der Mitte):
+    - Das Fenster öffnet **maximiert**; F11 schaltet auf echtes Vollbild, Esc
+      zurück
+    - **Maßstab:** Ab 1920 × 1080 wird alles 1,5-mal so gross gezeichnet –
+      Schriften, Abstände und die Bilder (`ui/stil.py`, `massstab_fuer`). Die
+      Screens rechnen feste Pixelangaben mit `self.px(…)` um
+    - Die Bilder gibt es dafür in einem **zweiten, schärferen Satz** (1440 ×
+      810 statt 960 × 540), gerendert aus derselben SVG. Das kleine Bild im
+      Spiel zu vergrössern sähe grob aus – Tkinter kann nur Pixel verdoppeln
+    - Die Screens stehen **in der Mitte** des Fensters, der Rand drumherum hat
+      ihre Hintergrundfarbe. Ein Screen, der den ganzen Platz braucht (etwa
+      das Handbuch in 6.4), setzt `fuellt_fenster = True`
+    - Die Tests prüfen jeden Bild-Screen in beiden Maßstäben: im kleinen in
+      1000 × 700, im grossen in 1920 × 980 (1080p abzüglich Titel- und
+      Taskleiste, mit 20 Pixel Luft für Schriften unter Windows)
 
 ### 6.2 Startbildschirm + Charakterauswahl
 - **Umgesetzt:**
@@ -418,8 +434,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     beim Öffnen als 1. Dezember (und `1-45` als Januar 1945); wer die Datei
     danach speichert, hat die ID verloren. Mit einem Buchstaben vorn bleibt es
     Text. Für pandas: `tabelle["pseudonym"].str.removeprefix("ID ")`
-  - In der Standardgrösse (1000 × 700) passt alles; ein Test prüft das. Wird
-    das Fenster schmaler als etwa 960 Pixel gezogen, wird die rechte Karte
+  - Alles passt ins Fenster – im kleinen Maßstab in 1000 × 700, im grossen
+    auf den 1080p-Schulmonitor (siehe 6.1, "Bildschirmgrösse"); Tests prüfen
+    beides. Wird das Fenster von Hand schmaler gezogen, wird die rechte Karte
     abgeschnitten – wie die Szenen in 6.3
 ### 6.3 Story-Intro (Absturz-Szene)
 - **Umgesetzt** (vor 6.2 gezogen – die Platzhalter aus 6.1 überbrücken die
@@ -435,9 +452,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     bewegten Szene wären zu viel
   - Der letzte Knopf heisst "Handbuch aufschlagen" und startet Level 1 – der
     Intro kostet keine Levelzeit (siehe 7.1)
-  - Die Szene ist 960 × 540 Pixel gross und passt in das Fenster in seiner
-    Standardgrösse (1000 × 700). Wird das Fenster schmaler als etwa 1000
-    Pixel gezogen, wird sie rechts abgeschnitten
+  - Die Szene ist 960 × 540 Pixel gross, auf dem 1080p-Schulmonitor 1440 ×
+    810 (siehe 6.1, "Bildschirmgrösse"). Wird das Fenster von Hand schmaler
+    gezogen, wird sie rechts abgeschnitten
 ### 6.4 Handbuch-Screen
 - Scrollbarer Text, Tabellen als Grid
 - Muss während der Aufgaben erreichbar bleiben (Nachschlagen ist erlaubt)
@@ -555,8 +572,14 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
   Im Build muss der Ordner neben der .exe liegen (`sys.executable`)
 - **Die Animationen mit einpacken:** `content/animationen/` enthält PNG- und
   JSON-Dateien, keine Python-Module. PyInstaller nimmt sie nur mit, wenn sie
-  als Daten angegeben sind (`--add-data`). `grafik/` gehört nicht in den
-  Build – das ist Werkzeug für den Entwicklungsrechner
+  als Daten angegeben sind (`--add-data`) – den ganzen Ordner, samt der
+  Unterordner `1.5x/` für die grossen Bildschirme. `grafik/` gehört nicht in
+  den Build – das ist Werkzeug für den Entwicklungsrechner
+- **Auf dem Schulrechner nachsehen, ob der grosse Maßstab greift:** Das Spiel
+  soll maximiert öffnen und den Bildschirm füllen. Steht Windows auf 125 %
+  Skalierung, meldet es Tkinter nur 1536 × 864 und vergrössert das Fenster
+  selbst – dann gilt der kleine Maßstab, alles passt, wirkt aber etwas weicher.
+  Bei 100 % (auf 1080p-Monitoren üblich) greift der grosse
 
 ### 8.4 Logdateien einsammeln und Auswertung vorbereiten
 - Wo landen die CSVs? Wie kommst du nach dem Experiment an alle heran?

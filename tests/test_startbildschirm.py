@@ -30,8 +30,8 @@ def wurzel():
 
 
 @pytest.fixture
-def fenster(wurzel, tmp_path):
-    return ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path)
+def fenster(wurzel, tmp_path, massstab):
+    return ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=massstab)
 
 
 @pytest.fixture
@@ -70,6 +70,7 @@ def _rahmen(screen, element):
     return screen.buehne.bbox(element)
 
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
 def test_untertitel_und_hinweis_stehen_unter_dem_schriftzug(screen):
     """Nicht über dem glänzenden Schriftzug, nicht übereinander, nicht über den Rand."""
     assert screen.untertitel == startbildschirm.UNTERTITEL
@@ -80,6 +81,7 @@ def test_untertitel_und_hinweis_stehen_unter_dem_schriftzug(screen):
     assert schriftzug_unten <= u_oben < u_unten <= h_oben < h_unten <= animation.hoehe
 
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
 def test_jede_meldung_passt_in_die_zeile(screen):
     """Die Meldungen sind unterschiedlich lang – keine darf über den Bildrand laufen."""
     breite = screen.buehne.animation.breite
@@ -89,10 +91,19 @@ def test_jede_meldung_passt_in_die_zeile(screen):
         assert 0 <= links and rechts <= breite, eingabe
 
 
-def test_der_startbildschirm_passt_ins_fenster(screen, wurzel):
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_der_startbildschirm_passt_ins_fenster(screen, wurzel, platz):
+    """Im kleinen Maßstab in 1000 × 700, im grossen auf den 1080p-Schulmonitor."""
     wurzel.update_idletasks()
-    assert wurzel.winfo_reqwidth() <= hauptfenster.FENSTER_BREITE
-    assert wurzel.winfo_reqheight() <= hauptfenster.FENSTER_HOEHE
+    assert wurzel.winfo_reqwidth() <= platz[0]
+    assert wurzel.winfo_reqheight() <= platz[1]
+
+
+@pytest.mark.parametrize("massstab", [1.5])
+def test_im_grossen_massstab_kommt_der_scharfe_bildsatz(screen):
+    """Nicht das kleine Bild vergrössert – das sähe grob aus."""
+    assert screen.buehne.animation.massstab == 1.5
+    assert int(screen.buehne.cget("width")) == 1440
 
 
 # ── Das ID-Feld ────────────────────────────────────────────────────────────

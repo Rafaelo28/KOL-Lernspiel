@@ -8,6 +8,11 @@ dokumentation/Animationen.md), und hier werden sie nur noch durchgeblättert:
     content/animationen/<name>/bereich_1.png     Bildfolge des bewegten Ausschnitts,
                                                  als ein Blatt mit allen Bildern
     content/animationen/<name>/animation.json    Größen, Positionen, Takt
+    content/animationen/<name>/1.5x/…            derselbe Satz 1,5-mal so groß
+
+Welcher Satz geladen wird, entscheidet der Maßstab des Fensters (siehe
+:func:`ui.stil.massstab_fuer`): Auf einem 1080p-Schulmonitor ist es der
+grosse, sonst der kleine.
 
 Eine :class:`Buehne` legt den Hintergrund auf eine Leinwand und darüber für
 jeden Ausschnitt ein Bild, das im Takt ausgetauscht wird. Das kostet fast
@@ -39,6 +44,14 @@ import content
 ANIMATIONSORDNER = Path(content.__file__).resolve().parent / "animationen"
 
 
+def unterordner(massstab):
+    """Wo der Bildsatz eines Maßstabs liegt – wie in grafik/rendern.py.
+
+    Maßstab 1 direkt im Ordner der Animation, die anderen etwa in "1.5x".
+    """
+    return "" if massstab == 1 else f"{massstab:g}x"
+
+
 class Ausschnitt(NamedTuple):
     """Ein bewegter Ausschnitt: wo er liegt und woher seine Bilder kommen."""
 
@@ -57,13 +70,15 @@ class Animation:
     geöffnetes Fenster.
     """
 
-    def __init__(self, name, ordner=None):
+    def __init__(self, name, ordner=None, massstab=1):
         self.name = name
-        self.ordner = Path(ordner if ordner is not None else ANIMATIONSORDNER) / name
+        self.massstab = massstab
+        self.ordner = Path(ordner if ordner is not None else ANIMATIONSORDNER) / name / unterordner(massstab)
         beschreibung = self.ordner / "animation.json"
         if not beschreibung.exists():
+            groesse = "" if massstab == 1 else f" im Maßstab {massstab:g}"
             raise FileNotFoundError(
-                f"Die Animation '{name}' ist nicht gerendert ({beschreibung} fehlt). "
+                f"Die Animation '{name}' ist{groesse} nicht gerendert ({beschreibung} fehlt). "
                 f"Erzeugen mit: python3 grafik/rendern.py grafik/{name}.svg"
             )
         daten = json.loads(beschreibung.read_text(encoding="utf-8"))
@@ -176,3 +191,7 @@ class Buehne(tk.Canvas):
         # Beim Abriss des Screens mit abräumen – sonst liefe ein after() ins Leere.
         self.anhalten()
         super().destroy()
+        # Die Bilder gleich freigeben, nicht erst, wenn Python aufräumt: Im
+        # grossen Maßstab belegt eine Szene um die 50 MB.
+        self._folgen = []
+        self._hintergrund = None

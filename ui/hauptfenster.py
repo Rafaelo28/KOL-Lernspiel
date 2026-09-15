@@ -41,6 +41,15 @@ Zeit still, und niemand merkte es.
 Was nach einem Levelwechsel kommt, entscheidet nicht das Hauptfenster, sondern
 der Rückruf ``bei_levelwechsel`` – siehe :mod:`ui.ablauf`.
 
+Grösse und Vollbild
+───────────────────
+Das Fenster öffnet maximiert – auf den Schulrechnern soll das Spiel den
+Bildschirm füllen, nicht als kleines Fenster darauf liegen. Auf einem
+1080p-Monitor wird dabei alles 1,5-mal so gross gezeichnet (siehe
+:mod:`ui.stil`, "Der Maßstab"), und die Screens stehen in der Mitte des
+Fensters statt oben am Rand. F11 schaltet auf echtes Vollbild ohne
+Titelleiste, Esc wieder zurück.
+
 Fehler, die niemand sieht
 ─────────────────────────
 Tkinter schreibt Fehler in Bedienelementen nur auf die Konsole, und die sieht
@@ -67,12 +76,17 @@ from game.durchlauf import Durchlauf
 from ui import stil
 
 FENSTER_TITEL = "Der Diamantenraub"
+#: Grösse des Fensters, wenn es nicht maximiert ist – im Maßstab 1. Im
+#: grossen Maßstab wächst sie mit, höchstens bis auf die Bildschirmgrösse.
 FENSTER_BREITE = 1000
 FENSTER_HOEHE = 700
 # Untergrenze: auf kleinen Schulmonitoren muss das Vigenère-Quadrat (26x26)
 # noch vollständig lesbar sein – siehe Arbeitsplan 6.7.
 MIN_BREITE = 800
 MIN_HOEHE = 600
+#: So viel vom Bildschirm bleibt für Titelleiste und Taskleiste frei, wenn das
+#: Fenster nicht maximiert ist.
+RAND_BILDSCHIRM = (40, 100)
 
 #: So oft wird das Zeitfenster geprüft. Viermal pro Sekunde: Der Levelwechsel
 #: kommt dann höchstens eine Viertelsekunde nach Ablauf – bei einem Takt pro
@@ -81,12 +95,22 @@ TAKT_MILLISEKUNDEN = 250
 
 
 def _zentriere(fenster, breite, hoehe):
-    """Setzt das Fenster mittig auf den Bildschirm."""
+    """Setzt das Fenster mittig auf den Bildschirm – nie grösser als dieser."""
     bildschirm_breite = fenster.winfo_screenwidth()
     bildschirm_hoehe = fenster.winfo_screenheight()
+    breite = min(breite, bildschirm_breite - RAND_BILDSCHIRM[0])
+    hoehe = min(hoehe, bildschirm_hoehe - RAND_BILDSCHIRM[1])
     x = max(0, (bildschirm_breite - breite) // 2)
     y = max(0, (bildschirm_hoehe - hoehe) // 3)
     fenster.geometry(f"{breite}x{hoehe}+{x}+{y}")
+
+
+def _maximieren(fenster):
+    """Maximiert das Fenster. Windows und macOS kennen dafür einen Zustand, X11 ein Attribut."""
+    try:
+        fenster.state("zoomed")
+    except tk.TclError:
+        fenster.attributes("-zoomed", True)
 
 
 class Hauptfenster:
@@ -100,12 +124,21 @@ class Hauptfenster:
                           nach einem Level kommt
     ``zeitgeber``         die Uhr für Zeitfenster und Aufgaben (Tests)
     ``protokollordner``   wohin die Messdaten geschrieben werden
+    ``massstab``          wie gross alles gezeichnet wird; ohne Angabe nach
+                          der Bildschirmgrösse (:func:`ui.stil.massstab_fuer`)
     """
 
     def __init__(
-        self, wurzel, startscreen, bei_levelwechsel, zeitgeber=None, protokollordner=None
+        self, wurzel, startscreen, bei_levelwechsel, zeitgeber=None, protokollordner=None, massstab=None
     ):
         self.wurzel = wurzel
+        #: Der Maßstab des Fensters – siehe :mod:`ui.stil`. Er gilt für die
+        #: ganze Sitzung; die Bilder dazu werden je Screen geladen.
+        self.massstab = (
+            massstab
+            if massstab is not None
+            else stil.massstab_fuer(wurzel.winfo_screenwidth(), wurzel.winfo_screenheight())
+        )
         self.durchlauf = None
         self._bei_levelwechsel = bei_levelwechsel
         self._zeitgeber = zeitgeber
@@ -121,23 +154,33 @@ class Hauptfenster:
         self.frage_nochmal = messagebox.askretrycancel
 
         wurzel.title(FENSTER_TITEL)
-        wurzel.minsize(MIN_BREITE, MIN_HOEHE)
-        _zentriere(wurzel, FENSTER_BREITE, FENSTER_HOEHE)
-        self._schriften = stil.schriften_einrichten(wurzel)
+        wurzel.minsize(
+            min(self.px(MIN_BREITE), wurzel.winfo_screenwidth() - RAND_BILDSCHIRM[0]),
+            min(self.px(MIN_HOEHE), wurzel.winfo_screenheight() - RAND_BILDSCHIRM[1]),
+        )
+        _zentriere(wurzel, self.px(FENSTER_BREITE), self.px(FENSTER_HOEHE))
+        _maximieren(wurzel)
+        self._schriften = stil.schriften_einrichten(wurzel, self.massstab)
         self._rahmen_bauen()
         wurzel.protocol("WM_DELETE_WINDOW", self.schliessen_anfragen)
         wurzel.report_callback_exception = self._unerwarteter_fehler
+        wurzel.bind("<F11>", lambda _ereignis: self.vollbild_umschalten())
+        wurzel.bind("<Escape>", lambda _ereignis: self.vollbild_beenden())
 
         self.zeige(startscreen)
         self._takt()
 
+    def px(self, wert):
+        """Eine Pixelangabe aus dem Maßstab 1 in den Maßstab dieses Fensters."""
+        return stil.skaliert(wert, self.massstab)
+
     def _rahmen_bauen(self):
-        kopf = tk.Frame(self.wurzel, padx=stil.ABSTAND, pady=stil.ABSTAND // 2)
+        kopf = tk.Frame(self.wurzel, padx=self.px(stil.ABSTAND), pady=self.px(stil.ABSTAND // 2))
         kopf.pack(side="top", fill="x")
         self._titelanzeige = tk.Label(kopf, font=stil.SCHRIFT_TITEL, anchor="w")
         self._titelanzeige.pack(side="left")
         self._levelanzeige = tk.Label(kopf)
-        self._levelanzeige.pack(side="right", padx=stil.ABSTAND)
+        self._levelanzeige.pack(side="right", padx=self.px(stil.ABSTAND))
         tk.Frame(self.wurzel, height=1, bg=stil.FARBE_LINIE).pack(side="top", fill="x")
 
         # Die Meldungszeile wird erst gepackt, wenn es etwas zu melden gibt.
@@ -146,9 +189,9 @@ class Hauptfenster:
             fg=stil.FARBE_MELDUNG,
             anchor="w",
             justify="left",
-            wraplength=MIN_BREITE - 2 * stil.ABSTAND,
-            padx=stil.ABSTAND,
-            pady=stil.ABSTAND // 2,
+            wraplength=self.px(MIN_BREITE - 2 * stil.ABSTAND),
+            padx=self.px(stil.ABSTAND),
+            pady=self.px(stil.ABSTAND // 2),
         )
 
         #: Hierhin bauen die Screens ihre Bedienelemente.
@@ -185,7 +228,14 @@ class Hauptfenster:
             # halb gebaute darf ihn nicht überdecken.
             neu.destroy()
             return self._screen
-        neu.pack(fill="both", expand=True)
+        if neu.fuellt_fenster:
+            neu.pack(fill="both", expand=True)
+        else:
+            # In der Mitte des Fensters – auf einem grossen Bildschirm stünde
+            # der Screen sonst oben am Rand. Der Rand drumherum bekommt seine
+            # Farbe, damit der Nachthimmel nicht an einem grauen Rand endet.
+            neu.pack(expand=True)
+        self.inhalt.configure(bg=neu.cget("bg"))
         self._screen = neu
         self._kopfzeile_aktualisieren()
         neu.beim_anzeigen()
@@ -289,6 +339,22 @@ class Hauptfenster:
             self._meldungszeile.pack_forget()
         elif not self._meldungszeile.winfo_manager():
             self._meldungszeile.pack(side="bottom", fill="x", before=self.inhalt)
+
+    # ── Vollbild ───────────────────────────────────────────────────────────
+
+    @property
+    def vollbild(self):
+        """Läuft das Spiel gerade im echten Vollbild (ohne Titelleiste)?"""
+        return bool(int(self.wurzel.attributes("-fullscreen")))
+
+    def vollbild_umschalten(self):
+        """F11: echtes Vollbild an oder aus."""
+        self.wurzel.attributes("-fullscreen", not self.vollbild)
+
+    def vollbild_beenden(self):
+        """Esc: zurück ins Fenster – im Vollbild fehlt sonst das Kreuz zum Schliessen."""
+        if self.vollbild:
+            self.wurzel.attributes("-fullscreen", False)
 
     # ── Schliessen ─────────────────────────────────────────────────────────
 

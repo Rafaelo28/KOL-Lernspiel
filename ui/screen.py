@@ -38,10 +38,32 @@ class Screen(tk.Frame):
     #: werden, etwa "Handbuch – Level 2".
     titel = ""
 
+    #: Soll der Screen den ganzen Platz im Fenster einnehmen – etwa ein
+    #: Handbuch mit langem Text, das nach unten wachsen darf? Sonst steht er
+    #: in seiner eigenen Grösse in der Mitte des Fensters.
+    fuellt_fenster = False
+
     def __init__(self, fenster):
-        super().__init__(fenster.inhalt, padx=ABSTAND, pady=ABSTAND)
+        # Oben und unten nur der halbe Abstand: Der Screen steht ohnehin in der
+        # Mitte des Fensters, und auf einem 1080p-Monitor zählt im grossen
+        # Maßstab jede Zeile (siehe tests/test_startbildschirm.py).
+        super().__init__(fenster.inhalt, padx=fenster.px(ABSTAND), pady=fenster.px(ABSTAND // 2))
         self.fenster = fenster
         self._auftraege = set()
+
+    def px(self, wert):
+        """Eine Pixelangabe im Maßstab des Fensters (siehe :mod:`ui.stil`).
+
+        Alle festen Grössen eines Screens – Abstände, Textbreiten, Positionen
+        über einer Szene – sind für den Maßstab 1 angegeben und gehen hier
+        hindurch. Auf einem 1080p-Monitor werden sie 1,5-mal so gross.
+        """
+        return self.fenster.px(wert)
+
+    @property
+    def massstab(self):
+        """Der Maßstab des Fensters – für :class:`ui.animation.Animation`."""
+        return self.fenster.massstab
 
     @property
     def durchlauf(self):
