@@ -160,7 +160,7 @@ steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 | Animation | Wo | Was sich bewegt |
 |-----------|----|-----------------|
 | `titel` | Startbildschirm | Lichtreflexe und Funkeln auf dem Diamanten, Glanz über dem Schriftzug |
-| `figur_<kennung>` (5×) | Figurwahl | das Rollen-Symbol der gewählten Karte: Zahlenschloss, Lupe, Chip, Landkarte, Füller |
+| `figur_<kennung>` (5×) | Figurwahl | das Rollen-Symbol unter der Maus und das der gewählten Karte: Zahlenschloss, Lupe, Chip, Landkarte, Füller |
 | `wrack` | Story-Intro | Feuer, Rauch und Funken am Wrack |
 
 ### Was in `crypto/` steckt

@@ -216,6 +216,51 @@ def test_der_mauszeiger_hellt_den_rand_auf(screen, ausloesen):
     assert karte.cget("highlightbackground") == stil.FARBE_KARTENRAND
 
 
+def test_unter_dem_mauszeiger_bewegt_sich_das_symbol(screen, ausloesen):
+    """Schon beim Drüberfahren – sonst merkt niemand, dass die Symbole Animationen sind."""
+    karte = screen.karten[2]
+    ausloesen(karte.buehne, "<Enter>")
+    assert karte.unter_maus and karte.buehne.laeuft
+    assert screen.gewaehlt is None                        # nur angesehen, nicht gewählt
+    assert [k.buehne.laeuft for k in screen.karten] == [False, False, True, False, False]
+
+
+def test_wenn_die_maus_geht_steht_das_symbol_wieder_auf_bild_0(screen, ausloesen):
+    karte = screen.karten[2]
+    ausloesen(karte.buehne, "<Enter>")
+    karte.buehne.zeige_bild(13)
+    ausloesen(karte.buehne, "<Leave>", x_root=-50, y_root=-50)
+    assert not karte.unter_maus and not karte.buehne.laeuft
+    assert karte.buehne.bild_nr == 0
+
+
+def test_innerhalb_der_karte_laeuft_das_symbol_weiter(screen, ausloesen, monkeypatch):
+    """Vom Symbol auf den Namen: Tk meldet ein Verlassen, die Maus ist aber noch auf der Karte."""
+    karte = screen.karten[2]
+    ausloesen(karte.buehne, "<Enter>")
+    monkeypatch.setattr(karte, "winfo_containing", lambda x, y: karte._name)
+    ausloesen(karte.buehne, "<Leave>")
+    assert karte.unter_maus and karte.buehne.laeuft
+
+
+def test_die_gewaehlte_karte_laeuft_weiter_wenn_die_maus_geht(screen, ausloesen):
+    karte = screen.karten[1]
+    screen.waehle(karte.figur)
+    ausloesen(karte.buehne, "<Enter>")
+    ausloesen(karte.buehne, "<Leave>", x_root=-50, y_root=-50)
+    assert karte.buehne.laeuft
+
+
+def test_eine_abgewaehlte_karte_unter_der_maus_laeuft_weiter(screen, ausloesen):
+    """Wer mit den Pfeiltasten weiterblättert, während die Maus auf der Karte steht."""
+    karte = screen.karten[0]
+    screen.waehle(karte.figur)
+    ausloesen(karte.buehne, "<Enter>")
+    screen.waehle(charaktere.THEO_LAMBERT)
+    assert karte.buehne.laeuft
+    assert karte.cget("highlightbackground") == stil.FARBE_KARTENRAND_HELL
+
+
 def test_der_mauszeiger_nimmt_der_gewaehlten_karte_nicht_das_gold(screen, ausloesen):
     screen.waehle(charaktere.ELENA_DUARTE)
     karte = screen.karten[1]

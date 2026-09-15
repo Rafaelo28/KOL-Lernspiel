@@ -408,7 +408,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     Ein gezeichnetes Gesicht legt Aussehen, Geschlecht und Herkunft fest und
     wirkt schnell wie ein Klischee – mit einem Symbol kann sich jedes Kind
     jede Figur aussuchen. Die Symbole sind kleine Animationen
-    (`grafik/figur_<kennung>.svg`); es bewegt sich nur das der gewählten Karte
+    (`grafik/figur_<kennung>.svg`); es bewegt sich das Symbol unter dem
+    Mauszeiger (so merkt man beim Drüberfahren, dass es Animationen sind) und
+    das der gewählten Karte
   - **Erst wählen, dann bestätigen:** Ein Klick auf eine Karte wählt nur aus,
     erst "Als … spielen" legt die Figur fest und beginnt den Durchlauf.
     Danach lässt sie sich nicht mehr wechseln (ein Fenster, ein Durchlauf) –

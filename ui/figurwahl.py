@@ -10,8 +10,9 @@ Jede Karte zeigt ein Symbol für die Rolle – Tresor, Lupe, Chip, Landkarte,
 Pass – statt eines Porträts. Ein gezeichnetes Gesicht legt Aussehen,
 Geschlecht und Herkunft fest und wirkt schnell wie ein Klischee; mit einem
 Symbol kann sich jedes Kind jede Figur aussuchen. Die Symbole sind kleine
-Animationen (``grafik/figur_<kennung>.svg``), aber es bewegt sich nur das der
-gewählten Karte – fünf gleichzeitig wären Unruhe.
+Animationen (``grafik/figur_<kennung>.svg``). Es bewegt sich das Symbol unter
+dem Mauszeiger – so merkt man schon beim Drüberfahren, dass da etwas passiert –
+und das der gewählten Karte. Alle fünf gleichzeitig wären Unruhe.
 
 Erst wählen, dann bestätigen
 ────────────────────────────
@@ -96,6 +97,7 @@ class Karte(tk.Frame):
         )
         self.figur = figur
         self._gewaehlt = False
+        self._unter_maus = False
 
         self.buehne = Buehne(self, Animation(animation_fuer(figur), massstab=massstab), bg=stil.FARBE_KARTE)
         self.buehne.pack()
@@ -135,12 +137,27 @@ class Karte(tk.Frame):
     def gewaehlt(self):
         return self._gewaehlt
 
+    @property
+    def unter_maus(self):
+        """Steht der Mauszeiger gerade auf der Karte?"""
+        return self._unter_maus
+
     def markieren(self, gewaehlt):
         """Hebt die Karte als gewählt hervor und lässt ihr Symbol laufen – oder nicht."""
         self._gewaehlt = gewaehlt
-        self._rand(stil.FARBE_GOLD if gewaehlt else stil.FARBE_KARTENRAND)
-        self._name.config(fg=stil.FARBE_GOLD if gewaehlt else stil.FARBE_SAND)
         if gewaehlt:
+            self._rand(stil.FARBE_GOLD)
+        else:
+            self._rand(stil.FARBE_KARTENRAND_HELL if self._unter_maus else stil.FARBE_KARTENRAND)
+        self._name.config(fg=stil.FARBE_GOLD if gewaehlt else stil.FARBE_SAND)
+        self._symbol_bewegen()
+
+    def _symbol_bewegen(self):
+        """Das Symbol läuft, solange die Karte gewählt ist oder die Maus darauf steht.
+
+        Sonst steht es still auf Bild 0 – wie alle anderen Karten.
+        """
+        if self._gewaehlt or self._unter_maus:
             self.buehne.starten()
         else:
             self.buehne.anhalten()
@@ -150,8 +167,10 @@ class Karte(tk.Frame):
         self.config(highlightbackground=farbe, highlightcolor=farbe)
 
     def _maus_drauf(self, _ereignis):
+        self._unter_maus = True
         if not self._gewaehlt:
             self._rand(stil.FARBE_KARTENRAND_HELL)
+        self._symbol_bewegen()
 
     def enthaelt(self, widget):
         """Gehört ``widget`` zu dieser Karte?
@@ -169,8 +188,10 @@ class Karte(tk.Frame):
         drunter = self.winfo_containing(ereignis.x_root, ereignis.y_root)
         if drunter is not None and self.enthaelt(drunter):
             return
+        self._unter_maus = False
         if not self._gewaehlt:
             self._rand(stil.FARBE_KARTENRAND)
+        self._symbol_bewegen()
 
 
 class Figurwahl(Screen):

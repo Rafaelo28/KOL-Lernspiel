@@ -5,7 +5,7 @@
 
   Fürs Spiel vorrendern mit:
       python3 grafik/rendern.py grafik/figur_theo_lambert.svg
-  Die Animation läuft im Spiel nur auf der gewählten Karte; die anderen
+  Die Animation läuft im Spiel auf der Karte unter der Maus und der gewählten; die anderen
   zeigen Bild 0. Der Grund (#1a1d3a) ist die Farbe der Karten (ui/stil.py,
   FARBE_KARTE) – sonst stünde ein Rechteck auf der Karte.
   Alle Animationsdauern teilen data-schleife-ms – siehe dokumentation/Animationen.md.
