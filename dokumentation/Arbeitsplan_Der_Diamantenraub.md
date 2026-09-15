@@ -585,6 +585,32 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 
 ### 8.4 Logdateien einsammeln und Auswertung vorbereiten
 - Wo landen die CSVs? Wie kommst du nach dem Experiment an alle heran?
+- **Stand der Klärung** (noch offen, Rafael kümmert sich):
+  - Schulsystem vermutlich ein "SNV-Client" o. ä. – genauer Name noch zu
+    klären. Es gibt je Schülerkonto einen Abgabe-/Einsammelordner, vermutlich
+    `H:\<Nachname.Vorname>\home\ausgeteilt` (Pfad noch prüfen)
+  - **Problem:** Schülerinnen und Schüler können den Ordner nicht öffnen, nur
+    per Drag and Drop etwas hineinlegen
+  - Ein Webserver scheidet eher aus: Die Messdaten verliessen das Schulnetz
+    (Datenschutz, siehe "Offene Punkte"), Schulnetze blockieren solche
+    Verbindungen oft, und ein Server auf dem Lehrer-PC bräuchte Adminrechte
+- **Geplant – sobald der Pfad feststeht:**
+  - Das Spiel schreibt nach jeder Aufgabe **zusätzlich** eine Kopie der CSV in
+    den Abgabeordner, genau wie in `logs/`. Kein Kind muss daran denken, keine
+    Datei geht verloren. Vorher prüfen: Darf ein Programm dort schreiben,
+    obwohl man den Ordner nicht öffnen kann? (Solche Abgabeordner sind oft
+    "nur einwerfen": schreiben ja, ansehen nein – dann klappt es.)
+  - Der Pfad kommt in eine kleine Einstellungsdatei neben dem Spiel, nicht in
+    den Code – so lässt er sich an der Schule anpassen. Der Ordnername enthält
+    den Schülernamen; er darf deshalb nirgends ins Log oder ins Repository
+  - Die lokale Kopie in `logs/` bleibt immer: Ist der Abgabeordner nicht
+    erreichbar, geht nichts verloren, und die Meldungszeile sagt es
+  - Notlösung, falls das Schreiben dort nicht erlaubt ist: Der
+    Abschlussbildschirm zeigt die Datei und einen Knopf "Ordner öffnen", aus
+    dem man sie per Drag and Drop in den Abgabeordner zieht
+  - Dazu ein kleines Skript, das alle eingesammelten CSVs zu einer Tabelle
+    zusammenführt
+  - Vor dem Experiment mit 2–3 Rechnern ausprobieren (passt zu 8.2)
 
 ---
 
