@@ -22,8 +22,10 @@ Warum der Text hier ohne Fettschrift steht
 ──────────────────────────────────────────
 Im Markdown der Quelle sind Schlüsselwörter mit ``**`` hervorgehoben. Tkinter
 kennt kein Markdown, und ein Text-Widget würde die Sternchen wörtlich anzeigen.
-Der Text ist deshalb reiner Fließtext. Wenn Phase 6.4 Hervorhebungen möchte,
-gehören sie als Tkinter-Tags dorthin und nicht als Sonderzeichen hierher.
+Der Text ist deshalb reiner Fließtext. Hervorgehoben werden nur ganze Zeilen:
+``Absatz(..., betont=True)`` für die Beispiel-Überschriften und Ergebnisse,
+``Abschnitt(..., hervorgehoben=True)`` für die Merksätze. Wie das aussieht,
+entscheidet die Oberfläche (6.4) – hier steht nur, *was* wichtig ist.
 
 Warum die Beispielwerte hier abgeschrieben stehen
 ─────────────────────────────────────────────────
@@ -45,9 +47,15 @@ from . import verfahren as _verfahren
 
 
 class Absatz(NamedTuple):
-    """Ein Fließtextabsatz. Die UI bricht ihn auf die Fensterbreite um."""
+    """Ein Fließtextabsatz. Die UI bricht ihn auf die Fensterbreite um.
+
+    ``betont`` markiert die Zeilen, die in der Quelle fett stehen und für sich
+    wichtig sind: die Überschrift eines durchgerechneten Beispiels und sein
+    Ergebnis ("HUND wird zu KXQG"). Die UI setzt sie fett.
+    """
 
     text: str
+    betont: bool = False
 
 
 class Aufzaehlung(NamedTuple):
@@ -156,14 +164,14 @@ SEITE_CAESAR = Handbuchseite(
                     "Das heißt: Aus A wird D, aus B wird E, aus H wird K und so "
                     "weiter."
                 ),
-                Absatz('Verschlüsseln des Wortes "HUND" mit Schlüssel 3:'),
+                Absatz('Verschlüsseln des Wortes "HUND" mit Schlüssel 3:', betont=True),
                 Tabelle(
                     zeilen=(
                         ("Buchstabe", "H", "U", "N", "D"),
                         ("verschoben um 3", "K", "X", "Q", "G"),
                     ),
                 ),
-                Absatz("Ergebnis: HUND wird zu KXQG"),
+                Absatz("Ergebnis: HUND wird zu KXQG", betont=True),
                 Absatz(
                     "Entschlüsseln funktioniert genau umgekehrt: Du gehst dieselbe "
                     "Anzahl Stellen im Alphabet zurück. Aus KXQG wird also wieder "
@@ -240,14 +248,14 @@ SEITE_SUBSTITUTION = Handbuchseite(
         Abschnitt(
             ueberschrift='Beispiel: Das Wort "HUND"',
             bloecke=(
-                Absatz('Verschlüsseln des Wortes "HUND":'),
+                Absatz('Verschlüsseln des Wortes "HUND":', betont=True),
                 Tabelle(
                     zeilen=(
                         ("Buchstabe", "H", "U", "N", "D"),
                         ("Geheimzeichen", "I", "X", "F", "R"),
                     ),
                 ),
-                Absatz("Ergebnis: HUND wird zu IXFR"),
+                Absatz("Ergebnis: HUND wird zu IXFR", betont=True),
                 Absatz(
                     "Entschlüsseln: Du suchst den Geheimbuchstaben in der unteren "
                     "Zeile und liest ab, welcher Originalbuchstabe darüber steht."
@@ -344,7 +352,7 @@ SEITE_VIGENERE = Handbuchseite(
         Abschnitt(
             ueberschrift="Verschlüsseln – Schritt für Schritt",
             bloecke=(
-                Absatz('Beispiel: Nachricht "HUND", Schlüsselwort "ROT"'),
+                Absatz('Beispiel: Nachricht "HUND", Schlüsselwort "ROT"', betont=True),
                 Absatz(
                     "Zuerst schreibst du das Schlüsselwort so oft untereinander, "
                     "bis es genauso lang ist wie deine Nachricht:"
@@ -366,7 +374,7 @@ SEITE_VIGENERE = Handbuchseite(
                         'D + R: Zeile "R", Spalte "D" ergibt U.',
                     ),
                 ),
-                Absatz("Ergebnis: HUND wird zu YIGU"),
+                Absatz("Ergebnis: HUND wird zu YIGU", betont=True),
             ),
         ),
         Abschnitt(
@@ -395,7 +403,7 @@ SEITE_VIGENERE = Handbuchseite(
                         "ergibt Spalte D.",
                     ),
                 ),
-                Absatz("Ergebnis: YIGU wird zu HUND"),
+                Absatz("Ergebnis: YIGU wird zu HUND", betont=True),
             ),
         ),
         Abschnitt(

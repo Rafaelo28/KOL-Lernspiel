@@ -135,12 +135,13 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `hauptfenster.py` | Das eine Fenster: öffnet maximiert (F11 Vollbild), Kopfzeile mit Level, Screen-Wechsel, Takt. Zeigt bewusst keinen Countdown (Zeitdruck-Stress) |
 | `screen.py` | Die Grundform aller Screens |
 | `ablauf.py` | Welcher Screen wann kommt – hier setzt Phase 7 die Level zusammen |
-| `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.4–6.8 da sind |
+| `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.5–6.8 da sind |
 | `stil.py` | Schriften, Farben und Abstände an einer Stelle – und der Maßstab: auf 1080p-Monitoren alles 1,5-mal so groß |
 | `animation.py` | Spielt vorgerenderte Animationen ab |
 | `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
 | `figurwahl.py` | Die Figurwahl: Vorgeschichte und fünf Karten mit Rollen-Symbol; erst wählen, dann bestätigen |
 | `intro.py` | Der Story-Intro: die Absturz-Szene mit dem Erzähltext, Absatz für Absatz |
+| `handbuch.py` | Bobs Handbuch: die Seite des Levels zum Scrollen, Tabellen als Raster, das Vigenère-Quadrat; auch mitten in einer Aufgabe zum Nachschlagen |
 
 ### Animationen
 
@@ -276,14 +277,15 @@ dürfen nicht im Repository landen.
 | 3     | Aufgaben-Generator                           | fertig  |
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
-| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1–6.3 fertig) |
+| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1–6.4 fertig) |
 | 7     | Level zusammensetzen                         | offen   |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
 `main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom
 Titelbild über die Figurwahl und den Story-Intro mit der animierten
-Absturz-Szene durch alle drei Level bis zum Abschluss. Ab dem Handbuch sind die
-Screens noch Platzhalter; die echten entstehen in 6.4–6.8.
+Absturz-Szene und Bobs Handbuch durch alle drei Level bis zum Abschluss. Die
+Übungen, Funksprüche und der Abschluss sind noch Platzhalter; die echten
+entstehen in 6.5–6.8.
 
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).

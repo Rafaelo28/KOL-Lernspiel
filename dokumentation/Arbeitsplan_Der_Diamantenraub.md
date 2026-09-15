@@ -460,10 +460,48 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.4 Handbuch-Screen
 - Scrollbarer Text, Tabellen als Grid
 - Muss während der Aufgaben erreichbar bleiben (Nachschlagen ist erlaubt)
+- **Umgesetzt:**
+  - `ui/handbuch.py` – die Seite des Levels als **Blatt Papier auf dem
+    Nachthimmel**: Titel des Handbuchs, Seitentitel, Abschnitte mit
+    Rotstift-Überschriften, Absätze, Aufzählungen mit hängendem Einzug. Die
+    Merksätze stehen in einem gelben Kasten, Beispiel-Überschriften und
+    Ergebnisse ("HUND wird zu KXQG") fett – dafür hat `Absatz` in
+    `content/handbuch.py` ein Feld `betont` bekommen
+  - **Scrollen:** Die Seite ist ein `tk.Text` – bricht selbst um, scrollt mit
+    Mausrad, Rollbalken und Tasten und lässt sich nicht beschreiben. Die
+    Tabellen sitzen als **Raster** im Text und scrollen mit; über ihnen leiten
+    sie das Mausrad an die Seite weiter (sonst bliebe die Seite dort stehen)
+  - Das **Vigenère-Quadrat** auf Seite 3 wird aus der Formel gezeichnet
+    (`crypto/vigenere_quadrat.py`), nicht abgetippt; ein Test vergleicht alle
+    676 Felder. Hervorheben von Zeile und Spalte folgt in 6.7
+  - Die Seite ist höchstens 860 Pixel breit (im grossen Maßstab 1290) – auf
+    einem 1920 breiten Monitor wären die Zeilen sonst zu lang zum Lesen.
+    Nach unten nutzt sie die ganze Fensterhöhe
+  - Über der Seite steht der **Einstieg ins Level** aus der Geschichte ("Du
+    schlägst das Handbuch auf …", neu: `story.EINSTIEG_NACH_LEVEL`), nach
+    einem Zeitablauf davor der Hinweis "Die Zeit für Level … ist abgelaufen"
+  - **Nachschlagen während der Aufgaben:** `handbuch.nachschlagen(fenster,
+    level, zurueck)` zeigt dieselbe Seite mit "Zurück zur Aufgabe". Die
+    Aufgabe bleibt offen, ihre Uhr läuft weiter – Nachschlagen gehört zum
+    Lösen und zählt deshalb zur Bearbeitungszeit. Der Aufgaben-Screen baut
+    sich danach frisch auf und setzt dieselbe Aufgabe fort (der Platzhalter
+    der Übung macht es schon so: `Uebung(fortsetzen=True)`). Läuft die Zeit
+    beim Nachschlagen ab, gilt Projektregel 1: Die Aufgabe wird abgebrochen,
+    die nächste Seite liegt auf
+  - Ein Handbuch im Spiel, kein zweites Fenster: Ein zweites Fenster verlöre
+    man hinter dem maximierten Spiel, und das Spiel hat bewusst genau eines
 
 ### 6.5 Aufgaben-Screen
 - Aufgabentext, Schlüsselangabe, Eingabefeld, Prüf-Button, Rückmeldung,
   Versuchszähler
+- Aus 6.4: ein Knopf "Im Handbuch nachschlagen" über
+  `handbuch.nachschlagen(...)`; der Screen muss eine **offene Aufgabe
+  fortsetzen** können, statt eine neue zu stellen – samt dem, was schon
+  eingetippt war, und dem Stand der Versuche aus dem Spielstand
+- Das Werkzeug zum Lösen gehört **auf** den Aufgaben-Screen, nicht nur ins
+  Handbuch: das Alphabet (Level 1), die Geheimtabelle (Level 2), das Quadrat
+  (Level 3, siehe 6.7). Für jeden Buchstaben ins Handbuch zu wechseln, kostete
+  Zeit, die dann in den Messdaten stünde
 
 ### 6.6 Funk-Screen
 - Optisch abgesetzt vom Handbuch, damit "echte Nachricht" und "Übung"
@@ -479,6 +517,10 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.7 Vigenère-Quadrat als Anzeige
 - 26×26-Grid aus Phase 1.5, mit Hervorhebung der aktiven Zeile/Spalte
 - Muss auf kleinen Schulmonitoren lesbar sein – testen!
+- Aus 6.4: Das Handbuch zeichnet das Quadrat schon (`Handbuch._quadrat_bauen`);
+  jedes Feld trägt die Tags `z<Zeile>` und `s<Spalte>`, darüber lässt es sich
+  hervorheben. Für den Aufgaben-Screen gehört die Zeichnung in ein eigenes
+  Bauteil, das Handbuch und Aufgabe gemeinsam benutzen
 
 ### 6.8 Abschluss-Screen
 - Nachthimmel, Rettung, Schlusstext (Diamanten bleiben zurück)

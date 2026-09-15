@@ -26,7 +26,7 @@ import main  # noqa: E402
 from content import charaktere  # noqa: E402
 from game.protokoll import KODIERUNG, TRENNZEICHEN  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
-from ui import ablauf, hauptfenster, platzhalter, stil  # noqa: E402
+from ui import ablauf, handbuch, hauptfenster, platzhalter, stil  # noqa: E402
 from ui.hauptfenster import Hauptfenster  # noqa: E402
 from ui.screen import Screen  # noqa: E402
 
@@ -193,6 +193,12 @@ def test_die_schriften_sind_eingerichtet(fenster, wurzel):
     assert erzaehlung.cget("size") == stil.ERZAEHLGROESSE
     fett = tkfont.nametofont(stil.SCHRIFT_FETT, root=wurzel)
     assert (fett.cget("size"), fett.cget("weight")) == (stil.SCHRIFTGROESSE, "bold")
+    abschnitt = tkfont.nametofont(stil.SCHRIFT_ABSCHNITT, root=wurzel)
+    assert (abschnitt.cget("size"), abschnitt.cget("weight")) == (stil.ABSCHNITTGROESSE, "bold")
+    betont = tkfont.nametofont(stil.SCHRIFT_BETONT, root=wurzel)
+    assert (betont.cget("size"), betont.cget("weight")) == (stil.ERZAEHLGROESSE, "bold")
+    kursiv = tkfont.nametofont(stil.SCHRIFT_KURSIV, root=wurzel)
+    assert (kursiv.cget("size"), kursiv.cget("slant")) == (stil.SCHRIFTGROESSE, "italic")
 
 
 # ── Grösse, Maßstab und Vollbild ───────────────────────────────────────────
@@ -479,7 +485,7 @@ def test_eine_zu_spaet_gestellte_uebung_schaltet_sofort_weiter(fenster, uhr):
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1] + 0.1)
     _klick(fenster, "Zu den Übungen")
     screen = fenster.aktueller_screen
-    assert isinstance(screen, platzhalter.Handbuch)
+    assert isinstance(screen, handbuch.Handbuch)
     assert screen.titel == "Handbuch – Level 2"
     assert fenster.durchlauf.spielstand.aktuelle_aufgabe is None
     assert fenster.meldung == ""
@@ -498,7 +504,7 @@ def test_ein_screen_der_zu_frueh_stellt_verdeckt_den_levelwechsel_nicht(fenster,
     _bis_zum_handbuch(fenster)
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1] + 0.1)
     fenster.zeige(StelltImKonstruktor)
-    assert isinstance(fenster.aktueller_screen, platzhalter.Handbuch)
+    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
     assert fenster.aktueller_screen.titel == "Handbuch – Level 2"
     assert len(fenster.inhalt.winfo_children()) == 1
 
@@ -690,22 +696,13 @@ def test_ein_zweiter_durchlauf_im_selben_fenster_ist_verboten(fenster):
 # 8. Der ganze Weg durch die Platzhalter
 # ───────────────────────────────────────────────────────────────────────────
 
-def _text_mit(fenster, wort):
-    """Der Text des ersten Bedienelements im Screen, das ``wort`` enthält."""
-    for kind in fenster.aktueller_screen.winfo_children():
-        text = kind.cget("text")
-        if wort in text:
-            return text
-    return ""
-
-
 def test_der_platzhalterweg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, tmp_path):
     _bis_zur_uebung(fenster)
     uhr.weiter(12)
     _klick(fenster, "Musterlösung")
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1])
     fenster._takt()                                   # Level 1 endet am Timer
-    assert "Level 1 ist abgelaufen" in _text_mit(fenster, "abgelaufen")
+    assert "Level 1 ist abgelaufen" in fenster.aktueller_screen.hinweis
     _klick(fenster, "Zu den Übungen")
     _klick(fenster, "Level vorzeitig")                # Level 2 endet vorzeitig
     _klick(fenster, "Zu den Übungen")

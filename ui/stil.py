@@ -52,6 +52,7 @@ def skaliert(wert, massstab):
     """
     return round(wert * massstab)
 
+
 #: Grundgrösse aller Texte in Punkt. Auf Schulmonitoren lieber zu gross als
 #: zu klein.
 SCHRIFTGROESSE = 12
@@ -71,6 +72,17 @@ SCHRIFT_ERZAEHLUNG = "Erzaehlung"
 #: Name der fetten Schrift in Grundgrösse – für Namen und Initialen in der
 #: Figurwahl. Ebenfalls aus :func:`schriften_einrichten`.
 SCHRIFT_FETT = "Fett"
+
+#: Zwischenüberschriften im Handbuch – fett und etwas grösser als dessen Text.
+SCHRIFT_ABSCHNITT = "Abschnitt"
+ABSCHNITTGROESSE = 16
+
+#: Betonte Zeilen im Handbuch (Ergebnisse, Beispiel-Überschriften): fett in
+#: der Grösse der Erzählschrift.
+SCHRIFT_BETONT = "Betont"
+
+#: Kursiv in Grundgrösse – Untertitel und Tabellenbeschriftungen im Handbuch.
+SCHRIFT_KURSIV = "Kursiv"
 
 #: Farbe der Meldungszeile – für Probleme, die die Lehrkraft sehen muss.
 FARBE_MELDUNG = "#9a1c1c"
@@ -105,6 +117,20 @@ FARBE_GOLD = "#e2b651"
 #: hell genug, um auf dem dunklen Grund lesbar zu sein.
 FARBE_WARNUNG = "#ff9a76"
 
+# Farben des Handbuchs – ein Blatt Papier auf dem Nachthimmel:
+#: Papier.
+FARBE_PAPIER = "#f7f0dc"
+#: Etwas dunkleres Papier – Kopfzellen der Tabellen.
+FARBE_PAPIER_DUNKEL = "#eadcb6"
+#: Linien der Tabellen.
+FARBE_PAPIERLINIE = "#c5b186"
+#: Schrift auf dem Papier.
+FARBE_TINTE = "#2a2433"
+#: Überschriften auf dem Papier – wie mit Rotstift.
+FARBE_ROTSTIFT = "#8a2d1b"
+#: Hinterlegung der Merksätze.
+FARBE_MERKSATZ = "#f2dc9b"
+
 
 def schriften_einrichten(wurzel, massstab=1):
     """Stellt die Grundschriften ein und legt die benannten Schriften an.
@@ -114,7 +140,9 @@ def schriften_einrichten(wurzel, massstab=1):
     Rückgabe sind die Schriftobjekte. Wer sie aufbewahrt, behält die Schriften:
     Tkinter löscht eine benannte Schrift, sobald ihr Objekt verschwindet.
     """
-    grund, titel, erzaehlung = (skaliert(g, massstab) for g in (SCHRIFTGROESSE, TITELGROESSE, ERZAEHLGROESSE))
+    grund, titel, erzaehlung, abschnitt = (
+        skaliert(g, massstab) for g in (SCHRIFTGROESSE, TITELGROESSE, ERZAEHLGROESSE, ABSCHNITTGROESSE)
+    )
     for name in ("TkDefaultFont", "TkTextFont", "TkFixedFont"):
         tkfont.nametofont(name, root=wurzel).configure(size=grund)
     familie = tkfont.nametofont("TkDefaultFont", root=wurzel).actual("family")
@@ -122,4 +150,7 @@ def schriften_einrichten(wurzel, massstab=1):
         tkfont.Font(root=wurzel, name=SCHRIFT_TITEL, family=familie, size=titel, weight="bold"),
         tkfont.Font(root=wurzel, name=SCHRIFT_ERZAEHLUNG, family=familie, size=erzaehlung),
         tkfont.Font(root=wurzel, name=SCHRIFT_FETT, family=familie, size=grund, weight="bold"),
+        tkfont.Font(root=wurzel, name=SCHRIFT_ABSCHNITT, family=familie, size=abschnitt, weight="bold"),
+        tkfont.Font(root=wurzel, name=SCHRIFT_BETONT, family=familie, size=erzaehlung, weight="bold"),
+        tkfont.Font(root=wurzel, name=SCHRIFT_KURSIV, family=familie, size=grund, slant="italic"),
     )

@@ -235,6 +235,14 @@ def test_erzaehltexte_sind_normale_sprache_und_keine_funksprueche():
         assert any(zeichen in gesamt for zeichen in ".!?")
 
 
+def test_jedes_level_hat_seinen_einstieg():
+    """Der Satz, mit dem die Handbuchseite des Levels aufgeschlagen wird (6.4)."""
+    assert set(story.EINSTIEG_NACH_LEVEL) == {1, 2, 3}
+    for level, einstieg in story.EINSTIEG_NACH_LEVEL.items():
+        assert einstieg in story.ERZAEHLTEXTE
+        assert f"Seite {level}" in " ".join(einstieg.absaetze) or "Letzte Seite" in " ".join(einstieg.absaetze)
+
+
 def test_die_vorgeschichte_kommt_vor_dem_intro():
     """Der Intro beginnt am brennenden Wrack – wie es dazu kam, steht davor."""
     assert story.ERZAEHLTEXTE.index(story.VORGESCHICHTE) < story.ERZAEHLTEXTE.index(story.INTRO)

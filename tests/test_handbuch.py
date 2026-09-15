@@ -347,6 +347,20 @@ def _quadratbloecke(seite):
     ]
 
 
+@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"seite {s.level}")
+def test_betont_sind_genau_die_beispiele_und_ihre_ergebnisse(seite):
+    """In der Quelle stehen sie fett; die Oberfläche setzt sie fett (6.4)."""
+    betont = [block.text for a in seite.abschnitte for block in a.bloecke
+              if isinstance(block, Absatz) and block.betont]
+    assert any(text.startswith("Ergebnis:") for text in betont)
+    for a in seite.abschnitte:
+        for block in a.bloecke:
+            if isinstance(block, Absatz) and block.text.startswith("Ergebnis:"):
+                assert block.betont, f"Nicht betont: {block.text}"
+    for text in betont:
+        assert text.startswith(("Ergebnis:", "Verschlüsseln des Wortes", "Beispiel:")), text
+
+
 def test_nur_seite_3_hat_einen_platz_fuer_das_quadrat():
     """Die UI muss wissen, wo das 26x26-Raster hingehört (Arbeitsplan 6.7)."""
     for seite in handbuch.SEITEN:

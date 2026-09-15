@@ -7,6 +7,8 @@ ganze Weg an einer Stelle lesbar:
 
     Startbildschirm (ID) → Figurwahl → Story-Intro → Level 1 → Level 2 → Level 3 → Abschluss
 
+Jedes Level beginnt mit seiner Handbuchseite, danach kommen die Übungen.
+
 Die ID vom Startbildschirm reist bis zur Figurwahl mit; mit der Figur beginnt
 der Durchlauf, und die ID wird sein Pseudonym.
 
@@ -20,7 +22,8 @@ abgebrochen abgelegt und der Durchlauf gespeichert.
 
 from functools import partial
 
-from ui import figurwahl, intro, platzhalter, startbildschirm
+from content import story
+from ui import figurwahl, handbuch, intro, platzhalter, startbildschirm
 from ui.hauptfenster import Hauptfenster
 
 #: Mit diesem Screen beginnt das Spiel.
@@ -50,7 +53,23 @@ def figur_gewaehlt(fenster, figur, spieler_id=None):
 def level_1_beginnen(fenster):
     """Nach dem Intro: Level 1 beginnt, ab jetzt läuft die Uhr."""
     fenster.durchlauf.starte_level()
-    fenster.zeige(platzhalter.Handbuch, level=fenster.durchlauf.spielstand.aktuelles_level)
+    handbuch_aufschlagen(fenster, fenster.durchlauf.spielstand.aktuelles_level)
+
+
+def handbuch_aufschlagen(fenster, level, hinweis=""):
+    """Zu Beginn eines Levels: der Einstieg aus der Geschichte und die Handbuchseite."""
+    fenster.zeige(
+        handbuch.Handbuch,
+        level=level,
+        danach=uebungen_zeigen,
+        hinweis=hinweis,
+        einleitung=story.EINSTIEG_NACH_LEVEL[level].absaetze,
+    )
+
+
+def uebungen_zeigen(fenster):
+    """Nach dem Handbuch: die Übungen des Levels."""
+    fenster.zeige(platzhalter.Uebung)
 
 
 def nach_levelwechsel(fenster, wechsel):
@@ -64,7 +83,7 @@ def nach_levelwechsel(fenster, wechsel):
         if wechsel.durch_zeitablauf
         else ""
     )
-    fenster.zeige(platzhalter.Handbuch, level=wechsel.neues_level, hinweis=hinweis)
+    handbuch_aufschlagen(fenster, wechsel.neues_level, hinweis)
 
 
 def oeffnen(wurzel, zeitgeber=None, protokollordner=None, massstab=None):

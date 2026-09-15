@@ -449,6 +449,10 @@ FUNKSPRUECHE = (
     FUNKSPRUCH_BOB_ZWEITE_ANTWORT,
 )
 
+#: Womit jedes Level beginnt – der Satz, mit dem die Handbuchseite
+#: aufgeschlagen wird (Arbeitsplan 6.4).
+EINSTIEG_NACH_LEVEL = {1: EINSTIEG_LEVEL_1, 2: EINSTIEG_LEVEL_2, 3: EINSTIEG_LEVEL_3}
+
 #: Welche Funksprüche gehören zu welchem Level?
 FUNKSPRUECHE_NACH_LEVEL = {
     1: (FUNKSPRUCH_ERSTER_RUF, FUNKSPRUCH_BOB_ERSTE_ANTWORT),

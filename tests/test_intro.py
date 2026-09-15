@@ -12,7 +12,7 @@ import pytest
 tk = pytest.importorskip("tkinter")
 
 from content import charaktere, story  # noqa: E402
-from ui import ablauf, figurwahl, intro, platzhalter  # noqa: E402
+from ui import ablauf, figurwahl, handbuch, intro  # noqa: E402
 
 
 @pytest.fixture
@@ -122,4 +122,4 @@ def test_der_intro_kostet_keine_levelzeit(fenster):
     for _ in story.INTRO.absaetze:
         fenster.aktueller_screen.weiter()
     assert fenster.durchlauf.spielstand.aktuelles_level == 1
-    assert isinstance(fenster.aktueller_screen, platzhalter.Handbuch)
+    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
