@@ -26,7 +26,7 @@ import main  # noqa: E402
 from content import charaktere  # noqa: E402
 from game.protokoll import KODIERUNG, TRENNZEICHEN  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
-from ui import ablauf, handbuch, hauptfenster, platzhalter, stil  # noqa: E402
+from ui import ablauf, handbuch, hauptfenster, platzhalter, stil, uebung  # noqa: E402
 from ui.hauptfenster import Hauptfenster  # noqa: E402
 from ui.screen import Screen  # noqa: E402
 
@@ -132,6 +132,14 @@ def _bis_zum_handbuch(fenster):
 def _bis_zur_uebung(fenster):
     _bis_zum_handbuch(fenster)
     _klick(fenster, "Zu den Übungen")
+
+
+def _loesen(fenster):
+    """Löst die laufende Übung mit ihrer Musterlösung und schliesst sie ab."""
+    screen = fenster.aktueller_screen
+    screen._feld.insert(0, fenster.durchlauf.spielstand.aktuelle_aufgabe.loesung)
+    screen.pruefen()
+    screen.weiter()
 
 
 def _zeilen(fenster):
@@ -517,13 +525,13 @@ def test_die_uebung_wird_erst_beim_anzeigen_gestellt(fenster, monkeypatch):
     weil ``zeige()`` auch einen zu früh stellenden Screen auffängt.
     """
     beobachtet = []
-    echt = platzhalter.Uebung.beim_anzeigen
+    echt = uebung.Uebung.beim_anzeigen
 
     def beobachten(screen):
         beobachtet.append(screen.durchlauf.spielstand.aktuelle_aufgabe)
         echt(screen)
 
-    monkeypatch.setattr(platzhalter.Uebung, "beim_anzeigen", beobachten)
+    monkeypatch.setattr(uebung.Uebung, "beim_anzeigen", beobachten)
     _bis_zur_uebung(fenster)
     assert beobachtet == [None]
     assert fenster.durchlauf.spielstand.aktuelle_aufgabe is not None
@@ -542,13 +550,13 @@ def test_ein_speicherfehler_steht_in_der_meldungszeile(fenster, monkeypatch):
     _bis_zur_uebung(fenster)
     speicher = Speicher(fenster.durchlauf.protokoll)
     monkeypatch.setattr(fenster.durchlauf.protokoll, "schreiben", speicher)
-    _klick(fenster, "Musterlösung")
+    _loesen(fenster)
     assert "nicht gespeichert" in fenster.meldung
     assert "erneut versucht" in fenster.meldung
     assert fenster._meldungszeile.winfo_manager() == "pack"
 
     speicher.gesperrt = False
-    _klick(fenster, "Musterlösung")
+    _loesen(fenster)
     assert fenster.meldung == ""
     assert fenster._meldungszeile.winfo_manager() == ""
     assert len(_zeilen(fenster)) == 2
@@ -616,7 +624,7 @@ def test_vor_dem_ersten_level_wird_nicht_gefragt(fenster, tmp_path):
 def test_nach_dem_spielende_wird_nicht_gefragt(fenster):
     _bis_zur_uebung(fenster)
     for _ in range(3):
-        _klick(fenster, "Level vorzeitig")
+        _klick(fenster, "Level beenden")
         if not isinstance(fenster.aktueller_screen, platzhalter.Abschluss):
             _klick(fenster, "Zu den Übungen")
     assert isinstance(fenster.aktueller_screen, platzhalter.Abschluss)
@@ -696,17 +704,17 @@ def test_ein_zweiter_durchlauf_im_selben_fenster_ist_verboten(fenster):
 # 8. Der ganze Weg durch die Platzhalter
 # ───────────────────────────────────────────────────────────────────────────
 
-def test_der_platzhalterweg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, tmp_path):
+def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, tmp_path):
     _bis_zur_uebung(fenster)
     uhr.weiter(12)
-    _klick(fenster, "Musterlösung")
+    _loesen(fenster)                                  # eine Übung in Level 1
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1])
     fenster._takt()                                   # Level 1 endet am Timer
     assert "Level 1 ist abgelaufen" in fenster.aktueller_screen.hinweis
     _klick(fenster, "Zu den Übungen")
-    _klick(fenster, "Level vorzeitig")                # Level 2 endet vorzeitig
+    _klick(fenster, "Level beenden")                  # Level 2 endet vorzeitig
     _klick(fenster, "Zu den Übungen")
-    _klick(fenster, "Level vorzeitig")                # Level 3 ebenso
+    _klick(fenster, "Level beenden")                  # Level 3 ebenso
     assert isinstance(fenster.aktueller_screen, platzhalter.Abschluss)
     assert fenster.durchlauf.spielstand.ist_durchgespielt
     assert fenster.kopfzeile == ("Geschafft", "")

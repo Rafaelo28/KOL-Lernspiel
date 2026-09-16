@@ -351,6 +351,8 @@ def test_es_gibt_ueberhaupt_module_zu_pruefen():
         "ui/figurwahl.py",
         "ui/handbuch.py",
         "ui/buchsatz.py",
+        "ui/buchleinwand.py",
+        "ui/uebung.py",
     } <= namen
 
 

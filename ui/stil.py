@@ -140,6 +140,10 @@ FARBE_KARTENKANTE = "#c9a24a"
 FARBE_KLEBEBAND = "#efe6cc"
 #: Bobs Randnotizen – blauer Kugelschreiber.
 FARBE_KULI = "#284b8f"
+#: Was die Spielenden selbst ins Buch schreiben – Bleistift (ui/uebung.py).
+FARBE_BLEISTIFT = "#3b3a38"
+#: Grün für "stimmt" – dieselbe Tinte wie im Stempel "GELÖST".
+FARBE_HAKEN = "#2f7a46"
 
 #: Das Handbuch ist in einer Buchschrift gesetzt – der ersten aus dieser
 #: Liste, die der Rechner kennt. Die ersten beiden hat jedes Windows; "P052"

@@ -199,6 +199,31 @@ def test_jede_seite_hat_genau_ein_lesezeichen(seite):
     assert len(markiert) == 1
 
 
+@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
+def test_zu_jedem_level_gibt_es_ein_werkzeug_zum_loesen(seite):
+    """Beim Lösen liegt es neben der Aufgabe (Arbeitsplan 6.5) – aus denselben Daten wie das Handbuch."""
+    werkzeug = handbuch.WERKZEUG_NACH_LEVEL[seite.level]
+    assert isinstance(werkzeug, (Tabelle, VigenereQuadrat))
+
+
+def test_das_werkzeug_bei_caesar_ist_das_blanke_alphabet():
+    """Eine verschobene Zeile wäre für den Schlüssel der Aufgabe die halbe Lösung."""
+    werkzeug = handbuch.WERKZEUG_NACH_LEVEL[1]
+    (zeile,) = werkzeug.zeilen
+    assert tuple(zeile[1:]) == tuple(ALPHABET)
+    assert len(werkzeug.zeilen) == 1
+
+
+def test_das_werkzeug_bei_der_substitution_ist_die_geheimtabelle_aus_dem_handbuch():
+    assert handbuch.WERKZEUG_NACH_LEVEL[2] is handbuch.GEHEIMTABELLE
+    assert handbuch.GEHEIMTABELLE in [b for a in handbuch.SEITE_SUBSTITUTION.abschnitte for b in a.bloecke]
+
+
+def test_das_werkzeug_bei_vigenere_ist_das_quadrat():
+    werkzeug = handbuch.WERKZEUG_NACH_LEVEL[3]
+    assert isinstance(werkzeug, VigenereQuadrat) and werkzeug.beschriftung.strip()
+
+
 def test_das_lesezeichen_liegt_bei_der_tabelle_zum_loesen():
     """Caesar: das verschobene Alphabet, Substitution: die Geheimtabelle, Vigenère: das Quadrat."""
     def markiert(seite):

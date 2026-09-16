@@ -542,14 +542,51 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.5 Aufgaben-Screen
 - Aufgabentext, Schlüsselangabe, Eingabefeld, Prüf-Button, Rückmeldung,
   Versuchszähler
-- **Die Übungsaufgaben werden im Buch beantwortet** (festgelegt nach 6.4):
-  Die Übung steht auf der rechten Seite des aufgeschlagenen Handbuchs, die
-  Erklärung dazu links – aufgeschrieben wird also mitten im Buch, wie in ein
-  Übungsheft. So bleibt beim Lösen sichtbar, worum es geht, und der Wechsel
-  zwischen Aufgabe und Handbuch kostet keine Zeit im festen Zeitfenster.
-  Technisch: derselbe Satz und dieselbe Leinwand wie in 6.4
-  (`ui/buchsatz.py`, `ui/handbuch.py`), das Eingabefeld als Fenster auf der
-  Leinwand über der Buchseite
+- **Umgesetzt – die Übung steht im Buch** (`ui/uebung.py`): Bobs Handbuch
+  liegt aufgeschlagen da; rechts die Übung, links das Werkzeug zum Lösen.
+  Geschrieben wird also mitten ins Buch, wie in ein Übungsheft – gelernt und
+  geübt wird an derselben Stelle
+  - **Rechte Seite:** Überschrift ("Übung 3" – die wievielte im Level),
+    der Auftrag mit Schlüsselangabe ("Entschlüssele mit dem Schlüssel 16:",
+    "Verschlüssele mit deiner Geheimtabelle:", "… mit dem Schlüsselwort
+    ROT:"), darunter der Aufgabentext gross, ein Schreibfeld und die
+    Rückmeldung
+  - **Linke Seite – das Werkzeug** (`content.handbuch.WERKZEUG_NACH_LEVEL`):
+    bei Caesar **nur das blanke Alphabet** zum Abzählen, bei der Substitution
+    die Geheimtabelle, bei Vigenère das Quadrat. Die verschobene Zeile aus dem
+    Handbuch wäre für den Schlüssel der Aufgabe die halbe Lösung – im Handbuch
+    steht sie nur als Beispiel mit dem Schlüssel 3. Darunter passt in Level 1
+    und 2 noch der Merksatz des Levels; er wiederholt nur, was im Handbuch
+    steht, spart aber das Blättern
+  - **Die Regeln kommen aus der Spiellogik**, der Screen zeigt sie nur: die
+    konkrete Fehlermeldung (Projektregel 6), der Hinweis "Du bist näher dran
+    als vorher – dieser Versuch zählt nicht mit", die verbleibenden Versuche
+    und nach dreien ohne Fortschritt die Lösung (Projektregel 2). Eine leere
+    Eingabe kostet keinen Versuch
+  - **Drei Dinge machen die Rückmeldung sichtbar statt nur lesbar:** Die
+    Stelle, die die Meldung nennt, wird im Aufgabentext rot unterringelt
+    (dieselbe Auskunft, nur schneller zu finden – welcher Buchstabe dort
+    hingehört, verrät sie weiterhin nicht). Stimmt die Antwort, schlägt der
+    Stempel "GELÖST" auf die Seite (`grafik/stempel_geloest.svg`). Und
+    geschrieben wird in Handschrift, als hätte man den Bleistift selbst in
+    der Hand
+  - Ist die Aufgabe entschieden, weicht das Schreibfeld dem, was darin stand:
+    Die Antwort steht dann als Handschrift im Buch, und der Stempel kann
+    darüberliegen. (Ein eingebettetes Eingabefeld liegt in Tk immer über
+    allem, was auf der Leinwand steht.) Aus "Prüfen" wird "Weiter"
+  - **Nachschlagen:** "Im Handbuch nachschlagen" zeigt das ganze Handbuch und
+    kommt zu **derselben** Aufgabe zurück – samt dem, was schon im
+    Schreibfeld stand, und dem Stand der Versuche. Die Uhr der Aufgabe läuft
+    weiter: Nachschlagen gehört zum Lösen
+  - **Gemeinsam mit 6.4:** Das Buch selbst – Bild, Schriften, Stempel und das
+    Zeichnen der gesetzten Stücke – steht jetzt in `ui/buchleinwand.py`;
+    Handbuch und Übung benutzen dieselbe Leinwand. `buchsatz.einzelseite`
+    setzt das Werkzeug auf die linke Seite
+  - **Platzhalter bis 7.1:** Unter dem Buch hängt ein Knopf "Level beenden",
+    mit dem sich ein Level vorzeitig beenden lässt. Ohne ihn müsste man beim
+    Durchklicken jedes Zeitfenster abwarten. Was nach einer Übung kommt,
+    entscheidet `ui/ablauf.py` (`uebung_beendet`) – dort setzt Phase 7 die
+    Funksprüche dazwischen
 - Aus 6.4: ein Knopf "Im Handbuch nachschlagen" über
   `handbuch.nachschlagen(...)`; der Screen muss eine **offene Aufgabe
   fortsetzen** können, statt eine neue zu stellen – samt dem, was schon

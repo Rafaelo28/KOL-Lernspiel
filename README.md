@@ -135,7 +135,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `hauptfenster.py` | Das eine Fenster: öffnet maximiert (F11 Vollbild), Kopfzeile mit Level, Screen-Wechsel, Takt. Zeigt bewusst keinen Countdown (Zeitdruck-Stress) |
 | `screen.py` | Die Grundform aller Screens |
 | `ablauf.py` | Welcher Screen wann kommt – hier setzt Phase 7 die Level zusammen |
-| `platzhalter.py` | Platzhalter-Screens, bis die echten aus 6.5–6.8 da sind |
+| `platzhalter.py` | Platzhalter-Screen für den Abschluss, bis der echte aus 6.8 da ist |
 | `stil.py` | Schriften, Farben und Abstände an einer Stelle – und der Maßstab: auf 1080p-Monitoren alles 1,5-mal so groß |
 | `animation.py` | Spielt vorgerenderte Animationen ab |
 | `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
@@ -143,6 +143,8 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `intro.py` | Der Story-Intro: die Absturz-Szene mit dem Erzähltext, Absatz für Absatz |
 | `handbuch.py` | Bobs Handbuch als aufgeschlagenes Buch: Doppelseiten zum Blättern (Knöpfe, Tasten, Mausrad, Seitenecken), umschlagende Blätter, Lesezeichen-Band, das Vigenère-Quadrat; auch mitten in einer Aufgabe zum Nachschlagen |
 | `buchsatz.py` | Der Satz des Handbuchs: welcher Text auf welche Buchseite kommt – mit den Regeln aus dem Buchdruck |
+| `buchleinwand.py` | Das aufgeschlagene Buch als Leinwand – Bild, Schriften, Stempel, Zeichnen; Handbuch und Übung teilen es sich |
+| `uebung.py` | Die Übungen im Buch: Aufgabe rechts, Werkzeug links, Rückmeldung mit Fehlerstelle, Stempel und Versuchszähler |
 
 ### Animationen
 
@@ -281,15 +283,15 @@ dürfen nicht im Repository landen.
 | 3     | Aufgaben-Generator                           | fertig  |
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
-| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1–6.4 fertig) |
+| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1–6.5 fertig) |
 | 7     | Level zusammensetzen                         | offen   |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
 `main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom
 Titelbild über die Figurwahl und den Story-Intro mit der animierten
-Absturz-Szene und Bobs Handbuch durch alle drei Level bis zum Abschluss. Die
-Übungen, Funksprüche und der Abschluss sind noch Platzhalter; die echten
-entstehen in 6.5–6.8.
+Absturz-Szene, Bobs Handbuch und den Übungen darin durch alle drei Level bis
+zum Abschluss. Die Funksprüche und der Abschluss sind noch Platzhalter; die
+echten entstehen in 6.6–6.8.
 
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).

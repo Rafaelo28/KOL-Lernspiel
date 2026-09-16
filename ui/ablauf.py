@@ -23,7 +23,7 @@ abgebrochen abgelegt und der Durchlauf gespeichert.
 from functools import partial
 
 from content import story
-from ui import figurwahl, handbuch, intro, platzhalter, startbildschirm
+from ui import figurwahl, handbuch, intro, platzhalter, startbildschirm, uebung
 from ui.hauptfenster import Hauptfenster
 
 #: Mit diesem Screen beginnt das Spiel.
@@ -68,8 +68,17 @@ def handbuch_aufschlagen(fenster, level, hinweis=""):
 
 
 def uebungen_zeigen(fenster):
-    """Nach dem Handbuch: die Übungen des Levels."""
-    fenster.zeige(platzhalter.Uebung)
+    """Nach dem Handbuch: die Übungen des Levels, eine nach der anderen.
+
+    Was nach einer Übung kommt, steht in :func:`uebung_beendet` – dort setzt
+    Phase 7 die Funksprüche dazwischen.
+    """
+    fenster.zeige(uebung.Uebung, danach=uebung_beendet)
+
+
+def uebung_beendet(fenster):
+    """Nach einer Übung kommt vorerst die nächste (Phase 7 sortiert hier um)."""
+    uebungen_zeigen(fenster)
 
 
 def nach_levelwechsel(fenster, wechsel):

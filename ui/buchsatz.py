@@ -191,12 +191,16 @@ class Punktlinie(NamedTuple):
 
 
 class Stempel(NamedTuple):
-    """Der Stempel "STRENG GEHEIM" (ein Bild) mit seiner linken oberen Ecke."""
+    """Ein Stempel (ein vorgerendertes Bild) mit seiner linken oberen Ecke.
+
+    ``name`` ist der Ordner unter ``content/animationen/``.
+    """
 
     x: int
     y: int
     breite: int
     hoehe: int
+    name: str = "stempel"
 
 
 class Buchseite(NamedTuple):
@@ -357,8 +361,12 @@ class _Setzer:
         einzeilig = s.text.metrics("linespace") + 2 * px(ZELLRAND_SENKRECHT)
         zelle_eng = max(s.text.measure(z) for z in zellen) + 2 * px(ZELLRAND)
         zelle_bequem = max(zelle_eng, round(einzeilig * 1.1))
-        beschriftung_ganz = max(s.text.measure(b) for b in beschriftungen) + innen
-        beschriftung_eng = max(s.text.measure(wort) for b in beschriftungen for wort in b.split()) + innen
+        # Ein Band ohne Beschriftungen (das Alphabet zum Abzählen) bekommt auch
+        # keine Spalte dafür.
+        beschriftet = any(b.strip() for b in beschriftungen)
+        beschriftung_ganz = (max(s.text.measure(b) for b in beschriftungen) + innen) if beschriftet else 0
+        beschriftung_eng = (max(s.text.measure(wort) for b in beschriftungen for wort in b.split())
+                            + innen) if beschriftet else 0
         # So wenige Teile wie möglich. Reicht der Platz nicht für die ganze
         # Beschriftung, wird sie in ihrer Spalte umbrochen – aber kein Wort zerteilt.
         anzahl = len(block.zeilen[0]) - 1
@@ -368,7 +376,8 @@ class _Setzer:
             if spalte >= beschriftung_eng:
                 break
         zellbreite = min(zelle_bequem, (self.breite - spalte) // je_teil)
-        umbrochen = ["\n".join(umbrechen(b, s.text, spalte - innen)) for b in beschriftungen]
+        umbrochen = ["\n".join(umbrechen(b, s.text, spalte - innen)) if beschriftet else ""
+                     for b in beschriftungen]
         zeilenhoehen = tuple(einzeilig + b.count("\n") * s.text.metrics("linespace") for b in umbrochen)
         for teil in range(teile):
             if teil:
@@ -436,6 +445,25 @@ class _Setzer:
 
     # Das Kapitel
 
+    def block(self, block):
+        """Setzt einen Block aus :mod:`content.handbuch`."""
+        if isinstance(block, buch.Absatz):
+            self.absatz(block.text, "betont" if block.betont else "text",
+                        art="betont" if block.betont else "absatz")
+            if block.text.rstrip().endswith(":"):
+                # Ein Absatz mit Doppelpunkt kündigt an, was folgt – er bleibt dabei.
+                self.fluss.festhalten()
+        elif isinstance(block, buch.Aufzaehlung):
+            self.aufzaehlung(block)
+        elif isinstance(block, buch.Tabelle):
+            self.tabelle(block)
+        elif isinstance(block, buch.VigenereQuadrat):
+            self.quadrat(block)
+        elif isinstance(block, buch.Randnotiz):
+            self.randnotiz(block)
+        else:
+            raise TypeError(f"Diesen Block kennt das Handbuch nicht: {block!r}")
+
     def kapitel(self, seite):
         self.absatz(seite.titel, "kapitel", stil.FARBE_ROTSTIFT, "kapitel", vorher=0)
         self.fluss.festhalten()
@@ -445,22 +473,7 @@ class _Setzer:
                 continue
             self.ueberschrift(abschnitt.ueberschrift, marke=("abschnitt", abschnitt.ueberschrift))
             for block in abschnitt.bloecke:
-                if isinstance(block, buch.Absatz):
-                    self.absatz(block.text, "betont" if block.betont else "text",
-                                art="betont" if block.betont else "absatz")
-                    if block.text.rstrip().endswith(":"):
-                        # Ein Absatz mit Doppelpunkt kündigt an, was folgt – er bleibt dabei.
-                        self.fluss.festhalten()
-                elif isinstance(block, buch.Aufzaehlung):
-                    self.aufzaehlung(block)
-                elif isinstance(block, buch.Tabelle):
-                    self.tabelle(block)
-                elif isinstance(block, buch.VigenereQuadrat):
-                    self.quadrat(block)
-                elif isinstance(block, buch.Randnotiz):
-                    self.randnotiz(block)
-                else:
-                    raise TypeError(f"Diesen Block kennt das Handbuch nicht: {block!r}")
+                self.block(block)
         return self.fluss.kisten
 
 
@@ -540,6 +553,27 @@ def _titelseite(satz_inhalt, schriften, breite, hoehe, px, stempel):
         stempel_breite, stempel_hoehe = stempel
         stuecke.append(Stempel((breite - stempel_breite) // 2, max(y + px(8), hoehe - stempel_hoehe),
                                stempel_breite, stempel_hoehe))
+    return Buchseite(tuple(stuecke))
+
+
+def einzelseite(teile, schriften, breite, hoehe, px):
+    """Setzt ein paar Blöcke auf **eine** Seite – das Werkzeug neben der Übung (Arbeitsplan 6.5).
+
+    ``teile`` sind Blöcke aus :mod:`content.handbuch`; ein ganzer
+    :class:`content.handbuch.Abschnitt` wird zur Merksatz-Karte. Was nicht
+    mehr auf die Seite passt, fällt weg: Neben der Aufgabe steht nur, wofür
+    Platz ist – beim Vigenère-Quadrat ist das die ganze Seite.
+    """
+    setzer = _Setzer(schriften, breite, hoehe, px)
+    for teil in teile:
+        if isinstance(teil, buch.Abschnitt):
+            setzer.merksatz(teil)
+        else:
+            setzer.block(teil)
+    seiten = seiten_verteilen(setzer.fluss.kisten, hoehe)
+    stuecke = []
+    for kiste, y in (seiten[0] if seiten else ()):
+        stuecke.extend(_verschoben(stueck, y) for stueck in kiste.stuecke)
     return Buchseite(tuple(stuecke))
 
 

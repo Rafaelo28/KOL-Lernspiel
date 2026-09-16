@@ -46,17 +46,17 @@ Warum eine Leinwand
 Ein Buch hat feste Seiten, und der Text liegt auf einem Bild: auf dem
 Papier des Buchs, zwischen Stockflecken und Eselsohr. Das kann nur die
 Leinwand (``tk.Canvas``) – Text und Linien über einem Bild, Randnotizen
-schräg gestellt, und darüber das Blatt, das umschlägt.
+schräg gestellt, und darüber das Blatt, das umschlägt. Sie steht in
+:mod:`ui.buchleinwand`, weil der Aufgaben-Screen (6.5) dasselbe Buch
+benutzt: Dort liegt links das Werkzeug und rechts die Übung.
 """
 
 import tkinter as tk
-from tkinter import font as tkfont
 
 from content import handbuch as buch
-from crypto.normalize import ALPHABET
-from crypto.vigenere_quadrat import erzeuge_quadrat
-from ui import buchsatz, stil
-from ui.animation import Ablauf, Animation, Buehne
+from ui import buchleinwand, buchsatz, stil
+from ui.animation import Ablauf, Animation
+from ui.buchleinwand import Buchleinwand
 from ui.screen import Screen
 
 #: Aufschrift des Knopfes zu Beginn eines Levels.
@@ -68,13 +68,6 @@ KNOPF_ZURUECK = "Zurück zur Aufgabe"
 #: Die Knöpfe zum Blättern.
 KNOPF_VORBLAETTERN = "Weiterblättern ▶"
 KNOPF_ZURUECKBLAETTERN = "◀ Zurückblättern"
-
-#: Die Textflächen der beiden Seiten auf dem Buchbild (x0, y0, x1, y1) – in
-#: Pixeln im Maßstab 1, wie alle festen Grössen hier (siehe ui/stil.py, "Der
-#: Maßstab"). Das Buchbild ist halb so gross wie seine SVG; dort stehen
-#: dieselben Flächen in SVG-Einheiten (``grafik/buch_zeichnen.py``).
-TEXT_LINKS = (68, 48, 434, 433)
-TEXT_RECHTS = (526, 48, 892, 433)
 
 #: Wo man auf dem Buch klicken kann (x0, y0, x1, y1): die hochgebogenen Ecken
 #: unten außen zum Blättern und das Lesezeichen-Band unten in der Mitte.
@@ -125,25 +118,20 @@ class Handbuch(Screen):
         self._doppelseite = 0
         self._ablauf = None
         self._unter_maus = None
-        self._quadratschriften = {}
 
         self._hinweis = self._zeile(hinweis, stil.FARBE_WARNUNG, stil.SCHRIFT_FETT)
         self._einleitung = [self._zeile(absatz, stil.FARBE_SAND, stil.SCHRIFT_ERZAEHLUNG)
                             for absatz in einleitung]
 
         #: Die Leinwand mit dem aufgeschlagenen Buch.
-        self.buch = Buehne(self, Animation("buch", massstab=self.massstab), bg=stil.FARBE_NACHT,
-                           takefocus=True)
+        self.buch = Buchleinwand(self, self.massstab, self.px, takefocus=True)
         self.buch.pack(side="top")
-        stempel = Animation("stempel", massstab=self.massstab)
-        self._stempelbild = tk.PhotoImage(master=self, file=str(stempel.ordner / stempel.hintergrund))
 
-        #: Die Schriften des Buchs – gesetzt und gezeichnet wird mit denselben.
-        self.schriften = buchsatz.schriften(self, self.massstab)
+        stempel = self.buch.stempelbild("stempel")
         x0, y0, x1, y1 = self.flaeche("links")
         #: Das gesetzte Kapitel: welche Stücke auf welcher Seite stehen.
         self.satz = buchsatz.setzen(self.seite, self.schriften, x1 - x0, y1 - y0, self.px,
-                                    stempel=(self._stempelbild.width(), self._stempelbild.height()))
+                                    stempel=(stempel.width(), stempel.height()))
 
         self._leiste_bauen(knopf)
         self._bedienung_binden()
@@ -177,20 +165,22 @@ class Handbuch(Screen):
     def seitenanzeige(self):
         return self._seitenanzeige.cget("text")
 
+    @property
+    def schriften(self):
+        """Die Schriften des Buchs (siehe :mod:`ui.buchleinwand`)."""
+        return self.buch.schriften
+
     def flaeche(self, seite):
         """Die Textfläche der linken oder rechten Seite auf der Leinwand: (x0, y0, x1, y1)."""
-        return tuple(self.px(wert) for wert in (TEXT_LINKS if seite == "links" else TEXT_RECHTS))
+        return self.buch.flaeche(seite)
 
     def texte(self, seite=None):
         """Die Texte, die gerade im Buch stehen – auf der ``seite`` "links" oder "rechts", sonst auf beiden."""
-        auswahl = f"text&&{seite}" if seite else "text"
-        return [self.buch.itemcget(element, "text") for element in self.buch.find_withtag(auswahl)]
+        return self.buch.texte(seite)
 
     def quadratfeld(self, schluesselbuchstabe, nachrichtenbuchstabe):
         """Was im gezeichneten Quadrat in dieser Zeile und Spalte steht (es muss aufgeschlagen sein)."""
-        zeile, spalte = ALPHABET.index(schluesselbuchstabe), ALPHABET.index(nachrichtenbuchstabe)
-        (element,) = self.buch.find_withtag(f"feld&&z{zeile}&&s{spalte}")
-        return self.buch.itemcget(element, "text")
+        return self.buch.quadratfeld(schluesselbuchstabe, nachrichtenbuchstabe)
 
     # ── Bauen ──────────────────────────────────────────────────────────────
 
@@ -260,135 +250,16 @@ class Handbuch(Screen):
 
     def _seite_zeichnen(self, seite):
         """Zeichnet die linke oder rechte Seite der aufgeschlagenen Doppelseite neu."""
-        self.buch.delete(seite)
-        x0, y0, x1, y1 = self.flaeche(seite)
         nr = 2 * self._doppelseite + (seite == "rechts")
-        tags = ("seite", seite)
         if nr < len(self.satz.seiten):
-            for stueck in self.satz.seiten[nr].stuecke:
-                self._stueck_zeichnen(stueck, x0, y0, tags)
+            stuecke = self.satz.seiten[nr].stuecke
         else:
             # Die letzte Seite eines Kapitels bleibt leer – bis auf eine Verzierung.
-            self._verzierung_zeichnen(buchsatz.Verzierung(self.px(90), (y1 - y0) // 2, x1 - x0 - self.px(180)),
-                                      x0, y0, tags)
+            x0, y0, x1, y1 = self.flaeche(seite)
+            stuecke = (buchsatz.Verzierung(self.px(90), (y1 - y0) // 2, x1 - x0 - self.px(180)),)
+        self.buch.seite_zeichnen(seite, stuecke)
         # Was die Maus gerade zeigt, bleibt obenauf.
         self.buch.tag_raise("maus")
-
-    def _stueck_zeichnen(self, stueck, x0, y0, tags):
-        if isinstance(stueck, buchsatz.Zeile):
-            ausrichtung = {"n": "center", "ne": "right"}.get(stueck.anker, "left")
-            self.buch.create_text(x0 + stueck.x, y0 + stueck.y, text=stueck.text, anchor=stueck.anker,
-                                  justify=ausrichtung, angle=stueck.winkel, fill=stueck.farbe,
-                                  font=getattr(self.schriften, stueck.schrift), tags=tags + ("text", stueck.art))
-        elif isinstance(stueck, buchsatz.Karte):
-            self._karte_zeichnen(stueck, x0, y0, tags)
-        elif isinstance(stueck, buchsatz.Raster):
-            self._raster_zeichnen(stueck, x0, y0, tags)
-        elif isinstance(stueck, buchsatz.Quadrat):
-            self._quadrat_zeichnen(stueck, x0, y0, tags)
-        elif isinstance(stueck, buchsatz.Verzierung):
-            self._verzierung_zeichnen(stueck, x0, y0, tags)
-        elif isinstance(stueck, buchsatz.Punktlinie):
-            # Einzelne Pünktchen statt einer gestrichelten Linie: Striche mit
-            # eigenem Muster zeichnet Tk unter Windows nur ungefähr.
-            schritt, groesse = self.px(5), max(1, self.px(1))
-            for x in range(x0 + stueck.x0, x0 + stueck.x1, schritt):
-                self.buch.create_rectangle(x, y0 + stueck.y - groesse, x + groesse, y0 + stueck.y,
-                                           fill=stil.FARBE_TINTE, outline="", tags=tags)
-        elif isinstance(stueck, buchsatz.Stempel):
-            self.buch.create_image(x0 + stueck.x, y0 + stueck.y, image=self._stempelbild, anchor="nw",
-                                   tags=tags + ("stempel",))
-        else:
-            raise TypeError(f"Dieses Stück kennt das Handbuch nicht: {stueck!r}")
-
-    def _karte_zeichnen(self, karte, x0, y0, tags):
-        """Die Merksatz-Karte: ein Stück Papier, oben mit Klebeband ins Buch geklebt."""
-        px, leinwand = self.px, self.buch
-        x, y = x0 + karte.x, y0 + karte.y
-        schatten = px(buchsatz.KARTENSCHATTEN)
-        leinwand.create_rectangle(x + schatten, y + schatten, x + karte.breite + schatten,
-                                  y + karte.hoehe + schatten, fill=stil.FARBE_PAPIERLINIE, outline="", tags=tags)
-        leinwand.create_rectangle(x, y, x + karte.breite, y + karte.hoehe, fill=stil.FARBE_MERKSATZ,
-                                  outline=stil.FARBE_KARTENKANTE, tags=tags + ("karte",))
-        # Das Klebeband: etwas schief über der Oberkante – so weit, wie der Satz Platz gelassen hat.
-        schief = px(3)
-        mitte, halb_b, halb_h = x + karte.breite / 2, px(34), px(buchsatz.KLEBEBAND_UEBERSTAND) - schief
-        leinwand.create_polygon(mitte - halb_b, y - halb_h + schief, mitte + halb_b, y - halb_h - schief,
-                                mitte + halb_b, y + halb_h - schief, mitte - halb_b, y + halb_h + schief,
-                                fill=stil.FARBE_KLEBEBAND, outline=stil.FARBE_PAPIERLINIE, tags=tags)
-
-    def _raster_zeichnen(self, raster, x0, y0, tags):
-        """Eine Tabelle: vorne die Beschriftung auf dunklerem Grund, dahinter die Buchstaben."""
-        px, leinwand = self.px, self.buch
-        x, y = x0 + raster.x, y0 + raster.y
-        breite, hoehe = raster.breite, raster.hoehe
-        leinwand.create_rectangle(x, y, x + raster.beschriftungsbreite, y + hoehe, fill=stil.FARBE_PAPIER_DUNKEL,
-                                  outline="", tags=tags)
-        for nr, (beschriftung, *zellen) in enumerate(raster.zeilen):
-            mitte = y + raster.oben(nr) + raster.zeilenhoehen[nr] / 2
-            leinwand.create_text(x + px(buchsatz.ZELLRAND + 2), mitte, text=beschriftung, anchor="w",
-                                 font=self.schriften.text, fill=stil.FARBE_TINTE,
-                                 tags=tags + ("text", "beschriftung"))
-            for spalte, zelle in enumerate(zellen):
-                leinwand.create_text(x + raster.beschriftungsbreite + (spalte + .5) * raster.zellbreite, mitte,
-                                     text=zelle, font=self.schriften.text, fill=stil.FARBE_TINTE,
-                                     tags=tags + ("text", "zelle"))
-        for nr in range(len(raster.zeilen) + 1):
-            leinwand.create_line(x, y + raster.oben(nr), x + breite, y + raster.oben(nr),
-                                 fill=stil.FARBE_BUCHLINIE, tags=tags)
-        for spalte in range(len(raster.zeilen[0])):
-            links = x + (raster.beschriftungsbreite + (spalte - 1) * raster.zellbreite if spalte else 0)
-            leinwand.create_line(links, y, links, y + hoehe, fill=stil.FARBE_BUCHLINIE, tags=tags)
-        leinwand.create_line(x + breite, y, x + breite, y + hoehe, fill=stil.FARBE_BUCHLINIE, tags=tags)
-
-    def _quadratschrift(self, feld, fett):
-        """Eine Schrift, deren Buchstaben in ein Feld des Quadrats passen – in Pixeln, nicht Punkt."""
-        schluessel = (feld, fett)
-        if schluessel not in self._quadratschriften:
-            self._quadratschriften[schluessel] = tkfont.Font(
-                root=self, family=self.schriften.text.actual("family"), size=-round(feld * .62),
-                weight="bold" if fett else "normal")
-        return self._quadratschriften[schluessel]
-
-    def _quadrat_zeichnen(self, quadrat, x0, y0, tags):
-        """Das Vigenère-Quadrat: Kopfzeile Nachricht, Kopfspalte Schlüssel, 26 × 26 Felder.
-
-        Jedes Feld trägt die Tags ``z<Zeile>`` und ``s<Spalte>`` (ab 0) – damit
-        lässt es sich finden und später hervorheben (Aufgabe 6.7).
-        """
-        leinwand, feld = self.buch, quadrat.feld
-        x, y = x0 + quadrat.x, y0 + quadrat.y
-        kante = quadrat.kante
-        normal, fett = self._quadratschrift(feld, False), self._quadratschrift(feld, True)
-        leinwand.create_rectangle(x, y, x + kante, y + feld, fill=stil.FARBE_PAPIER_DUNKEL, width=0, tags=tags)
-        leinwand.create_rectangle(x, y, x + feld, y + kante, fill=stil.FARBE_PAPIER_DUNKEL, width=0, tags=tags)
-        mitte = feld / 2
-        for nr, buchstabe in enumerate(ALPHABET, 1):
-            leinwand.create_text(x + nr * feld + mitte, y + mitte, text=buchstabe, font=fett,
-                                 fill=stil.FARBE_ROTSTIFT, tags=tags + ("kopfzeile", f"s{nr - 1}"))
-            leinwand.create_text(x + mitte, y + nr * feld + mitte, text=buchstabe, font=fett,
-                                 fill=stil.FARBE_ROTSTIFT, tags=tags + ("kopfspalte", f"z{nr - 1}"))
-        for zeile, reihe in enumerate(erzeuge_quadrat()):
-            for spalte, buchstabe in enumerate(reihe):
-                leinwand.create_text(x + (spalte + 1) * feld + mitte, y + (zeile + 1) * feld + mitte,
-                                     text=buchstabe, font=normal, fill=stil.FARBE_TINTE,
-                                     tags=tags + ("feld", f"z{zeile}", f"s{spalte}"))
-        for nr in range(28):
-            staerke = 2 if nr in (0, 1, 27) else 1
-            leinwand.create_line(x + nr * feld, y, x + nr * feld, y + kante, fill=stil.FARBE_BUCHLINIE,
-                                 width=staerke, tags=tags)
-            leinwand.create_line(x, y + nr * feld, x + kante, y + nr * feld, fill=stil.FARBE_BUCHLINIE,
-                                 width=staerke, tags=tags)
-
-    def _verzierung_zeichnen(self, verzierung, x0, y0, tags):
-        """Eine feine Linie mit einem kleinen Diamanten in der Mitte."""
-        px, leinwand = self.px, self.buch
-        x, y = x0 + verzierung.x, y0 + verzierung.y
-        mitte, r = x + verzierung.breite / 2, px(5)
-        leinwand.create_line(x, y, mitte - 2 * r, y, fill=stil.FARBE_BUCHLINIE, tags=tags)
-        leinwand.create_line(mitte + 2 * r, y, x + verzierung.breite, y, fill=stil.FARBE_BUCHLINIE, tags=tags)
-        leinwand.create_polygon(mitte, y - 1.4 * r, mitte + r, y, mitte, y + 1.4 * r, mitte - r, y,
-                                fill=stil.FARBE_ROTSTIFT, outline="", tags=tags + ("diamant",))
 
     # ── Blättern ───────────────────────────────────────────────────────────
 

@@ -148,6 +148,23 @@ class Handbuchseite(NamedTuple):
     abschnitte: tuple
 
 
+#: Die Buchstaben des Alphabets – hier einmal aufgeschrieben, damit dieselbe
+#: Reihe nicht an mehreren Stellen steht.
+ALPHABET_ZEILE = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+                  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+
+#: Die Geheimtabelle aus dem Tastatur-Trick (Handbuchseite 2). Sie steht hier
+#: für sich, weil sie zweimal gebraucht wird: im Handbuch und beim Lösen der
+#: Übungen von Level 2 (siehe :data:`WERKZEUG_NACH_LEVEL`).
+GEHEIMTABELLE = Tabelle(
+    titel="Deine Geheimtabelle",
+    zeilen=(
+        ("Original", *ALPHABET_ZEILE),
+        ("Geheim", "Q", "W", "E", "R", "T", "Z", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Y", "X", "C", "V", "B", "N", "M"),
+    ),
+    lesezeichen=True,
+)
+
 HANDBUCH_TITEL = "Bobs Verschlüsselungshandbuch"
 HANDBUCH_UNTERTITEL = (
     "Notfall-Ausgabe – lies das genau durch, bevor du irgendwas funkst."
@@ -190,7 +207,7 @@ SEITE_CAESAR = Handbuchseite(
                 Tabelle(
                     titel="Das Alphabet, einmal ohne und einmal mit Verschiebung",
                     zeilen=(
-                        ("ohne Verschiebung", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"),
+                        ("ohne Verschiebung", *ALPHABET_ZEILE),
                         ("um 3 verschoben", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "B", "C"),
                     ),
                     lesezeichen=True,
@@ -279,14 +296,7 @@ SEITE_SUBSTITUTION = Handbuchseite(
                     "Buchstaben-Reihenfolge mit 26 Zeichen. Ordnest du sie dem "
                     "normalen Alphabet zu, bekommst du deine Geheimtabelle:"
                 ),
-                Tabelle(
-                    titel="Deine Geheimtabelle",
-                    zeilen=(
-                        ("Original", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"),
-                        ("Geheim", "Q", "W", "E", "R", "T", "Z", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Y", "X", "C", "V", "B", "N", "M"),
-                    ),
-                    lesezeichen=True,
-                ),
+                GEHEIMTABELLE,
             ),
         ),
         Abschnitt(
@@ -504,3 +514,23 @@ SEITEN = (SEITE_CAESAR, SEITE_SUBSTITUTION, SEITE_VIGENERE)
 # Nachschlagetabelle für die UI: Welches Level zeigt welche Seite?
 # Bewusst ein Dict und keine Funktion – content/ enthält nur Daten.
 SEITE_NACH_LEVEL = {seite.level: seite for seite in SEITEN}
+
+#: Was beim Lösen einer Übung neben der Aufgabe liegt (Arbeitsplan 6.5).
+#:
+#: Bei der Substitution und bei Vigenère ist das Werkzeug die Tabelle selbst –
+#: ohne sie lässt sich das Verfahren gar nicht rechnen, und genau so steht es
+#: im Handbuch.
+#:
+#: Bei Caesar ist es dagegen **nur das blanke Alphabet**. Die verschobene
+#: Zeile stünde für den Schlüssel der Aufgabe da wie die halbe Lösung: Man
+#: bräuchte bloss abzulesen, statt zu zählen. Im Handbuch gibt es sie nur als
+#: Beispiel mit dem Schlüssel 3, die Übungen benutzen andere Schlüssel.
+WERKZEUG_NACH_LEVEL = {
+    1: Tabelle(
+        titel="Das Alphabet zum Abzählen",
+        # Ohne Zeilenbeschriftung: Das Band besteht nur aus den Buchstaben.
+        zeilen=(("", *ALPHABET_ZEILE),),
+    ),
+    2: GEHEIMTABELLE,
+    3: VigenereQuadrat(beschriftung="Zeile: Schlüssel, Spalte: Nachricht"),
+}

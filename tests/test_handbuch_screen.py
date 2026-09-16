@@ -28,7 +28,7 @@ from content import charaktere, story  # noqa: E402
 from content import handbuch as buch  # noqa: E402
 from crypto.normalize import ALPHABET  # noqa: E402
 from crypto.vigenere_quadrat import erzeuge_quadrat  # noqa: E402
-from ui import ablauf, animation, buchsatz, handbuch, platzhalter, stil  # noqa: E402
+from ui import ablauf, animation, buchleinwand, buchsatz, handbuch, stil, uebung  # noqa: E402
 
 LEVEL = (1, 2, 3)
 PROJEKT = Path(__file__).resolve().parent.parent
@@ -174,7 +174,7 @@ def test_die_titelseite_nennt_zu_jedem_abschnitt_seine_seite(fenster, aufrufe, l
 def test_auf_der_titelseite_steht_der_stempel(fenster, aufrufe, level):
     screen = _buch(fenster, level, aufrufe)
     (stempel,) = screen.buch.find_withtag("stempel&&links")
-    assert screen.buch.itemcget(stempel, "image") == str(screen._stempelbild)
+    assert screen.buch.itemcget(stempel, "image") == str(screen.buch.stempelbild("stempel"))
     screen.aufschlagen(1, animiert=False)
     assert not screen.buch.find_withtag("stempel")
 
@@ -414,7 +414,7 @@ def test_die_textflaechen_liegen_auf_dem_papier_des_buchbilds(massstab):
     def farbe(x, y):
         return tuple(bild.zeilen[y][x * bild.kanaele:x * bild.kanaele + 3])
 
-    for flaeche in (handbuch.TEXT_LINKS, handbuch.TEXT_RECHTS):
+    for flaeche in (buchleinwand.TEXT_LINKS, buchleinwand.TEXT_RECHTS):
         x0, y0, x1, y1 = (stil.skaliert(wert, massstab) for wert in flaeche)
         for i in range(11):
             for j in range(11):
@@ -505,7 +505,7 @@ def test_ein_klick_auf_die_hochgebogenen_ecken_blaettert(fenster, aufrufe, auslo
 
 def test_ein_klick_mitten_auf_die_seite_blaettert_nicht(fenster, aufrufe):
     screen = _buch(fenster, 3, aufrufe)
-    screen.klicken(*_mitte(handbuch.TEXT_RECHTS, screen))
+    screen.klicken(*_mitte(buchleinwand.TEXT_RECHTS, screen))
     assert screen.doppelseite == 0
 
 
@@ -533,7 +533,7 @@ def test_der_zeiger_zeigt_wo_man_klicken_kann(fenster, aufrufe):
     assert screen.ziel(*_mitte(handbuch.ECKE_LINKS, screen)) == "zurueck"
     screen.aufschlagen(0, animiert=False)
     assert screen.ziel(*_mitte(handbuch.BAND, screen)) == "lesezeichen"
-    assert screen.ziel(*_mitte(handbuch.TEXT_LINKS, screen)) is None
+    assert screen.ziel(*_mitte(buchleinwand.TEXT_LINKS, screen)) is None
     screen._maus_ueber("vor")
     assert screen.buch.cget("cursor") == "hand2" and screen.buch.find_withtag("maus")
     screen._maus_ueber("lesezeichen")
@@ -699,7 +699,7 @@ def test_nach_dem_intro_liegt_seite_1_mit_dem_einstieg_auf(fenster):
 def test_nach_dem_handbuch_kommen_die_uebungen(fenster):
     _bis_zum_handbuch(fenster)
     fenster.aktueller_screen.weiter()
-    assert isinstance(fenster.aktueller_screen, platzhalter.Uebung)
+    assert isinstance(fenster.aktueller_screen, uebung.Uebung)
     assert fenster.durchlauf.spielstand.aktuelle_aufgabe is not None
 
 
@@ -749,10 +749,10 @@ def test_zurueck_vom_nachschlagen_geht_es_mit_derselben_uebung_weiter(fenster, u
     fenster.aktueller_screen._nachschlagen()
     uhr.jetzt += 40
     fenster.aktueller_screen.weiter()
-    assert isinstance(fenster.aktueller_screen, platzhalter.Uebung)
+    assert isinstance(fenster.aktueller_screen, uebung.Uebung)
     assert stand.aktuelle_aufgabe is aufgabe
     assert len(stand.erledigte_aufgaben) == 0
-    assert aufgabe.kennung in fenster.aktueller_screen._aufgabentext.cget("text")
+    assert fenster.aktueller_screen.aufgabe is aufgabe
     stand.versuchen(aufgabe.loesung)
     fenster.durchlauf.aufgabe_abschliessen()
     assert round(stand.erledigte_aufgaben[0].benoetigte_sekunden) == 40
