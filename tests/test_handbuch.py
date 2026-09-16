@@ -211,10 +211,28 @@ def test_das_werkzeug_bei_der_substitution_ist_die_geheimtabelle_aus_dem_handbuc
     assert handbuch.GEHEIMTABELLE in [b for a in handbuch.SEITE_SUBSTITUTION.abschnitte for b in a.bloecke]
 
 
+def test_die_merkkarten_wiederholen_nur_was_im_handbuch_steht():
+    """Wie die Randnotizen: nichts Neues neben der Aufgabe, was die Kontrollgruppe nicht hat."""
+    for level, karte in handbuch.MERKKARTE_NACH_LEVEL.items():
+        if karte is None:
+            continue
+        texte = _alle_texte(handbuch.SEITE_NACH_LEVEL[level])
+        for satz in karte.saetze:
+            stelle = satz.bezug or satz.text
+            assert any(stelle in text for text in texte), (level, stelle)
+
+
+def test_beim_loesen_liegt_kein_merksatz_ueber_die_haeufigkeitsanalyse():
+    """Er sagt, warum die Methode unsicher ist – nicht, wie man die Tabelle liest."""
+    karte = handbuch.MERKKARTE_NACH_LEVEL[2]
+    text = " ".join(satz.text for satz in karte.saetze)
+    assert "Häufigkeitsanalyse" not in text
+    assert "Geheimbuchstaben in der unteren Zeile" in text
+
+
 def test_das_werkzeug_bei_vigenere_ist_das_quadrat():
     werkzeug = handbuch.WERKZEUG_NACH_LEVEL[3]
     assert isinstance(werkzeug, VigenereQuadrat) and werkzeug.beschriftung.strip()
-
 
 
 @pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")

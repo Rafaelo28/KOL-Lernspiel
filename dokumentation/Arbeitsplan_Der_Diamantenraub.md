@@ -558,9 +558,16 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     bei Caesar **nur das blanke Alphabet** zum Abzählen, bei der Substitution
     die Geheimtabelle, bei Vigenère das Quadrat. Die verschobene Zeile aus dem
     Handbuch wäre für den Schlüssel der Aufgabe die halbe Lösung – im Handbuch
-    steht sie nur als Beispiel mit dem Schlüssel 3. Darunter passt in Level 1
-    und 2 noch der Merksatz des Levels; er wiederholt nur, was im Handbuch
-    steht, spart aber das Blättern
+    steht sie nur als Beispiel mit dem Schlüssel 3. Darunter klebt in Level 1
+    und 2 eine **Merkkarte** (`content.handbuch.MERKKARTE_NACH_LEVEL`), die
+    sagt, wie man mit dem Werkzeug rechnet: bei Caesar der Merksatz der
+    Handbuchseite, bei der Substitution die beiden Sätze, mit denen das
+    Handbuch die Geheimtabelle liest ("So geht's"). Der Merksatz von Seite 2
+    ("Je länger der Text, desto leichter … Häufigkeitsanalyse") erklärt,
+    warum die Methode unsicher ist – beim Lösen hilft er nicht und liegt dort
+    deshalb nicht. Jeder Satz der Karte steht so im Handbuch oder wiederholt
+    eine Stelle daraus (Test wie bei den Randnotizen). Neben dem Quadrat ist
+    für eine Karte kein Platz
   - **Die Regeln kommen aus der Spiellogik**, der Screen zeigt sie nur: die
     konkrete Fehlermeldung (Projektregel 6), der Hinweis "Du bist näher dran
     als vorher – dieser Versuch zählt nicht mit", die verbleibenden Versuche

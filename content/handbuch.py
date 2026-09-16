@@ -521,3 +521,58 @@ WERKZEUG_NACH_LEVEL = {
     2: GEHEIMTABELLE,
     3: VigenereQuadrat(beschriftung="Zeile: Schlüssel, Spalte: Nachricht"),
 }
+
+
+class Merksatz(NamedTuple):
+    """Ein Satz auf der Merkkarte. ``bezug`` ist die Stelle der Handbuchseite,
+    die er wiederholt – leer, wenn er dort wörtlich so steht."""
+
+    text: str
+    bezug: str = ""
+
+
+class Merkkarte(NamedTuple):
+    """Die Karte, die beim Lösen unter dem Werkzeug liegt (Arbeitsplan 6.5).
+
+    Sie sagt in wenigen Sätzen, wie man mit dem Werkzeug rechnet. Wie die
+    Randnotizen bringt sie nichts Neues: Jeder Satz steht so im Handbuch oder
+    wiederholt eine Stelle daraus, und ``tests/test_handbuch.py`` prüft das.
+    """
+
+    ueberschrift: str
+    saetze: tuple
+
+
+#: Was beim Lösen unter dem Werkzeug liegt.
+#:
+#: Bei Caesar ist es der Merksatz der Handbuchseite – er sagt genau, wie man
+#: rechnet. Der Merksatz der Substitution taugt dafür nicht: "Je länger der
+#: Text, desto leichter …" erklärt, warum die Methode unsicher ist, nicht, wie
+#: man die Tabelle liest. Dort stehen deshalb die beiden Sätze, mit denen das
+#: Handbuch die Tabelle benutzt. Bei Vigenère füllt das Quadrat die Seite;
+#: seine Beschriftung sagt, was Zeile und Spalte sind.
+MERKKARTE_NACH_LEVEL = {
+    1: Merkkarte(
+        ueberschrift="Merksatz",
+        saetze=(
+            Merksatz("Verschlüsseln = im Alphabet vorwärts springen."),
+            Merksatz("Entschlüsseln = im Alphabet rückwärts springen."),
+            Merksatz("Am Rand des Alphabets (Z bzw. A) einfach am anderen Ende weitermachen."),
+        ),
+    ),
+    2: Merkkarte(
+        ueberschrift="So geht's",
+        saetze=(
+            Merksatz(
+                "Verschlüsseln: Du suchst deinen Buchstaben in der oberen Zeile und liest ab, "
+                "welches Geheimzeichen darunter steht.",
+                bezug="Ordnest du sie dem normalen Alphabet zu, bekommst du deine Geheimtabelle",
+            ),
+            Merksatz(
+                "Entschlüsseln: Du suchst den Geheimbuchstaben in der unteren Zeile und liest ab, "
+                "welcher Originalbuchstabe darüber steht."
+            ),
+        ),
+    ),
+    3: None,
+}

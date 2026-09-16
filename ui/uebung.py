@@ -13,7 +13,9 @@ hin- und herblättern – und diese Zeit stünde hinterher in den Messdaten, ohn
 etwas über das Verständnis zu sagen. Was je Level danebenliegt, steht in
 ``content.handbuch.WERKZEUG_NACH_LEVEL``: bei Caesar bewusst nur das blanke
 Alphabet zum Abzählen, denn eine verschobene Zeile wäre für den Schlüssel der
-Aufgabe die halbe Lösung.
+Aufgabe die halbe Lösung. Darunter klebt, wo Platz ist, eine Karte mit den
+Sätzen aus dem Handbuch, die sagen, wie man mit dem Werkzeug rechnet
+(``content.handbuch.MERKKARTE_NACH_LEVEL``).
 
 Die Regeln kommen aus der Spiellogik
 ────────────────────────────────────
@@ -191,14 +193,14 @@ class Uebung(Screen):
         self._stand_zeigen(stand.aktuelle_bearbeitung)
 
     def _werkzeug_zeichnen(self):
-        """Die linke Seite: womit sich diese Aufgabe von Hand rechnen lässt."""
+        """Die linke Seite: womit sich diese Aufgabe von Hand rechnen lässt – und wie."""
         level = self.durchlauf.spielstand.aktuelles_level
         teile = [buch.WERKZEUG_NACH_LEVEL[level]]
-        merksatz = next(
-            (abschnitt for abschnitt in buch.SEITE_NACH_LEVEL[level].abschnitte if abschnitt.hervorgehoben),
-            None)
-        if merksatz is not None:
-            teile.append(merksatz)
+        karte = buch.MERKKARTE_NACH_LEVEL[level]
+        if karte is not None:
+            # Gesetzt wie der Merksatz im Handbuch: als eingeklebte Karte.
+            teile.append(buch.Abschnitt(karte.ueberschrift, tuple(buch.Absatz(satz.text) for satz in karte.saetze),
+                                        hervorgehoben=True))
         x0, y0, x1, y1 = self.buch.flaeche("links")
         seite = buchsatz.einzelseite(teile, self.buch.schriften, x1 - x0, y1 - y0, self.px)
         self.buch.seite_zeichnen("links", seite.stuecke)

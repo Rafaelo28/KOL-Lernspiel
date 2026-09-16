@@ -161,13 +161,21 @@ def test_bei_vigenere_liegt_das_quadrat_daneben(fenster):
 
 
 @pytest.mark.parametrize("level", (1, 2))
-def test_der_merksatz_des_levels_liegt_mit_daneben(fenster, level):
-    """Er wiederholt nur, was im Handbuch steht – aber ohne Blättern."""
+def test_die_merkkarte_des_levels_liegt_mit_daneben(fenster, level):
+    """Sie sagt mit den Sätzen des Handbuchs, wie man mit dem Werkzeug rechnet – ohne Blättern."""
     screen = _zur_uebung(fenster, level)
-    (merksatz,) = [a for a in buch.SEITE_NACH_LEVEL[level].abschnitte if a.hervorgehoben]
+    karte = buch.MERKKARTE_NACH_LEVEL[level]
     links = _eine_zeile(screen.texte("links"))
-    assert merksatz.ueberschrift in links
-    assert merksatz.bloecke[0].text in links
+    assert karte.ueberschrift in links
+    for satz in karte.saetze:
+        assert _eine_zeile([satz.text]) in links
+    assert screen.buch.find_withtag("karte&&links")
+    assert "Häufigkeitsanalyse" not in links
+
+
+def test_neben_dem_quadrat_ist_fuer_eine_karte_kein_platz(fenster):
+    screen = _zur_uebung(fenster, 3)
+    assert not screen.buch.find_withtag("karte&&links")
 
 
 def test_geschrieben_wird_in_handschrift(fenster):
