@@ -10,13 +10,12 @@
   Textflächen links (x 136–868, y 104–874) und rechts (x 1052–1784, y 104–874).
   Diese Flächen bleiben frei von Flecken und Beschädigungen – ui/handbuch.py
   rechnet mit genau diesen Maßen (dort in Pixeln ab der Oberkante der viewBox, halb so groß).
-  Das rote Lesezeichen-Band unten in der Mitte und die hochgebogenen Ecken
-  unten außen sind im Spiel anklickbar.
+  Die hochgebogenen Ecken unten außen sind im Spiel anklickbar.
 -->
 <title>Bobs Handbuch, aufgeschlagen</title>
 <desc>Ein altes, in dunkelrotes Leder gebundenes Buch liegt aufgeschlagen auf dem Nachthimmel. Die
 Seiten sind vergilbt, an den Rändern fleckig und etwas beschädigt, oben rechts ist ein Eselsohr, die
-unteren Ecken biegen sich hoch. Aus dem Falz hängt ein rotes Lesezeichen-Band.</desc>
+unteren Ecken biegen sich hoch.</desc>
 <defs>
   <linearGradient id="leder" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#6b2a22"/><stop offset=".5" stop-color="#57201b"/>
@@ -60,10 +59,6 @@ unteren Ecken biegen sich hoch. Aus dem Falz hängt ein rotes Lesezeichen-Band.<
     <stop offset=".51" stop-color="#2a1d0e" stop-opacity=".42"/>
     <stop offset=".60" stop-color="#3b2a16" stop-opacity=".10"/>
     <stop offset="1" stop-color="#3b2a16" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="band" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0" stop-color="#6d0f16"/><stop offset=".35" stop-color="#b3212b"/>
-    <stop offset=".55" stop-color="#d23a42"/><stop offset="1" stop-color="#7a1219"/>
   </linearGradient>
   <linearGradient id="rueckseiteL" x1="0" y1="1" x2="1" y2="0">
     <stop offset="0" stop-color="#fbf4e2"/><stop offset=".55" stop-color="#ead9b2"/>
@@ -249,14 +244,4 @@ unteren Ecken biegen sich hoch. Aus dem Falz hängt ein rotes Lesezeichen-Band.<
 <!-- Hochgebogene Ecken unten außen: hier lässt sich blättern -->
 <path d="M1768,960 L1846,960 L1846,882 Q1822,930 1768,960 Z" fill="#d9c8a0"/><path d="M1768,960 Q1822,930 1846,882" fill="none" stroke="#3a2a14" stroke-opacity=".35" stroke-width="6" filter="url(#weich)"/><path d="M1768,960 Q1822,930 1846,882 Q1824,910 1806,920 Q1794,938 1768,960 Z" fill="#000" opacity=".2" filter="url(#weich)" transform="translate(3,-4)"/><path d="M1768,960 Q1822,930 1846,882 Q1824,910 1806,920 Q1794,938 1768,960 Z" fill="url(#rueckseiteR)" stroke="#a58c5c" stroke-width="1.2"/>
 <path d="M152,960 L74,960 L74,882 Q98,930 152,960 Z" fill="#d9c8a0"/><path d="M152,960 Q98,930 74,882" fill="none" stroke="#3a2a14" stroke-opacity=".35" stroke-width="6" filter="url(#weich)"/><path d="M152,960 Q98,930 74,882 Q96,910 114,920 Q126,938 152,960 Z" fill="#000" opacity=".2" filter="url(#weich)" transform="translate(-3,-4)"/><path d="M152,960 Q98,930 74,882 Q96,910 114,920 Q126,938 152,960 Z" fill="url(#rueckseiteL)" stroke="#a58c5c" stroke-width="1.2"/>
-
-<!-- Lesezeichen-Band -->
-<path d="M946,844 C952,900 946,940 954,1000 L990,1000
-         C982,940 988,900 980,844 Z" fill="#000" opacity=".25"
-      filter="url(#weich)" transform="translate(5,4)"/>
-<path d="M946,844 C952,900 946,940 954,1010
-         L967,992 L990,1010 C982,940 988,900
-         980,844 Z" fill="url(#band)"/>
-<path d="M962,850 C968,900 962,940 970,1000"
-      fill="none" stroke="#ff8a8f" stroke-opacity=".35" stroke-width="2"/>
 </svg>

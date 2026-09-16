@@ -192,14 +192,6 @@ def test_randnotizen_sind_kurz(seite):
 
 
 @pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
-def test_jede_seite_hat_genau_ein_lesezeichen(seite):
-    """Das rote Band des Buchs führt zu einer Stelle – zu mehreren könnte es nicht."""
-    markiert = [block for abschnitt in seite.abschnitte for block in abschnitt.bloecke
-                if getattr(block, "lesezeichen", False)]
-    assert len(markiert) == 1
-
-
-@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
 def test_zu_jedem_level_gibt_es_ein_werkzeug_zum_loesen(seite):
     """Beim Lösen liegt es neben der Aufgabe (Arbeitsplan 6.5) – aus denselben Daten wie das Handbuch."""
     werkzeug = handbuch.WERKZEUG_NACH_LEVEL[seite.level]
@@ -223,16 +215,6 @@ def test_das_werkzeug_bei_vigenere_ist_das_quadrat():
     werkzeug = handbuch.WERKZEUG_NACH_LEVEL[3]
     assert isinstance(werkzeug, VigenereQuadrat) and werkzeug.beschriftung.strip()
 
-
-def test_das_lesezeichen_liegt_bei_der_tabelle_zum_loesen():
-    """Caesar: das verschobene Alphabet, Substitution: die Geheimtabelle, Vigenère: das Quadrat."""
-    def markiert(seite):
-        (block,) = [b for a in seite.abschnitte for b in a.bloecke if getattr(b, "lesezeichen", False)]
-        return block
-
-    assert markiert(handbuch.SEITE_CAESAR).zeilen[1][0] == "um 3 verschoben"
-    assert markiert(handbuch.SEITE_SUBSTITUTION).titel == "Deine Geheimtabelle"
-    assert isinstance(markiert(handbuch.SEITE_VIGENERE), VigenereQuadrat)
 
 
 @pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")

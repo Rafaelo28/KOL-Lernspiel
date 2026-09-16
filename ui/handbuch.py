@@ -23,9 +23,6 @@ und die neue linke erscheint, wenn es gelandet ist – rückwärts umgekehrt.
 Solange es umschlägt, wird nicht noch einmal geblättert; ein schnell
 gedrehtes Mausrad blättert so nicht fünf Seiten auf einmal.
 
-Das rote Lesezeichen-Band unten in der Mitte führt zur Tabelle, die man
-beim Lösen immer wieder braucht (``lesezeichen`` in ``content/handbuch.py``).
-
 Die Bilder des Umblätterns sind groß – im großen Maßstab rund 50 MB. Sie
 werden erst geladen, wenn das Buch schon dasteht, und dann im
 Zwischenspeicher des Fensters behalten: Das Handbuch wird zu Beginn jedes
@@ -70,17 +67,13 @@ KNOPF_VORBLAETTERN = "Weiterblättern ▶"
 KNOPF_ZURUECKBLAETTERN = "◀ Zurückblättern"
 
 #: Wo man auf dem Buch klicken kann (x0, y0, x1, y1): die hochgebogenen Ecken
-#: unten außen zum Blättern und das Lesezeichen-Band unten in der Mitte.
+#: unten außen zum Blättern.
 ECKE_LINKS = (18, 426, 86, 492)
 ECKE_RECHTS = (874, 426, 942, 492)
-BAND = (466, 414, 502, 492)
 
 #: So lange nach dem Aufschlagen werden die Bilder des Umblätterns geladen –
 #: erst steht das Buch da, dann kommt, was man erst beim Blättern braucht.
 VORLADEN_MS = 150
-
-#: Die Beschriftung am Lesezeichen, wenn die Maus darüber steht.
-LESEZEICHEN = "zum Lesezeichen"
 
 #: So breit dürfen die Zeilen über dem Buch werden: so breit wie das Buch.
 #: Im grossen Maßstab dürfen sie breiter werden – siehe
@@ -296,10 +289,6 @@ class Handbuch(Screen):
         ablauf.abspielen(rueckwaerts=not vorwaerts, danach=lambda: self._seite_zeichnen(zuletzt))
         return True
 
-    def zum_lesezeichen(self, animiert=True):
-        """Schlägt die Doppelseite auf, in der das Lesezeichen liegt."""
-        return self.aufschlagen(self.satz.lesezeichen // 2, animiert)
-
     def _umblaettern(self):
         """Der Ablauf, der ein Blatt umschlagen lässt – oder ``None``, wenn seine Bilder fehlen.
 
@@ -330,7 +319,7 @@ class Handbuch(Screen):
             self.blaettern(-1 if ereignis.delta > 0 else 1)
 
     def ziel(self, x, y):
-        """Was ein Klick an dieser Stelle der Leinwand täte: "vor", "zurueck", "lesezeichen" oder ``None``."""
+        """Was ein Klick an dieser Stelle der Leinwand täte: "vor", "zurueck" oder ``None``."""
         def drin(bereich):
             x0, y0, x1, y1 = (self.px(wert) for wert in bereich)
             return x0 <= x <= x1 and y0 <= y <= y1
@@ -339,8 +328,6 @@ class Handbuch(Screen):
             return "vor"
         if drin(ECKE_LINKS) and self._doppelseite > 0:
             return "zurueck"
-        if drin(BAND) and self.satz.lesezeichen // 2 != self._doppelseite:
-            return "lesezeichen"
         return None
 
     def klicken(self, x, y):
@@ -351,11 +338,9 @@ class Handbuch(Screen):
             self.blaettern(1)
         elif ziel == "zurueck":
             self.blaettern(-1)
-        elif ziel == "lesezeichen":
-            self.zum_lesezeichen()
 
     def _maus_ueber(self, ziel):
-        """Zeigt, dass sich hier etwas tut: Hand als Zeiger, ein Pfeil an der Ecke, ein Wort am Band."""
+        """Zeigt, dass sich hier etwas tut: Hand als Zeiger und ein Pfeil an der Ecke."""
         if ziel == self._unter_maus:
             return
         self._unter_maus = ziel
@@ -367,9 +352,6 @@ class Handbuch(Screen):
             mitte = px(420)
             leinwand.create_polygon(hinten, mitte - px(7), spitze, mitte, hinten, mitte + px(7),
                                     fill=stil.FARBE_ROTSTIFT, outline="", tags=("maus",))
-        elif ziel == "lesezeichen":
-            leinwand.create_text(px(508), px(470), text=LESEZEICHEN, anchor="w", font=self.schriften.klein,
-                                 fill=stil.FARBE_ROTSTIFT, tags=("maus",))
 
     # ── Screen ─────────────────────────────────────────────────────────────
 

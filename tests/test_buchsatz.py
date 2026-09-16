@@ -298,13 +298,6 @@ def test_der_stempel_steht_unten_auf_der_titelseite():
     assert max(z.y + ZEILE for z in _zeilen(satz.seiten[0])) <= stempel.y   # kein Text darunter
 
 
-def test_das_lesezeichen_fuehrt_zur_markierten_tabelle():
-    tabelle = buch.Tabelle(zeilen=(("a", "B"), ("c", "D")), titel="Die Tabelle", lesezeichen=True)
-    seite = _seite(buch.Abschnitt("Eins", (_absatz(8),)), buch.Abschnitt("Zwei", (tabelle,)))
-    satz = _setzen(seite)
-    assert [z.text for z in _zeilen(satz.seiten[satz.lesezeichen], "tabellentitel")] == ["Die Tabelle"]
-
-
 @pytest.mark.parametrize("seite", buch.SEITEN, ids=lambda s: f"Level {s.level}")
 def test_keine_zeile_des_echten_handbuchs_ist_zu_breit(seite):
     """Mit der ausgedachten Schrift: Jede Zeile passt – ausser einem Wort, das allein zu lang ist."""

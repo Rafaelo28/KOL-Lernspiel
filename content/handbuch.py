@@ -20,10 +20,6 @@ auskommt:
 * :class:`Randnotiz`   – eine handschriftliche Notiz von Bob; sie wiederholt
   nur, was auf der Seite schon steht (siehe dort)
 
-Jede Seite hat genau ein Lesezeichen: die Tabelle, die man beim Lösen immer
-wieder braucht (``lesezeichen=True``). Im Spiel führt das rote Band des Buchs
-dorthin.
-
 Warum der Text hier ohne Fettschrift steht
 ──────────────────────────────────────────
 Im Markdown der Quelle sind Schlüsselwörter mit ``**`` hervorgehoben. Tkinter
@@ -76,14 +72,10 @@ class Tabelle(NamedTuple):
 
     Alle Zeilen einer Tabelle sind gleich lang; ``tests/test_handbuch.py``
     hält das nach, damit die UI kein Sonderfall-Layout braucht.
-
-    ``lesezeichen`` markiert die Tabelle, zu der das Lesezeichen des Buchs
-    führt – die, die man beim Lösen immer wieder braucht.
     """
 
     zeilen: tuple
     titel: str = ""
-    lesezeichen: bool = False
 
 
 class VigenereQuadrat(NamedTuple):
@@ -93,11 +85,9 @@ class VigenereQuadrat(NamedTuple):
     ``crypto.vigenere_quadrat.erzeuge_quadrat()`` erzeugt – abgetippt stünde es
     zweimal im Projekt und könnte auseinanderlaufen. Der Block sagt der
     Oberfläche nur: *hier* gehört das Raster hin, mit dieser Beschriftung.
-    ``lesezeichen`` wie bei :class:`Tabelle`.
     """
 
     beschriftung: str = ""
-    lesezeichen: bool = False
 
 
 class Randnotiz(NamedTuple):
@@ -162,7 +152,6 @@ GEHEIMTABELLE = Tabelle(
         ("Original", *ALPHABET_ZEILE),
         ("Geheim", "Q", "W", "E", "R", "T", "Z", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Y", "X", "C", "V", "B", "N", "M"),
     ),
-    lesezeichen=True,
 )
 
 HANDBUCH_TITEL = "Bobs Verschlüsselungshandbuch"
@@ -210,7 +199,6 @@ SEITE_CAESAR = Handbuchseite(
                         ("ohne Verschiebung", *ALPHABET_ZEILE),
                         ("um 3 verschoben", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "B", "C"),
                     ),
-                    lesezeichen=True,
                 ),
                 Absatz(
                     "Das heißt: Aus A wird D, aus B wird E, aus H wird K und so "
@@ -408,7 +396,6 @@ SEITE_VIGENERE = Handbuchseite(
                 VigenereQuadrat(
                     beschriftung="Das Vigenère-Quadrat – Zeile: Schlüssel, "
                     "Spalte: Nachricht",
-                    lesezeichen=True,
                 ),
             ),
         ),

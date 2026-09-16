@@ -197,13 +197,12 @@ def buch_svg():
   Textflächen links (x {TEXT_LINKS[0]}–{TEXT_LINKS[2]}, y {TEXT_LINKS[1]}–{TEXT_LINKS[3]}) und rechts (x {TEXT_RECHTS[0]}–{TEXT_RECHTS[2]}, y {TEXT_RECHTS[1]}–{TEXT_RECHTS[3]}).
   Diese Flächen bleiben frei von Flecken und Beschädigungen – ui/handbuch.py
   rechnet mit genau diesen Maßen (dort in Pixeln ab der Oberkante der viewBox, halb so groß).
-  Das rote Lesezeichen-Band unten in der Mitte und die hochgebogenen Ecken
-  unten außen sind im Spiel anklickbar.
+  Die hochgebogenen Ecken unten außen sind im Spiel anklickbar.
 -->
 <title>Bobs Handbuch, aufgeschlagen</title>
 <desc>Ein altes, in dunkelrotes Leder gebundenes Buch liegt aufgeschlagen auf dem Nachthimmel. Die
 Seiten sind vergilbt, an den Rändern fleckig und etwas beschädigt, oben rechts ist ein Eselsohr, die
-unteren Ecken biegen sich hoch. Aus dem Falz hängt ein rotes Lesezeichen-Band.</desc>
+unteren Ecken biegen sich hoch.</desc>
 <defs>
   <linearGradient id="leder" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#6b2a22"/><stop offset=".5" stop-color="#57201b"/>
@@ -239,10 +238,6 @@ unteren Ecken biegen sich hoch. Aus dem Falz hängt ein rotes Lesezeichen-Band.<
     <stop offset=".51" stop-color="#2a1d0e" stop-opacity=".42"/>
     <stop offset=".60" stop-color="#3b2a16" stop-opacity=".10"/>
     <stop offset="1" stop-color="#3b2a16" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="band" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0" stop-color="#6d0f16"/><stop offset=".35" stop-color="#b3212b"/>
-    <stop offset=".55" stop-color="#d23a42"/><stop offset="1" stop-color="#7a1219"/>
   </linearGradient>
   <linearGradient id="rueckseiteL" x1="0" y1="1" x2="1" y2="0">
     <stop offset="0" stop-color="#fbf4e2"/><stop offset=".55" stop-color="#ead9b2"/>
@@ -341,16 +336,6 @@ unteren Ecken biegen sich hoch. Aus dem Falz hängt ein rotes Lesezeichen-Band.<
 <!-- Hochgebogene Ecken unten außen: hier lässt sich blättern -->
 {ecke_angehoben(RX1, SY1, -1)}
 {ecke_angehoben(LX0, SY1, 1)}
-
-<!-- Lesezeichen-Band -->
-<path d="M{MITTE - 14},{SY1 - 116} C{MITTE - 8},{SY1 - 60} {MITTE - 14},{SY1 - 20} {MITTE - 6},{H} L{MITTE + 30},{H}
-         C{MITTE + 22},{SY1 - 20} {MITTE + 28},{SY1 - 60} {MITTE + 20},{SY1 - 116} Z" fill="#000" opacity=".25"
-      filter="url(#weich)" transform="translate(5,4)"/>
-<path d="M{MITTE - 14},{SY1 - 116} C{MITTE - 8},{SY1 - 60} {MITTE - 14},{SY1 - 20} {MITTE - 6},{H + 10}
-         L{MITTE + 7},{H - 8} L{MITTE + 30},{H + 10} C{MITTE + 22},{SY1 - 20} {MITTE + 28},{SY1 - 60}
-         {MITTE + 20},{SY1 - 116} Z" fill="url(#band)"/>
-<path d="M{MITTE + 2},{SY1 - 110} C{MITTE + 8},{SY1 - 60} {MITTE + 2},{SY1 - 20} {MITTE + 10},{H}"
-      fill="none" stroke="#ff8a8f" stroke-opacity=".35" stroke-width="2"/>
 </svg>
 '''
 

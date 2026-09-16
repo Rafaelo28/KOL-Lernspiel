@@ -213,13 +213,11 @@ class Buchseite(NamedTuple):
 class Satz(NamedTuple):
     """Das ganze gesetzte Kapitel.
 
-    ``inhalt`` sind (Überschrift, Seitennummer) für das Inhaltsverzeichnis,
-    ``lesezeichen`` die Nummer der Seite, zu der das Lesezeichen führt.
+    ``inhalt`` sind (Überschrift, Seitennummer) für das Inhaltsverzeichnis.
     """
 
     seiten: tuple
     inhalt: tuple
-    lesezeichen: int
 
 
 # ── Umbrechen ──────────────────────────────────────────────────────────────
@@ -348,12 +346,9 @@ class _Setzer:
     def tabelle(self, block):
         s, px = self.s, self.px
         abstand = px(ABSTAND_TABELLE)
-        marke = ("lesezeichen",) if block.lesezeichen else ()
         if block.titel:
-            self.absatz(block.titel, "kursiv", art="tabellentitel", vorher=abstand, ausrichtung="mitte",
-                        marke=marke)
+            self.absatz(block.titel, "kursiv", art="tabellentitel", vorher=abstand, ausrichtung="mitte")
             self.fluss.festhalten()
-            marke = ()
             abstand = px(2)
         beschriftungen = [zeile[0] for zeile in block.zeilen]
         zellen = [zelle for zeile in block.zeilen for zelle in zeile[1:]]
@@ -388,13 +383,11 @@ class _Setzer:
                                   for beschriftung, zeile in zip(umbrochen, block.zeilen))
             raster = Raster(0, 0, stueck_zeilen, spalte, zellbreite, zeilenhoehen)
             raster = raster._replace(x=(self.breite - raster.breite) // 2)
-            self.fluss.dazu(_Kiste(raster.hoehe, (raster,), abstand, marke=marke))
-            marke = ()
+            self.fluss.dazu(_Kiste(raster.hoehe, (raster,), abstand))
             abstand = px(4)
 
     def quadrat(self, block):
         """Das Quadrat auf einer eigenen Seite, so gross, wie sie es erlaubt."""
-        marke = ("lesezeichen",) if block.lesezeichen else ()
         # Die Beschriftung klein, damit für das Quadrat viel Platz bleibt.
         schrift = self.s.klein
         beschriftung = umbrechen(block.beschriftung, schrift, self.breite) if block.beschriftung else []
@@ -404,7 +397,7 @@ class _Setzer:
                               stil.FARBE_TINTE, "tabellentitel", anker="n")
                         for nr, text in enumerate(beschriftung))
         quadrat = Quadrat((self.breite - 27 * feld) // 2, oben, feld)
-        self.fluss.dazu(_Kiste(oben + quadrat.kante, stuecke + (quadrat,), neue_seite=True, marke=marke))
+        self.fluss.dazu(_Kiste(oben + quadrat.kante, stuecke + (quadrat,), neue_seite=True))
         self.fluss.danach_neue_seite()
 
     # Merksatz und Randnotiz
@@ -586,7 +579,7 @@ def setzen(seite, schriften, breite, hoehe, px, stempel=None):
     """
     setzer = _Setzer(schriften, breite, hoehe, px)
     verteilt = seiten_verteilen(setzer.kapitel(seite), hoehe)
-    seiten, inhalt, lesezeichen = [], [], None
+    seiten, inhalt = [], []
     zahl_y = hoehe + px(SEITENZAHL_ABSTAND)
     for nummer, kisten in enumerate(verteilt, 1):
         stuecke = []
@@ -594,10 +587,8 @@ def setzen(seite, schriften, breite, hoehe, px, stempel=None):
             stuecke.extend(_verschoben(stueck, y) for stueck in kiste.stuecke)
             if kiste.marke[:1] == ("abschnitt",):
                 inhalt.append((kiste.marke[1], nummer))
-            if kiste.marke == ("lesezeichen",) and lesezeichen is None:
-                lesezeichen = nummer
         stuecke.append(Zeile(breite // 2, zahl_y, f"– {nummer} –", "klein", stil.FARBE_TINTE,
                              "seitenzahl", anker="n"))
         seiten.append(Buchseite(tuple(stuecke), nummer))
     titel = _titelseite(inhalt, schriften, breite, hoehe, px, stempel)
-    return Satz((titel, *seiten), tuple(inhalt), lesezeichen if lesezeichen is not None else 1)
+    return Satz((titel, *seiten), tuple(inhalt))

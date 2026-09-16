@@ -4,7 +4,7 @@ Das Handbuch ist ein aufgeschlagenes Buch. Geprüft wird, dass jedes Kapitel
 vollständig und in der richtigen Reihenfolge im Buch steht – Text,
 Tabellen, Merksatz, Randnotizen, auf Seite 3 das Quadrat –, dass nichts über
 die Seiten hinausragt, dass sich blättern lässt (Knöpfe, Tasten, Mausrad,
-Ecken, Lesezeichen), dass dabei ein Blatt umschlägt, und dass man mitten in
+Ecken), dass dabei ein Blatt umschlägt, und dass man mitten in
 einer Übung nachschlagen und zur selben Übung zurückkehren kann
 (Arbeitsplan 6.4: "Muss während der Aufgaben erreichbar bleiben").
 
@@ -133,6 +133,22 @@ def _erwartet(seite):
             elif isinstance(block, buch.Randnotiz):
                 teile.append(block.text)
     return _eine_zeile(teile)
+
+
+def _hat_quadrat(buchseite):
+    return any(isinstance(s, buchsatz.Quadrat) for s in buchseite.stuecke)
+
+
+def _hat_geheimtabelle(buchseite):
+    zellen = {z for s in buchseite.stuecke if isinstance(s, buchsatz.Raster) for zeile in s.zeilen for z in zeile}
+    return "Geheim" in zellen
+
+
+def _aufschlagen_bei(screen, bedingung):
+    """Schlägt die Doppelseite mit der ersten Seite auf, für die ``bedingung`` stimmt; gibt deren Nummer."""
+    nummer = next(nr for nr, seite in enumerate(screen.satz.seiten) if bedingung(seite))
+    screen.aufschlagen(nummer // 2, animiert=False)
+    return nummer
 
 
 def _zeilen_im_satz(screen, seite, *arten):
@@ -294,16 +310,14 @@ def test_jede_tabelle_steht_vollstaendig_da_auch_wenn_sie_geteilt_ist(fenster, a
 def test_die_zellen_stehen_auch_auf_der_leinwand(fenster, aufrufe):
     """Der Satz kennt die Zellen – hier steht, dass sie auch gezeichnet werden, jede genau einmal."""
     screen = _buch(fenster, 2, aufrufe)
-    screen.zum_lesezeichen(animiert=False)
-    seite = "links" if screen.satz.lesezeichen % 2 == 0 else "rechts"
+    nummer = _aufschlagen_bei(screen, _hat_geheimtabelle)
+    seite = "links" if nummer % 2 == 0 else "rechts"
     gezeichnet = [screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag(f"zelle&&{seite}")]
-    erwartet = [zelle for stueck in screen.satz.seiten[screen.satz.lesezeichen].stuecke
+    erwartet = [zelle for stueck in screen.satz.seiten[nummer].stuecke
                 if isinstance(stueck, buchsatz.Raster)
                 for zeile in stueck.zeilen for zelle in zeile[1:]]
     assert sorted(gezeichnet) == sorted(erwartet)
-    (geheimtabelle,) = [b for a in screen.seite.abschnitte for b in a.bloecke
-                        if getattr(b, "lesezeichen", False)]
-    for zeile in geheimtabelle.zeilen:
+    for zeile in buch.GEHEIMTABELLE.zeilen:
         for zelle in zeile[1:]:
             assert zelle in gezeichnet
 
@@ -320,7 +334,7 @@ def test_das_quadrat_steht_nur_in_level_3_und_dort_auf_einer_seite_fuer_sich(fen
 def test_das_quadrat_stimmt_in_allen_676_feldern(fenster, aufrufe):
     """Gezeichnet aus derselben Formel wie crypto/ – kein abgetipptes Feld."""
     screen = _buch(fenster, 3, aufrufe)
-    screen.zum_lesezeichen(animiert=False)
+    _aufschlagen_bei(screen, _hat_quadrat)
     quadrat = erzeuge_quadrat()
     for zeile, schluessel in enumerate(ALPHABET):
         for spalte, nachricht in enumerate(ALPHABET):
@@ -329,13 +343,13 @@ def test_das_quadrat_stimmt_in_allen_676_feldern(fenster, aufrufe):
 
 def test_das_quadrat_zeigt_das_beispiel_aus_dem_handbuch(fenster, aufrufe):
     screen = _buch(fenster, 3, aufrufe)
-    screen.zum_lesezeichen(animiert=False)
+    _aufschlagen_bei(screen, _hat_quadrat)
     assert [screen.quadratfeld(s, n) for s, n in zip("ROTR", "HUND")] == list("YIGU")
 
 
 def test_das_quadrat_ist_beschriftet(fenster, aufrufe):
     screen = _buch(fenster, 3, aufrufe)
-    screen.zum_lesezeichen(animiert=False)
+    _aufschlagen_bei(screen, _hat_quadrat)
     leinwand = screen.buch
     kopfzeile = [leinwand.itemcget(e, "text") for e in leinwand.find_withtag("kopfzeile")]
     kopfspalte = [leinwand.itemcget(e, "text") for e in leinwand.find_withtag("kopfspalte")]
@@ -347,7 +361,7 @@ def test_das_quadrat_ist_beschriftet(fenster, aufrufe):
 def test_die_buchstaben_des_quadrats_passen_in_ihre_felder(fenster, aufrufe, massstab):
     """Sonst klebten die 676 Buchstaben aneinander – und niemand fände den Kreuzungspunkt."""
     screen = _buch(fenster, 3, aufrufe)
-    screen.zum_lesezeichen(animiert=False)
+    _aufschlagen_bei(screen, _hat_quadrat)
     (quadrat,) = [s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Quadrat)]
     for element in screen.buch.find_withtag("feld") + screen.buch.find_withtag("kopfzeile"):
         x0, y0, x1, y1 = screen.buch.bbox(element)
@@ -406,7 +420,7 @@ def test_die_textflaechen_liegen_auf_dem_papier_des_buchbilds(massstab):
 
     Geprüft wird im fertigen Bild: Überall auf den Textflächen ist helles,
     gelbliches Papier – keine Kante, kein Fleck, kein Einband. Links neben dem
-    Buch ist Nachthimmel, und wo man aufs Lesezeichen klickt, ist es rot.
+    Buch ist Nachthimmel.
     """
     ordner = animation.ANIMATIONSORDNER / "buch" / animation.unterordner(massstab)
     bild = _rendern().png_lesen((ordner / "hintergrund.png").read_bytes())
@@ -421,9 +435,6 @@ def test_die_textflaechen_liegen_auf_dem_papier_des_buchbilds(massstab):
                 r, g, b = farbe(x0 + (x1 - 1 - x0) * i // 10, y0 + (y1 - 1 - y0) * j // 10)
                 assert r >= 200 and g >= 180 and b >= 140 and r - b >= 25, (r, g, b)
     assert max(farbe(stil.skaliert(5, massstab), stil.skaliert(240, massstab))) < 60
-    bx0, by0, bx1, by1 = (stil.skaliert(wert, massstab) for wert in handbuch.BAND)
-    r, g, b = farbe((bx0 + bx1) // 2, (by0 + by1) // 2)
-    assert r > 140 and g < 90 and b < 90
 
 
 @pytest.mark.parametrize("massstab", [1, 1.5])
@@ -509,21 +520,6 @@ def test_ein_klick_mitten_auf_die_seite_blaettert_nicht(fenster, aufrufe):
     assert screen.doppelseite == 0
 
 
-@pytest.mark.parametrize("level", LEVEL)
-def test_das_lesezeichen_fuehrt_zur_tabelle_die_man_zum_loesen_braucht(fenster, aufrufe, wurzel, level):
-    screen = _buch(fenster, level, aufrufe)
-    screen.klicken(*_mitte(handbuch.BAND, screen))
-    assert screen.doppelseite == screen.satz.lesezeichen // 2
-    _warten(wurzel, lambda: not screen.blaettert)
-    if level == 3:
-        assert screen.quadratfeld("R", "H") == "Y"
-    else:
-        (tabelle,) = [b for a in screen.seite.abschnitte for b in a.bloecke if getattr(b, "lesezeichen", False)]
-        zellen = "".join(screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag("zelle"))
-        assert "".join(tabelle.zeilen[1][1:6]) in zellen
-    assert screen.zum_lesezeichen() is False                        # schon da
-
-
 def test_der_zeiger_zeigt_wo_man_klicken_kann(fenster, aufrufe):
     screen = _buch(fenster, 3, aufrufe)
     assert screen.ziel(*_mitte(handbuch.ECKE_RECHTS, screen)) == "vor"
@@ -532,13 +528,9 @@ def test_der_zeiger_zeigt_wo_man_klicken_kann(fenster, aufrufe):
     assert screen.ziel(*_mitte(handbuch.ECKE_RECHTS, screen)) is None      # hinter der letzten auch nicht
     assert screen.ziel(*_mitte(handbuch.ECKE_LINKS, screen)) == "zurueck"
     screen.aufschlagen(0, animiert=False)
-    assert screen.ziel(*_mitte(handbuch.BAND, screen)) == "lesezeichen"
     assert screen.ziel(*_mitte(buchleinwand.TEXT_LINKS, screen)) is None
     screen._maus_ueber("vor")
     assert screen.buch.cget("cursor") == "hand2" and screen.buch.find_withtag("maus")
-    screen._maus_ueber("lesezeichen")
-    (wort,) = screen.buch.find_withtag("maus")
-    assert screen.buch.itemcget(wort, "text") == handbuch.LESEZEICHEN
     screen._maus_ueber(None)
     assert screen.buch.cget("cursor") == "" and not screen.buch.find_withtag("maus")
 

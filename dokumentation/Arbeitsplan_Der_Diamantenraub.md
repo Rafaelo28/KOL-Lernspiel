@@ -463,7 +463,7 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 - **Umgesetzt – als aufgeschlagenes Buch:** Statt eines Blattes zum Scrollen
   liegt Bobs Handbuch als **altes, in Leder gebundenes Buch** vor den
   Spielenden: Einband mit Goldprägung, vergilbte Seiten mit Stockflecken,
-  Eselsohr, hochgebogene Ecken, ein rotes Lesezeichen-Band. Geblättert wird
+  Eselsohr, hochgebogene Ecken. Geblättert wird
   in Doppelseiten, und dabei schlägt sichtbar ein Blatt um
   - **Die Bilder** entstehen aus einem Programm, nicht von Hand:
     `grafik/buch_zeichnen.py` schreibt `grafik/buch.svg` (das Buch als
@@ -500,10 +500,10 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     nicht mehr Lernspiel und Unterricht, sondern zwei Erklärungen. Jede Notiz
     nennt die Stelle, die sie wiederholt – ein Test prüft, dass es sie gibt
   - **Blättern:** Knöpfe unter dem Buch, Pfeiltasten und Bild auf/ab,
-    Mausrad und ein Klick auf die hochgebogenen Ecken unten außen. Das rote
-    **Lesezeichen-Band** führt zu der Tabelle, die man beim Lösen immer
-    wieder braucht (`lesezeichen=True` in `content/handbuch.py`: das
-    verschobene Alphabet, die Geheimtabelle, das Quadrat)
+    Mausrad und ein Klick auf die hochgebogenen Ecken unten außen. (Ein
+    Lesezeichen-Band, das zur wichtigsten Tabelle sprang, gab es zuerst
+    auch – es flackerte beim Umblättern und war unnötig, seit das Werkzeug
+    in 6.5 ohnehin neben jeder Übung liegt; es ist wieder entfernt)
   - **Umblättern:** `ui.animation.Ablauf` legt die zwölf durchsichtigen
     Bilder über die Leinwand. Vorwärts liegt die neue rechte Seite schon
     unter dem Blatt und die neue linke erscheint, wenn es gelandet ist –
