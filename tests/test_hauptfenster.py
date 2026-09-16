@@ -773,3 +773,11 @@ def test_main_oeffnet_das_spiel_mit_dem_startscreen(wurzel, monkeypatch):
     fenster, kwargs = geoeffnet[0]
     assert isinstance(fenster.aktueller_screen, ablauf.STARTSCREEN)
     assert kwargs["protokollordner"] == main.PROTOKOLLORDNER
+
+
+def test_die_kopfzeile_steht_im_nachthimmel_statt_in_einer_hellen_leiste(fenster):
+    """Eine graue oder weisse Leiste über Buch und Szenen wirkte wie ein Formular."""
+    teile = [fenster.wurzel, fenster.inhalt, fenster._titelanzeige, fenster._levelanzeige,
+             fenster._titelanzeige.master, fenster._meldungszeile]
+    assert {teil.cget("bg") for teil in teile} == {stil.FARBE_NACHT}
+    assert fenster._titelanzeige.cget("fg") == stil.FARBE_SAND

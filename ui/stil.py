@@ -84,11 +84,13 @@ SCHRIFT_BETONT = "Betont"
 #: Kursiv in Grundgrösse – Untertitel und Tabellenbeschriftungen im Handbuch.
 SCHRIFT_KURSIV = "Kursiv"
 
-#: Farbe der Meldungszeile – für Probleme, die die Lehrkraft sehen muss.
-FARBE_MELDUNG = "#9a1c1c"
+#: Farbe der Meldungszeile – für Probleme, die die Lehrkraft sehen muss. Hell
+#: genug für den dunklen Grund, auf dem sie steht.
+FARBE_MELDUNG = "#ff9a76"
 
-#: Farbe der Trennlinie unter der Kopfzeile.
-FARBE_LINIE = "#b0b0b0"
+#: Farbe der feinen Trennlinie unter der Kopfzeile – kaum heller als der
+#: Nachthimmel, damit oben keine helle Leiste entsteht.
+FARBE_LINIE = "#2c3160"
 
 #: Innenabstand in Pixeln – um die Screens und in der Kopfzeile.
 ABSTAND = 16

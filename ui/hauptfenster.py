@@ -179,11 +179,16 @@ class Hauptfenster:
         return stil.skaliert(wert, self.massstab)
 
     def _rahmen_bauen(self):
-        kopf = tk.Frame(self.wurzel, padx=self.px(stil.ABSTAND), pady=self.px(stil.ABSTAND // 2))
+        # Alles im Nachthimmel des Spiels: Eine helle Leiste in Grau oder Weiss
+        # sähe über dem Buch und den Szenen aus wie ein Formular.
+        self.wurzel.configure(bg=stil.FARBE_NACHT)
+        kopf = tk.Frame(self.wurzel, padx=self.px(stil.ABSTAND), pady=self.px(stil.ABSTAND // 2),
+                        bg=stil.FARBE_NACHT)
         kopf.pack(side="top", fill="x")
-        self._titelanzeige = tk.Label(kopf, font=stil.SCHRIFT_TITEL, anchor="w")
+        self._titelanzeige = tk.Label(kopf, font=stil.SCHRIFT_TITEL, anchor="w", bg=stil.FARBE_NACHT,
+                                      fg=stil.FARBE_SAND)
         self._titelanzeige.pack(side="left")
-        self._levelanzeige = tk.Label(kopf)
+        self._levelanzeige = tk.Label(kopf, bg=stil.FARBE_NACHT, fg=stil.FARBE_DUENE)
         self._levelanzeige.pack(side="right", padx=self.px(stil.ABSTAND))
         tk.Frame(self.wurzel, height=1, bg=stil.FARBE_LINIE).pack(side="top", fill="x")
 
@@ -191,6 +196,7 @@ class Hauptfenster:
         self._meldungszeile = tk.Label(
             self.wurzel,
             fg=stil.FARBE_MELDUNG,
+            bg=stil.FARBE_NACHT,
             anchor="w",
             justify="left",
             wraplength=self.px(MIN_BREITE - 2 * stil.ABSTAND),
@@ -199,7 +205,7 @@ class Hauptfenster:
         )
 
         #: Hierhin bauen die Screens ihre Bedienelemente.
-        self.inhalt = tk.Frame(self.wurzel)
+        self.inhalt = tk.Frame(self.wurzel, bg=stil.FARBE_NACHT)
         self.inhalt.pack(side="top", fill="both", expand=True)
 
     # ── Screens ────────────────────────────────────────────────────────────

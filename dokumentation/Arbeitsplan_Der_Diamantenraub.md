@@ -379,6 +379,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     1080p-Schulmonitoren: maximiert stand das Spiel klein oben in der Mitte):
     - Das Fenster öffnet **maximiert**; F11 schaltet auf echtes Vollbild, Esc
       zurück
+    - Die **Kopfzeile** steht im Nachthimmel des Spiels (Titel in Sand, Level
+      gedämpft, darunter eine kaum sichtbare Linie). Die graue Standardleiste
+      von Tk wirkte über Buch und Szenen unseriös
     - **Maßstab:** Ab 1920 × 1080 wird alles 1,5-mal so gross gezeichnet –
       Schriften, Abstände und die Bilder (`ui/stil.py`, `massstab_fuer`). Die
       Screens rechnen feste Pixelangaben mit `self.px(…)` um
