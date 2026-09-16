@@ -41,11 +41,30 @@ Gute Vorlagen für neue Animationen:
 | `grafik/wrack.svg` | Story-Intro (6.3) | eine große Szene, ein Ausschnitt; der Text liegt im Spiel darüber |
 | `grafik/titel.svg` | Startbildschirm (6.2) | **zwei** Ausschnitte (Diamant, Schriftzug); der Schriftzug steckt im Bild |
 | `grafik/figur_<kennung>.svg` | Figurwahl (6.2) | fünf kleine Symbole, 150 × 150 Pixel; der Grund ist die Kartenfarbe |
+| `grafik/buch.svg` | Handbuch (6.4) | ein **Standbild**: das aufgeschlagene Buch, auf das das Spiel den Text setzt |
+| `grafik/umblaettern.svg` | Handbuch (6.4) | **einmalig und durchsichtig**: zwölf Bilder, in denen ein Blatt umschlägt |
+| `grafik/stempel.svg` | Handbuch (6.4) | ein **durchsichtiges Standbild**: "STRENG GEHEIM" auf der Titelseite |
 
 Die Symbole der Figurwahl sind auf `FARBE_KARTE` aus `ui/stil.py` gemalt,
 sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe. Wer die
 Farbe ändert, muss die SVGs mitziehen und neu rendern – ein Test in
 `tests/test_figurwahl.py` prüft die Ecken.
+
+**Buch und Umblättern werden gezeichnet, nicht getippt.** Beide SVGs entstehen
+aus `grafik/buch_zeichnen.py`:
+
+```bash
+python3 grafik/buch_zeichnen.py          # schreibt buch.svg und umblaettern.svg
+python3 grafik/rendern.py grafik/buch.svg
+python3 grafik/rendern.py grafik/umblaettern.svg
+```
+
+Sie brauchen dasselbe Blatt – denselben ausgefransten Umriss, dieselbe
+viewBox –, sonst springt beim Umblättern die Kante. Wer am Buch etwas ändern
+will, ändert es dort und lässt beide neu entstehen. Die Textflächen der
+Buchseiten stehen in beiden Dateien: in SVG-Einheiten in
+`grafik/buch_zeichnen.py`, in Pixeln in `ui/handbuch.py`. Ein Test prüft im
+gerenderten Bild, dass dort überall Papier ist.
 
 ---
 

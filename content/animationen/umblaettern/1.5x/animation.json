@@ -1,0 +1,20 @@
+{
+  "quelle": "grafik/umblaettern.svg",
+  "breite": 1440,
+  "hoehe": 738,
+  "bilder": 12,
+  "takt_ms": 30,
+  "hintergrund": null,
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 30,
+      "y": 0,
+      "breite": 1374,
+      "hoehe": 738,
+      "spalten": 2
+    }
+  ],
+  "durchsichtig": true,
+  "einmalig": true
+}

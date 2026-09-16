@@ -1,0 +1,10 @@
+{
+  "quelle": "grafik/buch.svg",
+  "breite": 1440,
+  "hoehe": 738,
+  "bilder": 1,
+  "takt_ms": 1,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [],
+  "standbild": true
+}

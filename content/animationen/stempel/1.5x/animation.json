@@ -1,0 +1,11 @@
+{
+  "quelle": "grafik/stempel.svg",
+  "breite": 360,
+  "hoehe": 162,
+  "bilder": 1,
+  "takt_ms": 1,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [],
+  "standbild": true,
+  "durchsichtig": true
+}

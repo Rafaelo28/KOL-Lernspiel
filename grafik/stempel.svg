@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 252" data-breite="240"
+     data-standbild="ja" data-durchsichtig="ja">
+<!--
+  Stempel "STRENG GEHEIM" auf der Titelseite von Bobs Handbuch (Arbeitsplan 6.4).
+  Durchsichtig: Die Tinte ist löchrig und nicht ganz deckend – dazwischen scheint das
+  Papier des Buchs durch, auf das das Spiel den Stempel setzt.
+  Fürs Spiel vorrendern mit:  python3 grafik/rendern.py grafik/stempel.svg
+-->
+<title>Stempel STRENG GEHEIM</title>
+<defs>
+  <filter id="abgenutzt" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="3" seed="4" result="rauschen"/>
+    <feColorMatrix in="rauschen" type="matrix"
+      values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.6 1.75" result="loecher"/>
+    <feComposite in="SourceGraphic" in2="loecher" operator="in" result="tinte"/>
+    <feGaussianBlur in="tinte" stdDeviation="0.6"/>
+  </filter>
+</defs>
+<g transform="rotate(-11 280 126)" filter="url(#abgenutzt)" opacity=".78" fill="none" stroke="#a3262a">
+  <rect x="30" y="57" width="500" height="136" rx="10" stroke-width="10"/>
+  <rect x="48" y="73" width="464" height="104" rx="6" stroke-width="3"/>
+  <text x="280" y="141" text-anchor="middle" fill="#a3262a" stroke="none"
+        font-family="'DejaVu Sans', sans-serif" font-weight="bold" font-size="44" letter-spacing="4">STRENG GEHEIM</text>
+</g>
+</svg>
