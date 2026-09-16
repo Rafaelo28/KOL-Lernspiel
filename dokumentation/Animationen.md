@@ -44,6 +44,7 @@ Gute Vorlagen für neue Animationen:
 | `grafik/buch.svg` | Handbuch (6.4) | ein **Standbild**: das aufgeschlagene Buch, auf das das Spiel den Text setzt |
 | `grafik/umblaettern.svg` | Handbuch (6.4) | **einmalig und durchsichtig**: zwölf Bilder, in denen ein Blatt umschlägt |
 | `grafik/stempel.svg` | Handbuch (6.4) | ein **durchsichtiges Standbild**: "STRENG GEHEIM" auf der Titelseite |
+| `grafik/stempel_geloest.svg` | Übung (6.5) | derselbe Bau in Grün: "GELÖST", sobald die Antwort stimmt |
 
 Die Symbole der Figurwahl sind auf `FARBE_KARTE` aus `ui/stil.py` gemalt,
 sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe. Wer die

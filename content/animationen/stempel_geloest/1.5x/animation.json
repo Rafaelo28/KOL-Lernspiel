@@ -1,0 +1,11 @@
+{
+  "quelle": "grafik/stempel_geloest.svg",
+  "breite": 300,
+  "hoehe": 135,
+  "bilder": 1,
+  "takt_ms": 1,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [],
+  "standbild": true,
+  "durchsichtig": true
+}

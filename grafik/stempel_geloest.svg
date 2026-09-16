@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 252" data-breite="200"
+     data-standbild="ja" data-durchsichtig="ja">
+<!--
+  Stempel "GELÖST" für die Übungsseite im Buch (Arbeitsplan 6.5): Er schlägt auf die
+  Seite, sobald die Antwort stimmt. Durchsichtig und löchrig wie der Stempel auf der
+  Titelseite – zwischen der Tinte scheint das Papier durch, die eigene Antwort bleibt
+  lesbar. Grün statt rot: Rot ist im Buch die Farbe der Überschriften und der Korrektur.
+  Fürs Spiel vorrendern mit:  python3 grafik/rendern.py grafik/stempel_geloest.svg
+-->
+<title>Stempel GELÖST</title>
+<defs>
+  <filter id="abgenutzt" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="3" seed="9" result="rauschen"/>
+    <feColorMatrix in="rauschen" type="matrix"
+      values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.6 1.75" result="loecher"/>
+    <feComposite in="SourceGraphic" in2="loecher" operator="in" result="tinte"/>
+    <feGaussianBlur in="tinte" stdDeviation="0.6"/>
+  </filter>
+</defs>
+<g transform="rotate(9 280 126)" filter="url(#abgenutzt)" opacity=".8" fill="none" stroke="#2f7a46">
+  <rect x="60" y="52" width="440" height="148" rx="74" stroke-width="10"/>
+  <rect x="78" y="70" width="404" height="112" rx="56" stroke-width="3"/>
+  <text x="280" y="148" text-anchor="middle" fill="#2f7a46" stroke="none"
+        font-family="'DejaVu Sans', sans-serif" font-weight="bold" font-size="60" letter-spacing="9">GELÖST</text>
+</g>
+</svg>
