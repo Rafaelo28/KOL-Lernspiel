@@ -2,11 +2,13 @@
 
 Das Handbuch ist ein aufgeschlagenes Buch. Geprüft wird, dass jedes Kapitel
 vollständig und in der richtigen Reihenfolge im Buch steht – Text,
-Tabellen, Merksatz, Randnotizen, auf Seite 3 das Quadrat –, dass nichts über
-die Seiten hinausragt, dass sich blättern lässt (Knöpfe, Tasten, Mausrad,
-Ecken), dass dabei ein Blatt umschlägt, und dass man mitten in
-einer Übung nachschlagen und zur selben Übung zurückkehren kann
-(Arbeitsplan 6.4: "Muss während der Aufgaben erreichbar bleiben").
+Tabellen, Merksatz, Randnotizen, auf Seite 3 das Quadrat –, dass neben jedem
+Beispiel sein Werkzeug liegt und darin markiert ist, wo der gerade gezeigte
+Schritt sucht, dass nichts über die Seiten hinausragt, dass sich blättern
+lässt (Knöpfe, Tasten, Mausrad, Ecken), dass dabei ein Blatt umschlägt, und
+dass man mitten in einer Übung nachschlagen und zur selben Übung
+zurückkehren kann (Arbeitsplan 6.4: "Muss während der Aufgaben erreichbar
+bleiben").
 
 Was *im* Handbuch steht, prüft ``tests/test_handbuch.py`` gegen die Quelle
 und gegen ``crypto/``; nach welchen Regeln es auf die Seiten verteilt wird,
@@ -108,11 +110,18 @@ def _art(screen, element):
 
 
 def _gelesen(screen):
-    """Der Fließtext des Kapitels, wie er im Buch steht – Doppelseite für Doppelseite, links vor rechts."""
+    """Der Fließtext des Kapitels, wie er im Buch steht – Doppelseite für Doppelseite, links vor rechts.
+
+    Die Seiten mit dem Werkzeug neben einem Beispiel zählen nicht mit: Das
+    Werkzeug liegt dort neben jeder Seite des Beispiels noch einmal.
+    """
     teile = []
-    for _ in _alle_doppelseiten(screen):
-        teile.extend(screen.buch.itemcget(element, "text") for element in screen.buch.find_withtag("text")
-                     if _art(screen, element))
+    for nr in _alle_doppelseiten(screen):
+        for seite, index in (("links", 2 * nr), ("rechts", 2 * nr + 1)):
+            if index < len(screen.satz.seiten) and screen.satz.seiten[index].werkzeug is not None:
+                continue
+            teile.extend(screen.buch.itemcget(element, "text") for element in screen.buch.find_withtag(f"text&&{seite}")
+                         if _art(screen, element))
     return _eine_zeile(teile)
 
 
@@ -137,6 +146,12 @@ def _erwartet(seite):
 
 def _hat_quadrat(buchseite):
     return any(isinstance(s, buchsatz.Quadrat) for s in buchseite.stuecke)
+
+
+def _quadrat(screen):
+    """Das gesetzte Quadrat – es liegt neben mehreren Seiten, ist aber überall dasselbe."""
+    (quadrat,) = {s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Quadrat)}
+    return quadrat
 
 
 def _hat_geheimtabelle(buchseite):
@@ -199,7 +214,13 @@ def test_die_seiten_sind_nummeriert(fenster, aufrufe):
     screen = _buch(fenster, 3, aufrufe)
     for nr in _alle_doppelseiten(screen):
         zahlen = [screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag("seitenzahl")]
-        assert zahlen == [f"– {n} –" for n in (2 * nr, 2 * nr + 1) if 0 < n < len(screen.satz.seiten)]
+        assert zahlen == [f"– {n} –" for n in (2 * nr, 2 * nr + 1)
+                          if 0 < n < len(screen.satz.seiten) and screen.satz.seiten[n].stuecke != _leer(screen)]
+
+
+def _leer(screen):
+    x0, y0, x1, y1 = screen.flaeche("links")
+    return buchsatz.leerseite(x1 - x0, y1 - y0, screen.px).stuecke
 
 
 def test_eine_leere_letzte_seite_bekommt_eine_verzierung(fenster, aufrufe):
@@ -289,13 +310,9 @@ def test_erste_schrift_nimmt_die_erste_die_es_gibt(wurzel):
 
 # ── Tabellen und Quadrat ───────────────────────────────────────────────────
 
-@pytest.mark.parametrize("massstab", [1, 1.5])
-@pytest.mark.parametrize("level", LEVEL)
-def test_jede_tabelle_steht_vollstaendig_da_auch_wenn_sie_geteilt_ist(fenster, aufrufe, level):
-    """Die Teile einer Tabelle ergeben zusammen genau ihre Zeilen – und jeder Teil ist beschriftet."""
-    screen = _buch(fenster, level, aufrufe)
-    tabellen = [block for a in screen.seite.abschnitte for block in a.bloecke if isinstance(block, buch.Tabelle)]
-    teile = [s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Raster)]
+def _tabellen_pruefen(tabellen, teile):
+    """Die Teile ergeben der Reihe nach genau die Tabellen – und jeder Teil ist beschriftet."""
+    teile = list(teile)
     for tabelle in tabellen:
         zusammen = [[zeile[0]] for zeile in tabelle.zeilen]
         while len(zusammen[0]) < len(tabelle.zeilen[0]):
@@ -305,6 +322,19 @@ def test_jede_tabelle_steht_vollstaendig_da_auch_wenn_sie_geteilt_ist(fenster, a
                 bisher.extend(zeile[1:])
         assert [tuple(z) for z in zusammen] == [tuple(z) for z in tabelle.zeilen]
     assert teile == []
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+@pytest.mark.parametrize("level", LEVEL)
+def test_jede_tabelle_steht_vollstaendig_da_auch_wenn_sie_geteilt_ist(fenster, aufrufe, level):
+    """Die Teile einer Tabelle ergeben zusammen genau ihre Zeilen – im Text und auf jeder Werkzeugseite."""
+    screen = _buch(fenster, level, aufrufe)
+    tabellen = [block for a in screen.seite.abschnitte for block in a.bloecke if isinstance(block, buch.Tabelle)]
+    _tabellen_pruefen(tabellen, [s for seite in screen.satz.seiten if seite.werkzeug is None
+                                 for s in seite.stuecke if isinstance(s, buchsatz.Raster)])
+    for seite in screen.satz.seiten:
+        if isinstance(seite.werkzeug, buch.Tabelle):
+            _tabellen_pruefen([seite.werkzeug], [s for s in seite.stuecke if isinstance(s, buchsatz.Raster)])
 
 
 def test_die_zellen_stehen_auch_auf_der_leinwand(fenster, aufrufe):
@@ -322,13 +352,17 @@ def test_die_zellen_stehen_auch_auf_der_leinwand(fenster, aufrufe):
             assert zelle in gezeichnet
 
 
-def test_das_quadrat_steht_nur_in_level_3_und_dort_auf_einer_seite_fuer_sich(fenster, aufrufe):
+def test_das_quadrat_steht_nur_in_level_3_und_dort_auf_seiten_fuer_sich(fenster, aufrufe):
     for level in (1, 2):
         screen = _buch(fenster, level, aufrufe)
         assert not any(isinstance(s, buchsatz.Quadrat) for seite in screen.satz.seiten for s in seite.stuecke)
     screen = _buch(fenster, 3, aufrufe)
-    (quadratseite,) = [s for s in screen.satz.seiten if any(isinstance(t, buchsatz.Quadrat) for t in s.stuecke)]
-    assert {s.art for s in quadratseite.stuecke if isinstance(s, buchsatz.Zeile)} == {"tabellentitel", "seitenzahl"}
+    quadratseiten = [s for s in screen.satz.seiten if _hat_quadrat(s)]
+    assert quadratseiten
+    for quadratseite in quadratseiten:
+        assert quadratseite.werkzeug is buch.QUADRAT
+        assert {s.art for s in quadratseite.stuecke if isinstance(s, buchsatz.Zeile)} == {"tabellentitel",
+                                                                                          "seitenzahl"}
 
 
 def test_das_quadrat_stimmt_in_allen_676_feldern(fenster, aufrufe):
@@ -362,7 +396,7 @@ def test_die_buchstaben_des_quadrats_passen_in_ihre_felder(fenster, aufrufe, mas
     """Sonst klebten die 676 Buchstaben aneinander – und niemand fände den Kreuzungspunkt."""
     screen = _buch(fenster, 3, aufrufe)
     _aufschlagen_bei(screen, _hat_quadrat)
-    (quadrat,) = [s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Quadrat)]
+    quadrat = _quadrat(screen)
     for element in screen.buch.find_withtag("feld") + screen.buch.find_withtag("kopfzeile"):
         x0, y0, x1, y1 = screen.buch.bbox(element)
         assert x1 - x0 <= quadrat.feld and y1 - y0 <= quadrat.feld, screen.buch.itemcget(element, "text")
@@ -372,8 +406,290 @@ def test_die_buchstaben_des_quadrats_passen_in_ihre_felder(fenster, aufrufe, mas
 def test_die_felder_des_quadrats_sind_gross_genug_zum_lesen(fenster, aufrufe, massstab):
     """Auf dem 1080p-Schulmonitor mindestens 18 Pixel – mit diesem Quadrat wird gerechnet."""
     screen = _buch(fenster, 3, aufrufe)
-    (quadrat,) = [s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Quadrat)]
-    assert quadrat.feld >= (12 if massstab == 1 else 18)
+    assert _quadrat(screen).feld >= (12 if massstab == 1 else 18)
+
+
+# ── Beispiele: das Werkzeug gegenüber, der Schritt markiert ────────────────
+
+def _beispiele(seite):
+    return [(nr, a) for nr, a in enumerate(seite.abschnitte) if a.gegenueber is not None]
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+@pytest.mark.parametrize("level", LEVEL)
+def test_neben_jedem_beispiel_liegt_sein_werkzeug(fenster, aufrufe, level):
+    """Links das Beispiel, rechts die Tabelle oder das Quadrat – auf jeder Doppelseite, über die es läuft."""
+    screen = _buch(fenster, level, aufrufe)
+    seiten = screen.satz.seiten
+    inhalt = dict(screen.satz.inhalt)
+    for _, abschnitt in _beispiele(screen.seite):
+        nummer = inhalt[abschnitt.ueberschrift]
+        assert nummer % 2 == 0, f"{abschnitt.ueberschrift!r} beginnt auf einer rechten Seite"
+        assert seiten[nummer + 1].werkzeug == abschnitt.gegenueber
+    for nummer, seite in enumerate(seiten):
+        if seite.schritte:
+            assert nummer % 2 == 0 and seiten[nummer + 1].werkzeug is not None
+        if seite.werkzeug is not None:
+            assert nummer % 2 == 1 and seiten[nummer - 1].werkzeug is None
+    # Alle Schritte stehen im Buch, jeder genau einmal.
+    marken = [marke for seite in seiten for marke in seite.schritte]
+    assert marken == [buchsatz.Schrittmarke(nr, i, schritt) for nr, a in _beispiele(screen.seite)
+                      for i, schritt in enumerate(a.schritte)]
+
+
+def test_auf_der_leinwand_liegt_das_werkzeug_rechts(fenster, aufrufe):
+    for level, zellen in ((1, buch.ALPHABET_UM_3), (2, buch.GEHEIMTABELLE), (3, None)):
+        screen = _buch(fenster, level, aufrufe)
+        nummer = _aufschlagen_bei(screen, lambda seite: seite.schritte)
+        assert nummer % 2 == 0
+        if zellen is None:
+            assert len(screen.buch.find_withtag("feld&&rechts")) == 26 * 26
+        else:
+            gezeichnet = [screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag("zelle&&rechts")]
+            assert sorted(gezeichnet) == sorted(z for zeile in zellen.zeilen for z in zeile[1:])
+
+
+def _texte_in(leinwand, seite, rechtecke, waagrecht=False):
+    """Die Texte auf der Seite, deren Mitte in einem der ``rechtecke`` liegt.
+
+    Sortiert von oben nach unten – oder, ``waagrecht``, von links nach rechts:
+    In einer Zeile des Quadrats steht der fette Kopfbuchstabe ein halbes
+    Pixel anders als die übrigen.
+    """
+    gefunden = []
+    for element in leinwand.find_withtag(seite):
+        if leinwand.type(element) != "text":          # die Buchstaben des Quadrats sind auch Text
+            continue
+        a, b, c, d = leinwand.bbox(element)
+        x, y = (a + c) / 2, (b + d) / 2
+        if any(x0 <= x <= x1 and y0 <= y <= y1 for x0, y0, x1, y1 in rechtecke):
+            gefunden.append(((x, y) if waagrecht else (y, x), leinwand.itemcget(element, "text")))
+    return [text for _, text in sorted(gefunden)]
+
+
+def _schritttexte(buchseite, marke):
+    """Was im Satz zu einem Schritt gehört: seine Zeilen – oder seine Spalte der Beispieltabelle."""
+    texte = []
+    for stueck in buchseite.stuecke:
+        if isinstance(stueck, buchsatz.Zeile) and stueck.schritt == marke:
+            texte.append(stueck.text)
+        elif isinstance(stueck, buchsatz.Raster) and marke in stueck.schritte:
+            texte.extend(zeile[1 + stueck.schritte.index(marke)] for zeile in stueck.zeilen)
+    return texte
+
+
+def _markierung_pruefen(screen, marke):
+    """Links steht der Schritt unter Textmarker, rechts im Werkzeug ist markiert, wo er sucht und was er findet."""
+    leinwand, schritt = screen.buch, marke.schritt
+    werkzeug = screen.satz.seiten[2 * screen.doppelseite + 1].werkzeug
+    (kreuzung,) = leinwand.find_withtag("kreuzung&&rechts")
+    (rand,) = leinwand.find_withtag("kreuzungsrand&&rechts")
+    feld = leinwand.coords(kreuzung)
+    assert leinwand.coords(rand) == feld
+    assert leinwand.itemcget(kreuzung, "fill") == stil.FARBE_KREUZUNG
+    assert leinwand.itemcget(rand, "outline") == stil.FARBE_ROTSTIFT
+    assert _texte_in(leinwand, "rechts", [feld]) == [schritt.kreuzung]
+    baender = [e for e in leinwand.find_withtag("markierung&&rechts") if e not in (kreuzung, rand)]
+    assert all(leinwand.itemcget(e, "fill") == stil.FARBE_MARKIERUNG for e in baender)
+    baender = [leinwand.coords(e) for e in baender]
+    # Markiert ist vom Kopf bis zum Kreuzungspunkt – und nicht weiter.
+    (spalte,) = [band for band in baender if band[0] == feld[0] and band[2] == feld[2]]
+    # Der Kreuzungspunkt ist genau ein Feld gross.
+    rechts = screen.satz.seiten[2 * screen.doppelseite + 1]
+    if isinstance(werkzeug, buch.VigenereQuadrat):
+        assert feld[2] - feld[0] == feld[3] - feld[1] == _quadrat(screen).feld
+    else:
+        (teil,) = [s for s in rechts.stuecke if isinstance(s, buchsatz.Raster) and schritt.spalte in s.zeilen[0][1:]]
+        zeile = next(nr for nr, reihe in enumerate(teil.zeilen)
+                     if nr and reihe[1 + teil.zeilen[0][1:].index(schritt.spalte)] == schritt.kreuzung)
+        assert (feld[2] - feld[0], feld[3] - feld[1]) == (teil.zellbreite, teil.zeilenhoehen[zeile])
+    if isinstance(werkzeug, buch.VigenereQuadrat):
+        quadrat = erzeuge_quadrat()
+        z, s = ALPHABET.index(schritt.zeile), ALPHABET.index(schritt.spalte)
+        assert _texte_in(leinwand, "rechts", [spalte]) == [schritt.spalte] + [quadrat[r][s] for r in range(z + 1)]
+        (zeile,) = [band for band in baender if band is not spalte]
+        assert _texte_in(leinwand, "rechts", [zeile], waagrecht=True) == [schritt.zeile] + list(quadrat[z][:s + 1])
+    else:
+        s = werkzeug.zeilen[0].index(schritt.spalte)
+        z = next(nr for nr, reihe in enumerate(werkzeug.zeilen) if nr and reihe[s] == schritt.kreuzung)
+        assert baender == [spalte]
+        assert _texte_in(leinwand, "rechts", [spalte]) == [reihe[s] for reihe in werkzeug.zeilen[:z + 1]]
+    # Links: der Textmarker liegt unter genau dem, was zu diesem Schritt gehört.
+    buchseite = screen.satz.seiten[2 * screen.doppelseite]
+    marker = [leinwand.coords(e) for e in leinwand.find_withtag("markierung&&links")]
+    assert all(leinwand.itemcget(e, "fill") == stil.FARBE_MARKIERUNG for e in leinwand.find_withtag("markierung&&links"))
+    assert sorted(_texte_in(leinwand, "links", marker)) == sorted(_schritttexte(buchseite, marke))
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+@pytest.mark.parametrize("level", LEVEL)
+def test_jeder_schritt_markiert_im_werkzeug_zeile_spalte_und_kreuzungspunkt(fenster, aufrufe, level):
+    screen = _buch(fenster, level, aufrufe)
+    for _ in _alle_doppelseiten(screen):
+        if not screen.schritte:
+            assert screen.schritt is None and not screen.buch.find_withtag("markierung")
+            continue
+        assert screen.schritt == screen.schritte[0]                 # zu Beginn der erste
+        for marke in screen.schritte:
+            screen.schritt_zeigen(marke)
+            assert screen.schritt == marke
+            _markierung_pruefen(screen, marke)
+
+
+def _schrittmitte(screen, marke):
+    """Eine Stelle auf der Leinwand, an der der Schritt steht."""
+    x0, y0, x1, y1 = screen._schrittflaechen["links"][marke][0]
+    return (x0 + x1) // 2, (y0 + y1) // 2
+
+
+@pytest.mark.parametrize("level", LEVEL)
+def test_zeigt_die_maus_auf_einen_schritt_wird_er_markiert_und_bleibt_es(fenster, aufrufe, ausloesen, level):
+    screen = _buch(fenster, level, aufrufe)
+    nummer = _aufschlagen_bei(screen, lambda seite: len(seite.schritte) > 1)
+    erster, letzter = screen.schritte[0], screen.schritte[-1]
+    x, y = _schrittmitte(screen, letzter)
+    assert screen.ziel(x, y) == letzter
+    ausloesen(screen.buch, "<Motion>", x=x, y=y)
+    assert screen.schritt == letzter and screen.buch.cget("cursor") == "hand2"
+    _markierung_pruefen(screen, letzter)
+    ausloesen(screen.buch, "<Leave>")
+    assert screen.schritt == letzter and screen.buch.cget("cursor") == ""
+    _markierung_pruefen(screen, letzter)
+    # Ein Klick tut dasselbe – geblättert wird davon nicht.
+    x, y = _schrittmitte(screen, erster)
+    ausloesen(screen.buch, "<Button-1>", x=x, y=y)
+    assert screen.schritt == erster and screen.doppelseite == nummer // 2
+    _markierung_pruefen(screen, erster)
+
+
+def test_neben_einem_schritt_ist_kein_schritt(fenster, aufrufe):
+    screen = _buch(fenster, 3, aufrufe)
+    _aufschlagen_bei(screen, lambda seite: seite.schritte)
+    x0, y0, x1, y1 = screen.flaeche("links")
+    assert screen.ziel(x0 + 1, y0 + 1) is None                      # die Überschrift oben ist kein Schritt
+    assert screen.ziel(*_mitte(buchleinwand.TEXT_RECHTS, screen)) is None
+    screen.schritt_zeigen(screen.schritte[1])
+    screen._maus_ueber(None)
+    assert screen.schritt == screen.schritte[1]
+
+
+@pytest.mark.parametrize("level", LEVEL)
+def test_die_pfeiltasten_hoch_und_runter_gehen_die_schritte_durch(fenster, aufrufe, ausloesen, level):
+    screen = _buch(fenster, level, aufrufe)
+    nummer = _aufschlagen_bei(screen, lambda seite: seite.schritte)
+    schritte = screen.schritte
+    for erwartet in schritte[1:]:
+        ausloesen(screen.buch, "<Down>")
+        assert screen.schritt == erwartet
+    assert screen.schritt_weiter(1) is False and screen.schritt == schritte[-1]
+    ausloesen(screen.buch, "<Up>")
+    assert screen.schritt == schritte[-2]
+    screen.schritt_zeigen(schritte[0])
+    assert screen.schritt_weiter(-1) is False and screen.schritt == schritte[0]
+    assert screen.doppelseite == nummer // 2                        # geblättert wird davon nicht
+    _markierung_pruefen(screen, schritte[0])
+
+
+def test_ein_schritt_von_einer_anderen_doppelseite_wird_nicht_markiert(fenster, aufrufe):
+    screen = _buch(fenster, 3, aufrufe)
+    alle = [marke for seite in screen.satz.seiten for marke in seite.schritte]
+    _aufschlagen_bei(screen, lambda seite: seite.schritte)
+    fremd = next(marke for marke in alle if marke not in screen.schritte)
+    assert screen.schritt_zeigen(fremd) is False
+    assert screen.schritt == screen.schritte[0]
+    assert screen.schritt_zeigen(screen.schritte[0]) is False           # schon markiert
+
+
+def test_ohne_beispiel_gibt_es_nichts_zu_markieren(fenster, aufrufe, ausloesen):
+    screen = _buch(fenster, 1, aufrufe)
+    assert screen.schritte == () and screen.schritt is None
+    ausloesen(screen.buch, "<Down>")
+    assert screen.schritt_weiter(1) is False
+    assert not screen.buch.find_withtag("markierung")
+
+
+def _markierung_der_doppelseite_pruefen(screen):
+    if screen.schritte:
+        assert screen.schritt == screen.schritte[0]
+        _markierung_pruefen(screen, screen.schritt)
+    else:
+        assert screen.schritt is None and not screen.buch.find_withtag("markierung")
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_nach_dem_umblaettern_ist_der_erste_schritt_der_neuen_seite_markiert(fenster, aufrufe, wurzel):
+    screen = _buch(fenster, 3, aufrufe)
+    nummer = _aufschlagen_bei(screen, lambda seite: seite.schritte)
+    screen.schritt_zeigen(screen.schritte[-1])
+    screen.aufschlagen(nummer // 2 - 1, animiert=False)
+    _markierung_der_doppelseite_pruefen(screen)
+    screen.aufschlagen(nummer // 2, animiert=False)
+    _markierung_der_doppelseite_pruefen(screen)
+    # Mit Umschlagen: Links liegt noch die alte Seite, aber ihre Schritte zählen nicht mehr.
+    x, y = _schrittmitte(screen, screen.schritte[0])
+    assert screen.blaettern(1) is True and screen.blaettert
+    assert screen.ziel(x, y) is None
+    assert not screen.buch.find_withtag("markierung&&links")
+    _warten(wurzel, lambda: not screen.blaettert)
+    _markierung_der_doppelseite_pruefen(screen)
+    assert screen.blaettern(-1) is True
+    _warten(wurzel, lambda: not screen.blaettert)
+    _markierung_der_doppelseite_pruefen(screen)
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_die_pfeiltasten_hoch_und_runter_gehen_auch_waehrend_das_blatt_umschlaegt(fenster, aufrufe, wurzel,
+                                                                                  ausloesen):
+    """Links liegt dann noch die alte Seite – markiert wird trotzdem nur, was auf die neue gehört."""
+    screen = _buch(fenster, 3, aufrufe)
+    mit_schritten = [nr // 2 for nr, seite in enumerate(screen.satz.seiten) if seite.schritte]
+    screen.aufschlagen(mit_schritten[-1] - 1, animiert=False)
+    assert screen.blaettern(1) is True and screen.blaettert
+    ausloesen(screen.buch, "<Down>")
+    assert screen.schritt == screen.schritte[1]
+    assert not screen.buch.find_withtag("markierung&&links")
+    _warten(wurzel, lambda: not screen.blaettert)
+    _markierung_pruefen(screen, screen.schritte[1])
+
+
+@pytest.mark.parametrize("level", LEVEL)
+def test_der_textmarker_liegt_unter_der_schrift_und_auf_dem_papier(fenster, aufrufe, level):
+    screen = _buch(fenster, level, aufrufe)
+    _aufschlagen_bei(screen, lambda seite: seite.schritte)
+    leinwand = screen.buch
+    stapel = leinwand.find_all()
+
+    def lage(auswahl):
+        return [stapel.index(e) for e in leinwand.find_withtag(auswahl)]
+
+    assert leinwand.type(stapel[0]) == "image"                                  # ganz unten das Buch
+    links = lage("markierung&&links")
+    assert links and 0 < min(links) and max(links) < min(lage("text&&links"))
+    rechts = [i for i in lage("markierung&&rechts") if "kreuzungsrand" not in leinwand.gettags(stapel[i])]
+    buchstaben = "(kopfzeile||kopfspalte||feld)&&rechts" if level == 3 else "text&&rechts"
+    assert rechts and max(rechts) < min(lage(buchstaben))
+    if level == 3:
+        # Über dem dunkleren Grund von Kopfzeile und Kopfspalte – der Kopf ist mit markiert.
+        kopfgrund = [i for i in lage("rechts") if leinwand.type(stapel[i]) == "rectangle"
+                     and leinwand.itemcget(stapel[i], "fill") == stil.FARBE_PAPIER_DUNKEL]
+        assert kopfgrund and max(kopfgrund) < min(rechts)
+    # Der rote Rand des Kreuzungspunkts liegt obenauf, über den Linien.
+    (rand,) = lage("kreuzungsrand")
+    assert rand > max(i for i in lage("rechts") if leinwand.type(stapel[i]) == "line")
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_der_textmarker_steht_nicht_ueber_die_textflaeche_hinaus(fenster, aufrufe):
+    """Eine Zeile, die vom linken bis zum rechten Rand reicht, wird nur bis zum Rand markiert."""
+    screen = _buch(fenster, 1, aufrufe)
+    x0, y0, x1, y1 = screen.flaeche("links")
+    schrift = screen.schriften.text
+    marke = buchsatz.Schrittmarke(0, 0, buch.Schritt(spalte="A", kreuzung="B"))
+    ganz_links = buchsatz.Zeile(0, 0, "Wort", "text", stil.FARBE_TINTE, "punkt", schritt=marke)
+    ganz_rechts = buchsatz.Zeile(x1 - x0 - schrift.measure("Wort"), 40, "Wort", "text", stil.FARBE_TINTE, "punkt",
+                                 schritt=marke)
+    ((links, _, _, _), (_, _, rechts, _)) = screen.buch.schrittflaechen("links", (ganz_links, ganz_rechts))[marke]
+    assert links == x0 and rechts == x1
 
 
 # ── Alles auf dem Papier ───────────────────────────────────────────────────

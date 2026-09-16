@@ -15,8 +15,10 @@ nachschlagen –, steht in ihm selbst.
 Die Seiten heissen "links" und "rechts". Jedes gezeichnete Stück trägt den
 Namen seiner Seite als Tag; :meth:`Buchleinwand.seite_zeichnen` räumt damit
 eine Seite ab, ohne die andere anzufassen. Text trägt zusätzlich den Tag
-``text`` und seine Art ("absatz", "notiz", "zelle" …) – daran hängen die
-Tests und später das Hervorheben im Quadrat (Aufgabe 6.7).
+``text`` und seine Art ("absatz", "notiz", "zelle" …) – daran hängen die Tests.
+
+Markiert wird mit Textmarker: unter der Schrift, aber über dem Papier. Die
+Markierungen tragen den Tag ``markierung`` und verschwinden mit ihrer Seite.
 """
 
 import tkinter as tk
@@ -36,6 +38,9 @@ TEXT_RECHTS = (526, 48, 892, 433)
 
 #: Die Seiten, die zugleich Tag jedes Stücks auf ihnen sind.
 SEITEN = ("links", "rechts")
+
+#: So weit steht der Textmarker links und rechts über den Text hinaus.
+MARKERRAND = 3
 
 
 class Buchleinwand(Buehne):
@@ -207,6 +212,94 @@ class Buchleinwand(Buehne):
                              width=staerke, tags=tags)
             self.create_line(x, y + nr * feld, x + kante, y + nr * feld, fill=stil.FARBE_BUCHLINIE,
                              width=staerke, tags=tags)
+
+    # ── Markieren ──────────────────────────────────────────────────────────
+
+    def schrittflaechen(self, seite, stuecke):
+        """Wo die Schritte eines Beispiels auf der Seite stehen: je Schrittmarke ihre Rechtecke (x0, y0, x1, y1).
+
+        Eine Textzeile gibt ein Rechteck so breit wie ihr Text – die Nummer
+        davor eingeschlossen – und so hoch wie ihre Schrift. In einer
+        Beispieltabelle ist es die ganze Spalte des Schritts.
+        """
+        x0, y0, x1, _ = self.flaeche(seite)
+        rand = self.px(MARKERRAND)
+        zeilen, flaechen = {}, {}
+        for stueck in stuecke:
+            if isinstance(stueck, buchsatz.Zeile) and stueck.schritt is not None:
+                schrift = getattr(self.schriften, stueck.schrift)
+                # Über den Rand der Textfläche hinaus malt der Marker nicht.
+                links, oben = max(x0, x0 + stueck.x - rand), y0 + stueck.y
+                rechts = min(x1, x0 + stueck.x + schrift.measure(stueck.text) + rand)
+                unten = oben + schrift.metrics("linespace")
+                # Nummer und Text einer Zeile bekommen einen Strich, nicht zwei.
+                bisher = zeilen.get((stueck.schritt, oben))
+                if bisher is not None:
+                    links, rechts = min(links, bisher[0]), max(rechts, bisher[2])
+                zeilen[(stueck.schritt, oben)] = (links, oben, rechts, unten)
+            elif isinstance(stueck, buchsatz.Raster):
+                for spalte, marke in enumerate(stueck.schritte):
+                    links = x0 + stueck.x + stueck.beschriftungsbreite + spalte * stueck.zellbreite
+                    oben = y0 + stueck.y
+                    flaechen.setdefault(marke, []).append(
+                        (links, oben, links + stueck.zellbreite, oben + stueck.hoehe))
+        for (marke, _), flaeche in zeilen.items():
+            flaechen.setdefault(marke, []).append(flaeche)
+        return flaechen
+
+    def markieren(self, seite, flaechen):
+        """Zieht Textmarker über die ``flaechen`` – unter die Schrift der Seite."""
+        self._unterlegen(seite, "text", [
+            self.create_rectangle(*flaeche, fill=stil.FARBE_MARKIERUNG, width=0, tags=(seite, "markierung"))
+            for flaeche in flaechen])
+
+    def werkzeug_markieren(self, seite, stuecke, schritt):
+        """Markiert im Werkzeug auf der Seite, wo ein Schritt sucht und was er findet.
+
+        Im Quadrat die Zeile des Schlüsselbuchstabens und die Spalte des
+        Nachrichtenbuchstabens, jeweils vom Kopf bis zum Kreuzungspunkt; in
+        einer Tabelle die Spalte bis zu dem Feld, in dem die ``kreuzung``
+        steht. Das Feld selbst wird kräftiger markiert und rot umrandet.
+        """
+        x0, y0, _, _ = self.flaeche(seite)
+        for stueck in stuecke:
+            if isinstance(stueck, buchsatz.Quadrat) and schritt.zeile:
+                feld = stueck.feld
+                x, y = x0 + stueck.x, y0 + stueck.y
+                zeile, spalte = ALPHABET.index(schritt.zeile) + 1, ALPHABET.index(schritt.spalte) + 1
+                kreuzung = (x + spalte * feld, y + zeile * feld, x + (spalte + 1) * feld, y + (zeile + 1) * feld)
+                baender = ((x, kreuzung[1], kreuzung[2], kreuzung[3]), (kreuzung[0], y, kreuzung[2], kreuzung[3]))
+                # Über den dunkleren Grund von Kopfzeile und Kopfspalte, unter die Buchstaben.
+                self._kreuzung_zeichnen(seite, "kopfzeile", baender, kreuzung)
+            elif isinstance(stueck, buchsatz.Raster) and schritt.spalte in stueck.zeilen[0][1:]:
+                spalte = stueck.zeilen[0][1:].index(schritt.spalte)
+                treffer = [nr for nr, zeile in enumerate(stueck.zeilen)
+                           if nr and zeile[1 + spalte] == schritt.kreuzung]
+                if not treffer:
+                    continue
+                links = x0 + stueck.x + stueck.beschriftungsbreite + spalte * stueck.zellbreite
+                oben = y0 + stueck.y
+                kreuzung = (links, oben + stueck.oben(treffer[0]), links + stueck.zellbreite,
+                            oben + stueck.oben(treffer[0] + 1))
+                self._kreuzung_zeichnen(seite, "text", ((links, oben, kreuzung[2], kreuzung[3]),), kreuzung)
+
+    def _kreuzung_zeichnen(self, seite, unter, baender, kreuzung):
+        marken = (seite, "markierung")
+        elemente = [self.create_rectangle(*band, fill=stil.FARBE_MARKIERUNG, width=0, tags=marken)
+                    for band in baender]
+        elemente.append(self.create_rectangle(*kreuzung, fill=stil.FARBE_KREUZUNG, width=0,
+                                              tags=marken + ("kreuzung",)))
+        self._unterlegen(seite, unter, elemente)
+        # Der Rand obenauf, sonst verschwände er unter den Linien der Tabelle.
+        self.create_rectangle(*kreuzung, outline=stil.FARBE_ROTSTIFT, width=max(2, self.px(2)),
+                              tags=marken + ("kreuzungsrand",))
+
+    def _unterlegen(self, seite, unter, elemente):
+        """Legt die ``elemente`` direkt unter das unterste Element der Seite mit dem Tag ``unter``."""
+        ziel = self.find_withtag(f"{unter}&&{seite}")
+        if ziel:
+            for element in elemente:
+                self.tag_lower(element, ziel[0])
 
     def verzierung_zeichnen(self, verzierung, x0, y0, tags):
         """Eine feine Linie mit einem kleinen Diamanten in der Mitte."""

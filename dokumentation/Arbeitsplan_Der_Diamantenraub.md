@@ -482,6 +482,32 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     Doppelpunkt bleibt bei dem, was er ankündigt; Tabellen, Merksätze und
     Randnotizen werden nicht geteilt. Gemessen wird mit genau den Schriften,
     mit denen danach gezeichnet wird
+  - **Beispiele mit dem Werkzeug gegenüber** (Nachtrag): Ein durchgerechnetes
+    Beispiel versteht man nur mit der Tabelle daneben. Ein Abschnitt kann
+    deshalb ein Werkzeug `gegenueber` nennen (`content.handbuch.Abschnitt`)
+    – das verschobene Alphabet, die Geheimtabelle, das Quadrat. Solche
+    Abschnitte stehen immer auf linken Seiten, und neben **jeder** ihrer
+    Seiten liegt rechts das Werkzeug; folgen mehrere mit demselben Werkzeug
+    aufeinander (Seite 3: Quadrat, Verschlüsseln, Entschlüsseln), laufen sie
+    ineinander weiter. Wäre die erste davon eine rechte Seite, bleibt die
+    leer (mit Verzierung, ohne Seitenzahl). Was danach ohne Werkzeug kommt,
+    beginnt auf einer neuen Seite. Ein Beispiel, das auf eine Seite passt,
+    wird nicht geteilt; bei einem längeren bleiben wenigstens die Schritte
+    beisammen, und das Ergebnis bleibt bei ihnen
+  - **Der Schritt ist markiert:** Die `schritte` eines Beispiels
+    (`content.handbuch.Schritt`: Spalte, Kreuzung, im Quadrat auch die
+    Zeile) gehören zu seinen nummerierten Punkten oder – bei Caesar und der
+    Substitution – zu den Spalten seiner Beispieltabelle. Einer davon steht
+    immer unter Textmarker, zu Beginn der erste; im Werkzeug ist markiert,
+    wo er sucht: im Quadrat die Zeile des Schlüsselbuchstabens und die Spalte
+    des Nachrichtenbuchstabens, jeweils vom Kopf bis zum Kreuzungspunkt, in
+    einer Tabelle die Spalte bis zum abgelesenen Feld; der Kreuzungspunkt
+    kräftiger und rot umrandet. Zeigt die Maus auf einen anderen Schritt,
+    wandert die Markierung mit (und bleibt, wenn die Maus weiterzieht); ein
+    Klick oder die Pfeiltasten hoch/runter tun dasselbe. Die Markierung zeigt
+    nur, was im Schritt schon steht ("Zeile R, Spalte H … steht Y"), und ein
+    Test prüft jeden Schritt gegen `crypto/` – die Kontrollgruppe liest
+    dieselben Beispiele
   - **Titelseite:** Links auf der ersten Doppelseite stehen Titel und
     Untertitel des Handbuchs, eine Verzierung, das **Inhaltsverzeichnis des
     Kapitels mit Seitenzahlen** und der Stempel. Rechts beginnt das Kapitel
@@ -491,7 +517,8 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     und wird so gross gezeichnet, wie sie es erlaubt (im grossen Maßstab
     20 Pixel je Feld). Es entsteht weiterhin aus der Formel
     (`crypto/vigenere_quadrat.py`), nicht abgetippt; ein Test vergleicht alle
-    676 Felder. Hervorheben von Zeile und Spalte folgt in 6.7
+    676 Felder. Neben den Beispielen sind Zeile, Spalte und Kreuzungspunkt
+    markiert (siehe oben)
   - Der **Merksatz** steht auf einer Karte, die mit Klebeband ins Buch
     geklebt ist; Beispiel-Überschriften und Ergebnisse ("HUND wird zu KXQG")
     sind fett (`betont` in `content/handbuch.py`)
@@ -537,7 +564,7 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     man hinter dem maximierten Spiel, und das Spiel hat bewusst genau eines
   - **Grössen:** Das Buch ist 960 × 492 Pixel gross, auf dem
     1080p-Schulmonitor 1440 × 738. Die Textflächen der beiden Seiten stehen
-    als Pixelmaße in `ui/handbuch.py` und in SVG-Einheiten in
+    als Pixelmaße in `ui/buchleinwand.py` und in SVG-Einheiten in
     `grafik/buch_zeichnen.py`; ein Test prüft im gerenderten Bild, dass dort
     überall Papier ist – und die Layout-Tests, dass nichts darüber hinausragt
     und kein Text auf einem anderen liegt
@@ -627,12 +654,14 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.7 Vigenère-Quadrat als Anzeige
 - 26×26-Grid aus Phase 1.5, mit Hervorhebung der aktiven Zeile/Spalte
 - Muss auf kleinen Schulmonitoren lesbar sein – testen!
-- Aus 6.4: Das Handbuch zeichnet das Quadrat schon
-  (`Handbuch._quadrat_zeichnen` auf der Leinwand, Grösse aus
-  `buchsatz.Quadrat`); jedes Feld trägt die Tags `z<Zeile>` und `s<Spalte>`,
-  darüber lässt es sich hervorheben. Für den Aufgaben-Screen gehört die
-  Zeichnung in ein eigenes Bauteil, das Handbuch und Aufgabe gemeinsam
-  benutzen
+- Aus 6.4 und 6.5: Handbuch und Aufgabe zeichnen das Quadrat mit demselben
+  Bauteil (`Buchleinwand._quadrat_zeichnen`, Grösse aus `buchsatz.Quadrat`);
+  jedes Feld trägt die Tags `z<Zeile>` und `s<Spalte>`. Im Handbuch markiert
+  `Buchleinwand.werkzeug_markieren` neben den Beispielen schon Zeile, Spalte
+  und Kreuzungspunkt des gezeigten Schritts. Beim Lösen ist das Quadrat noch
+  ohne Markierung – ob die Spielenden dort selbst Zeile und Spalte markieren
+  können, ist noch zu entscheiden: Die Kontrollgruppe rechnet mit dem
+  Quadrat auf Papier
 
 ### 6.8 Abschluss-Screen
 - Nachthimmel, Rettung, Schlusstext (Diamanten bleiben zurück)

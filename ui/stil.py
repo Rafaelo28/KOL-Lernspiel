@@ -146,6 +146,11 @@ FARBE_KULI = "#284b8f"
 FARBE_BLEISTIFT = "#3b3a38"
 #: Grün für "stimmt" – dieselbe Tinte wie im Stempel "GELÖST".
 FARBE_HAKEN = "#2f7a46"
+#: Textmarker: der Schritt eines Beispiels, den man gerade anschaut, und im
+#: Werkzeug gegenüber die Zeile und Spalte, in der er sucht.
+FARBE_MARKIERUNG = "#f5d86b"
+#: Der Kreuzungspunkt – kräftiger als der Textmarker, und rot umrandet.
+FARBE_KREUZUNG = "#f0a95b"
 
 #: Das Handbuch ist in einer Buchschrift gesetzt – der ersten aus dieser
 #: Liste, die der Rechner kennt. Die ersten beiden hat jedes Windows; "P052"

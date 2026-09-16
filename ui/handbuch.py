@@ -8,9 +8,22 @@ Einstiegssatz aus der Geschichte ("Du schlägst das Handbuch auf …").
 
 Was auf welcher Seite steht, rechnet :mod:`ui.buchsatz` aus; hier wird es
 nur gezeichnet. Das Vigenère-Quadrat auf Seite 3 entsteht aus der Formel
-(``crypto/vigenere_quadrat.py``), nicht abgetippt. Hervorheben, welche Zeile
-und Spalte gerade gebraucht wird, kommt mit Aufgabe 6.7 dazu – jedes Feld
-trägt dafür schon die Tags ``z<Zeile>`` und ``s<Spalte>``.
+(``crypto/vigenere_quadrat.py``), nicht abgetippt.
+
+Beispiele mit dem Werkzeug daneben
+──────────────────────────────────
+Ein durchgerechnetes Beispiel steht links, und rechts liegt das Werkzeug, mit
+dem es rechnet: das verschobene Alphabet, die Geheimtabelle, das Quadrat.
+Einer seiner Schritte ist immer mit Textmarker markiert – zu Beginn der
+erste –, und im Werkzeug ist markiert, wo dieser Schritt sucht: im Quadrat
+die Zeile des Schlüsselbuchstabens und die Spalte des Nachrichtenbuchstabens
+bis zum Kreuzungspunkt, in einer Tabelle die Spalte bis zu dem Feld, das der
+Schritt abliest. Zeigt die Maus auf einen anderen Schritt, wandert die
+Markierung mit; ein Klick oder die Pfeiltasten hoch und runter tun dasselbe.
+
+Die Markierung zeigt nur, was im Beispiel schon steht ("Suche im Quadrat die
+Zeile R und die Spalte H"), und rechnet nichts Neues vor – die Kontrollgruppe
+liest dieselben Beispiele.
 
 Blättern
 ────────
@@ -111,6 +124,11 @@ class Handbuch(Screen):
         self._doppelseite = 0
         self._ablauf = None
         self._unter_maus = None
+        #: Was gerade auf den beiden Seiten gezeichnet ist – und wo darauf die Schritte stehen.
+        self._gezeichnet = {}
+        self._schrittflaechen = {}
+        #: Der markierte Schritt. Die Titelseite vorne hat keine.
+        self._schritt = None
 
         self._hinweis = self._zeile(hinweis, stil.FARBE_WARNUNG, stil.SCHRIFT_FETT)
         self._einleitung = [self._zeile(absatz, stil.FARBE_SAND, stil.SCHRIFT_ERZAEHLUNG)
@@ -157,6 +175,19 @@ class Handbuch(Screen):
     @property
     def seitenanzeige(self):
         return self._seitenanzeige.cget("text")
+
+    @property
+    def schritte(self):
+        """Die Schritte des Beispiels auf der aufgeschlagenen Doppelseite – Schrittmarken in Lesereihenfolge.
+
+        Sie stehen immer links: Beispiele haben ihr Werkzeug rechts daneben.
+        """
+        return self.satz.seiten[2 * self._doppelseite].schritte
+
+    @property
+    def schritt(self):
+        """Der markierte Schritt (eine :class:`ui.buchsatz.Schrittmarke`) – oder ``None`` ohne Beispiel."""
+        return self._schritt
 
     @property
     def schriften(self):
@@ -222,12 +253,18 @@ class Handbuch(Screen):
         leinwand = self.buch
         for taste, richtung in (("<Left>", -1), ("<Prior>", -1), ("<Right>", 1), ("<Next>", 1)):
             leinwand.bind(taste, lambda _ereignis, richtung=richtung: self.blaettern(richtung))
+        leinwand.bind("<Up>", lambda _ereignis: self.schritt_weiter(-1))
+        leinwand.bind("<Down>", lambda _ereignis: self.schritt_weiter(1))
         leinwand.bind("<MouseWheel>", self._mausrad)
         leinwand.bind("<Button-4>", lambda _ereignis: self.blaettern(-1))
         leinwand.bind("<Button-5>", lambda _ereignis: self.blaettern(1))
         leinwand.bind("<Button-1>", lambda ereignis: self.klicken(ereignis.x, ereignis.y))
         leinwand.bind("<Motion>", lambda ereignis: self._maus_ueber(self.ziel(ereignis.x, ereignis.y)))
         leinwand.bind("<Leave>", lambda _ereignis: self._maus_ueber(None))
+
+    def _erster_schritt(self):
+        schritte = self.schritte
+        return schritte[0] if schritte else None
 
     def _leiste_aktualisieren(self):
         self._zurueckblaettern.configure(state="normal" if self._doppelseite > 0 else "disabled")
@@ -242,17 +279,63 @@ class Handbuch(Screen):
         self._seite_zeichnen("rechts")
 
     def _seite_zeichnen(self, seite):
-        """Zeichnet die linke oder rechte Seite der aufgeschlagenen Doppelseite neu."""
+        """Zeichnet die linke oder rechte Seite der aufgeschlagenen Doppelseite neu – samt Markierung."""
         nr = 2 * self._doppelseite + (seite == "rechts")
         if nr < len(self.satz.seiten):
-            stuecke = self.satz.seiten[nr].stuecke
+            buchseite = self.satz.seiten[nr]
         else:
             # Die letzte Seite eines Kapitels bleibt leer – bis auf eine Verzierung.
             x0, y0, x1, y1 = self.flaeche(seite)
-            stuecke = (buchsatz.Verzierung(self.px(90), (y1 - y0) // 2, x1 - x0 - self.px(180)),)
-        self.buch.seite_zeichnen(seite, stuecke)
+            buchseite = buchsatz.leerseite(x1 - x0, y1 - y0, self.px)
+        self.buch.seite_zeichnen(seite, buchseite.stuecke)
+        self._gezeichnet[seite] = buchseite
+        self._schrittflaechen[seite] = (self.buch.schrittflaechen(seite, buchseite.stuecke)
+                                        if buchseite.schritte else {})
+        self._markierung_zeichnen(seite)
         # Was die Maus gerade zeigt, bleibt obenauf.
         self.buch.tag_raise("maus")
+
+    def _markierung_zeichnen(self, seite):
+        """Markiert auf der Seite den Schritt, der dran ist – im Beispiel oder im Werkzeug."""
+        marke, buchseite = self._schritt, self._gezeichnet.get(seite)
+        if marke is None or buchseite is None:
+            return
+        if marke in self._schrittflaechen[seite]:
+            self.buch.markieren(seite, self._schrittflaechen[seite][marke])
+        if buchseite.werkzeug is not None:
+            self.buch.werkzeug_markieren(seite, buchseite.stuecke, marke.schritt)
+
+    # ── Schritte eines Beispiels ───────────────────────────────────────────
+
+    def schritt_zeigen(self, marke):
+        """Markiert einen Schritt des aufgeschlagenen Beispiels und im Werkzeug, wo er sucht.
+
+        ``False``, wenn er schon markiert ist oder nicht auf dieser Doppelseite steht.
+        """
+        if marke == self._schritt or marke not in self.schritte:
+            return False
+        self._schritt = marke
+        self.buch.delete("markierung")
+        for seite in buchleinwand.SEITEN:
+            self._markierung_zeichnen(seite)
+        self.buch.tag_raise("maus")
+        return True
+
+    def schritt_weiter(self, richtung):
+        """Markiert den nächsten (1) oder den vorigen Schritt (-1). ``False``, wenn es keinen gibt."""
+        schritte = self.schritte
+        if self._schritt not in schritte:
+            return False
+        nr = schritte.index(self._schritt) + richtung
+        return 0 <= nr < len(schritte) and self.schritt_zeigen(schritte[nr])
+
+    def schritt_bei(self, x, y):
+        """Der Schritt, der auf der Leinwand bei ``x, y`` steht – oder ``None``."""
+        for flaechen in self._schrittflaechen.values():
+            for marke, rechtecke in flaechen.items():
+                if any(x0 <= x <= x1 and y0 <= y <= y1 for x0, y0, x1, y1 in rechtecke):
+                    return marke
+        return None
 
     # ── Blättern ───────────────────────────────────────────────────────────
 
@@ -275,8 +358,14 @@ class Handbuch(Screen):
             return False
         vorwaerts = nr > self._doppelseite
         self._doppelseite = nr
+        self._schritt = self._erster_schritt()
         self._leiste_aktualisieren()
         self._maus_ueber(None)
+        # Was auf der alten Doppelseite stand und markiert war, gilt nicht mehr –
+        # auch nicht auf der Seite, die erst nach dem Umschlagen neu gezeichnet wird.
+        self.buch.delete("markierung")
+        self._gezeichnet.clear()
+        self._schrittflaechen.clear()
         ablauf = self._umblaettern() if animiert else None
         if ablauf is None:
             self._seiten_zeichnen()
@@ -319,7 +408,10 @@ class Handbuch(Screen):
             self.blaettern(-1 if ereignis.delta > 0 else 1)
 
     def ziel(self, x, y):
-        """Was ein Klick an dieser Stelle der Leinwand täte: "vor", "zurueck" oder ``None``."""
+        """Was ein Klick an dieser Stelle der Leinwand täte: "vor", "zurueck", einen Schritt markieren – oder nichts.
+
+        Für einen Schritt ist das Ziel seine Schrittmarke, sonst ``None``.
+        """
         def drin(bereich):
             x0, y0, x1, y1 = (self.px(wert) for wert in bereich)
             return x0 <= x <= x1 and y0 <= y <= y1
@@ -328,7 +420,7 @@ class Handbuch(Screen):
             return "vor"
         if drin(ECKE_LINKS) and self._doppelseite > 0:
             return "zurueck"
-        return None
+        return self.schritt_bei(x, y)
 
     def klicken(self, x, y):
         """Ein Klick auf die Leinwand bei ``x, y``."""
@@ -338,16 +430,24 @@ class Handbuch(Screen):
             self.blaettern(1)
         elif ziel == "zurueck":
             self.blaettern(-1)
+        elif ziel is not None:
+            self.schritt_zeigen(ziel)
 
     def _maus_ueber(self, ziel):
-        """Zeigt, dass sich hier etwas tut: Hand als Zeiger und ein Pfeil an der Ecke."""
+        """Zeigt, dass sich hier etwas tut: Hand als Zeiger und ein Pfeil an der Ecke.
+
+        Über einem Schritt eines Beispiels wird er gleich markiert – und bleibt
+        es, wenn die Maus weiterzieht.
+        """
         if ziel == self._unter_maus:
             return
         self._unter_maus = ziel
         px, leinwand = self.px, self.buch
         leinwand.delete("maus")
         leinwand.configure(cursor="hand2" if ziel else "")
-        if ziel in ("vor", "zurueck"):
+        if isinstance(ziel, buchsatz.Schrittmarke):
+            self.schritt_zeigen(ziel)
+        elif ziel in ("vor", "zurueck"):
             spitze, hinten = (px(912), px(898)) if ziel == "vor" else (px(48), px(62))
             mitte = px(420)
             leinwand.create_polygon(hinten, mitte - px(7), spitze, mitte, hinten, mitte + px(7),

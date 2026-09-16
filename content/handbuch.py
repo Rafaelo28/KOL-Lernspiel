@@ -20,6 +20,12 @@ auskommt:
 * :class:`Randnotiz`   – eine handschriftliche Notiz von Bob; sie wiederholt
   nur, was auf der Seite schon steht (siehe dort)
 
+Ein durchgerechnetes Beispiel versteht man nur mit der Tabelle daneben. Ein
+Abschnitt kann deshalb ein Werkzeug ``gegenueber`` nennen – das Buch zeigt es
+auf der Seite gegenüber – und die ``schritte`` des Beispiels. Zeigt man auf
+einen Schritt, markiert das Buch im Werkzeug, wo gesucht wird: Zeile, Spalte
+und Kreuzungspunkt.
+
 Warum der Text hier ohne Fettschrift steht
 ──────────────────────────────────────────
 Im Markdown der Quelle sind Schlüsselwörter mit ``**`` hervorgehoben. Tkinter
@@ -111,16 +117,39 @@ class Randnotiz(NamedTuple):
 Block = Union[Absatz, Aufzaehlung, Tabelle, VigenereQuadrat, Randnotiz]
 
 
+class Schritt(NamedTuple):
+    """Ein Schritt eines durchgerechneten Beispiels – was dabei im Werkzeug markiert wird.
+
+    ``spalte`` ist der Buchstabe, von dem man in der Kopfzeile ausgeht,
+    ``kreuzung`` der, der im markierten Feld steht. ``zeile`` gibt es nur im
+    Vigenère-Quadrat: der Schlüsselbuchstabe. Beim Entschlüsseln sind es
+    dieselben drei Buchstaben, nur andersherum gelesen – gesucht wird die
+    Kreuzung in der Zeile, abgelesen die Spalte.
+    """
+
+    spalte: str
+    kreuzung: str
+    zeile: str = ""
+
+
 class Abschnitt(NamedTuple):
     """Ein Abschnitt einer Handbuchseite, zum Beispiel "Was ist das?".
 
     ``hervorgehoben`` markiert den Merksatz. Die UI soll ihn absetzen können,
     ohne die Überschrift auf ihren Wortlaut prüfen zu müssen.
+
+    ``gegenueber`` ist das Werkzeug (eine :class:`Tabelle` oder das
+    :class:`VigenereQuadrat`), das beim Lesen dieses Abschnitts auf der Seite
+    gegenüber liegt. ``schritte`` sind die Schritte seines Beispiels, in der
+    Reihenfolge der nummerierten Punkte des Abschnitts – oder, wo es keine
+    gibt, der Spalten seiner Beispieltabelle.
     """
 
     ueberschrift: str
     bloecke: tuple
     hervorgehoben: bool = False
+    gegenueber: object = None
+    schritte: tuple = ()
 
 
 class Handbuchseite(NamedTuple):
@@ -152,6 +181,22 @@ GEHEIMTABELLE = Tabelle(
         ("Original", *ALPHABET_ZEILE),
         ("Geheim", "Q", "W", "E", "R", "T", "Z", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Y", "X", "C", "V", "B", "N", "M"),
     ),
+)
+
+#: Das Alphabet, einmal ohne und einmal mit der Verschiebung um 3
+#: (Handbuchseite 1). Es liegt dem Caesar-Beispiel gegenüber.
+ALPHABET_UM_3 = Tabelle(
+    titel="Das Alphabet, einmal ohne und einmal mit Verschiebung",
+    zeilen=(
+        ("ohne Verschiebung", *ALPHABET_ZEILE),
+        ("um 3 verschoben", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "B", "C"),
+    ),
+)
+
+#: Das Vigenère-Quadrat (Handbuchseite 3). Es liegt der Erklärung des Quadrats
+#: und beiden Beispielen gegenüber – so ist es beim Lesen immer zu sehen.
+QUADRAT = VigenereQuadrat(
+    beschriftung="Das Vigenère-Quadrat – Zeile: Schlüssel, Spalte: Nachricht",
 )
 
 HANDBUCH_TITEL = "Bobs Verschlüsselungshandbuch"
@@ -192,14 +237,14 @@ SEITE_CAESAR = Handbuchseite(
         ),
         Abschnitt(
             ueberschrift="Beispiel: Schlüssel 3",
+            gegenueber=ALPHABET_UM_3,
+            schritte=(
+                Schritt(spalte="H", kreuzung="K"),
+                Schritt(spalte="U", kreuzung="X"),
+                Schritt(spalte="N", kreuzung="Q"),
+                Schritt(spalte="D", kreuzung="G"),
+            ),
             bloecke=(
-                Tabelle(
-                    titel="Das Alphabet, einmal ohne und einmal mit Verschiebung",
-                    zeilen=(
-                        ("ohne Verschiebung", *ALPHABET_ZEILE),
-                        ("um 3 verschoben", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "B", "C"),
-                    ),
-                ),
                 Absatz(
                     "Das heißt: Aus A wird D, aus B wird E, aus H wird K und so "
                     "weiter."
@@ -289,6 +334,13 @@ SEITE_SUBSTITUTION = Handbuchseite(
         ),
         Abschnitt(
             ueberschrift='Beispiel: Das Wort "HUND"',
+            gegenueber=GEHEIMTABELLE,
+            schritte=(
+                Schritt(spalte="H", kreuzung="I"),
+                Schritt(spalte="U", kreuzung="X"),
+                Schritt(spalte="N", kreuzung="F"),
+                Schritt(spalte="D", kreuzung="R"),
+            ),
             bloecke=(
                 Absatz('Verschlüsseln des Wortes "HUND":', betont=True),
                 Tabelle(
@@ -376,6 +428,7 @@ SEITE_VIGENERE = Handbuchseite(
         ),
         Abschnitt(
             ueberschrift="Das Vigenère-Quadrat",
+            gegenueber=QUADRAT,
             bloecke=(
                 Absatz(
                     "Damit du nicht rechnen musst, gibt es eine fertige Tabelle: "
@@ -393,14 +446,17 @@ SEITE_VIGENERE = Handbuchseite(
                         "Spalte und liest ab, was am Kreuzungspunkt steht.",
                     ),
                 ),
-                VigenereQuadrat(
-                    beschriftung="Das Vigenère-Quadrat – Zeile: Schlüssel, "
-                    "Spalte: Nachricht",
-                ),
             ),
         ),
         Abschnitt(
             ueberschrift="Verschlüsseln – Schritt für Schritt",
+            gegenueber=QUADRAT,
+            schritte=(
+                Schritt(zeile="R", spalte="H", kreuzung="Y"),
+                Schritt(zeile="O", spalte="U", kreuzung="I"),
+                Schritt(zeile="T", spalte="N", kreuzung="G"),
+                Schritt(zeile="R", spalte="D", kreuzung="U"),
+            ),
             bloecke=(
                 Absatz('Beispiel: Nachricht "HUND", Schlüsselwort "ROT"', betont=True),
                 Absatz(
@@ -429,6 +485,13 @@ SEITE_VIGENERE = Handbuchseite(
         ),
         Abschnitt(
             ueberschrift="Entschlüsseln – Schritt für Schritt",
+            gegenueber=QUADRAT,
+            schritte=(
+                Schritt(zeile="R", spalte="H", kreuzung="Y"),
+                Schritt(zeile="O", spalte="U", kreuzung="I"),
+                Schritt(zeile="T", spalte="N", kreuzung="G"),
+                Schritt(zeile="R", spalte="D", kreuzung="U"),
+            ),
             bloecke=(
                 Absatz(
                     "Jetzt hast du den Geheimtext YIGU und das Schlüsselwort ROT "

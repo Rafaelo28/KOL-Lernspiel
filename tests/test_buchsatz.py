@@ -3,7 +3,7 @@
 Geprüft werden die Regeln, nach denen der Text auf die Buchseiten kommt –
 Überschriften nie allein unten, Absätze nur mit je zwei Zeilen geteilt,
 Tabellen in Teilen, die auf die Seite passen, das Quadrat auf einer Seite
-für sich.
+für sich, Beispiele links mit ihrem Werkzeug rechts daneben.
 
 Gemessen wird hier mit einer ausgedachten Schrift: Jedes Zeichen ist 10
 Pixel breit, jede Zeile 20 hoch. So lässt sich genau ausrechnen, was wohin
@@ -16,7 +16,7 @@ import pytest
 
 from content import handbuch as buch
 from ui import buchsatz
-from ui.buchsatz import Karte, Quadrat, Raster, Stempel, Zeile
+from ui.buchsatz import Karte, Quadrat, Raster, Schrittmarke, Stempel, Verzierung, Zeile
 
 ZEICHEN = 10
 ZEILE = 20
@@ -249,6 +249,238 @@ def test_der_merksatz_steht_auf_einer_karte():
     assert [z.text for z in texte] == ["Merksatz", "vorwärts", "rückwärts"]
     for zeile in texte:
         assert karte.x < zeile.x and karte.y < zeile.y and zeile.y + ZEILE < karte.y + karte.hoehe
+
+
+# ── Beispiele mit dem Werkzeug gegenüber ───────────────────────────────────
+
+WERKZEUG = buch.Tabelle(titel="Werkzeug", zeilen=(("o", "A", "B"), ("u", "C", "D")))
+SCHRITTE = (buch.Schritt(spalte="A", kreuzung="C"), buch.Schritt(spalte="B", kreuzung="D"))
+
+
+def _werkzeug(seite):
+    return [s for s in seite.stuecke if isinstance(s, Raster)]
+
+
+def _ist_werkzeugseite(seite, werkzeug=WERKZEUG):
+    """Auf der Seite steht das Werkzeug – und sonst nichts ausser Titel und Seitenzahl."""
+    return (seite.werkzeug == werkzeug
+            and [r.zeilen for r in _werkzeug(seite)] == [werkzeug.zeilen]
+            and {z.art for z in _zeilen(seite)} <= {"tabellentitel", "seitenzahl"})
+
+
+def _abschnitte_auf(seite):
+    return [z.text for z in _zeilen(seite, "abschnitt")]
+
+
+def test_neben_jeder_seite_eines_abschnitts_mit_werkzeug_liegt_das_werkzeug():
+    seite = _seite(buch.Abschnitt("Eins", (_absatz(2),)),
+                   buch.Abschnitt("Zwei", (_absatz(15),), gegenueber=WERKZEUG))
+    satz = _setzen(seite)
+    # Titelseite | Eins – Zwei | Werkzeug – Zwei (Rest) | Werkzeug
+    assert len(satz.seiten) == 6
+    assert _abschnitte_auf(satz.seiten[1]) == ["Eins"] and satz.seiten[1].werkzeug is None
+    assert _abschnitte_auf(satz.seiten[2]) == ["Zwei"] and satz.seiten[2].werkzeug is None
+    assert _zeilen(satz.seiten[4], "absatz")                              # der Rest von "Zwei"
+    for nummer in (3, 5):
+        assert _ist_werkzeugseite(satz.seiten[nummer])
+    assert [s.nummer for s in satz.seiten[1:]] == [1, 2, 3, 4, 5]
+    assert satz.inhalt == (("Eins", 1), ("Zwei", 2))
+
+
+def test_wuerde_das_werkzeug_links_liegen_bleibt_eine_seite_leer():
+    seite = _seite(buch.Abschnitt("Eins", (_absatz(12),)),
+                   buch.Abschnitt("Zwei", (_absatz(1),), gegenueber=WERKZEUG))
+    satz = _setzen(seite)
+    # Titelseite | Eins – Eins (Rest) | leer – Zwei | Werkzeug
+    assert _zeilen(satz.seiten[2], "absatz")
+    leer = satz.seiten[3]
+    assert leer.nummer == 3 and not _zeilen(leer)                       # auch ohne Seitenzahl
+    assert [type(s) for s in leer.stuecke] == [Verzierung]
+    assert _abschnitte_auf(satz.seiten[4]) == ["Zwei"]
+    assert _ist_werkzeugseite(satz.seiten[5])
+    assert dict(satz.inhalt)["Zwei"] == 4
+
+
+def test_beginnt_das_kapitel_mit_werkzeug_bleibt_die_seite_neben_der_titelseite_leer():
+    satz = _setzen(_seite(buch.Abschnitt("Eins", (_absatz(1),), gegenueber=WERKZEUG), titel="Kapitel"))
+    assert [type(s) for s in satz.seiten[1].stuecke] == [Verzierung]
+    assert [z.text for z in _zeilen(satz.seiten[2], "kapitel")] == ["Kapitel"]
+    assert _ist_werkzeugseite(satz.seiten[3])
+
+
+def test_abschnitte_mit_demselben_werkzeug_laufen_ineinander():
+    seite = _seite(buch.Abschnitt("Eins", (_absatz(1),), gegenueber=WERKZEUG),
+                   buch.Abschnitt("Zwei", (_absatz(1),), gegenueber=WERKZEUG))
+    satz = _setzen(seite)
+    assert _abschnitte_auf(satz.seiten[2]) == ["Eins", "Zwei"]
+    assert _ist_werkzeugseite(satz.seiten[3])
+    assert len(satz.seiten) == 4
+
+
+def test_ein_anderes_werkzeug_beginnt_eine_neue_doppelseite():
+    anderes = buch.Tabelle(zeilen=(("x", "Q"), ("y", "R")))
+    seite = _seite(buch.Abschnitt("Eins", (_absatz(1),), gegenueber=WERKZEUG),
+                   buch.Abschnitt("Zwei", (_absatz(1),), gegenueber=anderes))
+    satz = _setzen(seite)
+    assert _abschnitte_auf(satz.seiten[2]) == ["Eins"] and _ist_werkzeugseite(satz.seiten[3])
+    assert _abschnitte_auf(satz.seiten[4]) == ["Zwei"] and _ist_werkzeugseite(satz.seiten[5], anderes)
+
+
+def test_nach_dem_werkzeug_geht_es_auf_einer_neuen_seite_weiter():
+    """Auch wenn neben dem Beispiel noch Platz wäre – daneben läge sonst ein Werkzeug, das nicht dazugehört."""
+    seite = _seite(buch.Abschnitt("Eins", (_absatz(1),), gegenueber=WERKZEUG),
+                   buch.Abschnitt("Zwei", (_absatz(1),)),
+                   buch.Abschnitt("Drei", (_absatz(1),)))
+    satz = _setzen(seite)
+    assert _abschnitte_auf(satz.seiten[2]) == ["Eins"] and _ist_werkzeugseite(satz.seiten[3])
+    assert _abschnitte_auf(satz.seiten[4]) == ["Zwei", "Drei"] and satz.seiten[4].werkzeug is None
+    assert len(satz.seiten) == 5
+
+
+def test_das_quadrat_als_werkzeug_steht_auf_jeder_seite_daneben():
+    seite = _seite(buch.Abschnitt("Eins", (_absatz(24),), gegenueber=buch.VigenereQuadrat("Q")))
+    satz = _setzen(seite, breite=200, hoehe=400)
+    quadratseiten = [s for s in satz.seiten if any(isinstance(t, Quadrat) for t in s.stuecke)]
+    assert [satz.seiten.index(s) for s in quadratseiten] == [3, 5]
+    assert all(s.werkzeug == buch.VigenereQuadrat("Q") for s in quadratseiten)
+
+
+def _beispiel(*bloecke, schritte=SCHRITTE, ueberschrift="Beispiel"):
+    return buch.Abschnitt(ueberschrift, bloecke, gegenueber=WERKZEUG, schritte=schritte)
+
+
+def test_die_schritte_einer_aufzaehlung_tragen_ihre_marke():
+    punkte = buch.Aufzaehlung(punkte=("erster " * 4, "zweiter"), nummeriert=True)     # zwei Zeilen, eine
+    satz = _setzen(_seite(buch.Abschnitt("Vorher", (_absatz(1),)), _beispiel(buch.Absatz("so:"), punkte)))
+    seite = satz.seiten[2]
+    marken = [Schrittmarke(1, nr, schritt) for nr, schritt in enumerate(SCHRITTE)]
+    assert seite.schritte == tuple(marken)
+    zeilen = [z for z in _zeilen(seite) if z.schritt is not None]
+    assert [(z.art, z.schritt.nummer) for z in zeilen] == [("zeichen", 0), ("punkt", 0), ("punkt", 0),
+                                                         ("zeichen", 1), ("punkt", 1)]
+    assert all(z.schritt == marken[z.schritt.nummer] for z in zeilen)
+    assert not [z for z in _zeilen(seite, "absatz", "abschnitt") if z.schritt is not None]
+    assert satz.seiten[3].schritte == ()
+
+
+def test_in_einer_beispieltabelle_sind_die_spalten_die_schritte():
+    """Ohne nummerierte Punkte tragen die Spalten der letzten Tabelle die Schritte – nicht Stichpunkte davor."""
+    stichpunkte = buch.Aufzaehlung(punkte=("so", "geht"))
+    beispiel = buch.Tabelle(zeilen=(("rein", "A", "B"), ("raus", "C", "D")))
+    satz = _setzen(_seite(_beispiel(stichpunkte, buch.Tabelle(zeilen=(("x", "Q"), ("y", "R"))), beispiel)), hoehe=400)
+    raster = [r for r in _werkzeug(satz.seiten[2])]
+    assert [r.schritte for r in raster] == [(), (Schrittmarke(0, 0, SCHRITTE[0]), Schrittmarke(0, 1, SCHRITTE[1]))]
+    assert satz.seiten[2].schritte == raster[1].schritte
+    assert all(z.schritt is None for z in _zeilen(satz.seiten[2]))
+
+
+def test_die_marken_einer_geteilten_beispieltabelle_gehoeren_zu_ihren_spalten():
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    schritte = tuple(buch.Schritt(spalte=b, kreuzung=b.lower()) for b in alphabet)
+    beispiel = buch.Tabelle(zeilen=(("o", *alphabet), ("u", *alphabet.lower())))
+    satz = _setzen(_seite(_beispiel(beispiel, schritte=schritte)), breite=260, hoehe=400)
+    teile = _werkzeug(satz.seiten[2])
+    assert len(teile) == 2
+    for teil in teile:
+        assert [marke.schritt.spalte for marke in teil.schritte] == list(teil.zeilen[0][1:])
+
+
+def test_passen_schritte_und_beispiel_nicht_zusammen_faellt_das_auf():
+    punkte = buch.Aufzaehlung(punkte=("eins", "zwei", "drei"), nummeriert=True)
+    with pytest.raises(ValueError):
+        _setzen(_seite(_beispiel(punkte)))
+
+
+def test_ohne_schritte_traegt_nichts_eine_marke():
+    punkte = buch.Aufzaehlung(punkte=("eins", "zwei"), nummeriert=True)
+    satz = _setzen(_seite(buch.Abschnitt("Eins", (punkte,), gegenueber=WERKZEUG)))
+    assert satz.seiten[2].schritte == ()
+    assert all(z.schritt is None for z in _zeilen(satz.seiten[2]))
+
+
+def test_ein_beispiel_das_auf_eine_seite_passt_beginnt_lieber_auf_einer_neuen():
+    """Die Regeln für Absätze erlaubten eine Trennung – aber wer rechnet, soll nicht umblättern."""
+    # Titel 20; "Erklärung" 14 + 20, Absatz 6 + 60 = 120. Das Beispiel ist
+    # 20 + 6 + 80 + 6 + 20 + 3 + 20 = 155 hoch: Es passt nicht mehr darunter,
+    # aber auf eine Seite. Nach den Regeln für Absätze dürfte die Seite nach
+    # der Überschrift und zwei Zeilen seines Absatzes enden.
+    punkte = buch.Aufzaehlung(punkte=("eins", "zwei"), nummeriert=True)
+    seite = _seite(buch.Abschnitt("Erklärung", (_absatz(3),), gegenueber=WERKZEUG),
+                   _beispiel(_absatz(4), punkte))
+    satz = _setzen(seite)
+    assert _abschnitte_auf(satz.seiten[2]) == ["Erklärung"]
+    assert len(_zeilen(satz.seiten[2], "absatz")) == 3
+    assert _abschnitte_auf(satz.seiten[4]) == ["Beispiel"]
+    assert len(_zeilen(satz.seiten[4], "absatz")) == 4 and len(_zeilen(satz.seiten[4], "punkt")) == 2
+
+
+def test_bei_einem_langen_beispiel_bleiben_die_schritte_beisammen_und_das_ergebnis_bei_ihnen():
+    # Das Beispiel ist höher als eine Seite; geteilt wird vor den Schritten, nicht zwischen ihnen.
+    punkte = buch.Aufzaehlung(punkte=("wort " * 8, "zwei", "wort " * 8), nummeriert=True)   # 3 + 1 + 3 Zeilen
+    ergebnis = buch.Absatz("Ergebnis", betont=True)
+    seite = _seite(_beispiel(_absatz(5), punkte, ergebnis, _absatz(1),
+                             schritte=SCHRITTE + (buch.Schritt(spalte="A", kreuzung="C"),)))
+    satz = _setzen(seite)
+    erste, zweite = satz.seiten[2], satz.seiten[4]
+    assert not _zeilen(erste, "punkt")
+    assert len(_zeilen(zweite, "punkt")) == 7 and _zeilen(zweite, "betont")
+    assert _ist_werkzeugseite(satz.seiten[3]) and _ist_werkzeugseite(satz.seiten[5])
+    assert erste.schritte == () and len(zweite.schritte) == 3
+
+
+def test_ein_langer_schritt_wird_nicht_zwischen_seinen_zeilen_geteilt():
+    """Ein Absatz dürfte nach zwei Zeilen umbrechen – ein Schritt nicht."""
+    # Titel 20, Überschrift 14 + 20, Absatz 6 + 80 = 140. Vom ersten Schritt
+    # (vier Zeilen) passten noch zwei darunter. Das Beispiel ist höher als eine Seite.
+    punkte = buch.Aufzaehlung(punkte=(" ".join(["wort"] * 12), "zwei"), nummeriert=True)
+    seite = _seite(_beispiel(_absatz(4), punkte, buch.Absatz("Ergebnis", betont=True), _absatz(4)))
+    satz = _setzen(seite)
+    assert not _zeilen(satz.seiten[2], "punkt")
+    assert len(_zeilen(satz.seiten[4], "punkt")) == 5
+
+
+def test_schritte_werden_auch_nach_dem_zweiten_nicht_geteilt():
+    """Stichpunkte dürften nach zweien umbrechen – Schritte nicht."""
+    # Wie oben, aber vier einzeilige Schritte: zwei passten noch darunter.
+    punkte = buch.Aufzaehlung(punkte=("eins", "zwei", "drei", "vier"), nummeriert=True)
+    schritte = SCHRITTE + SCHRITTE
+    seite = _seite(_beispiel(_absatz(4), punkte, buch.Absatz("Ergebnis", betont=True), _absatz(4),
+                             schritte=schritte))
+    satz = _setzen(seite)
+    assert not _zeilen(satz.seiten[2], "punkt")
+    assert [z.text for z in _zeilen(satz.seiten[4], "punkt")] == ["eins", "zwei", "drei", "vier"]
+
+
+def test_das_ergebnis_wandert_nicht_allein_auf_die_naechste_seite():
+    # "Vorher" steht auf Seite 1, das Beispiel beginnt oben auf Seite 2:
+    # Überschrift 20, Absatz 6 + 100, zwei Schritte 6 + 20 + 3 + 20 = 175 –
+    # für das Ergebnis (6 + 20) ist kein Platz mehr.
+    punkte = buch.Aufzaehlung(punkte=("eins", "zwei"), nummeriert=True)
+    seite = _seite(buch.Abschnitt("Vorher", (_absatz(1),)),
+                   _beispiel(_absatz(5), punkte, buch.Absatz("Ergebnis", betont=True), _absatz(4)))
+    satz = _setzen(seite)
+    assert not _zeilen(satz.seiten[2], "punkt", "betont")
+    assert [z.text for z in _zeilen(satz.seiten[4], "punkt", "betont")] == ["eins", "zwei", "Ergebnis"]
+
+
+def test_endet_ein_beispiel_mit_seinen_schritten_haengt_der_naechste_abschnitt_nicht_daran():
+    # Das Beispiel (20 + 86 + 49 = 155) passt auf Seite 2, die Überschrift
+    # des nächsten Abschnitts noch darunter, ihre erste Zeile nicht mehr –
+    # also beginnt er auf der nächsten Seite, und das Beispiel bleibt, wo es ist.
+    punkte = buch.Aufzaehlung(punkte=("eins", "zwei"), nummeriert=True)
+    seite = _seite(buch.Abschnitt("Vorher", (_absatz(1),)),
+                   _beispiel(_absatz(4), punkte),
+                   buch.Abschnitt("Danach", (_absatz(2),), gegenueber=WERKZEUG))
+    satz = _setzen(seite)
+    assert _abschnitte_auf(satz.seiten[2]) == ["Beispiel"]
+    assert [z.text for z in _zeilen(satz.seiten[2], "punkt")] == ["eins", "zwei"]
+    assert _abschnitte_auf(satz.seiten[4]) == ["Danach"]
+
+
+def test_die_leere_seite_hat_nur_eine_verzierung():
+    (verzierung,) = buchsatz.leerseite(300, 400, px, nummer=7).stuecke
+    assert buchsatz.leerseite(300, 400, px, nummer=7).nummer == 7
+    assert verzierung == Verzierung(90, 200, 120)
 
 
 # ── Das ganze Kapitel ──────────────────────────────────────────────────────

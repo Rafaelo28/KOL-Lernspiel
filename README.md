@@ -96,7 +96,7 @@ hereinrutscht und dass die Logik weder `print()` noch `input()` aufruft.
 
 | Modul | Inhalt |
 |-------|--------|
-| `handbuch.py` | Die drei Handbuchseiten, zerlegt in Absätze, Aufzählungen, Tabellen und Bobs Randnotizen |
+| `handbuch.py` | Die drei Handbuchseiten, zerlegt in Absätze, Aufzählungen, Tabellen und Bobs Randnotizen; dazu die Schritte der Beispiele, das Werkzeug gegenüber und die Merkkarten zum Lösen |
 | `uebungen.py` | Die 30 Übungstexte, die Vigenère-Schlüsselwörter, die Caesar-Schlüssel |
 | `story.py` | Erzähltexte und die fünf Funksprüche samt Teilaufgaben |
 | `charaktere.py` | Die fünf wählbaren Figuren und Bob |
@@ -141,7 +141,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
 | `figurwahl.py` | Die Figurwahl: Vorgeschichte und fünf Karten mit Rollen-Symbol; erst wählen, dann bestätigen |
 | `intro.py` | Der Story-Intro: die Absturz-Szene mit dem Erzähltext, Absatz für Absatz |
-| `handbuch.py` | Bobs Handbuch als aufgeschlagenes Buch: Doppelseiten zum Blättern (Knöpfe, Tasten, Mausrad, Seitenecken), umschlagende Blätter, das Vigenère-Quadrat; auch mitten in einer Aufgabe zum Nachschlagen |
+| `handbuch.py` | Bobs Handbuch als aufgeschlagenes Buch: Doppelseiten zum Blättern (Knöpfe, Tasten, Mausrad, Seitenecken), umschlagende Blätter, das Vigenère-Quadrat; neben jedem Beispiel das Werkzeug mit markiertem Schritt; auch mitten in einer Aufgabe zum Nachschlagen |
 | `buchsatz.py` | Der Satz des Handbuchs: welcher Text auf welche Buchseite kommt – mit den Regeln aus dem Buchdruck |
 | `buchleinwand.py` | Das aufgeschlagene Buch als Leinwand – Bild, Schriften, Stempel, Zeichnen; Handbuch und Übung teilen es sich |
 | `uebung.py` | Die Übungen im Buch: Aufgabe rechts, Werkzeug links, Rückmeldung mit Fehlerstelle, Stempel und Versuchszähler |

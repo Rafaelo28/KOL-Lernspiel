@@ -14,6 +14,17 @@ die Zeilen auf Seiten verteilt, mit den Regeln, die man aus Büchern kennt:
 * Das Vigenère-Quadrat bekommt eine Seite für sich.
 * Tabellen mit 26 Buchstaben sind für eine Buchseite zu breit. Sie werden in
   Teile untereinander zerlegt (A–M, N–Z) – jeder Teil mit der Beschriftung.
+* Abschnitte mit einem Werkzeug (``Abschnitt.gegenueber``) stehen immer auf
+  linken Seiten, und rechts daneben liegt das Werkzeug – die Tabelle oder
+  das Quadrat. Folgen mehrere Abschnitte mit demselben Werkzeug aufeinander,
+  laufen sie ineinander weiter, jede ihrer Seiten mit dem Werkzeug daneben.
+  Wäre die erste davon eine rechte Seite, bleibt die leer – wie vor einem
+  neuen Kapitel. Was danach ohne Werkzeug kommt, beginnt auf einer neuen Seite.
+* Ein Beispiel, das auf eine Seite passt, wird nicht geteilt – es beginnt
+  lieber auf einer neuen. Ist es länger, bleiben wenigstens seine Schritte
+  beisammen, und das Ergebnis bleibt bei ihnen. Jedes Stück, das zu einem
+  Schritt gehört, trägt dessen :class:`Schrittmarke` – daran markiert das
+  Handbuch im Werkzeug, wo gesucht wird.
 
 Gezeichnet wird hier nichts. Das Ergebnis sind Seiten mit ihren Stücken –
 Zeilen, Tabellen, dem Quadrat, der Merksatz-Karte – und deren Lage auf der
@@ -123,6 +134,21 @@ class Zeile(NamedTuple):
     art: str
     anker: str = "nw"
     winkel: float = 0
+    #: Gehört die Zeile zu einem Schritt eines Beispiels? Dann seine :class:`Schrittmarke`.
+    schritt: object = None
+
+
+class Schrittmarke(NamedTuple):
+    """Wofür ein Stück eines Beispiels steht: den Schritt ``nummer`` (ab 0) im Abschnitt ``abschnitt``.
+
+    Die Nummer des Abschnitts unterscheidet zwei Beispiele mit denselben
+    Schritten – Ver- und Entschlüsseln rechnen beide HUND und ROT.
+    """
+
+    abschnitt: int
+    nummer: int
+    #: Was dabei im Werkzeug markiert wird (:class:`content.handbuch.Schritt`).
+    schritt: object
 
 
 class Karte(NamedTuple):
@@ -148,6 +174,8 @@ class Raster(NamedTuple):
     zellbreite: int
     #: Je Zeile – eine Beschriftung, die umbrochen werden musste, macht ihre Zeile höher.
     zeilenhoehen: tuple
+    #: Sind die Spalten die Schritte eines Beispiels? Dann je Spalte ihre :class:`Schrittmarke`.
+    schritte: tuple = ()
 
     @property
     def breite(self):
@@ -204,10 +232,18 @@ class Stempel(NamedTuple):
 
 
 class Buchseite(NamedTuple):
-    """Eine gesetzte Seite. ``nummer`` ist ``None`` auf der Titelseite."""
+    """Eine gesetzte Seite. ``nummer`` ist ``None`` auf der Titelseite.
+
+    ``schritte`` sind die :class:`Schrittmarke`-n der Beispielschritte auf
+    der Seite, in Lesereihenfolge. Auf der Seite gegenüber steht dann in
+    ``werkzeug`` das Werkzeug, in dem sie markiert werden – ein Block aus
+    :mod:`content.handbuch`.
+    """
 
     stuecke: tuple
     nummer: object = None
+    schritte: tuple = ()
+    werkzeug: object = None
 
 
 class Satz(NamedTuple):
@@ -258,6 +294,15 @@ class _Kiste(NamedTuple):
     marke: tuple = ()
 
 
+def _schrittmarken(stueck):
+    """Die Schrittmarken eines Stücks – eine Zeile hat höchstens eine, ein Raster eine je Spalte."""
+    if isinstance(stueck, Zeile):
+        return (stueck.schritt,) if stueck.schritt is not None else ()
+    if isinstance(stueck, Raster):
+        return stueck.schritte
+    return ()
+
+
 class _Fluss:
     """Sammelt die Kisten in Lesereihenfolge und merkt sich, was zusammenbleiben muss."""
 
@@ -303,12 +348,13 @@ class _Setzer:
     # Absätze, Überschriften, Aufzählungen
 
     def absatz(self, text, schrift="text", farbe=stil.FARBE_TINTE, art="absatz", vorher=None, einzug=0,
-               zeichen="", ausrichtung="links", marke=(), trennbar_davor=True):
+               zeichen="", ausrichtung="links", marke=(), trennbar_davor=True, schritt=None, zusammen=False):
         """Ein Absatz als Zeilen-Kisten, mit Schusterjungen- und Hurenkinder-Regel.
 
         Vor der i-ten Zeile (ab 0) darf eine Seite nur enden, wenn davor und
-        danach je mindestens zwei Zeilen stehen. Vor der ersten, wenn
-        ``trennbar_davor``.
+        danach je mindestens zwei Zeilen stehen – und gar nicht, wenn der
+        Absatz ``zusammen`` bleiben soll. Vor der ersten, wenn
+        ``trennbar_davor``. ``schritt`` ist die :class:`Schrittmarke` aller Zeilen.
         """
         vorher = self.px(ABSTAND_ABSATZ) if vorher is None else vorher
         font = getattr(self.s, schrift)
@@ -316,13 +362,13 @@ class _Setzer:
         hoehe = self.zeilenhoehe(schrift)
         for nr, inhalt in enumerate(zeilen):
             if ausrichtung == "mitte":
-                stueck = Zeile(self.breite // 2, 0, inhalt, schrift, farbe, art, anker="n")
+                stueck = Zeile(self.breite // 2, 0, inhalt, schrift, farbe, art, anker="n", schritt=schritt)
             else:
-                stueck = Zeile(einzug, 0, inhalt, schrift, farbe, art)
+                stueck = Zeile(einzug, 0, inhalt, schrift, farbe, art, schritt=schritt)
             stuecke = (stueck,)
             if nr == 0 and zeichen:
-                stuecke = (Zeile(self.px(4), 0, zeichen, schrift, farbe, "zeichen"),) + stuecke
-            trennbar = trennbar_davor if nr == 0 else 2 <= nr <= len(zeilen) - 2
+                stuecke = (Zeile(self.px(4), 0, zeichen, schrift, farbe, "zeichen", schritt=schritt),) + stuecke
+            trennbar = trennbar_davor if nr == 0 else not zusammen and 2 <= nr <= len(zeilen) - 2
             self.fluss.dazu(_Kiste(hoehe, stuecke, vorher if nr == 0 else 0, trennbar,
                                    marke=marke if nr == 0 else ()))
 
@@ -332,18 +378,25 @@ class _Setzer:
         # Die Überschrift nimmt den Anfang des Folgenden mit auf ihre Seite.
         self.fluss.festhalten()
 
-    def aufzaehlung(self, block):
-        """Punkte oder Schritte. Wie bei Zeilen: Geteilt wird nur, wenn je zwei Punkte zusammenbleiben."""
+    def aufzaehlung(self, block, schritte=()):
+        """Punkte oder Schritte. Wie bei Zeilen: Geteilt wird nur, wenn je zwei Punkte zusammenbleiben.
+
+        Sind es die ``schritte`` eines Beispiels (je Punkt eine
+        :class:`Schrittmarke`), wird gar nicht geteilt: Wer rechnet, soll
+        nicht mitten im Beispiel umblättern müssen.
+        """
         anzahl = len(block.punkte)
         for nr, punkt in enumerate(block.punkte):
             zeichen = f"{nr + 1}." if block.nummeriert else "•"
+            trennbar = nr == 0 or (not schritte and 2 <= nr <= anzahl - 2)
             self.absatz(punkt, einzug=self.px(EINZUG), zeichen=zeichen, art="punkt",
-                        vorher=self.px(ABSTAND_ABSATZ // 2) if nr else None,
-                        trennbar_davor=nr == 0 or 2 <= nr <= anzahl - 2)
+                        vorher=self.px(ABSTAND_ABSATZ // 2) if nr else None, trennbar_davor=trennbar,
+                        schritt=schritte[nr] if schritte else None, zusammen=bool(schritte))
 
     # Tabellen und Quadrat
 
-    def tabelle(self, block):
+    def tabelle(self, block, schritte=()):
+        """Eine Tabelle – in so wenigen Teilen wie nötig. ``schritte``: je Spalte eine :class:`Schrittmarke`."""
         s, px = self.s, self.px
         abstand = px(ABSTAND_TABELLE)
         if block.titel:
@@ -381,7 +434,8 @@ class _Setzer:
             von = 1 + teil * je_teil
             stueck_zeilen = tuple((beschriftung, *zeile[von:von + je_teil])
                                   for beschriftung, zeile in zip(umbrochen, block.zeilen))
-            raster = Raster(0, 0, stueck_zeilen, spalte, zellbreite, zeilenhoehen)
+            raster = Raster(0, 0, stueck_zeilen, spalte, zellbreite, zeilenhoehen,
+                            tuple(schritte[von - 1:von - 1 + je_teil]))
             raster = raster._replace(x=(self.breite - raster.breite) // 2)
             self.fluss.dazu(_Kiste(raster.hoehe, (raster,), abstand))
             abstand = px(4)
@@ -438,8 +492,8 @@ class _Setzer:
 
     # Das Kapitel
 
-    def block(self, block):
-        """Setzt einen Block aus :mod:`content.handbuch`."""
+    def block(self, block, schritte=()):
+        """Setzt einen Block aus :mod:`content.handbuch` – mit ``schritte``, wenn er die eines Beispiels trägt."""
         if isinstance(block, buch.Absatz):
             self.absatz(block.text, "betont" if block.betont else "text",
                         art="betont" if block.betont else "absatz")
@@ -447,9 +501,9 @@ class _Setzer:
                 # Ein Absatz mit Doppelpunkt kündigt an, was folgt – er bleibt dabei.
                 self.fluss.festhalten()
         elif isinstance(block, buch.Aufzaehlung):
-            self.aufzaehlung(block)
+            self.aufzaehlung(block, schritte)
         elif isinstance(block, buch.Tabelle):
-            self.tabelle(block)
+            self.tabelle(block, schritte)
         elif isinstance(block, buch.VigenereQuadrat):
             self.quadrat(block)
         elif isinstance(block, buch.Randnotiz):
@@ -457,17 +511,54 @@ class _Setzer:
         else:
             raise TypeError(f"Diesen Block kennt das Handbuch nicht: {block!r}")
 
-    def kapitel(self, seite):
+    def kapiteltitel(self, seite):
         self.absatz(seite.titel, "kapitel", stil.FARBE_ROTSTIFT, "kapitel", vorher=0)
         self.fluss.festhalten()
-        for abschnitt in seite.abschnitte:
-            if abschnitt.hervorgehoben:
-                self.merksatz(abschnitt)
-                continue
-            self.ueberschrift(abschnitt.ueberschrift, marke=("abschnitt", abschnitt.ueberschrift))
-            for block in abschnitt.bloecke:
+
+    def abschnitt(self, abschnitt, nummer):
+        """Ein Abschnitt: der Merksatz als Karte, sonst Überschrift und Blöcke.
+
+        ``nummer`` ist die Stelle des Abschnitts auf der Handbuchseite – sie
+        steht in den Schrittmarken seines Beispiels.
+        """
+        if abschnitt.hervorgehoben:
+            self.merksatz(abschnitt)
+            return
+        anfang = len(self.fluss.kisten)
+        self.ueberschrift(abschnitt.ueberschrift, marke=("abschnitt", abschnitt.ueberschrift))
+        traeger = schritttraeger(abschnitt)
+        marken = tuple(Schrittmarke(nummer, nr, schritt) for nr, schritt in enumerate(abschnitt.schritte))
+        for nr, block in enumerate(abschnitt.bloecke):
+            if block is not traeger:
                 self.block(block)
-        return self.fluss.kisten
+                continue
+            teile = len(block.punkte) if isinstance(block, buch.Aufzaehlung) else len(block.zeilen[0]) - 1
+            if teile != len(marken):
+                raise ValueError(f"{abschnitt.ueberschrift!r}: {len(marken)} Schritte, aber {teile} im Beispiel")
+            self.block(block, marken)
+            if nr + 1 < len(abschnitt.bloecke):
+                # Das Ergebnis bleibt bei den Schritten.
+                self.fluss.festhalten()
+        kisten = self.fluss.kisten
+        hoehe = sum(kiste.vorher + kiste.hoehe for kiste in kisten[anfang + 1:]) + kisten[anfang].hoehe
+        if abschnitt.schritte and hoehe <= self.hoehe:
+            # Das Beispiel passt auf eine Seite – dann steht es auch auf einer.
+            kisten[anfang + 1:] = [kiste._replace(trennbar=False) for kiste in kisten[anfang + 1:]]
+
+
+def schritttraeger(abschnitt):
+    """Der Block, dessen Teile die Schritte des Beispiels sind – oder ``None``, wenn es keine gibt.
+
+    Die nummerierten Punkte, wo es welche gibt, sonst die letzte Tabelle des
+    Abschnitts: die Beispieltabelle, deren Spalten die Schritte sind.
+    """
+    if not abschnitt.schritte:
+        return None
+    for block in abschnitt.bloecke:
+        if isinstance(block, buch.Aufzaehlung) and block.nummeriert:
+            return block
+    tabellen = [block for block in abschnitt.bloecke if isinstance(block, buch.Tabelle)]
+    return tabellen[-1] if tabellen else None
 
 
 def seiten_verteilen(kisten, hoehe):
@@ -549,6 +640,11 @@ def _titelseite(satz_inhalt, schriften, breite, hoehe, px, stempel):
     return Buchseite(tuple(stuecke))
 
 
+def leerseite(breite, hoehe, px, nummer=None):
+    """Eine leere Seite – bis auf eine Verzierung in der Mitte, damit sie nicht vergessen aussieht."""
+    return Buchseite((Verzierung(px(90), hoehe // 2, breite - px(180)),), nummer)
+
+
 def einzelseite(teile, schriften, breite, hoehe, px):
     """Setzt ein paar Blöcke auf **eine** Seite – das Werkzeug neben der Übung (Arbeitsplan 6.5).
 
@@ -577,18 +673,50 @@ def setzen(seite, schriften, breite, hoehe, px, stempel=None):
     ``px`` rechnet Pixel aus dem Maßstab 1 um (``Screen.px``), ``stempel``
     ist (Breite, Höhe) des Stempelbilds oder ``None`` ohne Stempel.
     """
-    setzer = _Setzer(schriften, breite, hoehe, px)
-    verteilt = seiten_verteilen(setzer.kapitel(seite), hoehe)
+    # Das Kapitel läuft in Strecken: Abschnitte hintereinander, die dasselbe
+    # Werkzeug gegenüber haben – oder keines. Jede Strecke beginnt auf einer
+    # neuen Seite, die mit Werkzeug auf einer linken.
+    strecken = []
+    for nummer, abschnitt in enumerate(seite.abschnitte):
+        if not strecken or abschnitt.gegenueber != strecken[-1][0]:
+            strecken.append((abschnitt.gegenueber, []))
+        strecken[-1][1].append((nummer, abschnitt))
+
+    rohseiten = []          # je Seite: (Kisten mit ihrem y, Werkzeug) – oder None für eine leere
+    for nr, (werkzeug, abschnitte) in enumerate(strecken):
+        setzer = _Setzer(schriften, breite, hoehe, px)
+        if nr == 0:
+            setzer.kapiteltitel(seite)
+        for nummer, abschnitt in abschnitte:
+            setzer.abschnitt(abschnitt, nummer)
+        if werkzeug is None:
+            rohseiten += [(kisten, None) for kisten in seiten_verteilen(setzer.fluss.kisten, hoehe)]
+            continue
+        if len(rohseiten) % 2 == 0:
+            # Die nächste Seite wäre eine rechte – sie bleibt leer.
+            rohseiten.append(None)
+        werkzeugsetzer = _Setzer(schriften, breite, hoehe, px)
+        werkzeugsetzer.block(werkzeug)
+        # Das Werkzeug passt auf eine Seite; tests/test_handbuch_screen.py prüft das.
+        werkzeugseite = seiten_verteilen(werkzeugsetzer.fluss.kisten, hoehe)[0]
+        for kisten in seiten_verteilen(setzer.fluss.kisten, hoehe):
+            rohseiten += [(kisten, None), (werkzeugseite, werkzeug)]
+
     seiten, inhalt = [], []
     zahl_y = hoehe + px(SEITENZAHL_ABSTAND)
-    for nummer, kisten in enumerate(verteilt, 1):
+    for nummer, roh in enumerate(rohseiten, 1):
+        if roh is None:
+            seiten.append(leerseite(breite, hoehe, px, nummer))
+            continue
+        kisten, werkzeug = roh
         stuecke = []
         for kiste, y in kisten:
             stuecke.extend(_verschoben(stueck, y) for stueck in kiste.stuecke)
             if kiste.marke[:1] == ("abschnitt",):
                 inhalt.append((kiste.marke[1], nummer))
+        schritte = tuple(marke for stueck in stuecke for marke in _schrittmarken(stueck))
         stuecke.append(Zeile(breite // 2, zahl_y, f"– {nummer} –", "klein", stil.FARBE_TINTE,
                              "seitenzahl", anker="n"))
-        seiten.append(Buchseite(tuple(stuecke), nummer))
+        seiten.append(Buchseite(tuple(stuecke), nummer, tuple(dict.fromkeys(schritte)), werkzeug))
     titel = _titelseite(inhalt, schriften, breite, hoehe, px, stempel)
     return Satz((titel, *seiten), tuple(inhalt))

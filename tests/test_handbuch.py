@@ -46,14 +46,20 @@ def _abschnitt(seite, ueberschrift):
     )
 
 
+def _bloecke(abschnitt):
+    """Die Blöcke eines Abschnitts – samt dem Werkzeug, das ihm gegenüber liegt."""
+    return abschnitt.bloecke + ((abschnitt.gegenueber,) if abschnitt.gegenueber is not None else ())
+
+
 def _tabellen(seite):
-    """Alle Tabellen einer Seite in Reihenfolge."""
-    return [
-        block
-        for abschnitt in seite.abschnitte
-        for block in abschnitt.bloecke
-        if isinstance(block, Tabelle)
-    ]
+    """Alle Tabellen einer Seite in Reihenfolge – jede nur einmal, auch wenn sie mehrfach gegenüber liegt."""
+    gesehen, tabellen = set(), []
+    for abschnitt in seite.abschnitte:
+        for block in _bloecke(abschnitt):
+            if isinstance(block, Tabelle) and id(block) not in gesehen:
+                gesehen.add(id(block))
+                tabellen.append(block)
+    return tabellen
 
 
 def _tabellenzeile(seite, beschriftung):
@@ -72,7 +78,7 @@ def _alle_texte(seite):
     texte = [seite.titel]
     for abschnitt in seite.abschnitte:
         texte.append(abschnitt.ueberschrift)
-        for block in abschnitt.bloecke:
+        for block in _bloecke(abschnitt):
             if isinstance(block, Absatz):
                 texte.append(block.text)
             elif isinstance(block, Aufzaehlung):
@@ -189,6 +195,54 @@ def test_randnotizen_sind_kurz(seite):
     """Eine Notiz ist ein Zuruf in Handschrift, kein zweiter Absatz."""
     for notiz in _randnotizen(seite):
         assert len(notiz.text) <= 60, notiz.text
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# Beispiele mit dem Werkzeug gegenüber
+# ───────────────────────────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
+def test_jede_seite_hat_ein_beispiel_mit_werkzeug_und_schritten(seite):
+    beispiele = [a for a in seite.abschnitte if a.gegenueber is not None and a.schritte]
+    assert beispiele
+    for abschnitt in seite.abschnitte:
+        assert isinstance(abschnitt.gegenueber, (type(None), Tabelle, VigenereQuadrat))
+        assert all(isinstance(schritt, handbuch.Schritt) for schritt in abschnitt.schritte)
+        assert not abschnitt.schritte or abschnitt.gegenueber is not None
+
+
+def test_die_schritte_der_beispiele_stimmen_mit_crypto_ueberein():
+    """Was markiert wird, muss stimmen – sonst zeigt das Buch auf das falsche Feld."""
+    quadrat = vigenere_quadrat.erzeuge_quadrat()
+    for abschnitt in handbuch.SEITE_CAESAR.abschnitte:
+        for schritt in abschnitt.schritte:
+            assert caesar.verschluesseln(schritt.spalte, 3) == schritt.kreuzung
+    for abschnitt in handbuch.SEITE_SUBSTITUTION.abschnitte:
+        for schritt in abschnitt.schritte:
+            assert substitution.verschluesseln(schritt.spalte) == schritt.kreuzung
+    for abschnitt in handbuch.SEITE_VIGENERE.abschnitte:
+        for schritt in abschnitt.schritte:
+            zeile, spalte = ALPHABET.index(schritt.zeile), ALPHABET.index(schritt.spalte)
+            assert quadrat[zeile][spalte] == schritt.kreuzung
+
+
+@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
+def test_die_schritte_passen_zu_den_punkten_oder_zur_beispieltabelle(seite):
+    """Jeder Schritt gehört zu einem nummerierten Punkt – oder, ohne solche, zu einer Spalte der Beispieltabelle."""
+    for abschnitt in seite.abschnitte:
+        if not abschnitt.schritte:
+            continue
+        punkte = [b for b in abschnitt.bloecke if isinstance(b, Aufzaehlung) and b.nummeriert]
+        if punkte:
+            (aufzaehlung,) = punkte
+            assert len(aufzaehlung.punkte) == len(abschnitt.schritte)
+            for punkt, schritt in zip(aufzaehlung.punkte, abschnitt.schritte):
+                for buchstabe in (schritt.zeile, schritt.spalte, schritt.kreuzung):
+                    assert re.search(rf"\b{buchstabe}\b", punkt), (buchstabe, punkt)
+        else:
+            beispiel = [b for b in abschnitt.bloecke if isinstance(b, Tabelle)][-1]
+            assert list(beispiel.zeilen[0][1:]) == [s.spalte for s in abschnitt.schritte]
+            assert list(beispiel.zeilen[1][1:]) == [s.kreuzung for s in abschnitt.schritte]
 
 
 @pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
@@ -417,12 +471,13 @@ def test_die_drei_ergebnisse_stehen_auch_in_der_quelle():
 # ───────────────────────────────────────────────────────────────────────────
 
 def _quadratbloecke(seite):
-    return [
-        block
-        for abschnitt in seite.abschnitte
-        for block in abschnitt.bloecke
-        if isinstance(block, VigenereQuadrat)
-    ]
+    """Die Quadrat-Platzhalter einer Seite – jeder nur einmal."""
+    gefunden = {}
+    for abschnitt in seite.abschnitte:
+        for block in _bloecke(abschnitt):
+            if isinstance(block, VigenereQuadrat):
+                gefunden.setdefault(id(block), block)
+    return list(gefunden.values())
 
 
 @pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"seite {s.level}")
@@ -450,11 +505,12 @@ def test_nur_seite_3_hat_einen_platz_fuer_das_quadrat():
         )
 
 
-def test_der_quadrat_platzhalter_steht_im_richtigen_abschnitt():
-    """Er gehört unter die Erklärung, was das Quadrat ist."""
+def test_das_quadrat_liegt_der_erklaerung_und_beiden_beispielen_gegenueber():
+    """Beim Lesen ist es immer zu sehen – das Beispiel versteht man nur mit dem Quadrat daneben."""
     seite = handbuch.SEITE_NACH_LEVEL[3]
-    abschnitt = _abschnitt(seite, "Das Vigenère-Quadrat")
-    assert any(isinstance(block, VigenereQuadrat) for block in abschnitt.bloecke)
+    for ueberschrift in ("Das Vigenère-Quadrat", "Verschlüsseln – Schritt für Schritt",
+                         "Entschlüsseln – Schritt für Schritt"):
+        assert _abschnitt(seite, ueberschrift).gegenueber is handbuch.QUADRAT
 
 
 def test_der_quadrat_platzhalter_hat_eine_beschriftung():
