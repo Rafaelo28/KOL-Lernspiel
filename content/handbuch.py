@@ -8,7 +8,7 @@ Aufbau
 ──────
 Eine :class:`Handbuchseite` besteht aus :class:`Abschnitt`-Objekten
 ("Was ist das?", "Beispiel", "Merksatz"). Jeder Abschnitt enthält Blöcke, und
-zwar genau drei Sorten, damit die UI mit einer einfachen Fallunterscheidung
+zwar nur wenige Sorten, damit die UI mit einer einfachen Fallunterscheidung
 auskommt:
 
 * :class:`Absatz`      – Fließtext, wird umgebrochen
@@ -17,6 +17,12 @@ auskommt:
   Beschriftung der Zeile**, danach folgen die Zellen
 * :class:`VigenereQuadrat` – Platzhalter: hier gehört das 26x26-Raster hin,
   das ``crypto.vigenere_quadrat`` zur Laufzeit erzeugt
+* :class:`Randnotiz`   – eine handschriftliche Notiz von Bob; sie wiederholt
+  nur, was auf der Seite schon steht (siehe dort)
+
+Jede Seite hat genau ein Lesezeichen: die Tabelle, die man beim Lösen immer
+wieder braucht (``lesezeichen=True``). Im Spiel führt das rote Band des Buchs
+dorthin.
 
 Warum der Text hier ohne Fettschrift steht
 ──────────────────────────────────────────
@@ -70,10 +76,14 @@ class Tabelle(NamedTuple):
 
     Alle Zeilen einer Tabelle sind gleich lang; ``tests/test_handbuch.py``
     hält das nach, damit die UI kein Sonderfall-Layout braucht.
+
+    ``lesezeichen`` markiert die Tabelle, zu der das Lesezeichen des Buchs
+    führt – die, die man beim Lösen immer wieder braucht.
     """
 
     zeilen: tuple
     titel: str = ""
+    lesezeichen: bool = False
 
 
 class VigenereQuadrat(NamedTuple):
@@ -83,12 +93,32 @@ class VigenereQuadrat(NamedTuple):
     ``crypto.vigenere_quadrat.erzeuge_quadrat()`` erzeugt – abgetippt stünde es
     zweimal im Projekt und könnte auseinanderlaufen. Der Block sagt der
     Oberfläche nur: *hier* gehört das Raster hin, mit dieser Beschriftung.
+    ``lesezeichen`` wie bei :class:`Tabelle`.
     """
 
     beschriftung: str = ""
+    lesezeichen: bool = False
 
 
-Block = Union[Absatz, Aufzaehlung, Tabelle, VigenereQuadrat]
+class Randnotiz(NamedTuple):
+    """Eine handschriftliche Notiz von Bob, direkt unter dem, was sie betrifft.
+
+    Randnotizen bringen **nichts Neues**. Sie wiederholen in Bobs Worten, was
+    auf der Seite schon steht – sie machen das Buch lebendig, nicht klüger.
+    Der Grund ist der Versuchsaufbau: Die Kontrollgruppe lernt mit denselben
+    Handbuchtexten, aber ohne Notizen. Hülfe eine Notiz mit einem Tipp, der im
+    Handbuch fehlt, verglichen die Messdaten nicht mehr Lernspiel und
+    Unterricht, sondern zwei verschiedene Erklärungen.
+
+    ``bezug`` ist die Stelle der Seite, die die Notiz wiederholt – wörtlich,
+    ``tests/test_handbuch.py`` prüft, dass sie dort steht.
+    """
+
+    text: str
+    bezug: str
+
+
+Block = Union[Absatz, Aufzaehlung, Tabelle, VigenereQuadrat, Randnotiz]
 
 
 class Abschnitt(NamedTuple):
@@ -148,6 +178,10 @@ SEITE_CAESAR = Handbuchseite(
                     "des Alphabets an (bei Z), geht es einfach wieder bei A weiter "
                     "– wie bei einer Uhr, die nach 12 wieder bei 1 anfängt."
                 ),
+                Randnotiz(
+                    "Nach Z geht's wieder bei A los – wie bei der Uhr!",
+                    bezug="wie bei einer Uhr, die nach 12 wieder bei 1 anfängt",
+                ),
             ),
         ),
         Abschnitt(
@@ -159,10 +193,15 @@ SEITE_CAESAR = Handbuchseite(
                         ("ohne Verschiebung", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"),
                         ("um 3 verschoben", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "B", "C"),
                     ),
+                    lesezeichen=True,
                 ),
                 Absatz(
                     "Das heißt: Aus A wird D, aus B wird E, aus H wird K und so "
                     "weiter."
+                ),
+                Randnotiz(
+                    "Aus A wird D, aus B wird E – immer 3 weiter!",
+                    bezug="Aus A wird D, aus B wird E",
                 ),
                 Absatz('Verschlüsseln des Wortes "HUND" mit Schlüssel 3:', betont=True),
                 Tabelle(
@@ -231,6 +270,10 @@ SEITE_SUBSTITUTION = Handbuchseite(
                         "Dritte Zeile: Y X C V B N M",
                     ),
                 ),
+                Randnotiz(
+                    "Einfach die Tastatur abschreiben – Zeile für Zeile!",
+                    bezug="Lies die Buchstaben einfach der Reihe nach ab, Zeile für Zeile",
+                ),
                 Absatz(
                     "Hintereinander ergibt das eine komplette neue "
                     "Buchstaben-Reihenfolge mit 26 Zeichen. Ordnest du sie dem "
@@ -242,6 +285,7 @@ SEITE_SUBSTITUTION = Handbuchseite(
                         ("Original", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"),
                         ("Geheim", "Q", "W", "E", "R", "T", "Z", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Y", "X", "C", "V", "B", "N", "M"),
                     ),
+                    lesezeichen=True,
                 ),
             ),
         ),
@@ -280,6 +324,10 @@ SEITE_SUBSTITUTION = Handbuchseite(
                     "Geheimzeichen am öftesten vorkommt – das ist dann sehr "
                     'wahrscheinlich das "E". So lässt sich die Zuordnung Stück '
                     "für Stück knacken. Das nennt man Häufigkeitsanalyse."
+                ),
+                Randnotiz(
+                    'Das "E" ist im Deutschen der häufigste Buchstabe!',
+                    bezug='Im Deutschen ist zum Beispiel das "E" der häufigste Buchstabe.',
                 ),
             ),
         ),
@@ -322,6 +370,10 @@ SEITE_VIGENERE = Handbuchseite(
                     "Das Schlüsselwort wird so oft wiederholt, bis es genauso "
                     "lang ist wie deine Nachricht."
                 ),
+                Randnotiz(
+                    "ROT ROT ROT … bis es so lang ist wie die Nachricht!",
+                    bezug="Das Schlüsselwort wird so oft wiederholt, bis es genauso lang ist wie deine Nachricht.",
+                ),
             ),
         ),
         Abschnitt(
@@ -346,6 +398,7 @@ SEITE_VIGENERE = Handbuchseite(
                 VigenereQuadrat(
                     beschriftung="Das Vigenère-Quadrat – Zeile: Schlüssel, "
                     "Spalte: Nachricht",
+                    lesezeichen=True,
                 ),
             ),
         ),
@@ -389,6 +442,10 @@ SEITE_VIGENERE = Handbuchseite(
                     "deines Schlüsselbuchstabens, und darin den Geheimbuchstaben. "
                     "Die Spalte, in der du ihn findest, verrät dir den "
                     "Original-Buchstaben."
+                ),
+                Randnotiz(
+                    "Erst die Zeile, dann den Buchstaben darin suchen!",
+                    bezug="Du suchst zuerst die Zeile deines Schlüsselbuchstabens, und darin den Geheimbuchstaben.",
                 ),
                 Aufzaehlung(
                     nummeriert=True,

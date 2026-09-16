@@ -148,6 +148,10 @@ class Hauptfenster:
         self._geschlossen = False
         self._speichermeldung = ""
         self._fehlermeldung = ""
+        #: Was Screens über ihren eigenen Abriss hinaus behalten wollen – etwa
+        #: die Bilder des Umblätterns im Handbuch, die zu laden eine spürbare
+        #: Weile dauert und die bei jedem Nachschlagen wieder gebraucht werden.
+        self.zwischenspeicher = {}
         #: Rückfragen an die Spielenden. In Tests ersetzbar, damit kein Dialog
         #: den Testlauf anhält.
         self.frage_ja_nein = messagebox.askyesno

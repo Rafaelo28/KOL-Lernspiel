@@ -1,19 +1,24 @@
 """Tests für den Handbuch-Screen (Arbeitsplan 6.4): ui/handbuch.py.
 
-Geprüft wird, dass jede Seite vollständig und richtig dasteht – Text,
-Tabellen, Merksatz, auf Seite 3 das Quadrat –, dass sie sich lesen und
-scrollen lässt, und dass man mitten in einer Übung nachschlagen und zur
-selben Übung zurückkehren kann (Arbeitsplan 6.4: "Muss während der Aufgaben
-erreichbar bleiben").
+Das Handbuch ist ein aufgeschlagenes Buch. Geprüft wird, dass jedes Kapitel
+vollständig und in der richtigen Reihenfolge im Buch steht – Text,
+Tabellen, Merksatz, Randnotizen, auf Seite 3 das Quadrat –, dass nichts über
+die Seiten hinausragt, dass sich blättern lässt (Knöpfe, Tasten, Mausrad,
+Ecken, Lesezeichen), dass dabei ein Blatt umschlägt, und dass man mitten in
+einer Übung nachschlagen und zur selben Übung zurückkehren kann
+(Arbeitsplan 6.4: "Muss während der Aufgaben erreichbar bleiben").
 
 Was *im* Handbuch steht, prüft ``tests/test_handbuch.py`` gegen die Quelle
-und gegen ``crypto/``. Hier geht es darum, dass es auch auf dem Bildschirm
-ankommt.
+und gegen ``crypto/``; nach welchen Regeln es auf die Seiten verteilt wird,
+``tests/test_buchsatz.py``. Hier geht es darum, dass es auch auf dem
+Bildschirm ankommt.
 
-Braucht eine Bildschirmanzeige, sonst übersprungen. Die wenigen Tests, die
-echte Grössen brauchen (scrollt die Seite? wie breit wird sie?), zeigen das
-Fenster kurz an – ein verstecktes ist für Tk nur 1 × 1 Pixel gross.
+Braucht eine Bildschirmanzeige, sonst übersprungen.
 """
+
+import importlib.util
+import time
+from pathlib import Path
 
 import pytest
 
@@ -23,9 +28,10 @@ from content import charaktere, story  # noqa: E402
 from content import handbuch as buch  # noqa: E402
 from crypto.normalize import ALPHABET  # noqa: E402
 from crypto.vigenere_quadrat import erzeuge_quadrat  # noqa: E402
-from ui import ablauf, handbuch, platzhalter  # noqa: E402
+from ui import ablauf, animation, buchsatz, handbuch, platzhalter, stil  # noqa: E402
 
 LEVEL = (1, 2, 3)
+PROJEKT = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture
@@ -67,147 +73,254 @@ def aufrufe():
     return []
 
 
-@pytest.fixture
-def sichtbar(wurzel):
-    """Zeigt das Fenster wirklich an – nur dann hat Tk echte Grössen.
-
-    Ein verstecktes Fenster ist für Tk 1 × 1 Pixel gross; ob die Seite scrollt
-    oder wie breit sie wird, liesse sich daran nicht ablesen. Danach wird es
-    gleich wieder versteckt.
-    """
-    def zeigen(breite, hoehe):
-        wurzel.geometry(f"{breite}x{hoehe}")
-        wurzel.deiconify()
-        wurzel.update()
-
-    yield zeigen
-    wurzel.withdraw()
-
-
-def _seite(fenster, level, aufrufe, **optionen):
+def _buch(fenster, level, aufrufe, **optionen):
     return fenster.zeige(handbuch.Handbuch, level=level, danach=aufrufe.append, **optionen)
 
 
-def _texte(seite):
-    """Alle Absätze, Aufzählungspunkte und Überschriften einer Handbuchseite."""
+def _alle_doppelseiten(screen):
+    """Schlägt eine Doppelseite nach der anderen auf (ohne Umblättern) und gibt dabei ihre Nummer."""
+    for nr in range(screen.anzahl_doppelseiten):
+        screen.aufschlagen(nr, animiert=False)
+        yield nr
+
+
+def _warten(wurzel, bedingung, sekunden=3):
+    """Lässt Tk arbeiten, bis ``bedingung()`` stimmt – etwa bis das Blatt umgeschlagen ist."""
+    ende = time.monotonic() + sekunden
+    while not bedingung():
+        assert time.monotonic() < ende, "Das hat zu lange gedauert."
+        wurzel.update()
+        time.sleep(0.005)
+
+
+def _eine_zeile(texte):
+    """Texte zu einer Zeile zusammengezogen – so, wie man sie liest, egal wo umbrochen ist."""
+    return " ".join(" ".join(texte).split())
+
+
+#: Die Arten von Zeilen, die zum Fließtext des Kapitels gehören.
+FLIESSTEXT = {"kapitel", "abschnitt", "absatz", "betont", "punkt", "tabellentitel", "merksatz_titel",
+              "merksatz", "notiz"}
+
+
+def _art(screen, element):
+    return next((tag for tag in screen.buch.gettags(element) if tag in FLIESSTEXT), None)
+
+
+def _gelesen(screen):
+    """Der Fließtext des Kapitels, wie er im Buch steht – Doppelseite für Doppelseite, links vor rechts."""
+    teile = []
+    for _ in _alle_doppelseiten(screen):
+        teile.extend(screen.buch.itemcget(element, "text") for element in screen.buch.find_withtag("text")
+                     if _art(screen, element))
+    return _eine_zeile(teile)
+
+
+def _erwartet(seite):
+    """Der Fließtext eines Kapitels aus content/handbuch.py, in Lesereihenfolge."""
+    teile = [seite.titel]
     for abschnitt in seite.abschnitte:
-        yield abschnitt.ueberschrift
+        teile.append(abschnitt.ueberschrift)
         for block in abschnitt.bloecke:
             if isinstance(block, buch.Absatz):
-                yield block.text
+                teile.append(block.text)
             elif isinstance(block, buch.Aufzaehlung):
-                yield from block.punkte
+                teile.extend(block.punkte)
             elif isinstance(block, buch.Tabelle) and block.titel:
-                yield block.titel
+                teile.append(block.titel)
             elif isinstance(block, buch.VigenereQuadrat) and block.beschriftung:
-                yield block.beschriftung
+                teile.append(block.beschriftung)
+            elif isinstance(block, buch.Randnotiz):
+                teile.append(block.text)
+    return _eine_zeile(teile)
 
 
-def _bereiche(screen, tag):
-    """Die Textstücke, die ein Tag trägt."""
-    bereiche = screen.text.tag_ranges(tag)
-    return [screen.text.get(anfang, ende) for anfang, ende in zip(bereiche[::2], bereiche[1::2])]
+def _zeilen_im_satz(screen, seite, *arten):
+    return [z.text for z in screen.satz.seiten[seite].stuecke if isinstance(z, buchsatz.Zeile) and z.art in arten]
 
 
-# ── Was auf der Seite steht ────────────────────────────────────────────────
+# ── Was im Buch steht ──────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+@pytest.mark.parametrize("level", LEVEL)
+def test_das_kapitel_steht_vollstaendig_und_in_der_richtigen_reihenfolge_im_buch(fenster, aufrufe, level):
+    """Jeder Absatz, jeder Punkt, jede Überschrift und Notiz – nichts fehlt, nichts doppelt, nichts vertauscht."""
+    screen = _buch(fenster, level, aufrufe)
+    assert _gelesen(screen) == _erwartet(screen.seite)
+
+
+def test_das_buch_beginnt_mit_der_titelseite_und_dem_anfang_des_kapitels(fenster, aufrufe):
+    screen = _buch(fenster, 1, aufrufe)
+    assert screen.doppelseite == 0
+    links = _eine_zeile(screen.texte("links"))
+    assert _eine_zeile([buch.HANDBUCH_TITEL]) in links and "Inhalt" in links
+    assert _eine_zeile(screen.texte("rechts")).startswith(buch.SEITE_CAESAR.titel)
+
 
 @pytest.mark.parametrize("level", LEVEL)
-def test_die_seite_des_levels_steht_vollstaendig_da(fenster, aufrufe, level):
-    screen = _seite(fenster, level, aufrufe)
-    seite = buch.SEITE_NACH_LEVEL[level]
-    assert screen.seite is seite
-    assert seite.titel in screen.inhalt
-    assert buch.HANDBUCH_TITEL.upper() in screen.inhalt
-    assert buch.HANDBUCH_UNTERTITEL in screen.inhalt
-    for text in _texte(seite):
-        assert text in screen.inhalt, f"Auf Seite {level} fehlt: {text[:60]}…"
+def test_die_titelseite_nennt_zu_jedem_abschnitt_seine_seite(fenster, aufrufe, level):
+    screen = _buch(fenster, level, aufrufe)
+    eintraege = [screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag("inhalt")]
+    zahlen = [screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag("inhalt_seite")]
+    assert len(eintraege) == len(screen.seite.abschnitte) == len(zahlen)
+    for (ueberschrift, nummer), eintrag, zahl in zip(screen.satz.inhalt, eintraege, zahlen):
+        assert ueberschrift.startswith(eintrag.removesuffix(" …")) and zahl == str(nummer)
+        screen.aufschlagen(nummer // 2, animiert=False)
+        assert ueberschrift in _eine_zeile(screen.texte("links" if nummer % 2 == 0 else "rechts"))
+        screen.aufschlagen(0, animiert=False)
 
 
 @pytest.mark.parametrize("level", LEVEL)
-def test_die_abschnitte_stehen_in_der_richtigen_reihenfolge(fenster, aufrufe, level):
-    screen = _seite(fenster, level, aufrufe)
-    ueberschriften = [a.ueberschrift for a in screen.seite.abschnitte]
-    stellen = [screen.inhalt.index(u) for u in ueberschriften]
-    assert stellen == sorted(stellen)
+def test_auf_der_titelseite_steht_der_stempel(fenster, aufrufe, level):
+    screen = _buch(fenster, level, aufrufe)
+    (stempel,) = screen.buch.find_withtag("stempel&&links")
+    assert screen.buch.itemcget(stempel, "image") == str(screen._stempelbild)
+    screen.aufschlagen(1, animiert=False)
+    assert not screen.buch.find_withtag("stempel")
+
+
+def test_die_seiten_sind_nummeriert(fenster, aufrufe):
+    screen = _buch(fenster, 3, aufrufe)
+    for nr in _alle_doppelseiten(screen):
+        zahlen = [screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag("seitenzahl")]
+        assert zahlen == [f"– {n} –" for n in (2 * nr, 2 * nr + 1) if 0 < n < len(screen.satz.seiten)]
+
+
+def test_eine_leere_letzte_seite_bekommt_eine_verzierung(fenster, aufrufe):
+    screen = _buch(fenster, 1, aufrufe)
+    screen.aufschlagen(screen.anzahl_doppelseiten - 1, animiert=False)
+    ungerade = len(screen.satz.seiten) % 2
+    assert bool(screen.buch.find_withtag("diamant&&rechts")) == bool(ungerade)
+    assert bool(screen.texte("rechts")) != bool(ungerade)
 
 
 def test_nummerierte_schritte_tragen_ihre_nummer(fenster, aufrufe):
-    screen = _seite(fenster, 3, aufrufe)
-    assert '1.\tH (Nachricht) + R (Schlüssel)' in screen.inhalt
-    assert "4.\tGeheimbuchstabe U" in screen.inhalt
+    screen = _buch(fenster, 3, aufrufe)
+    zeichen = [screen.buch.itemcget(e, "text") for _ in _alle_doppelseiten(screen)
+               for e in screen.buch.find_withtag("zeichen")]
+    assert zeichen == ["•", "•", "•", "1.", "2.", "3.", "4.", "1.", "2.", "3.", "4."]
 
 
 def test_stichpunkte_bekommen_einen_punkt(fenster, aufrufe):
-    screen = _seite(fenster, 2, aufrufe)
-    assert "•\tErste Zeile: Q W E R T Z U I O P" in screen.inhalt
-
-
-@pytest.mark.parametrize("level", LEVEL)
-def test_der_merksatz_ist_hinterlegt(fenster, aufrufe, level):
-    screen = _seite(fenster, level, aufrufe)
-    hinterlegt = " ".join(_bereiche(screen, "merksatz"))
-    (merksatz,) = [a for a in screen.seite.abschnitte if a.hervorgehoben]
-    for block in merksatz.bloecke:
-        assert block.text in hinterlegt
-    # … und nur der Merksatz
-    for abschnitt in screen.seite.abschnitte:
-        if not abschnitt.hervorgehoben:
-            assert abschnitt.ueberschrift not in hinterlegt
+    screen = _buch(fenster, 2, aufrufe)
+    zeichen = [screen.buch.itemcget(e, "text") for _ in _alle_doppelseiten(screen)
+               for e in screen.buch.find_withtag("zeichen")]
+    assert zeichen == ["•", "•", "•"]
 
 
 @pytest.mark.parametrize("level", LEVEL)
 def test_ergebnisse_und_beispiel_ueberschriften_sind_fett(fenster, aufrufe, level):
-    screen = _seite(fenster, level, aufrufe)
-    fett = _bereiche(screen, "betont")
+    screen = _buch(fenster, level, aufrufe)
+    fett = []
+    for _ in _alle_doppelseiten(screen):
+        for element in screen.buch.find_withtag("betont"):
+            assert screen.buch.itemcget(element, "font") == str(screen.schriften.betont)
+            fett.append(screen.buch.itemcget(element, "text"))
     betonte = [block.text for a in screen.seite.abschnitte for block in a.bloecke
                if isinstance(block, buch.Absatz) and block.betont]
     assert betonte, f"Seite {level} hat keine betonte Zeile."
-    assert [text.rstrip("\n") for text in fett] == betonte
+    assert _eine_zeile(fett) == _eine_zeile(betonte)
 
 
-def test_die_seite_laesst_sich_nicht_beschreiben(fenster, aufrufe):
-    screen = _seite(fenster, 1, aufrufe)
-    vorher = screen.inhalt
-    screen.text.insert("1.0", "Kritzelei")
-    assert screen.inhalt == vorher
-    assert screen.text.cget("state") == "disabled"
+@pytest.mark.parametrize("level", LEVEL)
+def test_der_merksatz_steht_auf_einer_karte(fenster, aufrufe, level):
+    screen = _buch(fenster, level, aufrufe)
+    karten = ()
+    for _ in _alle_doppelseiten(screen):
+        karten = screen.buch.find_withtag("karte")
+        if karten:
+            break
+    (karte,) = karten
+    assert screen.buch.itemcget(karte, "fill") == stil.FARBE_MERKSATZ
+    x0, y0, x1, y1 = screen.buch.bbox(karte)
+    zeilen = screen.buch.find_withtag("merksatz") + screen.buch.find_withtag("merksatz_titel")
+    assert len(zeilen) >= 2
+    for element in zeilen:
+        a, b, c, d = screen.buch.bbox(element)
+        assert x0 <= a and c <= x1 and y0 <= b and d <= y1
+
+
+@pytest.mark.parametrize("level", LEVEL)
+def test_bobs_randnotizen_stehen_in_handschrift_blau_und_etwas_schief(fenster, aufrufe, level):
+    screen = _buch(fenster, level, aufrufe)
+    notizen = []
+    for _ in _alle_doppelseiten(screen):
+        for element in screen.buch.find_withtag("notiz"):
+            assert screen.buch.itemcget(element, "font") == str(screen.schriften.notiz)
+            assert float(screen.buch.itemcget(element, "angle")) == buchsatz.NOTIZWINKEL
+            assert screen.buch.itemcget(element, "fill") == stil.FARBE_KULI
+            notizen.append(_eine_zeile([screen.buch.itemcget(element, "text")]))
+    assert notizen == [block.text for a in screen.seite.abschnitte for block in a.bloecke
+                       if isinstance(block, buch.Randnotiz)]
+
+
+def test_die_notizen_stehen_in_einer_handschrift_wenn_der_rechner_eine_kennt(wurzel):
+    familie = stil.erste_schrift(wurzel, stil.HANDSCHRIFTEN)
+    schriften = buchsatz.schriften(wurzel, 1)
+    if familie is None:
+        assert schriften.notiz.actual("slant") == "italic"
+    else:
+        assert schriften.notiz.actual("family") == familie
+
+
+def test_erste_schrift_nimmt_die_erste_die_es_gibt(wurzel):
+    from tkinter import font as tkfont
+
+    vorhanden = tkfont.families(wurzel)[0]
+    assert stil.erste_schrift(wurzel, ("Gibt es nicht 1", vorhanden, "Gibt es nicht 2")) == vorhanden
+    assert stil.erste_schrift(wurzel, ("Gibt es nicht",)) is None
 
 
 # ── Tabellen und Quadrat ───────────────────────────────────────────────────
 
-def _zellen(rahmen):
-    """Die Tabelle als Zeilen von Texten, gelesen aus dem Raster."""
-    zeilen = {}
-    for zelle in rahmen.grid_slaves():
-        info = zelle.grid_info()
-        zeilen.setdefault(int(info["row"]), {})[int(info["column"])] = zelle.cget("text")
-    return [tuple(spalten[s] for s in sorted(spalten)) for _, spalten in sorted(zeilen.items())]
-
-
+@pytest.mark.parametrize("massstab", [1, 1.5])
 @pytest.mark.parametrize("level", LEVEL)
-def test_jede_tabelle_steht_als_raster_da(fenster, aufrufe, level):
-    screen = _seite(fenster, level, aufrufe)
+def test_jede_tabelle_steht_vollstaendig_da_auch_wenn_sie_geteilt_ist(fenster, aufrufe, level):
+    """Die Teile einer Tabelle ergeben zusammen genau ihre Zeilen – und jeder Teil ist beschriftet."""
+    screen = _buch(fenster, level, aufrufe)
     tabellen = [block for a in screen.seite.abschnitte for block in a.bloecke if isinstance(block, buch.Tabelle)]
-    assert len(screen.tabellen) == len(tabellen)
-    for rahmen, tabelle in zip(screen.tabellen, tabellen):
-        assert _zellen(rahmen) == [tuple(zeile) for zeile in tabelle.zeilen]
+    teile = [s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Raster)]
+    for tabelle in tabellen:
+        zusammen = [[zeile[0]] for zeile in tabelle.zeilen]
+        while len(zusammen[0]) < len(tabelle.zeilen[0]):
+            teil = teile.pop(0)
+            assert [_eine_zeile([z[0]]) for z in teil.zeilen] == [z[0] for z in tabelle.zeilen]
+            for bisher, zeile in zip(zusammen, teil.zeilen):
+                bisher.extend(zeile[1:])
+        assert [tuple(z) for z in zusammen] == [tuple(z) for z in tabelle.zeilen]
+    assert teile == []
 
 
-def test_die_tabellen_sitzen_im_text_und_scrollen_mit(fenster, aufrufe):
-    screen = _seite(fenster, 2, aufrufe)
-    eingebettet = {str(name) for name in screen.text.window_names()}
-    assert {str(rahmen) for rahmen in screen.tabellen} <= eingebettet
+def test_die_zellen_stehen_auch_auf_der_leinwand(fenster, aufrufe):
+    """Der Satz kennt die Zellen – hier steht, dass sie auch gezeichnet werden, jede genau einmal."""
+    screen = _buch(fenster, 2, aufrufe)
+    screen.zum_lesezeichen(animiert=False)
+    seite = "links" if screen.satz.lesezeichen % 2 == 0 else "rechts"
+    gezeichnet = [screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag(f"zelle&&{seite}")]
+    erwartet = [zelle for stueck in screen.satz.seiten[screen.satz.lesezeichen].stuecke
+                if isinstance(stueck, buchsatz.Raster)
+                for zeile in stueck.zeilen for zelle in zeile[1:]]
+    assert sorted(gezeichnet) == sorted(erwartet)
+    (geheimtabelle,) = [b for a in screen.seite.abschnitte for b in a.bloecke
+                        if getattr(b, "lesezeichen", False)]
+    for zeile in geheimtabelle.zeilen:
+        for zelle in zeile[1:]:
+            assert zelle in gezeichnet
 
 
-def test_nur_seite_3_zeichnet_das_quadrat(fenster, aufrufe):
-    assert _seite(fenster, 1, aufrufe).quadrat is None
-    assert _seite(fenster, 2, aufrufe).quadrat is None
-    assert _seite(fenster, 3, aufrufe).quadrat is not None
+def test_das_quadrat_steht_nur_in_level_3_und_dort_auf_einer_seite_fuer_sich(fenster, aufrufe):
+    for level in (1, 2):
+        screen = _buch(fenster, level, aufrufe)
+        assert not any(isinstance(s, buchsatz.Quadrat) for seite in screen.satz.seiten for s in seite.stuecke)
+    screen = _buch(fenster, 3, aufrufe)
+    (quadratseite,) = [s for s in screen.satz.seiten if any(isinstance(t, buchsatz.Quadrat) for t in s.stuecke)]
+    assert {s.art for s in quadratseite.stuecke if isinstance(s, buchsatz.Zeile)} == {"tabellentitel", "seitenzahl"}
 
 
 def test_das_quadrat_stimmt_in_allen_676_feldern(fenster, aufrufe):
     """Gezeichnet aus derselben Formel wie crypto/ – kein abgetipptes Feld."""
-    screen = _seite(fenster, 3, aufrufe)
+    screen = _buch(fenster, 3, aufrufe)
+    screen.zum_lesezeichen(animiert=False)
     quadrat = erzeuge_quadrat()
     for zeile, schluessel in enumerate(ALPHABET):
         for spalte, nachricht in enumerate(ALPHABET):
@@ -215,139 +328,351 @@ def test_das_quadrat_stimmt_in_allen_676_feldern(fenster, aufrufe):
 
 
 def test_das_quadrat_zeigt_das_beispiel_aus_dem_handbuch(fenster, aufrufe):
-    screen = _seite(fenster, 3, aufrufe)
+    screen = _buch(fenster, 3, aufrufe)
+    screen.zum_lesezeichen(animiert=False)
     assert [screen.quadratfeld(s, n) for s, n in zip("ROTR", "HUND")] == list("YIGU")
 
 
 def test_das_quadrat_ist_beschriftet(fenster, aufrufe):
-    leinwand = _seite(fenster, 3, aufrufe).quadrat
+    screen = _buch(fenster, 3, aufrufe)
+    screen.zum_lesezeichen(animiert=False)
+    leinwand = screen.buch
     kopfzeile = [leinwand.itemcget(e, "text") for e in leinwand.find_withtag("kopfzeile")]
     kopfspalte = [leinwand.itemcget(e, "text") for e in leinwand.find_withtag("kopfspalte")]
     assert "".join(kopfzeile) == ALPHABET == "".join(kopfspalte)
     assert len(leinwand.find_withtag("feld")) == 26 * 26
 
 
-# ── Lesen und Scrollen ─────────────────────────────────────────────────────
-
-@pytest.mark.parametrize("level", LEVEL)
-def test_die_seite_ist_laenger_als_der_platz_und_scrollt(fenster, aufrufe, wurzel, sichtbar, level):
-    screen = _seite(fenster, level, aufrufe)
-    sichtbar(1000, 700)
-    anfang, ende = screen.text.yview()
-    assert anfang == 0 and ende < 1, "Die Seite passt ganz hinein – dann gäbe es nichts zu scrollen."
-    screen.rollen(10)
-    wurzel.update_idletasks()
-    assert screen.text.yview()[0] > 0
-
-
-def _rad(ausloesen, widget, delta):
-    import re
-
-    skript = widget.bind("<MouseWheel>")
-    assert re.search(r"\[(\S+) %#", skript), f"{widget} leitet das Mausrad nicht weiter"
-    return ausloesen(widget, "<MouseWheel>")
-
-
-def test_das_mausrad_rollt_auch_ueber_einer_tabelle(fenster, aufrufe, wurzel, ausloesen, monkeypatch):
-    """Über einem eingebetteten Raster käme das Rad sonst nicht beim Text an."""
-    screen = _seite(fenster, 3, aufrufe)
-    wurzel.geometry("1000x700")
-    wurzel.update_idletasks()
-    gerollt = []
-    monkeypatch.setattr(screen, "rollen", gerollt.append)
-    for teil in (screen.tabellen[0], *screen.tabellen[0].winfo_children(), screen.quadrat):
-        assert teil.bind("<MouseWheel>"), f"{teil} leitet das Mausrad nicht weiter"
-        assert teil.bind("<Button-4>") and teil.bind("<Button-5>")
-    ausloesen(screen.quadrat, "<Button-5>")
-    ausloesen(screen.quadrat, "<Button-4>")
-    assert gerollt == [handbuch.ZEILEN_JE_RASTE, -handbuch.ZEILEN_JE_RASTE]
-
-
-@pytest.mark.parametrize("delta, erwartet", [(120, -3), (-120, 3), (240, -6), (30, -1), (-10, 1)])
-def test_das_mausrad_rollt_je_raste_drei_zeilen(fenster, aufrufe, monkeypatch, delta, erwartet):
-    """Windows meldet 120 je Raste; kleinere Werte (Touchpad) rollen mindestens eine Zeile."""
-    screen = _seite(fenster, 1, aufrufe)
-    gerollt = []
-    monkeypatch.setattr(screen, "rollen", gerollt.append)
-
-    class Ereignis:
-        pass
-
-    ereignis = Ereignis()
-    ereignis.delta = delta
-    screen._mausrad(ereignis)
-    assert gerollt == [erwartet]
-
-
-def test_die_seite_hat_den_fokus_fuer_die_pfeiltasten(fenster, aufrufe):
-    screen = _seite(fenster, 1, aufrufe)
-    assert str(screen.text.cget("takefocus")) in ("", "1")
-    assert screen.text.cget("yscrollcommand")
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_die_buchstaben_des_quadrats_passen_in_ihre_felder(fenster, aufrufe, massstab):
+    """Sonst klebten die 676 Buchstaben aneinander – und niemand fände den Kreuzungspunkt."""
+    screen = _buch(fenster, 3, aufrufe)
+    screen.zum_lesezeichen(animiert=False)
+    (quadrat,) = [s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Quadrat)]
+    for element in screen.buch.find_withtag("feld") + screen.buch.find_withtag("kopfzeile"):
+        x0, y0, x1, y1 = screen.buch.bbox(element)
+        assert x1 - x0 <= quadrat.feld and y1 - y0 <= quadrat.feld, screen.buch.itemcget(element, "text")
 
 
 @pytest.mark.parametrize("massstab", [1, 1.5])
-def test_die_seite_nutzt_die_ganze_hoehe_des_fensters(fenster, aufrufe, wurzel, sichtbar, massstab):
-    """Sonst stünde nur ein Streifen Papier da, und man müsste ständig scrollen."""
-    screen = _seite(fenster, 1, aufrufe, einleitung=story.EINSTIEG_LEVEL_1.absaetze)
-    hoehe = 700 if massstab == 1 else 1000
-    sichtbar(1920, hoehe)
-    assert screen.text.winfo_height() > 0.6 * hoehe
-    assert screen._knopf.winfo_rooty() + screen._knopf.winfo_height() <= wurzel.winfo_rooty() + hoehe
+def test_die_felder_des_quadrats_sind_gross_genug_zum_lesen(fenster, aufrufe, massstab):
+    """Auf dem 1080p-Schulmonitor mindestens 18 Pixel – mit diesem Quadrat wird gerechnet."""
+    screen = _buch(fenster, 3, aufrufe)
+    (quadrat,) = [s for seite in screen.satz.seiten for s in seite.stuecke if isinstance(s, buchsatz.Quadrat)]
+    assert quadrat.feld >= (12 if massstab == 1 else 18)
 
 
-@pytest.mark.parametrize("massstab", [1, 1.5])
-def test_die_seite_wird_nicht_breiter_als_zum_lesen_gut(fenster, aufrufe, sichtbar, massstab):
-    """Auf einem 1920 Pixel breiten Monitor wären die Zeilen sonst viel zu lang."""
-    screen = _seite(fenster, 1, aufrufe)
-    sichtbar(1920, 1000)
-    blatt = screen.text.master
-    assert blatt.winfo_width() == screen.px(handbuch.SEITENBREITE)
-    assert screen.winfo_width() > blatt.winfo_width()         # der Rest ist Nachthimmel
+# ── Alles auf dem Papier ───────────────────────────────────────────────────
+
+def _ueberlappen(a, b, luft=1):
+    return a[0] + luft < b[2] and b[0] + luft < a[2] and a[1] + luft < b[3] and b[1] + luft < a[3]
 
 
 @pytest.mark.parametrize("massstab", [1, 1.5])
 @pytest.mark.parametrize("level", LEVEL)
-def test_die_tabellen_passen_auf_die_seite(fenster, aufrufe, wurzel, massstab, level):
-    screen = _seite(fenster, level, aufrufe)
-    wurzel.update_idletasks()
-    platz = screen.px(handbuch.SEITENBREITE)
-    for fenster_im_text in [*screen.tabellen, screen.quadrat]:
-        if fenster_im_text is not None:
-            assert fenster_im_text.winfo_reqwidth() <= platz
+def test_nichts_ragt_ueber_die_textflaeche_und_kein_text_liegt_auf_einem_anderen(fenster, aufrufe, level):
+    screen = _buch(fenster, level, aufrufe)
+    luft = 2          # um Text rechnet Tk einen Pixel Rand
+    for nr in _alle_doppelseiten(screen):
+        for seite in ("links", "rechts"):
+            x0, y0, x1, y1 = screen.flaeche(seite)
+            texte = []
+            for element in screen.buch.find_withtag(seite):
+                tags = screen.buch.gettags(element)
+                if "seitenzahl" in tags:
+                    continue
+                a, b, c, d = screen.buch.bbox(element)
+                text = screen.buch.itemcget(element, "text") if "text" in tags else ""
+                assert x0 - luft <= a and c <= x1 + luft and y0 - luft <= b and d <= y1 + luft, (
+                    f"Doppelseite {nr}, {seite}: {tags} {text!r} liegt bei {(a, b, c, d)}, "
+                    f"die Textfläche ist {(x0, y0, x1, y1)}")
+                if _art(screen, element) or {"beschriftung", "zelle"} & set(tags):
+                    texte.append((text, (a, b, c, d)))
+            for i, (text_a, kasten_a) in enumerate(texte):
+                for text_b, kasten_b in texte[i + 1:]:
+                    assert not _ueberlappen(kasten_a, kasten_b), f"{text_a!r} liegt auf {text_b!r}"
+
+
+def _rendern():
+    spec = importlib.util.spec_from_file_location("rendern", PROJEKT / "grafik" / "rendern.py")
+    modul = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modul)
+    return modul
 
 
 @pytest.mark.parametrize("massstab", [1, 1.5])
-def test_der_handbuch_screen_passt_ins_fenster(fenster, aufrufe, wurzel, platz):
-    _seite(fenster, 2, aufrufe, einleitung=story.EINSTIEG_LEVEL_2.absaetze,
-           hinweis="Die Zeit für Level 1 ist abgelaufen – weiter geht es mit Level 2.")
+def test_die_textflaechen_liegen_auf_dem_papier_des_buchbilds(massstab):
+    """ui/handbuch.py und grafik/buch_zeichnen.py müssen dieselben Flächen meinen.
+
+    Geprüft wird im fertigen Bild: Überall auf den Textflächen ist helles,
+    gelbliches Papier – keine Kante, kein Fleck, kein Einband. Links neben dem
+    Buch ist Nachthimmel, und wo man aufs Lesezeichen klickt, ist es rot.
+    """
+    ordner = animation.ANIMATIONSORDNER / "buch" / animation.unterordner(massstab)
+    bild = _rendern().png_lesen((ordner / "hintergrund.png").read_bytes())
+
+    def farbe(x, y):
+        return tuple(bild.zeilen[y][x * bild.kanaele:x * bild.kanaele + 3])
+
+    for flaeche in (handbuch.TEXT_LINKS, handbuch.TEXT_RECHTS):
+        x0, y0, x1, y1 = (stil.skaliert(wert, massstab) for wert in flaeche)
+        for i in range(11):
+            for j in range(11):
+                r, g, b = farbe(x0 + (x1 - 1 - x0) * i // 10, y0 + (y1 - 1 - y0) * j // 10)
+                assert r >= 200 and g >= 180 and b >= 140 and r - b >= 25, (r, g, b)
+    assert max(farbe(stil.skaliert(5, massstab), stil.skaliert(240, massstab))) < 60
+    bx0, by0, bx1, by1 = (stil.skaliert(wert, massstab) for wert in handbuch.BAND)
+    r, g, b = farbe((bx0 + bx1) // 2, (by0 + by1) // 2)
+    assert r > 140 and g < 90 and b < 90
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_das_buch_passt_ins_fenster_auch_mit_hinweis_und_langem_einstieg(fenster, aufrufe, wurzel, platz):
+    _buch(fenster, 2, aufrufe, einleitung=story.EINSTIEG_LEVEL_2.absaetze,
+          hinweis="Die Zeit für Level 1 ist abgelaufen – weiter geht es mit Level 2.")
     wurzel.update_idletasks()
     assert wurzel.winfo_reqwidth() <= platz[0]
     assert wurzel.winfo_reqheight() <= platz[1]
 
 
+def test_im_kleinen_massstab_ist_der_text_darueber_so_breit_wie_das_buch(fenster, aufrufe):
+    screen = _buch(fenster, 2, aufrufe, einleitung=story.EINSTIEG_LEVEL_2.absaetze)
+    (zeile,) = screen._einleitung
+    assert int(zeile.cget("wraplength")) == screen.buch.winfo_reqwidth()
+
+
+@pytest.mark.parametrize("massstab", [1.5])
+def test_im_grossen_massstab_darf_der_text_darueber_breiter_werden(fenster, aufrufe):
+    """Auf dem 1080p-Monitor ist neben dem Buch Platz – und in der Höhe zählt jede Zeile."""
+    screen = _buch(fenster, 2, aufrufe, einleitung=story.EINSTIEG_LEVEL_2.absaetze)
+    (zeile,) = screen._einleitung
+    assert int(zeile.cget("wraplength")) > screen.buch.winfo_reqwidth()
+
+
+# ── Blättern ───────────────────────────────────────────────────────────────
+
+def _mitte(bereich, screen):
+    x0, y0, x1, y1 = (screen.px(wert) for wert in bereich)
+    return (x0 + x1) // 2, (y0 + y1) // 2
+
+
+def test_die_knoepfe_blaettern_und_sind_am_ende_gesperrt(fenster, aufrufe, wurzel):
+    screen = _buch(fenster, 3, aufrufe)
+    letzte = screen.anzahl_doppelseiten - 1
+    assert screen._zurueckblaettern.cget("state") == "disabled"
+    assert screen.seitenanzeige == f"Doppelseite 1 von {letzte + 1}"
+    screen._vorblaettern.invoke()
+    assert screen.doppelseite == 1 and screen.seitenanzeige == f"Doppelseite 2 von {letzte + 1}"
+    assert screen._zurueckblaettern.cget("state") == "normal"
+    _warten(wurzel, lambda: not screen.blaettert)
+    screen.aufschlagen(letzte, animiert=False)
+    assert screen._vorblaettern.cget("state") == "disabled"
+    assert screen.blaettern(1) is False and screen.doppelseite == letzte
+    screen._zurueckblaettern.invoke()
+    assert screen.doppelseite == letzte - 1
+    assert screen.blaettern(-99) is False
+
+
+@pytest.mark.parametrize("taste, richtung", [("<Right>", 1), ("<Next>", 1), ("<Left>", -1), ("<Prior>", -1)])
+def test_die_pfeiltasten_und_bild_auf_ab_blaettern(fenster, aufrufe, ausloesen, taste, richtung):
+    screen = _buch(fenster, 3, aufrufe)
+    screen.aufschlagen(1, animiert=False)
+    ausloesen(screen.buch, taste)
+    assert screen.doppelseite == 1 + richtung
+
+
+@pytest.mark.parametrize("sequenz, delta, richtung",
+                         [("<MouseWheel>", -120, 1), ("<MouseWheel>", 120, -1), ("<MouseWheel>", -3, 1),
+                          ("<Button-5>", 0, 1), ("<Button-4>", 0, -1)])
+def test_das_mausrad_blaettert(fenster, aufrufe, ausloesen, sequenz, delta, richtung):
+    screen = _buch(fenster, 3, aufrufe)
+    screen.aufschlagen(1, animiert=False)
+    ausloesen(screen.buch, sequenz, delta=delta)
+    assert screen.doppelseite == 1 + richtung
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_ein_klick_auf_die_hochgebogenen_ecken_blaettert(fenster, aufrufe, ausloesen, wurzel):
+    screen = _buch(fenster, 3, aufrufe)
+    x, y = _mitte(handbuch.ECKE_RECHTS, screen)
+    ausloesen(screen.buch, "<Button-1>", x=x, y=y)
+    assert screen.doppelseite == 1
+    _warten(wurzel, lambda: not screen.blaettert)
+    x, y = _mitte(handbuch.ECKE_LINKS, screen)
+    ausloesen(screen.buch, "<Button-1>", x=x, y=y)
+    assert screen.doppelseite == 0
+
+
+def test_ein_klick_mitten_auf_die_seite_blaettert_nicht(fenster, aufrufe):
+    screen = _buch(fenster, 3, aufrufe)
+    screen.klicken(*_mitte(handbuch.TEXT_RECHTS, screen))
+    assert screen.doppelseite == 0
+
+
+@pytest.mark.parametrize("level", LEVEL)
+def test_das_lesezeichen_fuehrt_zur_tabelle_die_man_zum_loesen_braucht(fenster, aufrufe, wurzel, level):
+    screen = _buch(fenster, level, aufrufe)
+    screen.klicken(*_mitte(handbuch.BAND, screen))
+    assert screen.doppelseite == screen.satz.lesezeichen // 2
+    _warten(wurzel, lambda: not screen.blaettert)
+    if level == 3:
+        assert screen.quadratfeld("R", "H") == "Y"
+    else:
+        (tabelle,) = [b for a in screen.seite.abschnitte for b in a.bloecke if getattr(b, "lesezeichen", False)]
+        zellen = "".join(screen.buch.itemcget(e, "text") for e in screen.buch.find_withtag("zelle"))
+        assert "".join(tabelle.zeilen[1][1:6]) in zellen
+    assert screen.zum_lesezeichen() is False                        # schon da
+
+
+def test_der_zeiger_zeigt_wo_man_klicken_kann(fenster, aufrufe):
+    screen = _buch(fenster, 3, aufrufe)
+    assert screen.ziel(*_mitte(handbuch.ECKE_RECHTS, screen)) == "vor"
+    assert screen.ziel(*_mitte(handbuch.ECKE_LINKS, screen)) is None       # vor der Titelseite ist nichts
+    screen.aufschlagen(screen.anzahl_doppelseiten - 1, animiert=False)
+    assert screen.ziel(*_mitte(handbuch.ECKE_RECHTS, screen)) is None      # hinter der letzten auch nicht
+    assert screen.ziel(*_mitte(handbuch.ECKE_LINKS, screen)) == "zurueck"
+    screen.aufschlagen(0, animiert=False)
+    assert screen.ziel(*_mitte(handbuch.BAND, screen)) == "lesezeichen"
+    assert screen.ziel(*_mitte(handbuch.TEXT_LINKS, screen)) is None
+    screen._maus_ueber("vor")
+    assert screen.buch.cget("cursor") == "hand2" and screen.buch.find_withtag("maus")
+    screen._maus_ueber("lesezeichen")
+    (wort,) = screen.buch.find_withtag("maus")
+    assert screen.buch.itemcget(wort, "text") == handbuch.LESEZEICHEN
+    screen._maus_ueber(None)
+    assert screen.buch.cget("cursor") == "" and not screen.buch.find_withtag("maus")
+
+
+def test_das_buch_bekommt_den_fokus_fuer_die_pfeiltasten(fenster, aufrufe, monkeypatch):
+    """Ein verstecktes Fenster bekommt von Tk keinen Fokus – deshalb wird nachgesehen, wem er gegeben wird."""
+    bekommen = []
+    monkeypatch.setattr(animation.Buehne, "focus_set", lambda leinwand: bekommen.append(leinwand))
+    screen = _buch(fenster, 1, aufrufe)
+    assert bekommen == [screen.buch]
+    screen._vorblaettern.invoke()                  # nach einem Knopf gleich wieder
+    assert bekommen == [screen.buch, screen.buch]
+    assert str(screen.buch.cget("takefocus")) == "1"
+
+
+# ── Umblättern ─────────────────────────────────────────────────────────────
+
+def test_die_bilder_des_umblaetterns_werden_erst_nach_dem_aufschlagen_geladen(fenster, aufrufe, wurzel):
+    screen = _buch(fenster, 1, aufrufe)
+    assert screen._ablauf is None
+    _warten(wurzel, lambda: screen._ablauf is not None)
+
+
+def test_vorwaerts_liegt_die_neue_rechte_seite_unter_dem_blatt_das_umschlaegt(fenster, aufrufe, wurzel):
+    screen = _buch(fenster, 1, aufrufe)
+    alt_links = screen.texte("links")
+    assert screen.blaettern(1) is True
+    assert screen.blaettert
+    (blatt,) = screen.buch.find_withtag(animation.Ablauf.TAG)
+    assert screen.buch.find_all()[-1] == blatt                       # das Blatt liegt über allem
+    ((_, folge),) = screen._ablauf.bilder
+    assert screen.buch.itemcget(blatt, "image") == str(folge[0])     # es liegt noch flach auf der rechten Seite
+    assert screen.aufschlagen(0, animiert=False) is False           # kein zweites Mal, solange es umschlägt
+    assert screen.doppelseite == 1
+    assert screen.texte("links") == alt_links                       # links noch die alte Seite …
+    assert _zeilen_im_satz(screen, 3, *FLIESSTEXT)[0] in screen.texte("rechts")   # … rechts schon die neue
+    _warten(wurzel, lambda: not screen.blaettert)
+    assert not screen.buch.find_withtag(animation.Ablauf.TAG)
+    assert _zeilen_im_satz(screen, 2, *FLIESSTEXT)[0] in screen.texte("links")
+
+
+def test_rueckwaerts_liegt_die_neue_linke_seite_zuerst_darunter(fenster, aufrufe, wurzel):
+    screen = _buch(fenster, 1, aufrufe)
+    screen.aufschlagen(1, animiert=False)
+    alt_rechts = screen.texte("rechts")
+    assert screen.blaettern(-1) is True
+    (blatt,) = screen.buch.find_withtag(animation.Ablauf.TAG)
+    ((_, folge),) = screen._ablauf.bilder
+    assert screen.buch.itemcget(blatt, "image") == str(folge[-1])    # rückwärts: erst liegt es links
+    assert screen.texte("rechts") == alt_rechts
+    assert _eine_zeile([buch.HANDBUCH_TITEL]) in _eine_zeile(screen.texte("links"))
+    _warten(wurzel, lambda: not screen.blaettert)
+    assert _eine_zeile(screen.texte("rechts")).startswith(buch.SEITE_CAESAR.titel)
+
+
+def test_waehrend_es_umschlaegt_wird_nicht_noch_einmal_geblaettert(fenster, aufrufe, wurzel, ausloesen):
+    """Ein schnell gedrehtes Mausrad blättert nicht fünf Seiten auf einmal."""
+    screen = _buch(fenster, 3, aufrufe)
+    screen.blaettern(1)
+    for _ in range(4):
+        ausloesen(screen.buch, "<MouseWheel>", delta=-120)
+    assert screen.doppelseite == 1
+    _warten(wurzel, lambda: not screen.blaettert)
+    assert screen.blaettern(1) and screen.doppelseite == 2
+
+
+def test_die_bilder_werden_nur_einmal_geladen(fenster, aufrufe, monkeypatch):
+    """Das Handbuch wird oft aufgeschlagen – die grossen Bilder bleiben im Fenster."""
+    geladen = []
+    original = animation._folge_laden
+    monkeypatch.setattr(animation, "_folge_laden", lambda *werte: geladen.append(1) or original(*werte))
+    erstes = _buch(fenster, 1, aufrufe)._umblaettern()
+    zweites = _buch(fenster, 2, aufrufe)._umblaettern()
+    assert len(geladen) == 1
+    assert zweites.bilder is erstes.bilder
+
+
+def test_ohne_bilder_wird_eben_ohne_umschlagen_geblaettert(fenster, aufrufe, monkeypatch):
+    def laden(name, **optionen):
+        if name == "umblaettern":
+            raise FileNotFoundError(name)
+        return animation.Animation(name, **optionen)
+
+    monkeypatch.setattr(handbuch, "Animation", laden)
+    screen = _buch(fenster, 1, aufrufe)
+    assert screen.blaettern(1) is True
+    assert not screen.blaettert and screen.doppelseite == 1
+    assert _zeilen_im_satz(screen, 2, *FLIESSTEXT)[0] in screen.texte("links")
+
+
+def test_wer_mitten_im_umblaettern_weitergeht_hinterlaesst_nichts(fenster, aufrufe, wurzel):
+    """Sonst liefe der Takt des Umblätterns nach dem Abriss ins Leere – mitten in der nächsten Aufgabe."""
+    screen = _buch(fenster, 1, aufrufe)
+    screen.blaettern(1)
+    blatt = screen._ablauf
+    auftrag = blatt._auftrag
+    assert auftrag in wurzel.tk.call("after", "info")
+    _buch(fenster, 2, aufrufe)                          # der alte Screen wird abgerissen
+    assert not blatt.laeuft and blatt._auftrag is None
+    assert auftrag not in wurzel.tk.call("after", "info")
+    ende = time.monotonic() + 0.4
+    while time.monotonic() < ende:
+        wurzel.update()
+        time.sleep(0.01)
+    assert fenster.meldung == ""
+
+
 # ── Knopf, Einleitung, Hinweis ─────────────────────────────────────────────
 
 def test_der_knopf_fuehrt_weiter(fenster, aufrufe, ausloesen):
-    screen = _seite(fenster, 1, aufrufe)
+    screen = _buch(fenster, 1, aufrufe)
     assert screen.knopftext == handbuch.KNOPF_WEITER
     screen._knopf.invoke()
     ausloesen(screen._knopf, "<Return>")
     assert aufrufe == [fenster, fenster]
 
 
-def test_einleitung_und_hinweis_stehen_ueber_der_seite(fenster, aufrufe):
-    screen = _seite(fenster, 2, aufrufe, einleitung=story.EINSTIEG_LEVEL_2.absaetze, hinweis="Zeit um.")
+def test_einleitung_und_hinweis_stehen_ueber_dem_buch(fenster, aufrufe):
+    screen = _buch(fenster, 2, aufrufe, einleitung=story.EINSTIEG_LEVEL_2.absaetze, hinweis="Zeit um.")
     assert screen.einleitung == story.EINSTIEG_LEVEL_2.absaetze
     assert screen.hinweis == "Zeit um."
+    reihenfolge = screen.pack_slaves()
+    assert (reihenfolge.index(screen._hinweis) < reihenfolge.index(screen._einleitung[0])
+            < reihenfolge.index(screen.buch))
 
 
 def test_ohne_einleitung_und_hinweis_steht_nichts_darueber(fenster, aufrufe):
-    screen = _seite(fenster, 1, aufrufe)
+    screen = _buch(fenster, 1, aufrufe)
     assert screen.einleitung == () and screen.hinweis == ""
+    assert screen.pack_slaves()[0] is screen.buch
 
 
 def test_die_kopfzeile_nennt_das_level(fenster, aufrufe):
-    assert _seite(fenster, 3, aufrufe).titel == "Handbuch – Level 3"
+    assert _buch(fenster, 3, aufrufe).titel == "Handbuch – Level 3"
 
 
 # ── Im Spielablauf ─────────────────────────────────────────────────────────
@@ -388,7 +713,7 @@ def test_nach_einem_levelwechsel_liegt_die_naechste_seite_auf(fenster):
     assert screen.hinweis == ""                            # vorzeitig beendet, nicht abgelaufen
 
 
-def test_ist_die_zeit_abgelaufen_sagt_die_seite_es(fenster, uhr):
+def test_ist_die_zeit_abgelaufen_sagt_das_buch_es(fenster, uhr):
     from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN
 
     _bis_zum_handbuch(fenster)

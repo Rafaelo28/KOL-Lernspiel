@@ -386,8 +386,8 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
       810 statt 960 × 540), gerendert aus derselben SVG. Das kleine Bild im
       Spiel zu vergrössern sähe grob aus – Tkinter kann nur Pixel verdoppeln
     - Die Screens stehen **in der Mitte** des Fensters, der Rand drumherum hat
-      ihre Hintergrundfarbe. Ein Screen, der den ganzen Platz braucht (etwa
-      das Handbuch in 6.4), setzt `fuellt_fenster = True`
+      ihre Hintergrundfarbe. Ein Screen, der den ganzen Platz braucht, setzt
+      `fuellt_fenster = True`
     - Die Tests prüfen jeden Bild-Screen in beiden Maßstäben: im kleinen in
       1000 × 700, im grossen in 1920 × 980 (1080p abzüglich Titel- und
       Taskleiste, mit 20 Pixel Luft für Schriften unter Windows)
@@ -460,40 +460,96 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.4 Handbuch-Screen
 - Scrollbarer Text, Tabellen als Grid
 - Muss während der Aufgaben erreichbar bleiben (Nachschlagen ist erlaubt)
-- **Umgesetzt:**
-  - `ui/handbuch.py` – die Seite des Levels als **Blatt Papier auf dem
-    Nachthimmel**: Titel des Handbuchs, Seitentitel, Abschnitte mit
-    Rotstift-Überschriften, Absätze, Aufzählungen mit hängendem Einzug. Die
-    Merksätze stehen in einem gelben Kasten, Beispiel-Überschriften und
-    Ergebnisse ("HUND wird zu KXQG") fett – dafür hat `Absatz` in
-    `content/handbuch.py` ein Feld `betont` bekommen
-  - **Scrollen:** Die Seite ist ein `tk.Text` – bricht selbst um, scrollt mit
-    Mausrad, Rollbalken und Tasten und lässt sich nicht beschreiben. Die
-    Tabellen sitzen als **Raster** im Text und scrollen mit; über ihnen leiten
-    sie das Mausrad an die Seite weiter (sonst bliebe die Seite dort stehen)
-  - Das **Vigenère-Quadrat** auf Seite 3 wird aus der Formel gezeichnet
+- **Umgesetzt – als aufgeschlagenes Buch:** Statt eines Blattes zum Scrollen
+  liegt Bobs Handbuch als **altes, in Leder gebundenes Buch** vor den
+  Spielenden: Einband mit Goldprägung, vergilbte Seiten mit Stockflecken,
+  Eselsohr, hochgebogene Ecken, ein rotes Lesezeichen-Band. Geblättert wird
+  in Doppelseiten, und dabei schlägt sichtbar ein Blatt um
+  - **Die Bilder** entstehen aus einem Programm, nicht von Hand:
+    `grafik/buch_zeichnen.py` schreibt `grafik/buch.svg` (das Buch als
+    Standbild) und `grafik/umblaettern.svg` (zwölf Bilder, durchsichtig, mit
+    derselben viewBox). Beide brauchen dasselbe Blatt – sonst sprängen beim
+    Umblättern die Kanten. Dazu `grafik/stempel.svg` ("STRENG GEHEIM",
+    durchsichtig). Gerendert wie jede Animation (`dokumentation/Animationen.md`)
+  - **Der Satz** (`ui/buchsatz.py`): Ein Buch hat feste Seiten, also muss
+    vorher feststehen, was auf welche passt. Absätze werden in Zeilen
+    umbrochen und die Zeilen auf Seiten verteilt – mit den Regeln aus dem
+    Buchdruck: Eine Überschrift steht nie allein unten; ein geteilter Absatz
+    lässt unten zwei Zeilen stehen und nimmt zwei mit; ein Absatz mit
+    Doppelpunkt bleibt bei dem, was er ankündigt; Tabellen, Merksätze und
+    Randnotizen werden nicht geteilt. Gemessen wird mit genau den Schriften,
+    mit denen danach gezeichnet wird
+  - **Titelseite:** Links auf der ersten Doppelseite stehen Titel und
+    Untertitel des Handbuchs, eine Verzierung, das **Inhaltsverzeichnis des
+    Kapitels mit Seitenzahlen** und der Stempel. Rechts beginnt das Kapitel
+  - **Breite Tabellen** (26 Buchstaben) passen auf keine Buchseite; sie
+    werden in so wenige Teile wie möglich zerlegt (A–M / N–Z), jeder Teil mit
+    seiner Beschriftung. Das **Vigenère-Quadrat** bekommt eine Seite für sich
+    und wird so gross gezeichnet, wie sie es erlaubt (im grossen Maßstab
+    20 Pixel je Feld). Es entsteht weiterhin aus der Formel
     (`crypto/vigenere_quadrat.py`), nicht abgetippt; ein Test vergleicht alle
     676 Felder. Hervorheben von Zeile und Spalte folgt in 6.7
-  - Die Seite ist höchstens 860 Pixel breit (im grossen Maßstab 1290) – auf
-    einem 1920 breiten Monitor wären die Zeilen sonst zu lang zum Lesen.
-    Nach unten nutzt sie die ganze Fensterhöhe
-  - Über der Seite steht der **Einstieg ins Level** aus der Geschichte ("Du
-    schlägst das Handbuch auf …", neu: `story.EINSTIEG_NACH_LEVEL`), nach
-    einem Zeitablauf davor der Hinweis "Die Zeit für Level … ist abgelaufen"
+  - Der **Merksatz** steht auf einer Karte, die mit Klebeband ins Buch
+    geklebt ist; Beispiel-Überschriften und Ergebnisse ("HUND wird zu KXQG")
+    sind fett (`betont` in `content/handbuch.py`)
+  - **Bobs Randnotizen** (neu: `content.handbuch.Randnotiz`) stehen in
+    Handschrift, blau und etwas schief am Rand. Sie **wiederholen nur**, was
+    auf der Seite schon steht ("Nach Z geht's wieder bei A los – wie bei der
+    Uhr!"). Grund ist der Versuchsaufbau: Die Kontrollgruppe lernt mit
+    denselben Handbuchtexten; ein Tipp, der im Handbuch fehlt, vergliche
+    nicht mehr Lernspiel und Unterricht, sondern zwei Erklärungen. Jede Notiz
+    nennt die Stelle, die sie wiederholt – ein Test prüft, dass es sie gibt
+  - **Blättern:** Knöpfe unter dem Buch, Pfeiltasten und Bild auf/ab,
+    Mausrad und ein Klick auf die hochgebogenen Ecken unten außen. Das rote
+    **Lesezeichen-Band** führt zu der Tabelle, die man beim Lösen immer
+    wieder braucht (`lesezeichen=True` in `content/handbuch.py`: das
+    verschobene Alphabet, die Geheimtabelle, das Quadrat)
+  - **Umblättern:** `ui.animation.Ablauf` legt die zwölf durchsichtigen
+    Bilder über die Leinwand. Vorwärts liegt die neue rechte Seite schon
+    unter dem Blatt und die neue linke erscheint, wenn es gelandet ist –
+    rückwärts umgekehrt. Solange es umschlägt, wird nicht noch einmal
+    geblättert (ein schnell gedrehtes Mausrad soll nicht fünf Seiten
+    weiterspringen). Die Bilder sind gross (im grossen Maßstab rund 50 MB):
+    Sie werden erst geladen, wenn das Buch schon dasteht, und bleiben im
+    `zwischenspeicher` des Hauptfensters – das Handbuch wird zu Beginn jedes
+    Levels und bei jedem Nachschlagen neu aufgeschlagen
+  - **Schriften:** eine Buchschrift (Palatino Linotype, Georgia … je nach
+    Rechner) und für die Notizen eine Handschrift (Ink Free, Segoe Print,
+    Z003 …); fehlen alle, wird kursiv gesetzt (`ui/stil.py`,
+    `erste_schrift`)
+  - Über dem Buch steht der **Einstieg ins Level** aus der Geschichte ("Du
+    schlägst das Handbuch auf …", `story.EINSTIEG_NACH_LEVEL`), nach einem
+    Zeitablauf davor der Hinweis "Die Zeit für Level … ist abgelaufen". Im
+    grossen Maßstab dürfen diese Zeilen breiter werden als das Buch: Auf dem
+    1080p-Monitor ist neben dem Buch Platz, in der Höhe aber nicht
   - **Nachschlagen während der Aufgaben:** `handbuch.nachschlagen(fenster,
-    level, zurueck)` zeigt dieselbe Seite mit "Zurück zur Aufgabe". Die
+    level, zurueck)` zeigt dasselbe Buch mit "Zurück zur Aufgabe". Die
     Aufgabe bleibt offen, ihre Uhr läuft weiter – Nachschlagen gehört zum
     Lösen und zählt deshalb zur Bearbeitungszeit. Der Aufgaben-Screen baut
     sich danach frisch auf und setzt dieselbe Aufgabe fort (der Platzhalter
     der Übung macht es schon so: `Uebung(fortsetzen=True)`). Läuft die Zeit
     beim Nachschlagen ab, gilt Projektregel 1: Die Aufgabe wird abgebrochen,
-    die nächste Seite liegt auf
+    das nächste Kapitel liegt auf
   - Ein Handbuch im Spiel, kein zweites Fenster: Ein zweites Fenster verlöre
     man hinter dem maximierten Spiel, und das Spiel hat bewusst genau eines
+  - **Grössen:** Das Buch ist 960 × 492 Pixel gross, auf dem
+    1080p-Schulmonitor 1440 × 738. Die Textflächen der beiden Seiten stehen
+    als Pixelmaße in `ui/handbuch.py` und in SVG-Einheiten in
+    `grafik/buch_zeichnen.py`; ein Test prüft im gerenderten Bild, dass dort
+    überall Papier ist – und die Layout-Tests, dass nichts darüber hinausragt
+    und kein Text auf einem anderen liegt
 
 ### 6.5 Aufgaben-Screen
 - Aufgabentext, Schlüsselangabe, Eingabefeld, Prüf-Button, Rückmeldung,
   Versuchszähler
+- **Die Übungsaufgaben werden im Buch beantwortet** (festgelegt nach 6.4):
+  Die Übung steht auf der rechten Seite des aufgeschlagenen Handbuchs, die
+  Erklärung dazu links – aufgeschrieben wird also mitten im Buch, wie in ein
+  Übungsheft. So bleibt beim Lösen sichtbar, worum es geht, und der Wechsel
+  zwischen Aufgabe und Handbuch kostet keine Zeit im festen Zeitfenster.
+  Technisch: derselbe Satz und dieselbe Leinwand wie in 6.4
+  (`ui/buchsatz.py`, `ui/handbuch.py`), das Eingabefeld als Fenster auf der
+  Leinwand über der Buchseite
 - Aus 6.4: ein Knopf "Im Handbuch nachschlagen" über
   `handbuch.nachschlagen(...)`; der Screen muss eine **offene Aufgabe
   fortsetzen** können, statt eine neue zu stellen – samt dem, was schon
@@ -506,6 +562,13 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.6 Funk-Screen
 - Optisch abgesetzt vom Handbuch, damit "echte Nachricht" und "Übung"
   unterscheidbar sind
+- **Als Gerät, nicht als Formular** (festgelegt nach 6.4): Die
+  story-tragenden Funksprüche werden an einem **Funkgerät** ver- und
+  entschlüsselt – Metallgehäuse, leuchtende Anzeige, Skala, Kippschalter,
+  Kontrolllämpchen; der Text erscheint zeichenweise, als käme er gerade
+  herein. Das Handbuch ist Papier, der Funk ist Technik: Schon am Bild ist zu
+  sehen, ob gerade geübt wird oder ob es ernst ist. Entsteht wie das Buch als
+  SVG in `grafik/` und wird vorgerendert
 - **Beim Empfangen bleibt der vollständige Geheimtext sichtbar**, der selbst
   zu entschlüsselnde Anfang ist hervorgehoben. Sonst sieht man in Level 2 nicht
   mehr, dass der Geheimtext lang ist – und genau darauf beruht der Merksatz zur
@@ -517,10 +580,12 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 ### 6.7 Vigenère-Quadrat als Anzeige
 - 26×26-Grid aus Phase 1.5, mit Hervorhebung der aktiven Zeile/Spalte
 - Muss auf kleinen Schulmonitoren lesbar sein – testen!
-- Aus 6.4: Das Handbuch zeichnet das Quadrat schon (`Handbuch._quadrat_bauen`);
-  jedes Feld trägt die Tags `z<Zeile>` und `s<Spalte>`, darüber lässt es sich
-  hervorheben. Für den Aufgaben-Screen gehört die Zeichnung in ein eigenes
-  Bauteil, das Handbuch und Aufgabe gemeinsam benutzen
+- Aus 6.4: Das Handbuch zeichnet das Quadrat schon
+  (`Handbuch._quadrat_zeichnen` auf der Leinwand, Grösse aus
+  `buchsatz.Quadrat`); jedes Feld trägt die Tags `z<Zeile>` und `s<Spalte>`,
+  darüber lässt es sich hervorheben. Für den Aufgaben-Screen gehört die
+  Zeichnung in ein eigenes Bauteil, das Handbuch und Aufgabe gemeinsam
+  benutzen
 
 ### 6.8 Abschluss-Screen
 - Nachthimmel, Rettung, Schlusstext (Diamanten bleiben zurück)

@@ -5,7 +5,7 @@ import re
 import pytest
 
 
-def ereignis_ausloesen(widget, sequenz, x_root=0, y_root=0, zeichen=""):
+def ereignis_ausloesen(widget, sequenz, x_root=0, y_root=0, zeichen="", x=5, y=5, delta=0):
     """Ruft die Bindung ``sequenz`` von ``widget`` so auf, wie Tk es täte.
 
     In einem versteckten Fenster (``withdraw``) lassen sich Mausklicks und
@@ -17,7 +17,8 @@ def ereignis_ausloesen(widget, sequenz, x_root=0, y_root=0, zeichen=""):
 
     ``zeichen`` ist bei Tastenereignissen das getippte Zeichen. Tks eigene
     Bindung (etwa die, die das Zeichen ins Feld schreibt) läuft dabei nicht mit
-    – die muss ein Test selbst nachstellen.
+    – die muss ein Test selbst nachstellen. ``x`` und ``y`` sind die Stelle
+    im Widget, ``delta`` ist beim Mausrad die Drehung (Windows: 120 je Raste).
     """
     import tkinter as tk
 
@@ -25,8 +26,8 @@ def ereignis_ausloesen(widget, sequenz, x_root=0, y_root=0, zeichen=""):
     treffer = re.search(r"\[(\S+) %#", skript)
     assert treffer, f"{widget} hat keine Bindung für {sequenz}"
     felder = {"%#": "0", "%b": "1", "%f": "0", "%h": "0", "%k": "0", "%s": "0", "%t": "0", "%w": "0",
-              "%x": "5", "%y": "5", "%A": zeichen, "%E": "0", "%K": zeichen, "%N": "0", "%W": str(widget),
-              "%T": "4", "%X": str(x_root), "%Y": str(y_root), "%D": "0"}
+              "%x": str(x), "%y": str(y), "%A": zeichen, "%E": "0", "%K": zeichen, "%N": "0", "%W": str(widget),
+              "%T": "4", "%X": str(x_root), "%Y": str(y_root), "%D": str(delta)}
     return widget.tk.call(treffer.group(1), *(felder[feld] for feld in tk.Misc._subst_format))
 
 

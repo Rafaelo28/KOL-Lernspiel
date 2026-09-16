@@ -229,19 +229,26 @@ class Ablauf:
     der linken oberen Ecke der Animation auf der Leinwand.
 
     Die Bilder werden beim Bauen geladen. Wer das nicht beim Öffnen eines
-    Screens bezahlen will, baut den Ablauf etwas später (siehe das Handbuch).
+    Screens bezahlen will, baut den Ablauf etwas später. Wer denselben Ablauf
+    immer wieder braucht, gibt die :attr:`bilder` eines früheren mit und lädt
+    gar nicht erst neu (so macht es das Handbuch beim Umblättern).
     """
 
     TAG = "ablauf"
 
-    def __init__(self, leinwand, animation, x=0, y=0):
+    def __init__(self, leinwand, animation, x=0, y=0, bilder=None):
         self.leinwand = leinwand
         self.animation = animation
         self._x, self._y = x, y
         self._auftrag = None
         self._elemente = []
-        self._folgen = [(ausschnitt, _folge_laden(leinwand, animation, ausschnitt))
-                        for ausschnitt in animation.ausschnitte]
+        self._folgen = bilder if bilder is not None else [
+            (ausschnitt, _folge_laden(leinwand, animation, ausschnitt)) for ausschnitt in animation.ausschnitte]
+
+    @property
+    def bilder(self):
+        """Die geladenen Bildfolgen – für einen späteren Ablauf derselben Animation."""
+        return self._folgen
 
     @property
     def laeuft(self):

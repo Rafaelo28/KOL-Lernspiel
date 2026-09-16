@@ -131,6 +131,32 @@ FARBE_ROTSTIFT = "#8a2d1b"
 #: Hinterlegung der Merksätze.
 FARBE_MERKSATZ = "#f2dc9b"
 
+# Das Handbuch als aufgeschlagenes Buch (ui/handbuch.py, ui/buchsatz.py):
+#: Linien der Tabellen im Buch – wie mit brauner Tinte gezogen.
+FARBE_BUCHLINIE = "#9c8456"
+#: Kante der Merksatz-Karte, die ins Buch geklebt ist.
+FARBE_KARTENKANTE = "#c9a24a"
+#: Das Klebeband darauf.
+FARBE_KLEBEBAND = "#efe6cc"
+#: Bobs Randnotizen – blauer Kugelschreiber.
+FARBE_KULI = "#284b8f"
+
+#: Das Handbuch ist in einer Buchschrift gesetzt – der ersten aus dieser
+#: Liste, die der Rechner kennt. Die ersten beiden hat jedes Windows; "P052"
+#: ist ihr Gegenstück unter Linux.
+BUCHSCHRIFTEN = ("Palatino Linotype", "Georgia", "Book Antiqua", "P052", "DejaVu Serif",
+                 "Liberation Serif", "Times New Roman")
+
+#: Bobs Randnotizen stehen in einer Handschrift. "Ink Free" und "Segoe Print"
+#: gibt es unter Windows 10 und 11; fehlen alle, werden sie kursiv gesetzt.
+HANDSCHRIFTEN = ("Ink Free", "Segoe Print", "Segoe Script", "Z003", "Comic Sans MS")
+
+
+def erste_schrift(wurzel, wunschliste):
+    """Die erste Schriftfamilie aus ``wunschliste``, die es auf diesem Rechner gibt – sonst ``None``."""
+    vorhanden = set(tkfont.families(wurzel))
+    return next((familie for familie in wunschliste if familie in vorhanden), None)
+
 
 def schriften_einrichten(wurzel, massstab=1):
     """Stellt die Grundschriften ein und legt die benannten Schriften an.

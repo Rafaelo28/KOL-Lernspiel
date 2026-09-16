@@ -23,6 +23,7 @@ from content.handbuch import (
     Absatz,
     Aufzaehlung,
     Handbuchseite,
+    Randnotiz,
     Tabelle,
     VigenereQuadrat,
 )
@@ -81,6 +82,8 @@ def _alle_texte(seite):
                 texte.extend(zelle for zeile in block.zeilen for zelle in zeile)
             elif isinstance(block, VigenereQuadrat):
                 texte.append(block.beschriftung)
+            elif isinstance(block, Randnotiz):
+                texte.append(block.text)
     return texte
 
 
@@ -146,15 +149,65 @@ def test_kein_abschnitt_und_kein_text_ist_leer(seite):
         assert abschnitt.ueberschrift.strip()
         assert abschnitt.bloecke, f"'{abschnitt.ueberschrift}' ist leer."
         for block in abschnitt.bloecke:
-            assert isinstance(block, (Absatz, Aufzaehlung, Tabelle, VigenereQuadrat)), (
+            assert isinstance(block, (Absatz, Aufzaehlung, Tabelle, VigenereQuadrat, Randnotiz)), (
                 f"Unbekannter Blocktyp {type(block).__name__} – die UI kennt nur "
-                "Absatz, Aufzaehlung, Tabelle und VigenereQuadrat."
+                "Absatz, Aufzaehlung, Tabelle, VigenereQuadrat und Randnotiz."
             )
             if isinstance(block, Absatz):
                 assert block.text.strip()
             elif isinstance(block, Aufzaehlung):
                 assert block.punkte
                 assert all(punkt.strip() for punkt in block.punkte)
+            elif isinstance(block, Randnotiz):
+                assert block.text.strip() and block.bezug.strip()
+
+
+def _randnotizen(seite):
+    return [block for abschnitt in seite.abschnitte for block in abschnitt.bloecke
+            if isinstance(block, Randnotiz)]
+
+
+@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
+def test_jede_randnotiz_wiederholt_nur_was_auf_der_seite_schon_steht(seite):
+    """Randnotizen bringen nichts Neues – sonst lernte die Spielgruppe mehr als die Kontrollgruppe.
+
+    Geprüft wird, dass die Stelle, die eine Notiz wiederholt, wörtlich im
+    Handbuchtext derselben Seite steht – nicht in einer anderen Notiz.
+    """
+    notizen = _randnotizen(seite)
+    assert notizen, f"Seite {seite.level} hat keine Randnotiz."
+    handbuchtext = [text for text in _alle_texte(seite) if text not in {n.text for n in notizen}]
+    for notiz in notizen:
+        assert any(notiz.bezug in text for text in handbuchtext), (
+            f"Die Notiz {notiz.text!r} bezieht sich auf {notiz.bezug!r} – das steht so nicht "
+            f"auf Seite {seite.level}."
+        )
+
+
+@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
+def test_randnotizen_sind_kurz(seite):
+    """Eine Notiz ist ein Zuruf in Handschrift, kein zweiter Absatz."""
+    for notiz in _randnotizen(seite):
+        assert len(notiz.text) <= 60, notiz.text
+
+
+@pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")
+def test_jede_seite_hat_genau_ein_lesezeichen(seite):
+    """Das rote Band des Buchs führt zu einer Stelle – zu mehreren könnte es nicht."""
+    markiert = [block for abschnitt in seite.abschnitte for block in abschnitt.bloecke
+                if getattr(block, "lesezeichen", False)]
+    assert len(markiert) == 1
+
+
+def test_das_lesezeichen_liegt_bei_der_tabelle_zum_loesen():
+    """Caesar: das verschobene Alphabet, Substitution: die Geheimtabelle, Vigenère: das Quadrat."""
+    def markiert(seite):
+        (block,) = [b for a in seite.abschnitte for b in a.bloecke if getattr(b, "lesezeichen", False)]
+        return block
+
+    assert markiert(handbuch.SEITE_CAESAR).zeilen[1][0] == "um 3 verschoben"
+    assert markiert(handbuch.SEITE_SUBSTITUTION).titel == "Deine Geheimtabelle"
+    assert isinstance(markiert(handbuch.SEITE_VIGENERE), VigenereQuadrat)
 
 
 @pytest.mark.parametrize("seite", handbuch.SEITEN, ids=lambda s: f"Level {s.level}")

@@ -78,7 +78,7 @@ crypto/          Verschlüsselungslogik – reine Funktionen, kein GUI
 game/            Spiellogik, Zustand, Timer, Logging
 ui/              Tkinter-Oberfläche (baut als einzige Schicht Bedienelemente)
 content/         Handbuchtexte, Wortlisten, Story-Texte als Python-Daten, fertige Animationen
-grafik/          Quellen der Animationen (SVG) und das Werkzeug, das sie vorrendert
+grafik/          Quellen der Animationen (SVG) und die Werkzeuge, die sie zeichnen und vorrendern
 tests/           pytest
 logs/            Messdaten der Durchläufe (Inhalt steht in .gitignore)
 dokumentation/   Konzept, Arbeitsplan, Handbuchtexte, Commit-Regeln
@@ -96,7 +96,7 @@ hereinrutscht und dass die Logik weder `print()` noch `input()` aufruft.
 
 | Modul | Inhalt |
 |-------|--------|
-| `handbuch.py` | Die drei Handbuchseiten, zerlegt in Absätze, Aufzählungen und Tabellen |
+| `handbuch.py` | Die drei Handbuchseiten, zerlegt in Absätze, Aufzählungen, Tabellen und Bobs Randnotizen |
 | `uebungen.py` | Die 30 Übungstexte, die Vigenère-Schlüsselwörter, die Caesar-Schlüssel |
 | `story.py` | Erzähltexte und die fünf Funksprüche samt Teilaufgaben |
 | `charaktere.py` | Die fünf wählbaren Figuren und Bob |
@@ -141,7 +141,8 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
 | `figurwahl.py` | Die Figurwahl: Vorgeschichte und fünf Karten mit Rollen-Symbol; erst wählen, dann bestätigen |
 | `intro.py` | Der Story-Intro: die Absturz-Szene mit dem Erzähltext, Absatz für Absatz |
-| `handbuch.py` | Bobs Handbuch: die Seite des Levels zum Scrollen, Tabellen als Raster, das Vigenère-Quadrat; auch mitten in einer Aufgabe zum Nachschlagen |
+| `handbuch.py` | Bobs Handbuch als aufgeschlagenes Buch: Doppelseiten zum Blättern (Knöpfe, Tasten, Mausrad, Seitenecken), umschlagende Blätter, Lesezeichen-Band, das Vigenère-Quadrat; auch mitten in einer Aufgabe zum Nachschlagen |
+| `buchsatz.py` | Der Satz des Handbuchs: welcher Text auf welche Buchseite kommt – mit den Regeln aus dem Buchdruck |
 
 ### Animationen
 
@@ -155,7 +156,10 @@ python3 grafik/rendern.py grafik/wrack.svg
 Firefox rechnet dabei die Animation in Bilder um (nur auf dem Entwicklungsrechner),
 das Spiel blättert die fertigen Bilder aus `content/animationen/` nur noch durch – ohne
 Zusatzpaket. Jede Animation gibt es in zwei Größen: 960 × 540 für kleine Bildschirme
-und 1440 × 810 (Unterordner `1.5x/`) für die 1080p-Schulmonitore. Wie man eine neue Animation anlegt und welche Regeln sie einhalten muss,
+und 1440 × 810 (Unterordner `1.5x/`) für die 1080p-Schulmonitore. Das Buch des Handbuchs
+und das Umblättern darin sind selbst gezeichnete SVGs: `python3 grafik/buch_zeichnen.py`
+schreibt beide, danach werden sie wie jede Animation vorgerendert. Wie man eine neue
+Animation anlegt und welche Regeln sie einhalten muss,
 steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 
 | Animation | Wo | Was sich bewegt |
