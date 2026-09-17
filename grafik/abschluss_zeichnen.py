@@ -23,8 +23,8 @@ Gejagt wird die Crew von Polizei, CIA und Interpol (Vorgeschichte). Der
 Hubschrauber darf deshalb nicht aussehen wie einer von ihnen: kein Blaulicht,
 kein Schriftzug, kein Grau. Er ist dunkelgrün mit Goldstreifen, auf seiner
 Seite glänzt groß ein goldener Diamant – das Zeichen aus dem Titelbild, das
-Zeichen der Crew –, ein grünes Licht blinkt, und aus der offenen Tür winkt
-jemand. Der Text im Spiel sagt es dann noch ausdrücklich.
+Zeichen der Crew –, und ein grünes Licht blinkt. Der Text im Spiel sagt es dann
+noch ausdrücklich.
 
 Warum ein Programm
 ──────────────────
@@ -389,8 +389,99 @@ steigt auf; Rucksack, zurückgeschlagene Decke und Funkgerät liegen noch da. Re
 '''
 
 
+#: Der Hauptrotor, von leicht oben gesehen: Nabe, Blattlänge und wie hoch die flache Scheibe
+#: erscheint, die die Blätter überstreichen (Einheiten).
+NABE = (300, 54)
+BLATT = 292
+SCHEIBE = 18
+#: Der Heckrotor dreht sich in der Ebene des Bilds – seine Scheibe ist rund.
+HECKNABE = (632, 116)
+HECKBLATT = 28
+#: Alle 50 ms kommt ein Bild, 16 Stellungen je Schleife. Der Hauptrotor hat vier Blätter
+#: und dreht sich je Bild um 22,5° – ein Viertel des Wegs zum nächsten Blatt; der Heckrotor
+#: hat zwei und dreht sich um 45°, ebenfalls ein Viertel. So liest das Auge die Drehung
+#: eindeutig. Vier Blätter, weil von der Seite gesehen immer eins lang quer steht; zwei
+#: verschwänden jedes zweite Bild, wenn sie gerade auf einen zeigen. (Vorher schwankten
+#: zwei Blätter nur in der Länge, und das Bild flackerte zwischen lang und kurz.)
+SCHLEIFE_MS = 800
+STELLUNGEN = 16
+#: Je Rotor: Zahl der Blätter und Drehung je Bild in Grad – der Heckrotor dreht andersherum.
+HAUPTROTOR = (4, 360 / STELLUNGEN)
+HECKROTOR = (2, -2 * 360 / STELLUNGEN)
+#: Die Unschärfe hinter einem Blatt: Tortenstücke der Scheibe, je (Winkel, Deckkraft).
+WISCHER = ((40, .07), (24, .09), (10, .12))
+FARBE_BLATT = "#1b1f21"
+
+
+def _auf_scheibe(zentrum, rx, ry, winkel, anteil=1.0):
+    w = math.radians(winkel)
+    return zentrum[0] + rx * anteil * math.cos(w), zentrum[1] + ry * anteil * math.sin(w)
+
+
+def _wisch(zentrum, rx, ry, von, bis, deckkraft):
+    rand = [_auf_scheibe(zentrum, rx, ry, von + (bis - von) * i / 8) for i in range(9)]
+    return f'<polygon points="{punkte([zentrum] + rand)}" fill="{FARBE_BLATT}" opacity="{deckkraft}"/>'
+
+
+def _blatt(zentrum, rx, ry, winkel, breite, spitze=None):
+    x0, y0 = zentrum
+    x1, y1 = _auf_scheibe(zentrum, rx, ry, winkel)
+    teile = [f'<line x1="{x0}" y1="{y0}" x2="{x1:.1f}" y2="{y1:.1f}" stroke="{FARBE_BLATT}" '
+             f'stroke-width="{breite}" stroke-linecap="round"/>']
+    # Zeigt das Blatt fast genau auf einen zu, wäre die Spitze nur ein goldener Punkt am Mast.
+    if spitze and abs(math.cos(math.radians(winkel))) > .25:
+        xs, ys = _auf_scheibe(zentrum, rx, ry, winkel, .88)
+        teile.append(f'<line x1="{xs:.1f}" y1="{ys:.1f}" x2="{x1:.1f}" y2="{y1:.1f}" stroke="{spitze}" '
+                     f'stroke-width="{breite}" stroke-linecap="round"/>')
+    return teile
+
+
+def blattwinkel(rotor, nr):
+    """Wo die Blätter von ``rotor`` in Stellung ``nr`` stehen, in Grad (0° zeigt nach rechts)."""
+    blaetter, schritt = rotor
+    return [nr * schritt + 360 / blaetter * k for k in range(blaetter)]
+
+
+def rotorstellung(nr):
+    """Beide Rotoren in Stellung ``nr`` – jedes Blatt mit der Unschärfe dahinter.
+
+    Der Hauptrotor dreht sich vorn von links nach rechts, der Heckrotor
+    andersherum. Die Blattspitzen des Hauptrotors sind golden wie der Streifen.
+    """
+    haupt = blattwinkel(HAUPTROTOR, nr)
+    heck = blattwinkel(HECKROTOR, nr)
+    teile = []
+    for blatt in haupt:
+        teile += [_wisch(NABE, BLATT, SCHEIBE, blatt - breite, blatt, deckkraft) for breite, deckkraft in WISCHER]
+    for blatt in heck:
+        teile += [_wisch(HECKNABE, HECKBLATT, HECKBLATT, blatt, blatt + breite, deckkraft * 1.4)
+                  for breite, deckkraft in WISCHER]
+    # Die hinteren Blätter (über der Nabe) zuerst, die vorderen liegen darüber.
+    for blatt in sorted(haupt, key=lambda w: math.sin(math.radians(w))):
+        teile += _blatt(NABE, BLATT, SCHEIBE, blatt, 7, spitze="#e2b651")
+    for blatt in heck:
+        teile += _blatt(HECKNABE, HECKBLATT, HECKBLATT, blatt, 7)
+    return teile
+
+
+def rotoren():
+    """Alle Stellungen übereinander; jede ist genau in ihrem 50-ms-Fenster zu sehen.
+
+    Das Fenster liegt mittig um den Zeitpunkt, zu dem ``grafik/rendern.py`` das
+    Bild nimmt – ein Rundungsfehler an der Kante kann so kein falsches Bild
+    zeigen.
+    """
+    takt = SCHLEIFE_MS // STELLUNGEN
+    gruppen = []
+    for nr in range(STELLUNGEN):
+        verzoegerung = nr * takt - takt // 2 - SCHLEIFE_MS
+        inhalt = "\n  ".join(rotorstellung(nr))
+        gruppen.append(f'<g class="stellung" style="animation-delay: {verzoegerung}ms">\n  {inhalt}\n</g>')
+    return "\n".join(gruppen)
+
+
 def hubschrauber_svg():
-    return '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320"
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320"
      data-breite="340" data-schleife-ms="800" data-bilder="16" data-bereiche="0 0 680 320" data-durchsichtig="ja">
 <!--
   Der Hubschrauber der Crew – für den Abschluss (Arbeitsplan 6.8).
@@ -398,25 +489,19 @@ def hubschrauber_svg():
 
   Fürs Spiel vorrendern mit:
       python3 grafik/rendern.py grafik/hubschrauber.svg
-  Durchsichtig und in Schleife: Rotoren drehen sich, das grüne Licht blinkt, aus der Tür winkt jemand.
+  Durchsichtig und in Schleife: Die Rotoren drehen sich, das grüne Licht blinkt.
   Das Spiel lässt ihn über die Morgenszene fliegen und landen.
   Freund, nicht Feind: dunkelgrün mit Goldstreifen und großem goldenem Diamanten – kein Blaulicht, keine Aufschrift.
 -->
 <title>Der Hubschrauber der Crew</title>
 <desc>Ein dunkelgrüner Hubschrauber von der Seite, nach links gewandt, mit goldenem Streifen und einem großen
-goldenen Diamanten auf der Seite. Die Rotoren drehen sich, am Heck blinkt ein grünes Licht, und aus der offenen
-Seitentür winkt eine Person.</desc>
+goldenen Diamanten auf der Seite. Die Rotoren drehen sich, und am Heck blinkt ein grünes Licht.</desc>
 <style>
-  /* Alle Dauern teilen 800 ms. */
-  .blatt { transform-box: view-box; transform-origin: 300px 56px; animation: rotor .2s linear infinite; }
-  .blatt.zwei { animation-delay: -.1s; }
-  @keyframes rotor { 0% { transform: scaleX(1); } 50% { transform: scaleX(.12); } 100% { transform: scaleX(1); } }
-  .heckrotor { transform-box: view-box; transform-origin: 632px 116px; animation: drehen .2s linear infinite; }
-  @keyframes drehen { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  .arm { transform-box: view-box; transform-origin: 262px 152px; animation: winken .4s ease-in-out infinite alternate; }
-  @keyframes winken { 0% { transform: rotate(-22deg); } 100% { transform: rotate(18deg); } }
-  .licht { animation: blinken .8s steps(1) infinite; }
-  @keyframes blinken { 0% { opacity: 1; } 50% { opacity: .15; } }
+  /* Alle Dauern teilen 800 ms. Von den Rotorstellungen ist immer genau eine zu sehen. */
+  .stellung {{ opacity: 0; animation: stellung {SCHLEIFE_MS / 1000:g}s steps(1) infinite; }}
+  @keyframes stellung {{ 0% {{ opacity: 1; }} {100 / STELLUNGEN:g}% {{ opacity: 0; }} }}
+  .licht {{ animation: blinken .8s steps(1) infinite; }}
+  @keyframes blinken {{ 0% {{ opacity: 1; }} 50% {{ opacity: .15; }} }}
 </style>
 <defs>
   <linearGradient id="lack" x1="0" y1="0" x2="0" y2="1">
@@ -453,12 +538,8 @@ Seitentür winkt eine Person.</desc>
 <path d="M430,146 L636,137" stroke="#e2b651" stroke-width="5"/>
 <circle class="licht" cx="650" cy="78" r="9" fill="#5dff7a"/>
 <circle class="licht" cx="650" cy="78" r="18" fill="#5dff7a" opacity=".35" filter="url(#weich)"/>
-
-<!-- Heckrotor -->
-<circle cx="632" cy="116" r="30" fill="#dfe6e8" opacity=".12"/>
-<g class="heckrotor">
-  <rect x="628" y="88" width="8" height="56" rx="4" fill="#1d2223"/>
-</g>
+<!-- Die Scheibe des Heckrotors -->
+<circle cx="{HECKNABE[0]}" cy="{HECKNABE[1]}" r="{HECKBLATT + 3}" fill="#dfe6e8" opacity=".12"/>
 
 <!-- Die Kabine -->
 <path d="M70,152 C66,112 104,88 160,84 L398,84 C430,86 446,104 446,128 L446,186 C446,210 430,224 402,226
@@ -468,19 +549,15 @@ Seitentür winkt eine Person.</desc>
 <path d="M78,150 C76,118 104,96 150,94 L186,94 L186,170 L84,170 C80,164 78,158 78,150 Z" fill="url(#glas)"/>
 <path d="M104,110 C118,102 136,100 156,100" fill="none" stroke="#ffffff" stroke-width="5" opacity=".55"
       stroke-linecap="round"/>
+<!-- Die Schiebetür mit Fenster, geschlossen -->
+<rect x="210" y="98" width="100" height="124" rx="8" fill="none" stroke="#173e33" stroke-width="3"/>
+<rect x="222" y="108" width="76" height="54" rx="7" fill="url(#glas)"/>
+<path d="M232,118 C244,113 258,112 270,113" fill="none" stroke="#ffffff" stroke-width="4" opacity=".5"
+      stroke-linecap="round"/>
+<path d="M206,93 L322,93" stroke="#173e33" stroke-width="3" stroke-linecap="round"/>
 <!-- Goldstreifen -->
 <path d="M84,184 L446,184" stroke="#e2b651" stroke-width="9"/>
-
-<!-- Die offene Seitentür: jemand winkt heraus -->
-<rect x="206" y="100" width="92" height="118" rx="8" fill="#0d1416"/>
-<rect x="300" y="100" width="40" height="118" rx="6" fill="#23594a" opacity=".95"/>
-<circle cx="250" cy="134" r="17" fill="#e0a47c"/>
-<path d="M233,128 C234,112 266,112 267,128 Z" fill="#23364f"/>
-<path d="M226,218 L228,166 C230,152 270,152 274,166 L276,218 Z" fill="#c9582e"/>
-<g class="arm">
-  <path d="M262,156 L300,112" stroke="#c9582e" stroke-width="15" stroke-linecap="round"/>
-  <circle cx="303" cy="106" r="10" fill="#e0a47c"/>
-</g>
+<rect x="284" y="196" width="16" height="6" rx="3" fill="url(#metall)"/>
 
 <!-- Das Zeichen der Crew: ein großer goldener Diamant -->
 <g transform="translate(392,146)">
@@ -490,19 +567,19 @@ Seitentür winkt eine Person.</desc>
   <polygon points="-18,-30 -10,-12 -34,-12" fill="#fff6d0" opacity=".55"/>
 </g>
 
-<!-- Rotormast und Hauptrotor -->
-<rect x="290" y="62" width="20" height="24" rx="4" fill="url(#metall)"/>
-<ellipse cx="300" cy="56" rx="298" ry="10" fill="#e8eef0" opacity=".16"/>
-<g class="blatt">
-  <rect x="4" y="52" width="592" height="8" rx="4" fill="#1b1f21"/>
-</g>
-<g class="blatt zwei">
-  <rect x="4" y="52" width="592" height="8" rx="4" fill="#2b3134"/>
-</g>
-<circle cx="300" cy="56" r="11" fill="url(#metall)"/>
-</svg>
-'''
+<!-- Rotormast und die Scheibe des Hauptrotors -->
+<rect x="{NABE[0] - 10}" y="{NABE[1] + 6}" width="20" height="{84 - NABE[1] - 4}" rx="4" fill="url(#metall)"/>
+<ellipse cx="{NABE[0]}" cy="{NABE[1]}" rx="{BLATT}" ry="{SCHEIBE}" fill="{FARBE_BLATT}" opacity=".05"
+         stroke="{FARBE_BLATT}" stroke-width="2" stroke-opacity=".12"/>
 
+<!-- Die Rotoren: 16 Stellungen, je 50 ms -->
+{rotoren()}
+
+<!-- Die Naben -->
+<circle cx="{NABE[0]}" cy="{NABE[1]}" r="11" fill="url(#metall)"/>
+<circle cx="{HECKNABE[0]}" cy="{HECKNABE[1]}" r="6" fill="url(#metall)"/>
+</svg>
+"""
 
 def main():
     for name, inhalt in (("nachtlager", nachtlager_svg()), ("morgen", morgen_svg()),

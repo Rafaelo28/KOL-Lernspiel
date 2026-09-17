@@ -10,6 +10,8 @@ Braucht eine Bildschirmanzeige, sonst übersprungen.
 """
 
 import importlib.util
+import math
+import re
 from pathlib import Path
 
 import pytest
@@ -491,3 +493,44 @@ def test_vorne_kuerzen_behaelt_das_ende():
     assert abschluss.vorne_kuerzen("kurz.csv", passt) == "kurz.csv"
     assert abschluss.vorne_kuerzen("genau zwölf!", passt) == "genau zwölf!"
     assert abschluss.vorne_kuerzen("abcdef", lambda text: False) == "…f"
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 7. Die Rotoren des Hubschraubers (grafik/abschluss_zeichnen.py)
+# ───────────────────────────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("rotor", ["HAUPTROTOR", "HECKROTOR"])
+def test_ein_rotorblatt_rueckt_je_bild_hoechstens_ein_viertel_vor(rotor):
+    """Bei der Hälfte des Blattabstands sieht das Auge keine Richtung mehr, beim
+    ganzen steht der Rotor scheinbar still (dokumentation/Animationen.md)."""
+    blaetter, schritt = getattr(zeichnung, rotor)
+    abstand = 360 / blaetter
+    assert 0 < abs(schritt) <= abstand / 4
+    assert (zeichnung.STELLUNGEN * schritt) % abstand == 0, "Sonst springt der Rotor an der Nahtstelle der Schleife."
+
+
+def test_vom_hauptrotor_steht_immer_ein_blatt_lang_quer():
+    """Von der Seite gesehen verschwindet ein Blatt, das auf einen zeigt. Mit zwei
+    Blättern wäre der Rotor jedes zweite Bild fast weg – das flackert."""
+    for nr in range(zeichnung.STELLUNGEN):
+        winkel = zeichnung.blattwinkel(zeichnung.HAUPTROTOR, nr)
+        assert max(abs(math.cos(math.radians(w))) for w in winkel) >= math.cos(math.radians(45)) - 1e-9
+
+
+def test_zu_jedem_bild_ist_genau_eine_rotorstellung_zu_sehen():
+    """Gerendert wird alle 50 ms – mitten im Fenster einer Stellung, nie an dessen Kante."""
+    svg = zeichnung.hubschrauber_svg()
+    verzoegerungen = [int(wert) for wert in re.findall(r"animation-delay: (-?\d+)ms", svg)]
+    assert len(verzoegerungen) == zeichnung.STELLUNGEN
+    fenster = zeichnung.SCHLEIFE_MS / zeichnung.STELLUNGEN
+    assert f"{100 / zeichnung.STELLUNGEN:g}% {{ opacity: 0; }}" in svg
+    gesehen = []
+    for zeit in range(0, zeichnung.SCHLEIFE_MS, 50):
+        im_fenster = [(nr, (zeit - verzoegerung) % zeichnung.SCHLEIFE_MS)
+                      for nr, verzoegerung in enumerate(verzoegerungen)
+                      if (zeit - verzoegerung) % zeichnung.SCHLEIFE_MS < fenster]
+        assert len(im_fenster) == 1
+        (nr, stelle), = im_fenster
+        assert stelle == fenster / 2
+        gesehen.append(nr)
+    assert sorted(gesehen) == list(range(zeichnung.STELLUNGEN)), "Jede Stellung kommt genau einmal dran."

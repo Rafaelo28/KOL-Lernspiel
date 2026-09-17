@@ -752,9 +752,13 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     `RETTUNG`)
   - **Freunde, nicht Verfolger:** Der Hubschrauber ist dunkelgrün mit
     Goldstreifen statt in Polizeifarben, auf seiner Seite glänzt groß ein
-    goldener Diamant – das Zeichen der Crew –, ein grünes Licht blinkt, und
-    aus der offenen Tür winkt jemand. Der Text nach der Landung beginnt mit
-    "Das ist nicht die Polizei" und nennt, woran man es sieht
+    goldener Diamant – das Zeichen der Crew –, und ein grünes Licht blinkt.
+    Der Text nach der Landung beginnt mit "Das ist nicht die Polizei" und
+    nennt, woran man es sieht. (Eine Person, die aus der offenen Tür winkte,
+    ist nach der Abnahme wieder herausgeflogen; die Tür ist jetzt zu)
+  - **Die Rotoren** drehen sich sichtbar: 16 feste Stellungen statt Blättern,
+    die nur in der Länge schwanken – das hatte geflackert (siehe
+    `dokumentation/Animationen.md`)
   - **Das Ende:** "Weiter" zeigt den Schlusstext aus dem Konzept, unten links
     klein, wo die Messdaten liegen (ein zu langer Pfad wird vorn gekürzt,
     Ordner und Datei bleiben stehen), und "Spiel beenden". Endete Level 3 am

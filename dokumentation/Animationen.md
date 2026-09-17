@@ -48,7 +48,7 @@ Gute Vorlagen für neue Animationen:
 | `grafik/funkgeraet.svg` | Funkgerät (6.6) | ein **durchsichtiges Standbild**, das auf dem Buch steht; auf sein leeres Glas schreibt das Spiel |
 | `grafik/nachtlager.svg` | Abschluss (6.8) | eine große Szene wie das Wrack: das Lagerfeuer ist der Ausschnitt; Mond und Sterne stehen still im Hintergrund |
 | `grafik/morgen.svg` | Abschluss (6.8) | **dieselbe Stelle** im Morgengrauen – das Spiel wechselt hinter geschlossenen Augen von der einen Szene zur anderen (`Buehne.wechseln`) |
-| `grafik/hubschrauber.svg` | Abschluss (6.8) | eine **durchsichtige Figur**: Rotor, Winken und Licht in einer Schleife, der Ausschnitt ist das ganze Bild. Das Spiel schiebt sie mit `ui.animation.Figur` über die Szene und blättert ihre Bilder selbst weiter |
+| `grafik/hubschrauber.svg` | Abschluss (6.8) | eine **durchsichtige Figur**: Rotoren und Licht in einer Schleife, der Ausschnitt ist das ganze Bild. Das Spiel schiebt sie mit `ui.animation.Figur` über die Szene und blättert ihre Bilder selbst weiter. Die Rotoren sind **feste Stellungen**, von denen immer genau eine zu sehen ist (siehe unten) |
 
 Die Symbole der Figurwahl sind auf `FARBE_KARTE` aus `ui/stil.py` gemalt,
 sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe. Wer die
@@ -74,6 +74,21 @@ entstehen aus denselben Formen – Dünen und Lager dürfen beim Wechsel nicht
 springen. Wo der Hubschrauber landet und wo der Text steht, rechnet
 `ui/abschluss.py` in Pixeln; ein Test prüft, dass er rechts neben dem Lager
 aufsetzt.
+
+**Was sich schnell dreht, zeichnet man in Stellungen.** Ein Rotor dreht sich
+schneller, als 20 Bilder in der Sekunde zeigen können. Blätter, die nur in der
+Länge schwanken, flackerten deshalb zwischen lang und kurz hin und her.
+`grafik/abschluss_zeichnen.py` rechnet stattdessen für jedes der 16 Bilder
+aus, wo die Blätter stehen – von leicht oben gesehen, auf einer flachen
+Ellipse, mit einer Unschärfe hinter jedem Blatt –, und eine CSS-Animation zeigt
+immer genau eine Stellung. Zwei Regeln dabei:
+
+- Je Bild rückt ein Blatt höchstens ein Viertel des Wegs zum nächsten Blatt
+  vor. Bei der Hälfte weiß das Auge nicht mehr, in welche Richtung es sich
+  dreht; bei einem ganzen Abstand steht der Rotor scheinbar still.
+- Das Fenster einer Stellung liegt mittig um den Zeitpunkt, zu dem das Bild
+  genommen wird – eine Stellung genau auf der Kante könnte sonst durch einen
+  Rundungsfehler danebenliegen.
 
 Buch und Umblättern brauchen dasselbe Blatt – denselben ausgefransten Umriss, dieselbe
 viewBox –, sonst springt beim Umblättern die Kante. Wer am Buch etwas ändern

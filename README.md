@@ -175,7 +175,7 @@ steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 | `wrack` | Story-Intro | Feuer, Rauch und Funken am Wrack |
 | `nachtlager` | Abschluss | das Lagerfeuer mit Flammen, Funken und Glut unter dem Sternenhimmel |
 | `morgen` | Abschluss | dieselbe Stelle im Morgengrauen: Rauch über der erloschenen Glut |
-| `hubschrauber` | Abschluss | Rotor, Heckrotor, das grüne Licht und die winkende Person in der Tür – das Spiel lässt ihn einfliegen und landen |
+| `hubschrauber` | Abschluss | Haupt- und Heckrotor und das grüne Licht – das Spiel lässt ihn einfliegen und landen |
 
 ### Was in `crypto/` steckt
 

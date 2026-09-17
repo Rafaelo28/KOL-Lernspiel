@@ -452,8 +452,7 @@ RETTUNG = Erzaehltext(
     kennung="rettung",
     absaetze=(
         "Das ist nicht die Polizei: Auf dem Hubschrauber glänzt ein goldener "
-        "Diamant – das Zeichen deiner Crew. Aus der offenen Tür winkt dir "
-        "jemand zu. Die Zentrale hat Wort gehalten.",
+        "Diamant – das Zeichen deiner Crew. Die Zentrale hat Wort gehalten.",
     ),
 )
 

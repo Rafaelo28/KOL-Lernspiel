@@ -20,8 +20,8 @@ Gejagt wird die Crew von Polizei, CIA und Interpol. Ein Hubschrauber am Ende
 könnte deshalb erst einmal wie eine Festnahme aussehen. Damit das nicht
 passiert, sagen es Bild und Text: Der Hubschrauber ist dunkelgrün mit
 Goldstreifen statt in Polizeifarben, auf seiner Seite glänzt groß ein goldener
-Diamant – das Zeichen der Crew –, ein grünes Licht blinkt, jemand winkt aus
-der offenen Tür, und der Text beginnt mit "Das ist nicht die Polizei".
+Diamant – das Zeichen der Crew –, ein grünes Licht blinkt, und der Text
+beginnt mit "Das ist nicht die Polizei".
 
 Wie der Ablauf gebaut ist
 ─────────────────────────

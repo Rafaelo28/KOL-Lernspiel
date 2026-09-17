@@ -287,7 +287,7 @@ def test_die_rettung_sagt_dass_es_freunde_sind():
     allein sähe am Ende wie die Festnahme aus (Arbeitsplan 6.8)."""
     text = " ".join(story.RETTUNG.absaetze)
     assert text.startswith("Das ist nicht die Polizei")
-    for stichwort in ("Diamant", "Crew", "winkt"):
+    for stichwort in ("Diamant", "Crew"):
         assert stichwort in text
 
 
