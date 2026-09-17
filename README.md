@@ -119,6 +119,7 @@ sofort, wo Text und Code auseinanderlaufen.
 | `spielstand.py` | Der zentrale Zustand eines Durchlaufs: Figur, Level, laufende Aufgabe |
 | `zeitfenster.py` | Die 15/20/25-Minuten-Fenster der drei Level |
 | `zusatzaufgaben.py` | Entscheidet, wer eine Extraaufgabe bekommt |
+| `levelablauf.py` | Was im Level als Nächstes drankommt: Übung, Zusatzaufgabe, Funkspruch – oder Levelende |
 | `protokoll.py` | Schreibt das CSV eines Durchlaufs |
 | `durchlauf.py` | Spielstand und Protokoll in einer Hand – speichert von selbst, fängt den Zeitablauf ab |
 | `spieler_id.py` | Die ID der Lehrkraft (`1-12`): prüft die Form X-XX und sagt genau, was fehlt |
@@ -291,14 +292,16 @@ dürfen nicht im Repository landen.
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
 | 6     | Tkinter-Oberfläche                           | fertig  |
-| 7     | Level zusammensetzen                         | offen   |
+| 7     | Level zusammensetzen                         | in Arbeit (7.1 fertig) |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
 `main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom
 Titelbild über die Figurwahl und den Story-Intro mit der animierten
 Absturz-Szene, Bobs Handbuch, den Übungen darin und den Funksprüchen am
-Funkgerät durch alle drei Level bis zur Rettung im Morgengrauen. Zu den
-Funksprüchen führt bis Phase 7 ein Platzhalter-Knopf unter den Übungen.
+Funkgerät durch alle drei Level bis zur Rettung im Morgengrauen. Jedes Level
+läuft von selbst durch: Handbuchseite, Übungen, dann die Funksprüche – und
+wenn die Zeit knapp wird, kommen die Funksprüche früher (siehe
+`game/levelablauf.py`).
 
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).

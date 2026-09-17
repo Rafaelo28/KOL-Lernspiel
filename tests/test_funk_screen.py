@@ -23,6 +23,7 @@ import pytest
 tk = pytest.importorskip("tkinter")
 
 from content import charaktere, story  # noqa: E402
+from game import levelablauf  # noqa: E402
 from game.bearbeitung import HINWEIS_FORTSCHRITT  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
 from ui import ablauf, animation, funk, handbuch, stil, uebung  # noqa: E402
@@ -66,21 +67,36 @@ def fenster(wurzel, tmp_path, massstab, uhr):
 
 
 def _zum_funkgeraet(fenster, level=1):
-    """Klickt vom Startbildschirm bis zum ersten Funkspruch des Levels (über den Platzhalter)."""
+    """Spielt vom Startbildschirm bis zum ersten Funkspruch des Levels.
+
+    Seit Phase 7 überspringt kein Knopf mehr ein Level: Der Weg dorthin führt
+    über die Aufgaben, also werden sie hier gelöst – Übungen wie Funksprüche.
+    Die Uhr steht dabei still, deshalb gilt jede Übung als schnell gelöst und
+    es kommen die Zusatzaufgaben des Levels dazu.
+    """
     fenster.aktueller_screen._feld.insert(0, "1-12")
     fenster.aktueller_screen.starten()
     fenster.aktueller_screen.waehle(FIGUR)
     fenster.aktueller_screen.bestaetigen()
     for _ in story.INTRO.absaetze:
         fenster.aktueller_screen.weiter()
-    for _ in range(level - 1):
-        fenster.aktueller_screen.weiter()
-        fenster.aktueller_screen._level_beenden()
-    fenster.aktueller_screen.weiter()
-    fenster.aktueller_screen._zum_funkgeraet()
-    screen = fenster.aktueller_screen
-    assert isinstance(screen, funk.Funk)
-    return screen
+    for _ in range(40):
+        screen = fenster.aktueller_screen
+        if isinstance(screen, funk.Funk):
+            if screen.funkspruch.level == level:
+                return screen
+            _loesen(screen)
+        elif isinstance(screen, uebung.Uebung):
+            _uebung_loesen(screen)
+        else:
+            screen.weiter()                                # das Handbuch des Levels
+    raise AssertionError(f"Der erste Funkspruch von Level {level} kam nie.")
+
+
+def _uebung_loesen(screen):
+    _tippen(screen, screen.aufgabe.loesung)
+    screen.pruefen()
+    screen.weiter()
 
 
 def _funkspruch(fenster, level, kennung):
@@ -145,11 +161,13 @@ def test_die_funksprueche_eines_levels_kommen_der_reihe_nach_danach_das_naechste
     assert kennungen[-2:] == ["erster_ruf", "bob_erste_antwort"]
 
 
-def test_der_platzhalter_legt_eine_offene_uebung_ab(fenster):
-    """Sonst liesse sich kein Funkspruch stellen – der Spielstand verlangt freie Bahn."""
+def test_vor_dem_funkspruch_sind_die_uebungen_des_levels_erledigt(fenster):
+    """Erst üben, dann funken – so steht es im Konzept (Arbeitsplan 7.1)."""
     screen = _zum_funkgeraet(fenster, 1)
-    (uebung_erledigt,) = [b for b in fenster.durchlauf.spielstand.erledigte_aufgaben if b.aufgabe.quelle == "uebung"]
-    assert uebung_erledigt.abgebrochen
+    uebungen = [b for b in fenster.durchlauf.spielstand.erledigte_aufgaben
+                if b.aufgabe.quelle == "uebung"]
+    assert len(uebungen) >= levelablauf.BASIS_UEBUNGEN_JE_LEVEL
+    assert not any(b.abgebrochen for b in uebungen), "Keine Übung bleibt unterwegs liegen."
     assert screen.aufgabe.kennung == "erster_ruf"
 
 

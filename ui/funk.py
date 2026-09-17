@@ -49,11 +49,11 @@ Knopf heisst beim Senden "Senden", und gesendet ist erst, was stimmt.
 Nachschlagen im Handbuch geht auch hier, und man kommt zu demselben Funkspruch
 zurück – samt dem, was schon eingetippt war.
 
-Bis Phase 7
-───────────
-Wann welcher Funkspruch kommt, entscheidet :mod:`ui.ablauf`. Bis die Level in
-Phase 7 zusammengesetzt werden, erreicht man die Funksprüche eines Levels über
-einen Platzhalter-Knopf unter den Übungen.
+Wann welcher Funkspruch kommt
+─────────────────────────────
+Das entscheidet die Spiellogik (:mod:`game.levelablauf`): Nach den Übungen
+eines Levels kommen seine Funksprüche der Reihe nach – und wenn die Zeit knapp
+wird, schon vorher. :mod:`ui.ablauf` zeigt sie dann hier.
 """
 
 import tkinter as tk

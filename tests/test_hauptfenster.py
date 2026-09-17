@@ -135,11 +135,27 @@ def _bis_zur_uebung(fenster):
 
 
 def _loesen(fenster):
-    """Löst die laufende Übung mit ihrer Musterlösung und schliesst sie ab."""
+    """Löst die laufende Aufgabe mit ihrer Musterlösung und schliesst sie ab.
+
+    Geht für Übungen wie für Funksprüche: Beim Funkgerät wird die Anzeige
+    vorher fertig getippt und danach der Rest der Nachricht freigegeben.
+    """
     screen = fenster.aktueller_screen
+    if hasattr(screen, "anzeige_vervollstaendigen"):
+        screen.anzeige_vervollstaendigen()
+    screen._feld.delete(0, "end")
     screen._feld.insert(0, fenster.durchlauf.spielstand.aktuelle_aufgabe.loesung)
     screen.pruefen()
+    if getattr(screen, "restknopf_sichtbar", False):
+        screen.rest_freigeben()
     screen.weiter()
+
+
+def _alle_level_ablaufen_lassen(fenster, uhr):
+    """Lässt die Zeitfenster aller Level ablaufen – der schnellste Weg zum Abschluss."""
+    for level in sorted(DAUER_JE_LEVEL_SEKUNDEN):
+        uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[level])
+        fenster._takt()
 
 
 def _zeilen(fenster):
@@ -621,12 +637,9 @@ def test_vor_dem_ersten_level_wird_nicht_gefragt(fenster, tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
-def test_nach_dem_spielende_wird_nicht_gefragt(fenster):
+def test_nach_dem_spielende_wird_nicht_gefragt(fenster, uhr):
     _bis_zur_uebung(fenster)
-    for _ in range(3):
-        _klick(fenster, "Level beenden")
-        if not isinstance(fenster.aktueller_screen, abschluss.Abschluss):
-            _klick(fenster, "Zu den Übungen")
+    _alle_level_ablaufen_lassen(fenster, uhr)
     assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
     fenster.schliessen_anfragen()
     assert fenster.ist_geschlossen
@@ -705,28 +718,25 @@ def test_ein_zweiter_durchlauf_im_selben_fenster_ist_verboten(fenster):
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, tmp_path):
+    """Ein Durchlauf, bei dem jede Aufgabe gelöst wird – vom Titel bis zur Rettung."""
     _bis_zur_uebung(fenster)
-    uhr.weiter(12)
-    _loesen(fenster)                                  # eine Übung in Level 1
-    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1])
-    fenster._takt()                                   # Level 1 endet am Timer
-    assert "Level 1 ist abgelaufen" in fenster.aktueller_screen.hinweis
-    _klick(fenster, "Zu den Übungen")
-    _klick(fenster, "Level beenden")                  # Level 2 endet vorzeitig
-    _klick(fenster, "Zu den Übungen")
-    _klick(fenster, "Level beenden")                  # Level 3 ebenso
-    assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
-    assert fenster.aktueller_screen.hinweis == ""                # Level 3 endete nicht am Timer
+    while not isinstance(fenster.aktueller_screen, abschluss.Abschluss):
+        uhr.weiter(60)                                # so schnell ist niemand: keine Zusatzaufgaben
+        _loesen(fenster)
+        if isinstance(fenster.aktueller_screen, handbuch.Handbuch):
+            _klick(fenster, "Zu den Übungen")         # das nächste Level beginnt
+    assert fenster.aktueller_screen.hinweis == ""                # kein Level endete am Timer
     assert fenster.durchlauf.spielstand.ist_durchgespielt
     assert fenster.kopfzeile == ("Die Rettung", "")
 
     zeilen = _zeilen(fenster)
     assert {z["pseudonym"] for z in zeilen} == {"ID 1-12"}   # so macht Excel kein Datum daraus
     assert fenster.durchlauf.protokoll.dateiname.startswith("durchlauf_1-12_")
-    assert [z["level"] for z in zeilen] == ["1", "1", "2", "3"]
-    assert [z["levelende"] for z in zeilen] == ["zeitablauf", "zeitablauf", "vorzeitig", "vorzeitig"]
-    assert [z["geloest"] for z in zeilen] == ["ja", "nein", "nein", "nein"]
-    assert [z["abgebrochen"] for z in zeilen] == ["nein", "ja", "ja", "ja"]
+    assert [z["level"] for z in zeilen] == ["1", "1", "1", "1", "2", "2", "2", "3", "3", "3", "3"]
+    assert [z["kennung"] for z in zeilen][-2:] == ["standort", "bob_zweite_antwort"]
+    assert {z["levelende"] for z in zeilen} == {"vorzeitig"}
+    assert {z["geloest"] for z in zeilen} == {"ja"}
+    assert {z["abgebrochen"] for z in zeilen} == {"nein"}
     assert [p.name for p in tmp_path.iterdir()] == [fenster.durchlauf.protokoll.dateiname]
 
     _klick(fenster, "Warten")                                  # die Augen fallen zu …
@@ -738,12 +748,7 @@ def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, 
 
 def test_endet_level_3_am_timer_steht_es_im_abschluss(fenster, uhr):
     _bis_zur_uebung(fenster)
-    _klick(fenster, "Level beenden")                  # Level 1 endet vorzeitig
-    _klick(fenster, "Zu den Übungen")
-    _klick(fenster, "Level beenden")                  # Level 2 ebenso
-    _klick(fenster, "Zu den Übungen")
-    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[3])
-    fenster._takt()                                   # Level 3 endet am Timer
+    _alle_level_ablaufen_lassen(fenster, uhr)
     assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
     assert fenster.aktueller_screen.hinweis == abschluss.HINWEIS_ZEITABLAUF
 

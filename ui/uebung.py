@@ -51,13 +51,16 @@ kommt danach zu **derselben** Aufgabe zurück – samt dem, was schon im
 Schreibfeld stand, und dem Stand der Versuche. Die Uhr der Aufgabe läuft
 dabei weiter: Nachschlagen gehört zum Lösen.
 
-Was hier noch fehlt
-───────────────────
-Welche Aufgabe nach der Übung kommt, entscheidet nicht dieser Screen, sondern
-:mod:`ui.ablauf` – dort werden in Phase 7 die Funksprüche dazwischen gesetzt.
-Bis dahin hängen am unteren Rand zwei Platzhalter-Knöpfe: Der eine beendet ein
-Level vorzeitig – sonst müsste man beim Durchklicken jedes Zeitfenster
-abwarten –, der andere springt zu den Funksprüchen des Levels (6.6).
+Was nach der Übung kommt
+────────────────────────
+Das entscheidet nicht dieser Screen, sondern die Spiellogik
+(:mod:`game.levelablauf`): die nächste Übung, eine Zusatzaufgabe, der nächste
+Funkspruch oder das Ende des Levels. Hier wird nur ``danach(fenster)``
+gerufen, und :mod:`ui.ablauf` zeigt, was drankommt.
+
+``zusatzaufgabe`` sagt, ob diese Übung eine Extraaufgabe für die Schnellen ist
+(Arbeitsplan 5.4). Für die Aufgabe selbst macht es keinen Unterschied – sie
+kommt aus demselben Pool –, aber im Log stehen beide getrennt.
 """
 
 import tkinter as tk
@@ -73,9 +76,6 @@ from ui.screen import Screen
 KNOPF_PRUEFEN = "Prüfen"
 KNOPF_WEITER = "Weiter"
 KNOPF_NACHSCHLAGEN = "Im Handbuch nachschlagen"
-#: Platzhalter bis Phase 7 – siehe Modulkopf.
-KNOPF_LEVELENDE = "Level beenden (Platzhalter)"
-KNOPF_FUNKGERAET = "Zum Funkgerät (Platzhalter)"
 
 #: Die Überschrift der Übungsseite.
 UEBERSCHRIFT = "Übung {nummer}"
@@ -131,16 +131,17 @@ class Uebung(Screen):
 
     ``fortsetzen`` setzt die offene Aufgabe fort, statt eine neue zu stellen –
     so kommt man vom Nachschlagen zurück; ``entwurf`` ist, was dabei schon im
-    Schreibfeld stand.
+    Schreibfeld stand. ``zusatzaufgabe`` stellt eine Extraaufgabe (5.4).
     """
 
-    def __init__(self, fenster, danach, fortsetzen=False, entwurf=""):
+    def __init__(self, fenster, danach, fortsetzen=False, entwurf="", zusatzaufgabe=False):
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(handbuch.ABSTAND_KNAPP))
         self.titel = f"Übung – Level {fenster.durchlauf.spielstand.aktuelles_level}"
         self._danach = danach
         self._fortsetzen = fortsetzen
         self._entwurf = entwurf
+        self._zusatzaufgabe = zusatzaufgabe
         #: Die laufende Aufgabe – erst beim Anzeigen gestellt, dann beginnt ihre Uhr.
         self.aufgabe = None
         self._beendet = False
@@ -195,12 +196,6 @@ class Uebung(Screen):
         self._nachschlagen_knopf = tk.Button(leiste, text=KNOPF_NACHSCHLAGEN, command=self._nachschlagen,
                                              **knopfart)
         self._nachschlagen_knopf.pack(side="left")
-        self._levelknopf = tk.Button(leiste, text=KNOPF_LEVELENDE, command=self._level_beenden,
-                                     font=stil.SCHRIFT_KURSIV, highlightbackground=stil.FARBE_NACHT)
-        self._levelknopf.pack(side="left", padx=(self.px(stil.ABSTAND), 0))
-        self._funkknopf = tk.Button(leiste, text=KNOPF_FUNKGERAET, command=self._zum_funkgeraet,
-                                    font=stil.SCHRIFT_KURSIV, highlightbackground=stil.FARBE_NACHT)
-        self._funkknopf.pack(side="left", padx=(self.px(stil.ABSTAND // 2), 0))
         self._knopf = tk.Button(leiste, text=KNOPF_PRUEFEN, command=self.pruefen,
                                 padx=self.px(stil.ABSTAND), **knopfart)
         self._knopf.pack(side="right")
@@ -213,7 +208,7 @@ class Uebung(Screen):
             # Zurück vom Nachschlagen: dieselbe Aufgabe, ihre Uhr lief weiter.
             aufgabe = stand.aktuelle_aufgabe
         else:
-            aufgabe = self.durchlauf.naechste_uebung()
+            aufgabe = self.durchlauf.naechste_uebung(zusatzaufgabe=self._zusatzaufgabe)
             if aufgabe is None:
                 return  # Die Zeit war um – der Levelwechsel hat schon umgeschaltet.
         self.aufgabe = aufgabe
@@ -447,14 +442,3 @@ class Uebung(Screen):
             zurueck=lambda fenster: fenster.zeige(Uebung, danach=danach, fortsetzen=True, entwurf=entwurf),
         )
 
-    def _level_beenden(self):
-        """Platzhalter bis Phase 7: das Level vorzeitig beenden."""
-        self.durchlauf.naechstes_level()
-
-    def _zum_funkgeraet(self):
-        """Platzhalter bis Phase 7: gleich zu den Funksprüchen des Levels – die offene Übung wird abgelegt."""
-        from ui import ablauf                # erst hier: ablauf kennt diesen Screen
-
-        if self.durchlauf.spielstand.aktuelle_aufgabe is not None:
-            self.durchlauf.aufgabe_abschliessen()
-        ablauf.funksprueche_zeigen(self.fenster)

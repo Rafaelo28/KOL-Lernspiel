@@ -64,18 +64,40 @@ def fenster(wurzel, tmp_path, massstab, uhr):
 
 
 def _zur_uebung(fenster, level=1):
-    """Klickt vom Startbildschirm bis zur ersten Übung des Levels."""
+    """Spielt vom Startbildschirm bis zur ersten Übung des Levels.
+
+    Seit Phase 7 überspringt kein Knopf mehr ein Level: Der Weg dorthin führt
+    über die Aufgaben der Level davor, also werden sie gelöst.
+    """
     fenster.aktueller_screen._feld.insert(0, "1-12")
     fenster.aktueller_screen.starten()
     fenster.aktueller_screen.waehle(charaktere.JONAS_BERG)
     fenster.aktueller_screen.bestaetigen()
     for _ in story.INTRO.absaetze:
         fenster.aktueller_screen.weiter()
-    for _ in range(level - 1):
-        fenster.aktueller_screen.weiter()             # Handbuch → Übung
-        fenster.aktueller_screen._level_beenden()     # Level vorzeitig beenden
-    fenster.aktueller_screen.weiter()                 # Handbuch → Übung
-    return fenster.aktueller_screen
+    for _ in range(40):
+        screen = fenster.aktueller_screen
+        if isinstance(screen, uebung.Uebung) and screen.aufgabe.level == level:
+            return screen
+        _einen_schritt_weiter(fenster)
+    raise AssertionError(f"Die erste Übung von Level {level} kam nie.")
+
+
+def _einen_schritt_weiter(fenster):
+    """Löst die Aufgabe des Screens – oder klickt weiter, wenn keine dasteht."""
+    screen = fenster.aktueller_screen
+    aufgabe = getattr(screen, "aufgabe", None)
+    if aufgabe is None:
+        screen.weiter()
+        return
+    if hasattr(screen, "anzeige_vervollstaendigen"):
+        screen.anzeige_vervollstaendigen()        # den Schreibmaschinen-Takt überspringen
+    screen._feld.delete(0, "end")
+    screen._feld.insert(0, aufgabe.loesung)
+    screen.pruefen()
+    if getattr(screen, "restknopf_sichtbar", False):
+        screen.rest_freigeben()
+    screen.weiter()
 
 
 def _eine_zeile(texte):

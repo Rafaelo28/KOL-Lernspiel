@@ -815,14 +815,32 @@ ein Funkspruch einmal begonnen hat, sorgt Regel 2 dafür, dass er auch bei
 sehr wenig Restzeit meist noch zu Ende kommt: Drei falsche Eingaben reichen
 für die Lösungsanzeige, unabhängig davon, wie viele Sekunden das dauert.
 
-Wird zusammen mit dem jeweiligen Levelablauf bei 7.1–7.3 gebaut, nicht
-vorab – die genaue Aufgabenfolge steht erst dort fest. 7.4 prüft den Fall
-gezielt: ein Durchlauf, der bei den Übungen bewusst trödelt, muss trotzdem
-bei allen Funksprüchen ankommen.
+**Umgesetzt** in `game/levelablauf.py`: `naechster_schritt` sagt, was auf die
+eben abgeschlossene Aufgabe folgt – Übung, Zusatzaufgabe, Funkspruch oder
+Levelende. Der Spielstand füttert die Funktion mit seinen Zahlen
+(`Spielstand.naechster_schritt`, `uebungen_im_level`, `wurde_gestellt`), die
+Oberfläche fragt in `ablauf.weiter_im_level` nur noch nach. Die Schätzung
+steckt in `zusatzaufgaben.zeit_reicht_noch`, das jetzt auch die offenen
+Funksprüche reserviert (`erwartete_dauer_funksprueche`,
+`Funkspruch.buchstaben_von_hand`).
+
+In Zahlen: Die Funksprüche kosten voraussichtlich 180 s (Level 1), 120 s
+(Level 2) und 216 s (Level 3). Eine weitere Übung gibt es, solange das plus
+Übung plus Puffer noch in die Restzeit passt – in Level 1 also, bis rund zehn
+der fünfzehn Minuten verbraucht sind. 7.4 prüft den Fall am ganzen Durchlauf:
+Wer bei den Übungen bewusst trödelt, muss trotzdem bei allen Funksprüchen
+ankommen.
 
 ### 7.1 Level 1 (Caesar)
 Handbuch → Übungen → Sendeaufgabe "Hallo, hört mich jemand? [Initialen]" →
 Bobs erste verschlüsselte Antwort entschlüsseln
+- **Umgesetzt** (`ui/ablauf.py`): Nach dem Handbuch und nach jeder Aufgabe
+  fragt `weiter_im_level`, was drankommt, und zeigt den passenden Screen –
+  Übung, Zusatzaufgabe, Funkgerät oder das nächste Level. Der Weg gilt für
+  alle drei Level; 7.2 und 7.3 setzen nur noch die Erzähltexte dazwischen
+- Die zwei Platzhalter-Knöpfe unter den Übungen sind weg ("Level beenden",
+  "Zum Funkgerät"). Ein Level endet jetzt, wenn seine Aufgaben erledigt sind –
+  oder am Timer
 - **Zu bestätigen: Wann beginnt die Uhr von Level 1?** Seit 6.3 startet sie
   mit dem letzten Knopf des Story-Intros ("Handbuch aufschlagen"). Dafür
   spricht: Die Kontrollgruppe hat 15 Minuten reine Caesar-Zeit, und die

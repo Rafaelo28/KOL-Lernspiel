@@ -7,12 +7,19 @@ ganze Weg an einer Stelle lesbar:
 
     Startbildschirm (ID) → Figurwahl → Story-Intro → Level 1 → Level 2 → Level 3 → Abschluss
 
-Jedes Level beginnt mit seiner Handbuchseite, danach kommen die Übungen.
+Jedes Level beginnt mit seiner Handbuchseite. Danach fragt :func:`weiter_im_level`
+nach jeder Aufgabe, was als Nächstes kommt:
+
+    Handbuchseite → Übung → (Zusatzaufgabe) → Funksprüche → nächstes Level
+
+Entschieden wird das nicht hier, sondern in :mod:`game.levelablauf`: Es hängt
+an der Restzeit, am Tempo und daran, was im Level schon gelaufen ist – das
+weiss der Spielstand. Wird die Zeit knapp, fallen Übungen aus, damit die
+Funksprüche noch drankommen (Vorrang-Regel, Arbeitsplan Phase 7). Dieses Modul
+übersetzt die Antwort nur in den passenden Screen.
 
 Die ID vom Startbildschirm reist bis zur Figurwahl mit; mit der Figur beginnt
 der Durchlauf, und die ID wird sein Pseudonym.
-
-In Phase 7 werden hier die Level zusammengesetzt.
 
 Nach einem Levelwechsel wird sofort umgeschaltet, egal was gerade offen ist
 (Projektregel 1). Eine offene Aufgabe hat der Spielstand da schon als
@@ -22,6 +29,7 @@ abgebrochen abgelegt und der Durchlauf gespeichert.
 from functools import partial
 
 from content import story
+from game import levelablauf
 from ui import abschluss, figurwahl, funk, handbuch, intro, startbildschirm, uebung
 from ui.hauptfenster import Hauptfenster
 
@@ -60,37 +68,35 @@ def handbuch_aufschlagen(fenster, level, hinweis=""):
     fenster.zeige(
         handbuch.Handbuch,
         level=level,
-        danach=uebungen_zeigen,
+        danach=weiter_im_level,
         hinweis=hinweis,
         einleitung=story.EINSTIEG_NACH_LEVEL[level].absaetze,
     )
 
 
-def uebungen_zeigen(fenster):
-    """Nach dem Handbuch: die Übungen des Levels, eine nach der anderen.
+def weiter_im_level(fenster):
+    """Zeigt, was im Level als Nächstes drankommt – nach dem Handbuch und nach jeder Aufgabe.
 
-    Was nach einer Übung kommt, steht in :func:`uebung_beendet` – dort setzt
-    Phase 7 die Funksprüche dazwischen.
+    Gefragt wird der Spielstand (:mod:`game.levelablauf`); hier wird nur
+    ausgeführt, was er sagt.
     """
-    fenster.zeige(uebung.Uebung, danach=uebung_beendet)
-
-
-def uebung_beendet(fenster):
-    """Nach einer Übung kommt vorerst die nächste (Phase 7 sortiert hier um)."""
-    uebungen_zeigen(fenster)
-
-
-def funksprueche_zeigen(fenster):
-    """Die Funksprüche des Levels, einer nach dem anderen – danach beginnt das nächste Level.
-
-    Bis Phase 7 erreicht man sie über den Platzhalter-Knopf unter den Übungen;
-    dort wird dann entschieden, wann nach den Übungen gefunkt wird.
-    """
-    offen = fenster.durchlauf.spielstand.offene_funksprueche
-    if not offen:
+    schritt = fenster.durchlauf.spielstand.naechster_schritt
+    if schritt.art in (levelablauf.SCHRITT_UEBUNG, levelablauf.SCHRITT_ZUSATZAUFGABE):
+        uebung_zeigen(fenster, zusatzaufgabe=schritt.art == levelablauf.SCHRITT_ZUSATZAUFGABE)
+    elif schritt.art == levelablauf.SCHRITT_FUNKSPRUCH:
+        funkspruch_zeigen(fenster, schritt.funkspruch)
+    else:
         fenster.durchlauf.naechstes_level()
-        return
-    fenster.zeige(funk.Funk, funkspruch=offen[0], danach=funksprueche_zeigen)
+
+
+def uebung_zeigen(fenster, zusatzaufgabe=False):
+    """Eine Übung aus dem Handbuch – oder eine Zusatzaufgabe für die Schnellen (5.4)."""
+    fenster.zeige(uebung.Uebung, danach=weiter_im_level, zusatzaufgabe=zusatzaufgabe)
+
+
+def funkspruch_zeigen(fenster, funkspruch):
+    """Ein echter Funkspruch am Funkgerät – der nächste, der in diesem Level ansteht."""
+    fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=weiter_im_level)
 
 
 def nach_levelwechsel(fenster, wechsel):
