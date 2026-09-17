@@ -1,0 +1,18 @@
+{
+  "quelle": "grafik/morgen.svg",
+  "breite": 1440,
+  "hoehe": 810,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 306,
+      "y": 415,
+      "breite": 171,
+      "hoehe": 316,
+      "spalten": 23
+    }
+  ]
+}

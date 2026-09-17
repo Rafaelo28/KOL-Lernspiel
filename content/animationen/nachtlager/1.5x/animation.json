@@ -1,0 +1,18 @@
+{
+  "quelle": "grafik/nachtlager.svg",
+  "breite": 1440,
+  "hoehe": 810,
+  "bilder": 40,
+  "takt_ms": 100,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 315,
+      "y": 532,
+      "breite": 144,
+      "hoehe": 208,
+      "spalten": 28
+    }
+  ]
+}

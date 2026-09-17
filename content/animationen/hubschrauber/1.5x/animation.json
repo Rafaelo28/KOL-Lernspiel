@@ -1,0 +1,19 @@
+{
+  "quelle": "grafik/hubschrauber.svg",
+  "breite": 510,
+  "hoehe": 240,
+  "bilder": 16,
+  "takt_ms": 50,
+  "hintergrund": "hintergrund.png",
+  "bereiche": [
+    {
+      "datei": "bereich_1.png",
+      "x": 0,
+      "y": 0,
+      "breite": 510,
+      "hoehe": 240,
+      "spalten": 8
+    }
+  ],
+  "durchsichtig": true
+}

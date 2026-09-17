@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320"
+     data-breite="340" data-schleife-ms="800" data-bilder="16" data-bereiche="0 0 680 320" data-durchsichtig="ja">
+<!--
+  Der Hubschrauber der Crew – für den Abschluss (Arbeitsplan 6.8).
+  Entsteht mit grafik/abschluss_zeichnen.py – dort ändern, nicht hier.
+
+  Fürs Spiel vorrendern mit:
+      python3 grafik/rendern.py grafik/hubschrauber.svg
+  Durchsichtig und in Schleife: Rotoren drehen sich, das grüne Licht blinkt, aus der Tür winkt jemand.
+  Das Spiel lässt ihn über die Morgenszene fliegen und landen.
+  Freund, nicht Feind: dunkelgrün mit Goldstreifen und großem goldenem Diamanten – kein Blaulicht, keine Aufschrift.
+-->
+<title>Der Hubschrauber der Crew</title>
+<desc>Ein dunkelgrüner Hubschrauber von der Seite, nach links gewandt, mit goldenem Streifen und einem großen
+goldenen Diamanten auf der Seite. Die Rotoren drehen sich, am Heck blinkt ein grünes Licht, und aus der offenen
+Seitentür winkt eine Person.</desc>
+<style>
+  /* Alle Dauern teilen 800 ms. */
+  .blatt { transform-box: view-box; transform-origin: 300px 56px; animation: rotor .2s linear infinite; }
+  .blatt.zwei { animation-delay: -.1s; }
+  @keyframes rotor { 0% { transform: scaleX(1); } 50% { transform: scaleX(.12); } 100% { transform: scaleX(1); } }
+  .heckrotor { transform-box: view-box; transform-origin: 632px 116px; animation: drehen .2s linear infinite; }
+  @keyframes drehen { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .arm { transform-box: view-box; transform-origin: 262px 152px; animation: winken .4s ease-in-out infinite alternate; }
+  @keyframes winken { 0% { transform: rotate(-22deg); } 100% { transform: rotate(18deg); } }
+  .licht { animation: blinken .8s steps(1) infinite; }
+  @keyframes blinken { 0% { opacity: 1; } 50% { opacity: .15; } }
+</style>
+<defs>
+  <linearGradient id="lack" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3f8a72"/><stop offset=".45" stop-color="#276552"/>
+    <stop offset="1" stop-color="#173e33"/>
+  </linearGradient>
+  <linearGradient id="glas" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#cfe9f2"/><stop offset=".4" stop-color="#7fb0c4"/>
+    <stop offset="1" stop-color="#2f5566"/>
+  </linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff0b0"/><stop offset=".45" stop-color="#e2b651"/>
+    <stop offset="1" stop-color="#9a7020"/>
+  </linearGradient>
+  <linearGradient id="metall" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#6d7478"/><stop offset="1" stop-color="#2e3336"/>
+  </linearGradient>
+  <filter id="weich" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+
+<!-- Kufen, hinten und vorn -->
+<g stroke="#2a2f31" stroke-linecap="round" fill="none">
+  <path d="M132,254 L150,212 M364,254 L352,212" stroke-width="7"/>
+  <path d="M96,256 C104,244 112,244 124,246 L440,246" stroke-width="8"/>
+</g>
+<g stroke="url(#metall)" stroke-linecap="round" fill="none">
+  <path d="M168,272 L182,214 M392,272 L376,214" stroke-width="9"/>
+  <path d="M112,276 C120,262 132,262 146,264 L470,264" stroke-width="10"/>
+</g>
+
+<!-- Heckausleger und Leitwerk -->
+<path d="M420,112 L640,128 L640,146 L420,176 Z" fill="url(#lack)"/>
+<path d="M600,128 L626,70 L660,70 L650,148 L618,146 Z" fill="url(#lack)"/>
+<path d="M430,146 L636,137" stroke="#e2b651" stroke-width="5"/>
+<circle class="licht" cx="650" cy="78" r="9" fill="#5dff7a"/>
+<circle class="licht" cx="650" cy="78" r="18" fill="#5dff7a" opacity=".35" filter="url(#weich)"/>
+
+<!-- Heckrotor -->
+<circle cx="632" cy="116" r="30" fill="#dfe6e8" opacity=".12"/>
+<g class="heckrotor">
+  <rect x="628" y="88" width="8" height="56" rx="4" fill="#1d2223"/>
+</g>
+
+<!-- Die Kabine -->
+<path d="M70,152 C66,112 104,88 160,84 L398,84 C430,86 446,104 446,128 L446,186 C446,210 430,224 402,226
+         L150,226 C104,226 74,200 70,152 Z" fill="url(#lack)"/>
+<path d="M98,112 C112,94 140,88 166,88 L396,88" fill="none" stroke="#8fd1b8" stroke-width="3" opacity=".5"/>
+<!-- Das Cockpitfenster vorn -->
+<path d="M78,150 C76,118 104,96 150,94 L186,94 L186,170 L84,170 C80,164 78,158 78,150 Z" fill="url(#glas)"/>
+<path d="M104,110 C118,102 136,100 156,100" fill="none" stroke="#ffffff" stroke-width="5" opacity=".55"
+      stroke-linecap="round"/>
+<!-- Goldstreifen -->
+<path d="M84,184 L446,184" stroke="#e2b651" stroke-width="9"/>
+
+<!-- Die offene Seitentür: jemand winkt heraus -->
+<rect x="206" y="100" width="92" height="118" rx="8" fill="#0d1416"/>
+<rect x="300" y="100" width="40" height="118" rx="6" fill="#23594a" opacity=".95"/>
+<circle cx="250" cy="134" r="17" fill="#e0a47c"/>
+<path d="M233,128 C234,112 266,112 267,128 Z" fill="#23364f"/>
+<path d="M226,218 L228,166 C230,152 270,152 274,166 L276,218 Z" fill="#c9582e"/>
+<g class="arm">
+  <path d="M262,156 L300,112" stroke="#c9582e" stroke-width="15" stroke-linecap="round"/>
+  <circle cx="303" cy="106" r="10" fill="#e0a47c"/>
+</g>
+
+<!-- Das Zeichen der Crew: ein großer goldener Diamant -->
+<g transform="translate(392,146)">
+  <polygon points="-34,-12 -18,-30 18,-30 34,-12 0,34" fill="url(#gold)" stroke="#6b4d12" stroke-width="2.5"/>
+  <polyline points="-34,-12 34,-12" fill="none" stroke="#6b4d12" stroke-width="2"/>
+  <polyline points="-18,-30 -10,-12 0,34 10,-12 18,-30" fill="none" stroke="#8c6818" stroke-width="1.6"/>
+  <polygon points="-18,-30 -10,-12 -34,-12" fill="#fff6d0" opacity=".55"/>
+</g>
+
+<!-- Rotormast und Hauptrotor -->
+<rect x="290" y="62" width="20" height="24" rx="4" fill="url(#metall)"/>
+<ellipse cx="300" cy="56" rx="298" ry="10" fill="#e8eef0" opacity=".16"/>
+<g class="blatt">
+  <rect x="4" y="52" width="592" height="8" rx="4" fill="#1b1f21"/>
+</g>
+<g class="blatt zwei">
+  <rect x="4" y="52" width="592" height="8" rx="4" fill="#2b3134"/>
+</g>
+<circle cx="300" cy="56" r="11" fill="url(#metall)"/>
+</svg>

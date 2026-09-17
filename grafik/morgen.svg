@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"
+     data-breite="960" data-schleife-ms="4000" data-bilder="40" data-bereiche="340 462 190 350">
+<!--
+  Dieselbe Stelle im Morgengrauen – Szene für den Abschluss (Arbeitsplan 6.8).
+  Entsteht mit grafik/abschluss_zeichnen.py – dort ändern, nicht hier.
+
+  Fürs Spiel vorrendern mit:
+      python3 grafik/rendern.py grafik/morgen.svg
+  Bewegt wird nur der Rauch über der Feuerstelle (data-bereiche). Rechts auf dem ebenen Sand landet im Spiel
+  der Hubschrauber, oben links steht der Text.
+-->
+<title>Das Lager am Morgen</title>
+<desc>Morgengrauen über denselben Dünen: Der Himmel geht von Blau über Rosa in ein warmes Orange über, rechts
+am Horizont kündigt sich die Sonne an, die letzten Sterne verblassen. Das Feuer ist aus, ein dünner Rauchfaden
+steigt auf; Rucksack, zurückgeschlagene Decke und Funkgerät liegen noch da. Rechts ist ebener Sand.</desc>
+<style>
+  /* Alle Dauern teilen 4 s. */
+  .puff { transform-box: fill-box; transform-origin: center; opacity: 0; animation: aufsteigen 4s linear infinite; }
+  @keyframes aufsteigen {
+    0%   { transform: translate(0, 0) scale(.5); opacity: 0; }
+    15%  { opacity: .45; }
+    75%  { opacity: 0; }
+    100% { transform: translate(var(--px), var(--py)) scale(2); opacity: 0; }
+  }
+</style>
+<defs>
+  <linearGradient id="himmel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1d2a5c"/><stop offset=".3" stop-color="#4c4f8a"/>
+    <stop offset=".47" stop-color="#a7728f"/><stop offset=".56" stop-color="#e8977a"/>
+    <stop offset=".62" stop-color="#ffc98f"/><stop offset="1" stop-color="#ffc98f"/>
+  </linearGradient>
+  <radialGradient id="sonne" cx="1240" cy="560" r="520" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#fff2c4" stop-opacity=".95"/><stop offset=".25" stop-color="#ffd48a" stop-opacity=".55"/>
+    <stop offset="1" stop-color="#ffb070" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="berge" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8c6788"/><stop offset="1" stop-color="#6d5176"/>
+  </linearGradient>
+  <linearGradient id="duene-fern" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d59379"/><stop offset="1" stop-color="#ad7063"/>
+  </linearGradient>
+  <linearGradient id="duene-mitte" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#eaa77a"/><stop offset="1" stop-color="#c07f60"/>
+  </linearGradient>
+  <linearGradient id="boden" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f2bf8c"/><stop offset="1" stop-color="#cf9168"/>
+  </linearGradient>
+
+  <filter id="weich2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2"/></filter>
+  <filter id="weich8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+  <filter id="weich30" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="30"/></filter>
+</defs>
+
+<rect width="1600" height="900" fill="url(#himmel)"/>
+<rect width="1600" height="900" fill="url(#sonne)"/>
+<g>
+<circle cx="108.3" cy="165.5" r="0.7" fill="#fff6e6" opacity="0.24"/>
+<circle cx="1466.6" cy="35.8" r="1.1" fill="#fff6e6" opacity="0.45"/>
+<circle cx="1496.0" cy="39.9" r="1.1" fill="#fff6e6" opacity="0.18"/>
+<circle cx="484.7" cy="56.2" r="1.0" fill="#fff6e6" opacity="0.24"/>
+<circle cx="857.3" cy="107.8" r="1.1" fill="#fff6e6" opacity="0.34"/>
+<circle cx="1077.4" cy="197.2" r="1.0" fill="#fff6e6" opacity="0.46"/>
+<circle cx="1457.1" cy="58.7" r="1.2" fill="#fff6e6" opacity="0.23"/>
+<circle cx="1386.5" cy="133.2" r="1.3" fill="#fff6e6" opacity="0.27"/>
+<circle cx="1204.6" cy="160.2" r="0.9" fill="#fff6e6" opacity="0.34"/>
+<circle cx="672.4" cy="157.8" r="0.8" fill="#fff6e6" opacity="0.28"/>
+<circle cx="729.2" cy="32.3" r="0.8" fill="#fff6e6" opacity="0.37"/>
+<circle cx="1248.4" cy="84.5" r="1.1" fill="#fff6e6" opacity="0.40"/>
+<circle cx="592.0" cy="191.1" r="0.9" fill="#fff6e6" opacity="0.49"/>
+<circle cx="895.2" cy="116.1" r="1.1" fill="#fff6e6" opacity="0.50"/>
+<circle cx="1415.5" cy="77.2" r="1.3" fill="#fff6e6" opacity="0.24"/>
+<circle cx="29.0" cy="10.4" r="0.9" fill="#fff6e6" opacity="0.32"/>
+<circle cx="96.6" cy="181.1" r="0.8" fill="#fff6e6" opacity="0.40"/>
+<circle cx="1584.2" cy="47.7" r="1.3" fill="#fff6e6" opacity="0.22"/>
+<circle cx="751.4" cy="101.2" r="0.6" fill="#fff6e6" opacity="0.22"/>
+<circle cx="1301.1" cy="192.7" r="0.9" fill="#fff6e6" opacity="0.47"/>
+<circle cx="299.4" cy="16.3" r="0.9" fill="#fff6e6" opacity="0.21"/>
+<circle cx="694.7" cy="72.9" r="0.8" fill="#fff6e6" opacity="0.27"/>
+</g>
+
+<path d="M-20,600 L-20,548 L70,540 L120,508 L240,506 L280,532 L420,536 L470,512 L610,510 L650,538 L860,544 L900,522 L1010,520 L1060,546 L1260,550 L1300,518 L1440,516 L1490,544 L1620,548 L1620,600 Z" fill="url(#berge)"/>
+<path d="M-40,910 L-40,598 Q126,569 292,605 Q460,567 627,599 Q772,567 916,600 Q1110,550 1303,595 Q1441,580 1578,601 Q1711,587 1845,605 L1640,910 Z" fill="url(#duene-fern)"/>
+<path d="M-40,910 L-40,662 Q213,646 466,670 Q644,626 822,660 Q1039,601 1257,656 Q1467,606 1677,661 L1640,910 Z" fill="url(#duene-mitte)"/>
+<path d="M-40,910 L-40,726 C120,700 360,712 560,734 C760,756 900,770 1060,776 C1240,782 1420,770 1640,752 L1640,910 Z" fill="url(#boden)"/>
+<!-- Lange Morgenschatten nach links, die Sonne steht rechts -->
+<path d="M-40,910 L-40,662 Q213,646 466,670 Q644,626 822,660 Q1039,601 1257,656 Q1467,606 1677,661 L1640,910 Z" fill="none" stroke="#fff0d0" stroke-width="3" opacity=".35"/>
+<ellipse cx="330" cy="800" rx="420" ry="34" fill="#7f5a78" opacity=".22" filter="url(#weich30)"/>
+
+<!-- Das Lager -->
+<path d="M160,832 C230,814 340,810 380,822 C430,796 500,814 506,842 L500,866 C400,880 240,882 150,866 Z" fill="#8f3f4a"/>
+<path d="M180,840 L486,834 M170,856 L494,852" stroke="#c56a6f" stroke-width="6" opacity=".8"/>
+<rect x="167" y="682" width="96" height="112" rx="26" fill="#6b7a45"/>
+<rect x="175" y="738" width="80" height="46" rx="12" fill="#4a5530"/>
+<path d="M185,684 C189,650 241,650 245,684" fill="none" stroke="#4a5530" stroke-width="9"/>
+<line x1="195" y1="688" x2="195" y2="734" stroke="#4a5530" stroke-width="7"/>
+<line x1="235" y1="688" x2="235" y2="734" stroke="#4a5530" stroke-width="7"/>
+<rect x="576" y="744" width="88" height="62" rx="10" fill="#5f6a38"/>
+<rect x="586" y="754" width="68" height="30" rx="4" fill="#0b120c"/>
+<circle cx="600" cy="795" r="6" fill="#15170f"/><circle cx="638" cy="795" r="6" fill="#15170f"/>
+<line x1="654" y1="746" x2="690" y2="650" stroke="#9c9a90" stroke-width="3"/>
+<ellipse cx="370" cy="795" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="380" cy="790" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="394" cy="785" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="412" cy="783" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="432" cy="782" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="452" cy="783" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="469" cy="786" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="483" cy="791" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="492" cy="796" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="430" cy="796" rx="56" ry="15" fill="#6e6a66" opacity=".85"/>
+<path d="M382,796 L468,784" stroke="#221612" stroke-width="13" stroke-linecap="round"/>
+<path d="M396,782 L476,798" stroke="#2c1d17" stroke-width="12" stroke-linecap="round"/>
+<ellipse cx="491" cy="796" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="494" cy="802" rx="17" ry="11" fill="#8d7d73"/>
+<ellipse cx="491" cy="808" rx="17" ry="11" fill="#8d7d73"/>
+<g>
+<circle class="puff" style="--px:-10px;--py:-244px;animation-delay:-0.0s" cx="432" cy="778" r="17" fill="#e9e4f0" filter="url(#weich8)"/>
+<circle class="puff" style="--px:-24px;--py:-223px;animation-delay:-0.5s" cx="434" cy="778" r="17" fill="#e9e4f0" filter="url(#weich8)"/>
+<circle class="puff" style="--px:10px;--py:-262px;animation-delay:-1.0s" cx="426" cy="778" r="14" fill="#e9e4f0" filter="url(#weich8)"/>
+<circle class="puff" style="--px:-15px;--py:-259px;animation-delay:-1.5s" cx="432" cy="778" r="15" fill="#e9e4f0" filter="url(#weich8)"/>
+<circle class="puff" style="--px:27px;--py:-246px;animation-delay:-2.0s" cx="429" cy="778" r="14" fill="#e9e4f0" filter="url(#weich8)"/>
+<circle class="puff" style="--px:29px;--py:-241px;animation-delay:-2.5s" cx="433" cy="778" r="16" fill="#e9e4f0" filter="url(#weich8)"/>
+<circle class="puff" style="--px:-30px;--py:-262px;animation-delay:-3.0s" cx="434" cy="778" r="13" fill="#e9e4f0" filter="url(#weich8)"/>
+<circle class="puff" style="--px:2px;--py:-237px;animation-delay:-3.5s" cx="428" cy="778" r="14" fill="#e9e4f0" filter="url(#weich8)"/>
+</g>
+</svg>
