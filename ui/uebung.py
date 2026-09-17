@@ -35,6 +35,15 @@ Drei Dinge machen die Rückmeldung sichtbar statt nur lesbar:
 * Geschrieben wird in Handschrift, als hätte man den Bleistift selbst in der
   Hand.
 
+Das Lineal in Level 3
+─────────────────────
+Neben einer Vigenère-Übung liegt das Quadrat mit 676 Feldern. Damit beim
+Nachschlagen niemand um eine Zeile verrutscht, lässt sich ein Lineal anlegen
+(:mod:`ui.lineal`): ein Klick auf den Schlüsselbuchstaben links, einer auf den
+Buchstaben der Nachricht oben. Abgelesen wird weiter selbst. Ein Satz unten auf
+der Übungsseite sagt, dass es das Lineal gibt; wie oft es bewegt wurde, zählt
+die Spiellogik fürs Log mit.
+
 Nachschlagen mitten in der Aufgabe
 ──────────────────────────────────
 "Im Handbuch nachschlagen" zeigt das ganze Handbuch (:mod:`ui.handbuch`) und
@@ -59,6 +68,7 @@ from game.aufgabe import ENTSCHLUESSELN, QUELLE_UEBUNG, VERSCHLUESSELN
 from game.rueckmeldung import bezugsloesung, erste_abweichung
 from ui import buchsatz, handbuch, stil
 from ui.buchleinwand import Buchleinwand
+from ui.lineal import Lineal
 from ui.screen import Screen
 
 #: Aufschriften der Knöpfe unter dem Buch.
@@ -83,6 +93,9 @@ BESCHRIFTUNG_ANTWORT = "Deine Antwort:"
 LOB = "Richtig! Genau so stimmt es."
 LOESUNGSZEILE = "Die Lösung: {loesung}"
 LOESUNGSHINWEIS = "Schau sie dir in Ruhe an – dann geht es weiter."
+#: Unten auf der Übungsseite, wenn links das Quadrat liegt.
+LINEAL_HINWEIS = ("Tipp: Klick im Quadrat links auf den Schlüsselbuchstaben und oben auf den Buchstaben "
+                  "der Nachricht – dann liegt ein Lineal an.")
 VERSUCHE_UEBRIG = "Noch {anzahl} Versuche."
 LETZTER_VERSUCH = "Noch ein Versuch – danach zeige ich dir die Lösung."
 
@@ -124,6 +137,8 @@ class Uebung(Screen):
         self._text_oben = 0
         self._feldkasten = (0, 0, 0, 0)
         self._rueckmeldung_oben = 0
+        #: Das Lineal im Quadrat – nur, wenn links das Quadrat liegt (Level 3).
+        self.lineal = None
 
         #: Die Leinwand mit dem aufgeschlagenen Buch.
         self.buch = Buchleinwand(self, self.massstab, self.px)
@@ -204,6 +219,18 @@ class Uebung(Screen):
         x0, y0, x1, y1 = self.buch.flaeche("links")
         seite = buchsatz.einzelseite(teile, self.buch.schriften, x1 - x0, y1 - y0, self.px)
         self.buch.seite_zeichnen("links", seite.stuecke)
+        quadrate = [stueck for stueck in seite.stuecke if isinstance(stueck, buchsatz.Quadrat)]
+        if quadrate and self.lineal is None:
+            self.lineal = Lineal(self.buch, "links", quadrate[0], bei_benutzung=self._lineal_benutzt)
+            self.buch.bind("<Button-1>", lambda ereignis: self.lineal.klicken(ereignis.x, ereignis.y))
+            self.buch.bind("<Motion>", lambda ereignis: self.buch.configure(
+                cursor="hand2" if self.lineal.ziel(ereignis.x, ereignis.y) else ""))
+
+    def _lineal_benutzt(self):
+        """Zählt fürs Log, dass das Lineal bewegt wurde."""
+        bearbeitung = self.durchlauf.spielstand.aktuelle_bearbeitung
+        if bearbeitung is not None:
+            bearbeitung.lineal_benutzt()
 
     def auftrag(self, aufgabe):
         """Der Satz über dem Aufgabentext: Richtung und Schlüssel."""
@@ -247,6 +274,14 @@ class Uebung(Screen):
         self._feldkasten = (0, y, breite, feldhoehe)
         y += feldhoehe + px(ABSTAND_RUECKMELDUNG)
         self._rueckmeldung_oben = y
+
+        if self.lineal is not None:
+            # Ganz unten auf der Seite, unter aller Rückmeldung.
+            zeilen = buchsatz.umbrechen(LINEAL_HINWEIS, s.klein, breite)
+            unten = self.buch.flaeche("rechts")[3] - y0
+            for nr, zeile in enumerate(zeilen):
+                stuecke.append(buchsatz.Zeile(0, unten - (len(zeilen) - nr) * s.klein.metrics("linespace"), zeile,
+                                              "klein", stil.FARBE_TINTE, "linealhinweis"))
 
         self.buch.seite_zeichnen("rechts", stuecke)
         self._schreibfeld_zeichnen()

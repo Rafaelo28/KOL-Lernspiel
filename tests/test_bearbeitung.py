@@ -288,6 +288,26 @@ def test_der_zaehler_liefert_die_zahlen_fuer_das_log():
     assert lauf.geloest is True
 
 
+def test_das_lineal_wird_gezaehlt_solange_die_aufgabe_laeuft():
+    """Im Log steht, ob eine Zeit mit oder ohne Lineal zustande kam – nach dem Lösen zählt nichts mehr."""
+    lauf = Bearbeitung(_uebung())
+    assert lauf.lineal_klicks == 0
+    lauf.lineal_benutzt()
+    lauf.lineal_benutzt()
+    lauf.versuchen("KXQG")
+    lauf.lineal_benutzt()
+    assert lauf.lineal_klicks == 2
+
+
+def test_auch_nach_der_loesungsanzeige_zaehlt_das_lineal_nicht_mehr():
+    lauf = Bearbeitung(_uebung())
+    for falsch in ("KXQA", "KXQB", "KXQC"):
+        lauf.versuchen(falsch)
+    assert lauf.loesung_angezeigt
+    lauf.lineal_benutzt()
+    assert lauf.lineal_klicks == 0
+
+
 @pytest.mark.parametrize(
     "aufgabe", MIT_TEILAUFGABE, ids=[a.kennung for a in MIT_TEILAUFGABE]
 )

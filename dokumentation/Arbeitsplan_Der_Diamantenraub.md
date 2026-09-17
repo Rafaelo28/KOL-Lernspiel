@@ -312,6 +312,9 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
   endete oder früher fertig war
 - **Zusätzlich: `figur`** (nur die Kennung) – die gesendeten Funksprüche
   tragen die Initialen der Figur, ihr Wortlaut hängt also an ihr
+- **Zusätzlich: `lineal_klicks`** (seit 6.7) – wie oft beim Lösen das Lineal
+  im Vigenère-Quadrat bewegt wurde. Eine Zeit mit Lineal ist nicht ohne
+  Weiteres mit einer ohne vergleichbar
 - Dateiname mit Zeitstempel, damit nichts überschrieben wird
 - **Semikolon und `utf-8-sig`:** Die Datei wird auf einem deutschen Rechner in
   Excel geöffnet; mit einem Komma landete die ganze Zeile in einer Spalte.
@@ -674,11 +677,24 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 - Aus 6.4 und 6.5: Handbuch und Aufgabe zeichnen das Quadrat mit demselben
   Bauteil (`Buchleinwand._quadrat_zeichnen`, Grösse aus `buchsatz.Quadrat`);
   jedes Feld trägt die Tags `z<Zeile>` und `s<Spalte>`. Im Handbuch markiert
-  `Buchleinwand.werkzeug_markieren` neben den Beispielen schon Zeile, Spalte
-  und Kreuzungspunkt des gezeigten Schritts. Beim Lösen ist das Quadrat noch
-  ohne Markierung – ob die Spielenden dort selbst Zeile und Spalte markieren
-  können, ist noch zu entscheiden: Die Kontrollgruppe rechnet mit dem
-  Quadrat auf Papier
+  `Buchleinwand.werkzeug_markieren` neben den Beispielen Zeile, Spalte und
+  Kreuzungspunkt des gezeigten Schritts
+- **Umgesetzt – das Lineal beim Lösen** (`ui/lineal.py`), in Level 3 von der
+  ersten Übung an: Ein Klick links auf den Schlüsselbuchstaben legt es an die
+  Zeile, ein Klick oben auf den Buchstaben der Nachricht an die Spalte; wo sie
+  sich kreuzen, liegt der Marker dunkler. Ein Klick ins Quadrat legt beide an
+  dieses Feld (beim Entschlüsseln: vom gefundenen Buchstaben hinauf zum
+  Spaltenkopf), ein zweiter Klick auf denselben Kopf nimmt es wieder ab. Ein
+  Satz unten auf der Übungsseite sagt, dass es das Lineal gibt
+  - **Es markiert nur und liest nicht ab:** Kein Buchstabe wird ausgegeben
+    (ein Test prüft, dass das Lineal keinen einzigen Text anlegt). Das Ablesen
+    im Quadrat ist genau, was Level 3 misst; die Kontrollgruppe darf auf
+    Papier Finger und Lineal benutzen – mehr nicht. Ein Werkzeug, das den
+    Kreuzungspunkt nennt, wäre ein Rechner
+  - **Im Log:** `lineal_klicks` zählt je Aufgabe, wie oft das Lineal bewegt
+    wurde, solange sie lief (siehe 5.5)
+  - Für die Funksprüche in Level 3 (6.6) liegt das Lineal als eigenes Bauteil
+    bereit: Es braucht nur eine Buchleinwand mit dem Quadrat darauf
 
 ### 6.8 Abschluss-Screen
 - Nachthimmel, Rettung, Schlusstext (Diamanten bleiben zurück)

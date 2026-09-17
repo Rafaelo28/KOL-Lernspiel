@@ -178,6 +178,57 @@ def test_neben_dem_quadrat_ist_fuer_eine_karte_kein_platz(fenster):
     assert not screen.buch.find_withtag("karte&&links")
 
 
+def _quadratmitte(screen, zeile, spalte):
+    """Die Mitte eines Feldes im Quadrat links – Zeile und Spalte -1 sind die Köpfe."""
+    lineal = screen.lineal
+    x0, y0, _, _ = screen.buch.flaeche("links")
+    feld = lineal.quadrat.feld
+    return (round(x0 + lineal.quadrat.x + (spalte + 1.5) * feld), round(y0 + lineal.quadrat.y + (zeile + 1.5) * feld))
+
+
+def test_bei_vigenere_liegt_ein_lineal_am_quadrat(fenster, ausloesen):
+    screen = _zur_uebung(fenster, 3)
+    assert screen.lineal is not None and screen.lineal.seite == "links"
+    assert _eine_zeile([uebung.LINEAL_HINWEIS]) in _eine_zeile(screen.texte("rechts"))
+    bearbeitung = fenster.durchlauf.spielstand.aktuelle_bearbeitung
+    for zeile, spalte in ((17, -1), (-1, 7)):
+        x, y = _quadratmitte(screen, zeile, spalte)
+        ausloesen(screen.buch, "<Button-1>", x=x, y=y)
+    assert (screen.lineal.zeile, screen.lineal.spalte) == (17, 7)
+    assert screen.buch.find_withtag("linealkreuzung")
+    assert bearbeitung.lineal_klicks == 2
+    ausloesen(screen.buch, "<Motion>", x=x, y=y)
+    assert screen.buch.cget("cursor") == "hand2"
+    ausloesen(screen.buch, "<Motion>", x=5, y=5)
+    assert screen.buch.cget("cursor") == ""
+
+
+@pytest.mark.parametrize("level", (1, 2))
+def test_vor_level_3_gibt_es_kein_lineal(fenster, level):
+    """Ohne Quadrat braucht es keins."""
+    screen = _zur_uebung(fenster, level)
+    assert screen.lineal is None
+    assert not screen.buch.bind("<Button-1>")
+    assert uebung.LINEAL_HINWEIS.split()[0] not in " ".join(screen.texte("rechts"))
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+def test_der_hinweis_aufs_lineal_steht_unter_der_laengsten_rueckmeldung(fenster):
+    screen = _zur_uebung(fenster, 3)
+    falsch = _mit_fehler(screen.aufgabe.loesung, 99)
+    for _ in range(3):
+        _tippen(screen, falsch)
+        screen.pruefen()
+    assert screen.ist_beendet
+    unten = max(screen.buch.bbox(e)[3] for e in screen.buch.find_withtag("rueckmeldung"))
+    oben = min(screen.buch.bbox(e)[1] for e in screen.buch.find_withtag("linealhinweis"))
+    assert unten <= oben
+    # Ganz unten auf der Seite – dort stört er beim Rechnen nicht.
+    ende = max(screen.buch.bbox(e)[3] for e in screen.buch.find_withtag("linealhinweis"))
+    seitenende = screen.buch.flaeche("rechts")[3]
+    assert seitenende - screen.buch.schriften.klein.metrics("linespace") <= ende <= seitenende + 2
+
+
 def test_geschrieben_wird_in_handschrift(fenster):
     screen = _zur_uebung(fenster)
     assert screen._feld.cget("font") == str(screen.buch.schriften.notiz)

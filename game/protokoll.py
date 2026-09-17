@@ -28,6 +28,9 @@ Zeilen, bei denen Vorsicht geboten ist
 * ``abgebrochen = ja``: Das Level endete, während die Aufgabe noch lief. In
   ``sekunden`` steht dann die Zeit bis zum Levelwechsel, keine Rechenzeit.
   Für Zeitauswertungen herausfiltern.
+* ``lineal_klicks`` zählt, wie oft jemand beim Lösen das Lineal im
+  Vigenère-Quadrat bewegt hat (nur Level 3, sonst 0). Eine Zeit mit Lineal
+  ist nicht ohne Weiteres mit einer ohne vergleichbar.
 * Für alles, was mit Tempo zu tun hat, ``gerechnete_buchstaben`` nehmen,
   nicht ``laenge_in_buchstaben``. Die beiden unterscheiden sich nur, wenn
   jemand bei einem Funkspruch mit Teilaufgabe von sich aus die ganze
@@ -139,6 +142,7 @@ SPALTEN = (
     "abgebrochen",
     "geloest",
     "vollstaendig_geloest",
+    "lineal_klicks",
 )
 
 
@@ -191,6 +195,7 @@ def zeile(spielstand, bearbeitung, aufgabennummer):
         "abgebrochen": _ja_nein(bearbeitung.abgebrochen),
         "geloest": _ja_nein(bearbeitung.geloest),
         "vollstaendig_geloest": _ja_nein(bearbeitung.vollstaendig_geloest),
+        "lineal_klicks": bearbeitung.lineal_klicks,
     }
 
 

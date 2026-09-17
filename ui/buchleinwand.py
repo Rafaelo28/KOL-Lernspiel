@@ -249,7 +249,7 @@ class Buchleinwand(Buehne):
 
     def markieren(self, seite, flaechen):
         """Zieht Textmarker über die ``flaechen`` – unter die Schrift der Seite."""
-        self._unterlegen(seite, "text", [
+        self.unterlegen(seite, "text", [
             self.create_rectangle(*flaeche, fill=stil.FARBE_MARKIERUNG, width=0, tags=(seite, "markierung"))
             for flaeche in flaechen])
 
@@ -289,12 +289,12 @@ class Buchleinwand(Buehne):
                     for band in baender]
         elemente.append(self.create_rectangle(*kreuzung, fill=stil.FARBE_KREUZUNG, width=0,
                                               tags=marken + ("kreuzung",)))
-        self._unterlegen(seite, unter, elemente)
+        self.unterlegen(seite, unter, elemente)
         # Der Rand obenauf, sonst verschwände er unter den Linien der Tabelle.
         self.create_rectangle(*kreuzung, outline=stil.FARBE_ROTSTIFT, width=max(2, self.px(2)),
                               tags=marken + ("kreuzungsrand",))
 
-    def _unterlegen(self, seite, unter, elemente):
+    def unterlegen(self, seite, unter, elemente):
         """Legt die ``elemente`` direkt unter das unterste Element der Seite mit dem Tag ``unter``."""
         ziel = self.find_withtag(f"{unter}&&{seite}")
         if ziel:

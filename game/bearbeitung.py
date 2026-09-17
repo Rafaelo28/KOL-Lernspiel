@@ -202,6 +202,7 @@ class Bearbeitung:
         self._ohne_fortschritt = 0
         self._beste_fehlerzahl = None
         self._abgebrochen = False
+        self._lineal_klicks = 0
 
     # ── Zustand ────────────────────────────────────────────────────────────
 
@@ -301,6 +302,21 @@ class Bearbeitung:
     def laeuft_noch(self):
         """Läuft die Uhr dieser Aufgabe noch?"""
         return self._ende is None
+
+    @property
+    def lineal_klicks(self):
+        """Wie oft beim Lösen das Lineal im Vigenère-Quadrat bewegt wurde (ui/lineal.py).
+
+        Gezählt wird nur, solange die Uhr läuft: Wer nach dem Lösen noch
+        herumklickt, rechnet nicht mehr. Im Log zeigt die Zahl, ob die Zeit
+        einer Aufgabe mit oder ohne Lineal zustande kam.
+        """
+        return self._lineal_klicks
+
+    def lineal_benutzt(self):
+        """Das Lineal wurde bewegt – zählt mit, solange die Aufgabe läuft."""
+        if self.laeuft_noch:
+            self._lineal_klicks += 1
 
     @property
     def gerechnete_buchstaben(self):

@@ -194,6 +194,24 @@ def test_die_zahlen_sind_zahlen(tmp_path):
         assert int(reihe["gerechnete_buchstaben"]) >= int(reihe["laenge_in_buchstaben"])
         assert int(reihe["sekunden"]) >= 0
         assert int(reihe["level_sekunden"]) >= int(reihe["sekunden"])
+        assert int(reihe["lineal_klicks"]) == 0
+
+
+def test_wie_oft_das_lineal_bewegt_wurde_steht_in_der_zeile(tmp_path):
+    """Eine Zeit mit Lineal ist nicht ohne Weiteres mit einer ohne vergleichbar."""
+    uhr = Uhr()
+    stand = Spielstand(charaktere.VIC_MORENO, Zufallsquelle(5), "P10", zeitgeber=uhr)
+    stand.starte_level(1)
+    for level in LEVEL[:2]:
+        stand.naechstes_level()
+    aufgabe = stand.naechste_uebung()
+    for _ in range(4):
+        stand.aktuelle_bearbeitung.lineal_benutzt()
+    uhr.weiter(20)
+    stand.versuchen(aufgabe.loesung)
+    stand.aufgabe_abschliessen()
+    (reihe,) = _gelesen(Protokoll(stand, ordner=tmp_path, zeitpunkt=ZEITPUNKT).schreiben())
+    assert reihe["level"] == "3" and reihe["lineal_klicks"] == "4"
 
 
 def test_die_gemessene_zeit_landet_gerundet_in_der_datei(tmp_path):

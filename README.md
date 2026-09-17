@@ -145,6 +145,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `buchsatz.py` | Der Satz des Handbuchs: welcher Text auf welche Buchseite kommt – mit den Regeln aus dem Buchdruck |
 | `buchleinwand.py` | Das aufgeschlagene Buch als Leinwand – Bild, Schriften, Stempel, Zeichnen; Handbuch und Übung teilen es sich |
 | `uebung.py` | Die Übungen im Buch: Aufgabe rechts, Werkzeug links, Rückmeldung mit Fehlerstelle, Stempel und Versuchszähler |
+| `lineal.py` | Das Lineal im Vigenère-Quadrat: Zeile und Spalte per Klick markieren, damit beim Nachschlagen niemand verrutscht |
 
 ### Animationen
 
