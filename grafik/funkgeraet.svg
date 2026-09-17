@@ -1,0 +1,280 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 960"
+     data-breite="460" data-standbild="ja" data-durchsichtig="ja">
+<!--
+  Das Kurzwellen-Funkgerät für den Funk-Screen (Arbeitsplan 6.6).
+  Entsteht mit grafik/funkgeraet_zeichnen.py – dort ändern, nicht hier.
+
+  Fürs Spiel vorrendern mit:
+      python3 grafik/rendern.py grafik/funkgeraet.svg
+  Auf das Glas (x 92–828, y 170–698) schreibt das Spiel, und die Lämpchen bei
+  (650, 770) und (764, 770) lässt es leuchten –
+  ui/funk.py rechnet mit genau diesen Maßen, dort in Pixeln und halb so groß.
+-->
+<title>Kurzwellen-Funkgerät</title>
+<desc>Ein olivgrünes Feldfunkgerät mit Tragegriff und Antenne. Auf der dunklen Frontplatte liegen
+eine große Glasanzeige, darunter eine Frequenzskala mit rotem Zeiger, ein geriffelter Abstimmknopf,
+zwei Lämpchen für Empfang und Senden mit Kippschaltern und die Schlitze des Lautsprechers.</desc>
+<defs>
+  <linearGradient id="oliv" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#6b7449"/><stop offset=".45" stop-color="#565e39"/>
+    <stop offset="1" stop-color="#3d4328"/>
+  </linearGradient>
+  <filter id="lack" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="koernung"/>
+    <feColorMatrix in="koernung" type="matrix"
+      values="0 0 0 0 .12  0 0 0 0 .13  0 0 0 0 .08  0 0 0 .35 -.08" result="koernfarbe"/>
+    <feMerge result="beides"><feMergeNode in="SourceGraphic"/><feMergeNode in="koernfarbe"/></feMerge>
+    <feComposite in="beides" in2="SourceGraphic" operator="in"/>
+  </filter>
+  <linearGradient id="platte" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2f3327"/><stop offset="1" stop-color="#23261d"/>
+  </linearGradient>
+  <linearGradient id="rahmen" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#15160f"/><stop offset=".5" stop-color="#2a2c22"/>
+    <stop offset="1" stop-color="#3b3e32"/>
+  </linearGradient>
+  <radialGradient id="glas" cx=".5" cy=".45" r=".7">
+    <stop offset="0" stop-color="#0d2416"/><stop offset=".65" stop-color="#08170e"/>
+    <stop offset="1" stop-color="#040a06"/>
+  </radialGradient>
+  <linearGradient id="spiegelung" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".07"/><stop offset=".35" stop-color="#ffffff" stop-opacity=".02"/>
+    <stop offset=".36" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <pattern id="zeilen" width="4" height="6" patternUnits="userSpaceOnUse">
+    <rect width="4" height="2" fill="#000" opacity=".22"/>
+  </pattern>
+  <linearGradient id="skalenglas" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3a3018"/><stop offset="1" stop-color="#231c0d"/>
+  </linearGradient>
+  <radialGradient id="knopf" cx=".38" cy=".32" r=".8">
+    <stop offset="0" stop-color="#4a4d42"/><stop offset=".6" stop-color="#26281f"/>
+    <stop offset="1" stop-color="#15160f"/>
+  </radialGradient>
+  <linearGradient id="chrom" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#e3e1d6"/><stop offset=".45" stop-color="#8f8e84"/>
+    <stop offset=".55" stop-color="#b9b7ab"/><stop offset="1" stop-color="#55544b"/>
+  </linearGradient>
+  <radialGradient id="lampenglas" cx=".4" cy=".35" r=".7">
+    <stop offset="0" stop-color="#3a3a33"/><stop offset="1" stop-color="#121210"/>
+  </radialGradient>
+  <linearGradient id="hebel" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#8e8c81"/><stop offset=".5" stop-color="#f1efe6"/>
+    <stop offset="1" stop-color="#77756b"/>
+  </linearGradient>
+  <radialGradient id="schraube" cx=".35" cy=".3" r=".8">
+    <stop offset="0" stop-color="#d6d4c8"/><stop offset="1" stop-color="#6d6c62"/>
+  </radialGradient>
+  <linearGradient id="griff" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3a3a33"/><stop offset="1" stop-color="#15150f"/>
+  </linearGradient>
+  <filter id="weich" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="schatten" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="12"/></filter>
+</defs>
+
+<!-- Schatten auf dem Buch -->
+<rect x="34" y="122" width="866" height="822" rx="40" fill="#000"
+      opacity=".55" filter="url(#schatten)"/>
+
+<!-- Antenne: Fuß am Gehäuse, Stab schräg nach oben, Kugel an der Spitze -->
+<line x1="812" y1="126" x2="884" y2="18" stroke="#121310" stroke-width="10" stroke-linecap="round"/>
+<line x1="812" y1="126" x2="884" y2="18" stroke="url(#chrom)" stroke-width="6" stroke-linecap="round"/>
+<circle cx="884" cy="16" r="8" fill="url(#schraube)"/>
+
+<!-- Tragegriff -->
+<path d="M262,102 C262,26 658,26 658,102" fill="none" stroke="#0e0e0a"
+      stroke-width="34" stroke-linecap="round"/>
+<path d="M262,102 C262,26 658,26 658,102" fill="none" stroke="url(#griff)"
+      stroke-width="26" stroke-linecap="round"/>
+<path d="M282,66 C352,34 568,34 638,66" fill="none"
+      stroke="#6a6a5c" stroke-width="3" opacity=".45"/>
+<rect x="232" y="84" width="60" height="26" rx="6" fill="url(#chrom)"/>
+<rect x="628" y="84" width="60" height="26" rx="6" fill="url(#chrom)"/>
+
+<!-- Gehäuse: oliv lackiertes Blech -->
+<rect x="24" y="96" width="872" height="844" rx="38" fill="url(#oliv)" filter="url(#lack)"/>
+<rect x="27" y="99" width="866" height="838" rx="35" fill="none"
+      stroke="#9aa376" stroke-opacity=".45" stroke-width="3"/>
+<rect x="24" y="96" width="872" height="844" rx="38" fill="none" stroke="#1d2014"
+      stroke-width="4"/>
+<!-- Antennenbuchse -->
+<circle cx="812" cy="126" r="18" fill="url(#chrom)" stroke="#1d2014" stroke-width="3"/>
+<circle cx="812" cy="126" r="7" fill="#1d2014"/>
+<!-- Gebrauchsspuren -->
+<g>
+  <line x1="512" y1="113" x2="496" y2="114" stroke="#cfd3b8" stroke-width="1.2" opacity="0.15"/>
+  <line x1="41" y1="425" x2="36" y2="431" stroke="#cfd3b8" stroke-width="1.2" opacity="0.31"/>
+  <line x1="103" y1="117" x2="89" y2="131" stroke="#cfd3b8" stroke-width="1.2" opacity="0.19"/>
+  <line x1="34" y1="751" x2="51" y2="763" stroke="#cfd3b8" stroke-width="1.2" opacity="0.19"/>
+  <line x1="807" y1="928" x2="827" y2="931" stroke="#cfd3b8" stroke-width="1.2" opacity="0.21"/>
+  <line x1="510" y1="925" x2="518" y2="926" stroke="#cfd3b8" stroke-width="1.2" opacity="0.17"/>
+  <line x1="419" y1="923" x2="411" y2="932" stroke="#cfd3b8" stroke-width="1.2" opacity="0.25"/>
+  <line x1="871" y1="517" x2="861" y2="519" stroke="#cfd3b8" stroke-width="1.2" opacity="0.32"/>
+  <line x1="84" y1="123" x2="84" y2="133" stroke="#cfd3b8" stroke-width="1.2" opacity="0.27"/>
+  <line x1="89" y1="929" x2="100" y2="939" stroke="#cfd3b8" stroke-width="1.2" opacity="0.21"/>
+  <line x1="235" y1="123" x2="240" y2="132" stroke="#cfd3b8" stroke-width="1.2" opacity="0.29"/>
+  <line x1="878" y1="848" x2="887" y2="852" stroke="#cfd3b8" stroke-width="1.2" opacity="0.32"/>
+  <line x1="101" y1="122" x2="104" y2="136" stroke="#cfd3b8" stroke-width="1.2" opacity="0.32"/>
+  <line x1="359" y1="921" x2="376" y2="933" stroke="#cfd3b8" stroke-width="1.2" opacity="0.15"/>
+  <line x1="880" y1="260" x2="880" y2="270" stroke="#cfd3b8" stroke-width="1.2" opacity="0.20"/>
+  <line x1="526" y1="928" x2="539" y2="930" stroke="#cfd3b8" stroke-width="1.2" opacity="0.16"/>
+  <line x1="728" y1="112" x2="726" y2="119" stroke="#cfd3b8" stroke-width="1.2" opacity="0.33"/>
+  <line x1="526" y1="118" x2="518" y2="136" stroke="#cfd3b8" stroke-width="1.2" opacity="0.18"/>
+  <line x1="637" y1="920" x2="652" y2="932" stroke="#cfd3b8" stroke-width="1.2" opacity="0.34"/>
+  <line x1="31" y1="588" x2="38" y2="590" stroke="#cfd3b8" stroke-width="1.2" opacity="0.30"/>
+  <line x1="355" y1="107" x2="362" y2="109" stroke="#cfd3b8" stroke-width="1.2" opacity="0.20"/>
+  <line x1="34" y1="770" x2="30" y2="777" stroke="#cfd3b8" stroke-width="1.2" opacity="0.19"/>
+  <line x1="821" y1="922" x2="805" y2="928" stroke="#cfd3b8" stroke-width="1.2" opacity="0.20"/>
+  <line x1="322" y1="928" x2="312" y2="935" stroke="#cfd3b8" stroke-width="1.2" opacity="0.35"/>
+  <line x1="499" y1="120" x2="513" y2="130" stroke="#cfd3b8" stroke-width="1.2" opacity="0.28"/>
+  <line x1="812" y1="920" x2="821" y2="937" stroke="#cfd3b8" stroke-width="1.2" opacity="0.32"/>
+</g>
+<!-- Namensschild -->
+<rect x="84" y="102" width="176" height="24" rx="5" fill="#1d2014" opacity=".75"/>
+<text x="172" y="121" text-anchor="middle" font-family="DejaVu Sans" font-size="17"
+      font-weight="bold" letter-spacing="3" fill="#cfc6a4" opacity=".85">KW-FUNK</text>
+
+<!-- Frontplatte -->
+<rect x="56" y="132" width="808" height="780" rx="20" fill="url(#platte)"/>
+<rect x="56" y="132" width="808" height="780" rx="20" fill="none" stroke="#0f110b"
+      stroke-width="3"/>
+<rect x="59" y="135" width="802" height="774" rx="18" fill="none"
+      stroke="#50563f" stroke-width="1.5" opacity=".6"/>
+<circle cx="78" cy="154" r="12" fill="#20251a" opacity=".55"/><circle cx="78" cy="154" r="10" fill="url(#schraube)"/><path d="M76.7,147.9 L79.3,160.1 M84.1,152.7 L71.9,155.3" stroke="#2b2f24" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="842" cy="154" r="12" fill="#20251a" opacity=".55"/><circle cx="842" cy="154" r="10" fill="url(#schraube)"/><path d="M836.5,151.2 L847.5,156.8 M844.8,148.5 L839.2,159.5" stroke="#2b2f24" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="78" cy="890" r="12" fill="#20251a" opacity=".55"/><circle cx="78" cy="890" r="10" fill="url(#schraube)"/><path d="M76.4,884.0 L79.6,896.0 M84.0,888.4 L72.0,891.6" stroke="#2b2f24" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="842" cy="890" r="12" fill="#20251a" opacity=".55"/><circle cx="842" cy="890" r="10" fill="url(#schraube)"/><path d="M836.0,888.3 L848.0,891.7 M843.7,884.0 L840.3,896.0" stroke="#2b2f24" stroke-width="2.4" stroke-linecap="round"/>
+
+<!-- Die Anzeige: Rahmen und dunkles Glas -->
+<rect x="72" y="150" width="776" height="568" rx="16" fill="url(#rahmen)"/>
+<rect x="72" y="150" width="776" height="568" rx="16" fill="none" stroke="#070806"
+      stroke-width="3"/>
+<rect x="92" y="170" width="736" height="528" rx="10" fill="url(#glas)"/>
+<rect x="92" y="170" width="736" height="528" rx="10" fill="url(#zeilen)"/>
+<rect x="92" y="170" width="736" height="528" rx="10" fill="url(#spiegelung)"/>
+<rect x="92" y="170" width="736" height="528" rx="10" fill="none" stroke="#000"
+      stroke-width="5" opacity=".7"/>
+
+<!-- Bedienelemente -->
+<g>
+  <rect x="96" y="744" width="334" height="106" rx="10" fill="#1b1d15" stroke="#0b0c08" stroke-width="3"/>
+  <rect x="104" y="752" width="318" height="90" rx="6" fill="url(#skalenglas)"/>
+  <line x1="124.0" y1="766" x2="124.0" y2="792" stroke="#e8dcc0" stroke-width="2.2" opacity=".85"/>
+  <line x1="130.9" y1="766" x2="130.9" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="137.9" y1="766" x2="137.9" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="144.8" y1="766" x2="144.8" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="151.8" y1="766" x2="151.8" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="158.8" y1="766" x2="158.8" y2="784" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="165.7" y1="766" x2="165.7" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="172.7" y1="766" x2="172.7" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="179.6" y1="766" x2="179.6" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="186.6" y1="766" x2="186.6" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="193.5" y1="766" x2="193.5" y2="792" stroke="#e8dcc0" stroke-width="2.2" opacity=".85"/>
+  <line x1="200.4" y1="766" x2="200.4" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="207.4" y1="766" x2="207.4" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="214.3" y1="766" x2="214.3" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="221.3" y1="766" x2="221.3" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="228.2" y1="766" x2="228.2" y2="784" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="235.2" y1="766" x2="235.2" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="242.2" y1="766" x2="242.2" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="249.1" y1="766" x2="249.1" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="256.1" y1="766" x2="256.1" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="263.0" y1="766" x2="263.0" y2="792" stroke="#e8dcc0" stroke-width="2.2" opacity=".85"/>
+  <line x1="269.9" y1="766" x2="269.9" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="276.9" y1="766" x2="276.9" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="283.9" y1="766" x2="283.9" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="290.8" y1="766" x2="290.8" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="297.8" y1="766" x2="297.8" y2="784" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="304.7" y1="766" x2="304.7" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="311.6" y1="766" x2="311.6" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="318.6" y1="766" x2="318.6" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="325.6" y1="766" x2="325.6" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="332.5" y1="766" x2="332.5" y2="792" stroke="#e8dcc0" stroke-width="2.2" opacity=".85"/>
+  <line x1="339.4" y1="766" x2="339.4" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="346.4" y1="766" x2="346.4" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="353.4" y1="766" x2="353.4" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="360.3" y1="766" x2="360.3" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="367.2" y1="766" x2="367.2" y2="784" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="374.2" y1="766" x2="374.2" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="381.1" y1="766" x2="381.1" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="388.1" y1="766" x2="388.1" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="395.1" y1="766" x2="395.1" y2="776" stroke="#e8dcc0" stroke-width="1.4" opacity=".85"/>
+  <line x1="402.0" y1="766" x2="402.0" y2="792" stroke="#e8dcc0" stroke-width="2.2" opacity=".85"/>
+  <text x="124.0" y="828" text-anchor="middle" font-family="DejaVu Sans" font-size="22" fill="#e8dcc0" opacity=".8">3</text>
+  <text x="193.5" y="828" text-anchor="middle" font-family="DejaVu Sans" font-size="22" fill="#e8dcc0" opacity=".8">6</text>
+  <text x="263.0" y="828" text-anchor="middle" font-family="DejaVu Sans" font-size="22" fill="#e8dcc0" opacity=".8">9</text>
+  <text x="332.5" y="828" text-anchor="middle" font-family="DejaVu Sans" font-size="22" fill="#e8dcc0" opacity=".8">12</text>
+  <text x="402.0" y="828" text-anchor="middle" font-family="DejaVu Sans" font-size="22" fill="#e8dcc0" opacity=".8">15</text>
+  <line x1="243.5" y1="758" x2="243.5" y2="836" stroke="#d8452e" stroke-width="3.2"/>
+  <rect x="104" y="752" width="318" height="45" rx="6" fill="#ffffff" opacity=".06"/>
+</g>
+<text x="263" y="880" text-anchor="middle" font-family="DejaVu Sans"
+      font-size="17" font-weight="bold" letter-spacing="1" fill="#d9ceb2" opacity=".75">FREQUENZ MHz</text>
+<g>
+  <circle cx="532" cy="807" r="58" fill="#000" opacity=".45" filter="url(#weich)"/>
+  <circle cx="528" cy="800" r="57" fill="#101109"/>
+  <line x1="575.0" y1="800.0" x2="582.0" y2="800.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="574.6" y1="806.1" x2="581.5" y2="807.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="573.4" y1="812.2" x2="580.2" y2="814.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="571.4" y1="818.0" x2="577.9" y2="820.7" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="568.7" y1="823.5" x2="574.8" y2="827.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="565.3" y1="828.6" x2="570.8" y2="832.9" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="561.2" y1="833.2" x2="566.2" y2="838.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="556.6" y1="837.3" x2="560.9" y2="842.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="551.5" y1="840.7" x2="555.0" y2="846.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="546.0" y1="843.4" x2="548.7" y2="849.9" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="540.2" y1="845.4" x2="542.0" y2="852.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="534.1" y1="846.6" x2="535.0" y2="853.5" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="528.0" y1="847.0" x2="528.0" y2="854.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="521.9" y1="846.6" x2="521.0" y2="853.5" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="515.8" y1="845.4" x2="514.0" y2="852.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="510.0" y1="843.4" x2="507.3" y2="849.9" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="504.5" y1="840.7" x2="501.0" y2="846.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="499.4" y1="837.3" x2="495.1" y2="842.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="494.8" y1="833.2" x2="489.8" y2="838.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="490.7" y1="828.6" x2="485.2" y2="832.9" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="487.3" y1="823.5" x2="481.2" y2="827.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="484.6" y1="818.0" x2="478.1" y2="820.7" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="482.6" y1="812.2" x2="475.8" y2="814.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="481.4" y1="806.1" x2="474.5" y2="807.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="481.0" y1="800.0" x2="474.0" y2="800.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="481.4" y1="793.9" x2="474.5" y2="793.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="482.6" y1="787.8" x2="475.8" y2="786.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="484.6" y1="782.0" x2="478.1" y2="779.3" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="487.3" y1="776.5" x2="481.2" y2="773.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="490.7" y1="771.4" x2="485.2" y2="767.1" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="494.8" y1="766.8" x2="489.8" y2="761.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="499.4" y1="762.7" x2="495.1" y2="757.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="504.5" y1="759.3" x2="501.0" y2="753.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="510.0" y1="756.6" x2="507.3" y2="750.1" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="515.8" y1="754.6" x2="514.0" y2="747.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="521.9" y1="753.4" x2="521.0" y2="746.5" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="528.0" y1="753.0" x2="528.0" y2="746.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="534.1" y1="753.4" x2="535.0" y2="746.5" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="540.2" y1="754.6" x2="542.0" y2="747.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="546.0" y1="756.6" x2="548.7" y2="750.1" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="551.5" y1="759.3" x2="555.0" y2="753.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="556.6" y1="762.7" x2="560.9" y2="757.2" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="561.2" y1="766.8" x2="566.2" y2="761.8" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="565.3" y1="771.4" x2="570.8" y2="767.1" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="568.7" y1="776.5" x2="574.8" y2="773.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="571.4" y1="782.0" x2="577.9" y2="779.3" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="573.4" y1="787.8" x2="580.2" y2="786.0" stroke="#3a3d33" stroke-width="3"/>
+  <line x1="574.6" y1="793.9" x2="581.5" y2="793.0" stroke="#3a3d33" stroke-width="3"/>
+  <circle cx="528" cy="800" r="46" fill="url(#knopf)"/>
+  <circle cx="528" cy="800" r="30" fill="none" stroke="#565a4b" stroke-width="2" opacity=".6"/>
+  <line x1="528" y1="760" x2="528" y2="780" stroke="#e8dcc0" stroke-width="5" stroke-linecap="round" transform="rotate(38 528 800)"/>
+</g>
+<circle cx="650" cy="770" r="31" fill="url(#chrom)"/><circle cx="650" cy="770" r="25" fill="#0c0d09"/><circle cx="650" cy="770" r="22" fill="url(#lampenglas)"/><text x="650" y="818" text-anchor="middle" font-family="DejaVu Sans" font-size="15" font-weight="bold" letter-spacing=".5" fill="#d9ceb2" opacity=".75">EMPFANG</text>
+<circle cx="764" cy="770" r="31" fill="url(#chrom)"/><circle cx="764" cy="770" r="25" fill="#0c0d09"/><circle cx="764" cy="770" r="22" fill="url(#lampenglas)"/><text x="764" y="818" text-anchor="middle" font-family="DejaVu Sans" font-size="15" font-weight="bold" letter-spacing=".5" fill="#d9ceb2" opacity=".75">SENDEN</text>
+<circle cx="650" cy="870" r="27" fill="#141510"/><polygon points="667.3,880.0 650.0,890.0 632.7,880.0 632.7,860.0 650.0,850.0 667.3,860.0" fill="url(#chrom)" stroke="#2a2c22" stroke-width="1.5"/><line x1="650" y1="870" x2="656" y2="836" stroke="#1a1b14" stroke-width="13" stroke-linecap="round" opacity=".5" transform="translate(3,4)"/><line x1="650" y1="870" x2="656" y2="836" stroke="url(#hebel)" stroke-width="11" stroke-linecap="round"/><circle cx="650" cy="870" r="7" fill="#c9c6b8"/>
+<circle cx="764" cy="870" r="27" fill="#141510"/><polygon points="781.3,880.0 764.0,890.0 746.7,880.0 746.7,860.0 764.0,850.0 781.3,860.0" fill="url(#chrom)" stroke="#2a2c22" stroke-width="1.5"/><line x1="764" y1="870" x2="770" y2="904" stroke="#1a1b14" stroke-width="13" stroke-linecap="round" opacity=".5" transform="translate(3,4)"/><line x1="764" y1="870" x2="770" y2="904" stroke="url(#hebel)" stroke-width="11" stroke-linecap="round"/><circle cx="764" cy="870" r="7" fill="#c9c6b8"/>
+<g>
+  <rect x="810.0" y="744" width="8" height="128" rx="4" fill="#0a0b07"/>
+  <rect x="810.0" y="744" width="8" height="128" rx="4" fill="none" stroke="#5b6147" stroke-width="1.2" opacity=".5"/>
+  <rect x="823.0" y="744" width="8" height="128" rx="4" fill="#0a0b07"/>
+  <rect x="823.0" y="744" width="8" height="128" rx="4" fill="none" stroke="#5b6147" stroke-width="1.2" opacity=".5"/>
+  <rect x="836.0" y="744" width="8" height="128" rx="4" fill="#0a0b07"/>
+  <rect x="836.0" y="744" width="8" height="128" rx="4" fill="none" stroke="#5b6147" stroke-width="1.2" opacity=".5"/>
+</g>
+</svg>

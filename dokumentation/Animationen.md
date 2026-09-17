@@ -45,6 +45,7 @@ Gute Vorlagen für neue Animationen:
 | `grafik/umblaettern.svg` | Handbuch (6.4) | **einmalig und durchsichtig**: zwölf Bilder, in denen ein Blatt umschlägt |
 | `grafik/stempel.svg` | Handbuch (6.4) | ein **durchsichtiges Standbild**: "STRENG GEHEIM" auf der Titelseite |
 | `grafik/stempel_geloest.svg` | Übung (6.5) | derselbe Bau in Grün: "GELÖST", sobald die Antwort stimmt |
+| `grafik/funkgeraet.svg` | Funkgerät (6.6) | ein **durchsichtiges Standbild**, das auf dem Buch steht; auf sein leeres Glas schreibt das Spiel |
 
 Die Symbole der Figurwahl sind auf `FARBE_KARTE` aus `ui/stil.py` gemalt,
 sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe. Wer die
@@ -60,7 +61,11 @@ python3 grafik/rendern.py grafik/buch.svg
 python3 grafik/rendern.py grafik/umblaettern.svg
 ```
 
-Sie brauchen dasselbe Blatt – denselben ausgefransten Umriss, dieselbe
+Das Funkgerät entsteht genauso aus einem Programm, `grafik/funkgeraet_zeichnen.py`:
+Glas und Lämpchen stehen dort in SVG-Einheiten und in `ui/funk.py` in Pixeln,
+und ein Test prüft im gerenderten Bild, dass das Spiel dort schreibt, wo Glas ist.
+
+Buch und Umblättern brauchen dasselbe Blatt – denselben ausgefransten Umriss, dieselbe
 viewBox –, sonst springt beim Umblättern die Kante. Wer am Buch etwas ändern
 will, ändert es dort und lässt beide neu entstehen. Die Textflächen der
 Buchseiten stehen in beiden Dateien: in SVG-Einheiten in
