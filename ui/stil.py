@@ -152,6 +152,27 @@ FARBE_MARKIERUNG = "#f5d86b"
 #: Der Kreuzungspunkt – kräftiger als der Textmarker, und rot umrandet.
 FARBE_KREUZUNG = "#f0a95b"
 
+# Das Funkgerät (ui/funk.py) – leuchtende Schrift auf dunklem Glas:
+#: Der Grund des Glases, auch hinter dem Eingabefeld.
+FARBE_GLAS = "#08170e"
+#: Die Leuchtschrift.
+FARBE_LEUCHTSCHRIFT = "#79e89a"
+#: Hell: was jetzt gerechnet wird, und was gelungen ist.
+FARBE_LEUCHTSCHRIFT_HELL = "#d4ffe0"
+#: Matt: Beschriftungen und der Rest einer langen Nachricht.
+FARBE_LEUCHTSCHRIFT_MATT = "#3f8a57"
+#: Warnlicht: Fehlermeldungen auf dem Glas – bernsteinfarben statt rot, auf dunklem Grund lesbarer.
+FARBE_LEUCHTSCHRIFT_WARNUNG = "#ffb86b"
+#: Die Lämpchen: aus, Empfang (grün) und Senden (rot).
+FARBE_LAMPE_AUS = "#1d1f19"
+FARBE_LAMPE_EMPFANG = "#6dff8f"
+FARBE_LAMPE_SENDEN = "#ff5a3c"
+
+#: Die Anzeige des Funkgeräts ist in einer Schrift mit festen Zeichenbreiten
+#: gesetzt – wie auf einem echten Gerät, und jeder Buchstabe steht genau unter
+#: dem darüber. "Consolas" hat jedes Windows, "DejaVu Sans Mono" jedes Linux.
+ANZEIGESCHRIFTEN = ("Consolas", "DejaVu Sans Mono", "Liberation Mono", "Courier New")
+
 #: Das Handbuch ist in einer Buchschrift gesetzt – der ersten aus dieser
 #: Liste, die der Rechner kennt. Die ersten beiden hat jedes Windows; "P052"
 #: ist ihr Gegenstück unter Linux.

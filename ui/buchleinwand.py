@@ -24,6 +24,7 @@ Markierungen tragen den Tag ``markierung`` und verschwinden mit ihrer Seite.
 import tkinter as tk
 from tkinter import font as tkfont
 
+from content import handbuch as buch
 from crypto.normalize import ALPHABET
 from crypto.vigenere_quadrat import erzeuge_quadrat
 from ui import buchsatz, stil
@@ -52,6 +53,7 @@ class Buchleinwand(Buehne):
 
     def __init__(self, master, massstab, px, **optionen):
         self.px = px
+        self.massstab = massstab
         self._massstab = massstab
         self._stempelbilder = {}
         self._quadratschriften = {}
@@ -78,6 +80,23 @@ class Buchleinwand(Buehne):
         """Setzt einen Stempel mit seiner Mitte auf ``x, y``."""
         return self.create_image(x, y, image=self.stempelbild(name), anchor="center",
                                  tags=tuple(tags) + ("stempel",))
+
+    def werkzeug_zeichnen(self, level, seite="links"):
+        """Legt auf die Seite, womit sich eine Aufgabe des Levels von Hand rechnen lässt – und wie.
+
+        Das Werkzeug aus ``content.handbuch.WERKZEUG_NACH_LEVEL`` und darunter,
+        wo Platz ist, die Merkkarte – gesetzt wie der Merksatz im Handbuch.
+        Übung und Funkgerät legen dasselbe hin. Rückgabe ist die gesetzte Seite.
+        """
+        teile = [buch.WERKZEUG_NACH_LEVEL[level]]
+        karte = buch.MERKKARTE_NACH_LEVEL[level]
+        if karte is not None:
+            teile.append(buch.Abschnitt(karte.ueberschrift, tuple(buch.Absatz(satz.text) for satz in karte.saetze),
+                                        hervorgehoben=True))
+        x0, y0, x1, y1 = self.flaeche(seite)
+        gesetzt = buchsatz.einzelseite(teile, self.schriften, x1 - x0, y1 - y0, self.px)
+        self.seite_zeichnen(seite, gesetzt.stuecke)
+        return gesetzt
 
     # ── Lesen (für Tests und Screens) ──────────────────────────────────────
 

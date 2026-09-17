@@ -28,7 +28,7 @@ sich nur darüber.
 
 import math
 
-from ui import stil
+from ui import buchsatz, stil
 
 #: Tag aller Stücke des Lineals auf der Leinwand.
 TAG = "lineal"
@@ -113,3 +113,19 @@ class Lineal:
                                                       fill=stil.FARBE_KREUZUNG, tags=marken + ("linealkreuzung",)))
         # Über den dunkleren Grund von Kopfzeile und Kopfspalte, unter die Buchstaben.
         leinwand.unterlegen(self.seite, "kopfzeile", elemente)
+
+
+def anlegen(leinwand, seite, stuecke, bei_benutzung=None):
+    """Legt ein Lineal an, wenn unter den ``stuecke`` der Seite das Quadrat ist – sonst ``None``.
+
+    Klicks auf die Leinwand bewegen es, und über dem Quadrat zeigt der
+    Mauszeiger eine Hand.
+    """
+    quadrate = [stueck for stueck in stuecke if isinstance(stueck, buchsatz.Quadrat)]
+    if not quadrate:
+        return None
+    lineal = Lineal(leinwand, seite, quadrate[0], bei_benutzung=bei_benutzung)
+    leinwand.bind("<Button-1>", lambda ereignis: lineal.klicken(ereignis.x, ereignis.y))
+    leinwand.bind("<Motion>", lambda ereignis: leinwand.configure(
+        cursor="hand2" if lineal.ziel(ereignis.x, ereignis.y) else ""))
+    return lineal

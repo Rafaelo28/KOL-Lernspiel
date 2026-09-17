@@ -681,6 +681,22 @@ def test_ein_funkspruch_laesst_sich_nicht_zweimal_stellen(funkspruch):
     assert kennungen.count(funkspruch.kennung) == 1
 
 
+def test_die_offenen_funksprueche_sind_die_des_levels_die_noch_nicht_dran_waren():
+    """Daran sieht der Ablauf, welcher Funkspruch als Nächstes kommt – und wann das Level fertig ist."""
+    stand = _stand()
+    assert stand.offene_funksprueche == ()
+    stand.starte_level(1)
+    assert stand.offene_funksprueche == (story.FUNKSPRUCH_ERSTER_RUF, story.FUNKSPRUCH_BOB_ERSTE_ANTWORT)
+    stand.stelle_funkspruch(story.FUNKSPRUCH_ERSTER_RUF)
+    assert stand.offene_funksprueche == (story.FUNKSPRUCH_BOB_ERSTE_ANTWORT,)
+    _loese(stand)
+    stand.naechstes_level()
+    assert stand.offene_funksprueche == (story.FUNKSPRUCH_VERFOLGER,)
+    stand.naechstes_level()
+    stand.stelle_funkspruch(story.FUNKSPRUCH_BOB_ZWEITE_ANTWORT)
+    assert stand.offene_funksprueche == (story.FUNKSPRUCH_STANDORT,)
+
+
 def test_ein_abgewiesener_funkspruch_gilt_nicht_als_gestellt():
     """Wer ihn im falschen Level stellen wollte, bekommt ihn später trotzdem."""
     stand = _stand()

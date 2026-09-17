@@ -670,6 +670,43 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 - **Beim Senden gilt das Gegenteil:** sichtbar ist der vollständige Klartext,
   der Geheimtext niemals – er ist die Lösung, die eingetippt werden soll
 - Knopf "Den Rest entschlüsseln" plus Erzähltext-Einblendung (siehe 4.4)
+- **Umgesetzt** (`ui/funk.py`, Bild `grafik/funkgeraet.svg` aus
+  `grafik/funkgeraet_zeichnen.py`): Das olivgrüne Feldfunkgerät steht rechts
+  auf dem aufgeschlagenen Handbuch; links liegt wie bei den Übungen das
+  Werkzeug, in Level 3 mit dem Lineal. Über dem Gerät steht die Einleitung
+  des Funkspruchs aus `content/story.py`
+  - **Das Glas:** oben Richtung und Gegenüber ("EMPFANG · ZENTRALE",
+    "SENDEN") und womit gerechnet wird ("Caesar · Schlüssel 3"), darunter der
+    Auftrag, die Nachricht, die Eingabezeile und die Rückmeldung. Die Schrift
+    hat feste Zeichenbreiten (Consolas unter Windows). Eine empfangene
+    Nachricht kommt Zeichen für Zeichen herein, das Empfangslämpchen flackert
+    dazu; nach dem Senden leuchtet das Sendelämpchen
+  - **Die Regel aus CLAUDE.md:** Beim Empfangen steht der ganze Geheimtext da,
+    der zu rechnende Anfang leuchtet hell und ist unterstrichen, der Rest ist
+    matt. Beim Senden steht der ganze Klartext da – der Geheimtext nie, auch
+    nach dem Senden nicht ("GESENDET."); Tests suchen ihn in jedem Text auf dem
+    Bildschirm. Der Prüfknopf heisst beim Senden "Senden": Falsch
+    Verschlüsseltes geht nicht raus
+  - **Rückmeldung** aus der Spiellogik wie bei den Übungen: die Meldung in
+    Warnfarbe, die Stelle in der Nachricht unterwellt, Fortschrittshinweis,
+    Versuche. Steht nach drei Versuchen ohne Fortschritt die Lösung da, steht
+    auf dem Glas nur noch sie – sonst reichte der Platz bei den langen
+    Nachrichten nicht
+  - **Der Rest:** Erst nach dem Anfang (gelöst oder aufgelöst) erscheint der
+    Knopf aus `story.BESCHRIFTUNG_REST` – vorher und statt "Weiter". Er setzt
+    den Erzähltext über das Gerät (der Platz darüber ist von Anfang an so hoch,
+    dass nichts springt) und gibt die ganze Nachricht frei: beim Empfangen der
+    ganze Klartext auf dem Glas, beim Senden das Sendelämpchen
+  - **Nachschlagen** geht auch hier; zurück kommt man zu demselben Funkspruch,
+    ohne dass er noch einmal hereinkommt, samt Eingabe und Stand
+  - **Bis Phase 7** erreicht man die Funksprüche über den Platzhalter-Knopf
+    "Zum Funkgerät" unter den Übungen (`ablauf.funksprueche_zeigen`: die
+    offenen Funksprüche des Levels der Reihe nach, danach das nächste Level;
+    neu: `Spielstand.offene_funksprueche`). Eine offene Übung wird dabei
+    abgelegt
+  - Nebenbei: Die Zeilen über Buch und Gerät werden im grossen Maßstab nicht
+    breiter als auf einem 1080p-Monitor – auf einem noch breiteren Bildschirm
+    wäre das Fenster sonst zu breit geworden
 
 ### 6.7 Vigenère-Quadrat als Anzeige
 - 26×26-Grid aus Phase 1.5, mit Hervorhebung der aktiven Zeile/Spalte

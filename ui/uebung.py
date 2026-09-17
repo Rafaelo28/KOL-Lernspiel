@@ -55,20 +55,18 @@ Was hier noch fehlt
 ───────────────────
 Welche Aufgabe nach der Übung kommt, entscheidet nicht dieser Screen, sondern
 :mod:`ui.ablauf` – dort werden in Phase 7 die Funksprüche dazwischen gesetzt.
-Bis dahin hängt am unteren Rand ein Platzhalter-Knopf, mit dem sich ein Level
-vorzeitig beenden lässt; sonst müsste man beim Durchklicken jedes Zeitfenster
-abwarten.
+Bis dahin hängen am unteren Rand zwei Platzhalter-Knöpfe: Der eine beendet ein
+Level vorzeitig – sonst müsste man beim Durchklicken jedes Zeitfenster
+abwarten –, der andere springt zu den Funksprüchen des Levels (6.6).
 """
 
 import tkinter as tk
 
-from content import handbuch as buch
 from content import verfahren
 from game.aufgabe import ENTSCHLUESSELN, QUELLE_UEBUNG, VERSCHLUESSELN
 from game.rueckmeldung import bezugsloesung, erste_abweichung
-from ui import buchsatz, handbuch, stil
+from ui import buchsatz, handbuch, lineal, stil
 from ui.buchleinwand import Buchleinwand
-from ui.lineal import Lineal
 from ui.screen import Screen
 
 #: Aufschriften der Knöpfe unter dem Buch.
@@ -77,6 +75,7 @@ KNOPF_WEITER = "Weiter"
 KNOPF_NACHSCHLAGEN = "Im Handbuch nachschlagen"
 #: Platzhalter bis Phase 7 – siehe Modulkopf.
 KNOPF_LEVELENDE = "Level beenden (Platzhalter)"
+KNOPF_FUNKGERAET = "Zum Funkgerät (Platzhalter)"
 
 #: Die Überschrift der Übungsseite.
 UEBERSCHRIFT = "Übung {nummer}"
@@ -111,6 +110,20 @@ FELDRAND = 6
 #: Wo der Stempel "GELÖST" landet – Anteil der Seitenbreite, gemessen an der
 #: Mitte des Stempels. Etwas rechts, damit er kurze Antworten nicht zudeckt.
 STEMPELSTELLE = 0.62
+
+
+def versuchstext(verbleibend):
+    """Wie viele Versuche noch bleiben – beim letzten deutlich."""
+    return LETZTER_VERSUCH if verbleibend == 1 else VERSUCHE_UEBRIG.format(anzahl=verbleibend)
+
+
+def welle(px, von, bis, y):
+    """Die Punkte einer kleinen Wellenlinie – wie mit dem Rotstift gezogen."""
+    schritt, hub = max(2, px(3)), px(2)
+    punkte = []
+    for nr, x in enumerate(range(von, bis + schritt, schritt)):
+        punkte += [min(x, bis), y + (hub if nr % 2 else 0)]
+    return punkte
 
 
 class Uebung(Screen):
@@ -185,6 +198,9 @@ class Uebung(Screen):
         self._levelknopf = tk.Button(leiste, text=KNOPF_LEVELENDE, command=self._level_beenden,
                                      font=stil.SCHRIFT_KURSIV, highlightbackground=stil.FARBE_NACHT)
         self._levelknopf.pack(side="left", padx=(self.px(stil.ABSTAND), 0))
+        self._funkknopf = tk.Button(leiste, text=KNOPF_FUNKGERAET, command=self._zum_funkgeraet,
+                                    font=stil.SCHRIFT_KURSIV, highlightbackground=stil.FARBE_NACHT)
+        self._funkknopf.pack(side="left", padx=(self.px(stil.ABSTAND // 2), 0))
         self._knopf = tk.Button(leiste, text=KNOPF_PRUEFEN, command=self.pruefen,
                                 padx=self.px(stil.ABSTAND), **knopfart)
         self._knopf.pack(side="right")
@@ -209,22 +225,9 @@ class Uebung(Screen):
 
     def _werkzeug_zeichnen(self):
         """Die linke Seite: womit sich diese Aufgabe von Hand rechnen lässt – und wie."""
-        level = self.durchlauf.spielstand.aktuelles_level
-        teile = [buch.WERKZEUG_NACH_LEVEL[level]]
-        karte = buch.MERKKARTE_NACH_LEVEL[level]
-        if karte is not None:
-            # Gesetzt wie der Merksatz im Handbuch: als eingeklebte Karte.
-            teile.append(buch.Abschnitt(karte.ueberschrift, tuple(buch.Absatz(satz.text) for satz in karte.saetze),
-                                        hervorgehoben=True))
-        x0, y0, x1, y1 = self.buch.flaeche("links")
-        seite = buchsatz.einzelseite(teile, self.buch.schriften, x1 - x0, y1 - y0, self.px)
-        self.buch.seite_zeichnen("links", seite.stuecke)
-        quadrate = [stueck for stueck in seite.stuecke if isinstance(stueck, buchsatz.Quadrat)]
-        if quadrate and self.lineal is None:
-            self.lineal = Lineal(self.buch, "links", quadrate[0], bei_benutzung=self._lineal_benutzt)
-            self.buch.bind("<Button-1>", lambda ereignis: self.lineal.klicken(ereignis.x, ereignis.y))
-            self.buch.bind("<Motion>", lambda ereignis: self.buch.configure(
-                cursor="hand2" if self.lineal.ziel(ereignis.x, ereignis.y) else ""))
+        seite = self.buch.werkzeug_zeichnen(self.durchlauf.spielstand.aktuelles_level)
+        if self.lineal is None:
+            self.lineal = lineal.anlegen(self.buch, "links", seite.stuecke, bei_benutzung=self._lineal_benutzt)
 
     def _lineal_benutzt(self):
         """Zählt fürs Log, dass das Lineal bewegt wurde."""
@@ -325,13 +328,10 @@ class Uebung(Screen):
                            stil.FARBE_TINTE))
             zeilen.append((LOESUNGSHINWEIS, "kursiv", stil.FARBE_TINTE))
         elif not ergebnis.richtig and ergebnis.zaehlte_als_versuch:
-            zeilen.append((self._versuchstext(ergebnis.verbleibende_versuche), "klein", stil.FARBE_TINTE))
+            zeilen.append((versuchstext(ergebnis.verbleibende_versuche), "klein", stil.FARBE_TINTE))
         self._rueckmeldung_setzen(zeilen)
         if ergebnis.ist_beendet:
             self._beenden(geloest=ergebnis.richtig)
-
-    def _versuchstext(self, verbleibend):
-        return LETZTER_VERSUCH if verbleibend == 1 else VERSUCHE_UEBRIG.format(anzahl=verbleibend)
 
     def _stand_zeigen(self, bearbeitung):
         """Zeigt beim Fortsetzen, wo die Aufgabe steht – Versuche, Lösung, Ende."""
@@ -345,7 +345,7 @@ class Uebung(Screen):
         elif bearbeitung.geloest:
             zeilen.append((LOB, "betont", stil.FARBE_HAKEN))
         elif bearbeitung.versuche:
-            zeilen.append((self._versuchstext(bearbeitung.verbleibende_versuche), "klein", stil.FARBE_TINTE))
+            zeilen.append((versuchstext(bearbeitung.verbleibende_versuche), "klein", stil.FARBE_TINTE))
         self._rueckmeldung_setzen(zeilen)
         if bearbeitung.ist_beendet:
             self._beenden(geloest=bearbeitung.geloest)
@@ -399,16 +399,8 @@ class Uebung(Screen):
         breite = max(schrift.measure(zeile[stelle]) - 2 * staerke, self.px(4))
         unten = (y0 + self._text_oben + nr * schrift.metrics("linespace")
                  + schrift.metrics("ascent") + self.px(3))
-        self.buch.create_line(*self._welle(links, links + breite, unten), fill=stil.FARBE_ROTSTIFT,
+        self.buch.create_line(*welle(self.px, links, links + breite, unten), fill=stil.FARBE_ROTSTIFT,
                               width=staerke, tags=("rechts", "fehlerstelle"))
-
-    def _welle(self, von, bis, y):
-        """Die Punkte einer kleinen Wellenlinie – wie mit dem Rotstift gezogen."""
-        schritt, hub = max(2, self.px(3)), self.px(2)
-        punkte = []
-        for nr, x in enumerate(range(von, bis + schritt, schritt)):
-            punkte += [min(x, bis), y + (hub if nr % 2 else 0)]
-        return punkte
 
     # ── Ende der Aufgabe ───────────────────────────────────────────────────
 
@@ -458,3 +450,11 @@ class Uebung(Screen):
     def _level_beenden(self):
         """Platzhalter bis Phase 7: das Level vorzeitig beenden."""
         self.durchlauf.naechstes_level()
+
+    def _zum_funkgeraet(self):
+        """Platzhalter bis Phase 7: gleich zu den Funksprüchen des Levels – die offene Übung wird abgelegt."""
+        from ui import ablauf                # erst hier: ablauf kennt diesen Screen
+
+        if self.durchlauf.spielstand.aktuelle_aufgabe is not None:
+            self.durchlauf.aufgabe_abschliessen()
+        ablauf.funksprueche_zeigen(self.fenster)

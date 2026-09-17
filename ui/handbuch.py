@@ -93,9 +93,30 @@ VORLADEN_MS = 150
 #: :meth:`Handbuch._textbreite`.
 TEXTBREITE = 960
 
+#: Breiter als ein 1080p-Schulmonitor werden die Zeilen über dem Buch auch auf
+#: einem noch grösseren Bildschirm nicht – dafür ist das Spiel gebaut.
+HOECHSTE_BILDSCHIRMBREITE = 1920
+
 #: Abstand des Screens nach oben und unten und der Knöpfe zum Buch – knapp,
 #: weil das Buch fast die ganze Höhe braucht.
 ABSTAND_KNAPP = 4
+
+
+def textbreite(screen):
+    """So breit dürfen die Zeilen über dem Buch werden.
+
+    Im kleinen Maßstab so breit wie das Buch – das Fenster ist dort nur
+    wenig breiter. Im grossen so breit wie der Bildschirm: Ein 1080p-Monitor
+    hat links und rechts vom Buch je 240 Pixel Platz, aber in der Höhe
+    zählt jede Zeile – ist die Zeit des letzten Levels abgelaufen, stehen
+    Hinweis und Einstieg über dem Buch, und beide müssen mit ihm auf den
+    Bildschirm passen (tests/test_handbuch_screen.py). Das Funkgerät
+    (ui/funk.py) setzt seinen Erzähltext genauso.
+    """
+    if screen.massstab == 1:
+        return screen.px(TEXTBREITE)
+    bildschirm = min(screen.winfo_screenwidth(), HOECHSTE_BILDSCHIRMBREITE)
+    return max(screen.px(TEXTBREITE), bildschirm - 2 * screen.px(stil.ABSTAND) - screen.px(8))
 
 
 def nachschlagen(fenster, level, zurueck):
@@ -219,18 +240,8 @@ class Handbuch(Screen):
         return zeile
 
     def _textbreite(self):
-        """So breit dürfen die Zeilen über dem Buch werden.
-
-        Im kleinen Maßstab so breit wie das Buch – das Fenster ist dort nur
-        wenig breiter. Im grossen so breit wie der Bildschirm: Ein 1080p-Monitor
-        hat links und rechts vom Buch je 240 Pixel Platz, aber in der Höhe
-        zählt jede Zeile – ist die Zeit des letzten Levels abgelaufen, stehen
-        Hinweis und Einstieg über dem Buch, und beide müssen mit ihm auf den
-        Bildschirm passen (tests/test_handbuch_screen.py).
-        """
-        if self.massstab == 1:
-            return self.px(TEXTBREITE)
-        return max(self.px(TEXTBREITE), self.winfo_screenwidth() - 2 * self.px(stil.ABSTAND) - self.px(8))
+        """So breit dürfen die Zeilen über dem Buch werden (siehe :func:`textbreite`)."""
+        return textbreite(self)
 
     def _leiste_bauen(self, knopf):
         leiste = tk.Frame(self, bg=stil.FARBE_NACHT)

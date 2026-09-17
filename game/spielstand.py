@@ -74,6 +74,7 @@ auftaucht. Ein Klarname darf hier nie hinein (Projektregel 7); die Zuordnung
 zu einer Person führt die Lehrkraft getrennt.
 """
 
+from content import story as _story
 from content import verfahren as _verfahren
 from game.bearbeitung import Bearbeitung
 from game.generator import Aufgabengenerator, aufgabe_aus_funkspruch
@@ -392,6 +393,14 @@ class Spielstand:
         aufgabe = self._generator.naechste_uebung(self._level, zusatzaufgabe=zusatzaufgabe)
         self._bearbeitung = Bearbeitung(aufgabe, self._zeitgeber)
         return aufgabe
+
+    @property
+    def offene_funksprueche(self):
+        """Die Funksprüche des laufenden Levels, die noch nicht gestellt wurden – in Spielreihenfolge."""
+        if self._level is None:
+            return ()
+        return tuple(funkspruch for funkspruch in _story.FUNKSPRUECHE_NACH_LEVEL[self._level]
+                     if funkspruch.kennung not in self._gestellte_funksprueche)
 
     def stelle_funkspruch(self, funkspruch):
         """Stellt einen echten Funkspruch als Aufgabe.

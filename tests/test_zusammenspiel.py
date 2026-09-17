@@ -352,6 +352,7 @@ def test_es_gibt_ueberhaupt_module_zu_pruefen():
         "ui/buchleinwand.py",
         "ui/uebung.py",
         "ui/lineal.py",
+        "ui/funk.py",
     } <= namen
 
 

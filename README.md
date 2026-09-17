@@ -146,6 +146,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `buchleinwand.py` | Das aufgeschlagene Buch als Leinwand – Bild, Schriften, Stempel, Zeichnen; Handbuch und Übung teilen es sich |
 | `uebung.py` | Die Übungen im Buch: Aufgabe rechts, Werkzeug links, Rückmeldung mit Fehlerstelle, Stempel und Versuchszähler |
 | `lineal.py` | Das Lineal im Vigenère-Quadrat: Zeile und Spalte per Klick markieren, damit beim Nachschlagen niemand verrutscht |
+| `funk.py` | Die echten Funksprüche am Funkgerät: leuchtende Anzeige, Nachricht Zeichen für Zeichen, beim Empfangen der ganze Geheimtext, beim Senden nie; der Knopf für den Rest einer langen Nachricht |
 
 ### Animationen
 
@@ -284,15 +285,16 @@ dürfen nicht im Repository landen.
 | 3     | Aufgaben-Generator                           | fertig  |
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
-| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1–6.5 fertig) |
+| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1–6.7 fertig) |
 | 7     | Level zusammensetzen                         | offen   |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
 `main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom
 Titelbild über die Figurwahl und den Story-Intro mit der animierten
-Absturz-Szene, Bobs Handbuch und den Übungen darin durch alle drei Level bis
-zum Abschluss. Die Funksprüche und der Abschluss sind noch Platzhalter; die
-echten entstehen in 6.6–6.8.
+Absturz-Szene, Bobs Handbuch, den Übungen darin und den Funksprüchen am
+Funkgerät durch alle drei Level bis zum Abschluss. Zu den Funksprüchen führt
+bis Phase 7 ein Platzhalter-Knopf unter den Übungen; der Abschluss ist noch
+ein Platzhalter und entsteht in 6.8.
 
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).

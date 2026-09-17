@@ -23,7 +23,7 @@ abgebrochen abgelegt und der Durchlauf gespeichert.
 from functools import partial
 
 from content import story
-from ui import figurwahl, handbuch, intro, platzhalter, startbildschirm, uebung
+from ui import figurwahl, funk, handbuch, intro, platzhalter, startbildschirm, uebung
 from ui.hauptfenster import Hauptfenster
 
 #: Mit diesem Screen beginnt das Spiel.
@@ -79,6 +79,19 @@ def uebungen_zeigen(fenster):
 def uebung_beendet(fenster):
     """Nach einer Übung kommt vorerst die nächste (Phase 7 sortiert hier um)."""
     uebungen_zeigen(fenster)
+
+
+def funksprueche_zeigen(fenster):
+    """Die Funksprüche des Levels, einer nach dem anderen – danach beginnt das nächste Level.
+
+    Bis Phase 7 erreicht man sie über den Platzhalter-Knopf unter den Übungen;
+    dort wird dann entschieden, wann nach den Übungen gefunkt wird.
+    """
+    offen = fenster.durchlauf.spielstand.offene_funksprueche
+    if not offen:
+        fenster.durchlauf.naechstes_level()
+        return
+    fenster.zeige(funk.Funk, funkspruch=offen[0], danach=funksprueche_zeigen)
 
 
 def nach_levelwechsel(fenster, wechsel):
