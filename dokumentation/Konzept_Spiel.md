@@ -74,10 +74,19 @@ Kontinente hinweg Signale zu senden, aber auch leicht von jedem mitzuhören,
 der auf derselben Frequenz lauscht – und Bobs Verschlüsselungshandbuch,
 Standardausrüstung, die du dir vor der Mission nie richtig angesehen hast.
 
-In sicherer Entfernung vom Wrack bist du auf dich allein gestellt: kein
-Funkkontakt, nur das Handbuch. Deine Aufgabe: einen Weg finden, Kontakt zur
-Zentrale in Singapur aufzunehmen, ohne dass die Verfolger – die dieselbe
-Frequenz absuchen – deine Nachrichten mitlesen können.
+Drei Kilometer weiter, an einer kleinen Oase, schlägst du dein Lager auf. Hier
+bist du fürs Erste sicher – und auf dich allein gestellt: kein Funkkontakt, nur
+das Handbuch. Deine Aufgabe: einen Weg finden, Kontakt zur Zentrale in Singapur
+aufzunehmen, ohne dass die Verfolger – die dieselbe Frequenz absuchen – deine
+Nachrichten mitlesen können.
+
+*Nachträglich entschieden:* Der Unterschlupf ist eine **Oase**. In der Wüste
+braucht man Wasser, und damit erklärt sich auch, warum das Lager nicht am Wrack
+steht und die Diamanten dort zurückbleiben. Vor allem aber bekommt das
+Verschlüsseln damit etwas Greifbares: In Level 2 liest man mit, wie die
+Verfolger Quadrant für Quadrant absuchen – in Level 3 verschlüsselt man selbst
+das Wort, das einen verraten würde, und am Ende landet der Hubschrauber genau
+dort, weil nur die eigene Crew die Nachricht lesen konnte.
 
 ---
 
@@ -149,7 +158,9 @@ Schlüsselwort; danach kurze Reflexionsfrage: "Warum hilft
 Häufigkeitsanalyse hier nicht mehr direkt?"
 
 **Reale Anwendung – Senden:** Du verschlüsselst deinen aktuellen Standort und
-sendest ihn.
+sendest ihn: "Oase, drei Kilometer nordwestlich vom Wrack" – die Verfolger
+dürfen nicht erfahren, wo die Oase liegt. Von Hand gerechnet wird "OASE DREI
+KILOMETER", den Rest löst der Knopf auf.
 
 **Reale Anwendung – Empfangen (zweiter und letzter Bob-Kontakt):** Antwort
 trifft verschlüsselt in Vigenère ein. Entschlüsselt ergibt sich: "Verstanden,

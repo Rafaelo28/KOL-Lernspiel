@@ -271,6 +271,13 @@ def test_die_vorgeschichte_stammt_aus_dem_konzept():
         assert stelle in konzept, f"{stelle!r} steht so nicht im Konzept."
 
 
+def test_der_standort_verraet_die_oase_erst_im_selbst_gerechneten_teil():
+    """Das Wort, das die Verfolger nicht mitlesen dürfen, wird von Hand
+    verschlüsselt – nicht erst von dem Knopf, der den Rest auflöst."""
+    assert "OASE" in story.FUNKSPRUCH_STANDORT.selbst_zu_loesen
+    assert "Oase" in " ".join(story.INTRO.absaetze), "Im Intro kommt man an der Oase an."
+
+
 def test_der_abschluss_laesst_die_diamanten_zurueck():
     """Die Kernaussage des Endes – kein reiches Ende (Konzept, Punkt 4)."""
     text = " ".join(story.ABSCHLUSS.absaetze).lower()
@@ -335,7 +342,7 @@ def test_die_wortlaute_stehen_so_im_konzept():
         (story.FUNKSPRUCH_VERFOLGER, ("QUADRANT", "DURCHSUCHT", "VERRAETER")),
         (story.FUNKSPRUCH_BOB_ZWEITE_ANTWORT, ("VERSTANDEN", "HILFE", "UNTERWEGS")),
         (story.FUNKSPRUCH_ERSTER_RUF, ("HALLO", "HOERT", "JEMAND")),
-        (story.FUNKSPRUCH_STANDORT, ("STANDORT", "WRACK")),
+        (story.FUNKSPRUCH_STANDORT, ("OASE", "WRACK")),
     ],
     ids=["bob 1", "verfolger", "bob 2", "erster ruf", "standort"],
 )

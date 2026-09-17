@@ -61,6 +61,7 @@ Die vollständige Story ("**Der große Diamantenraub")**
 
 - 5 wählbare Charaktere: Vic Moreno, Elena Duarte, Jonas Berg, Amara Nwosu, Théo Lambert
 - Ausgangssituation: Flugzeugabsturz nach Diamantenraub in Antwerpen, Diamanten müssen am Wrack zurückgelassen werden (Fluchtgewicht), kein reiches Ende
+- Unterschlupf ist eine **Oase**, drei Kilometer vom Wrack: erklärt Wasser und Abstand zum Wrack – und gibt der Standort-Sendeaufgabe in Level 3 ihr Geheimnis ("OASE DREI KILOMETER" wird von Hand verschlüsselt, die Verfolger suchen Quadrant für Quadrant)
 - Kommunikationsmittel: **Kurzwellen-Funkgerät** (nicht "Transmitter") – erklärt plausibel, warum Nachrichten Singapur erreichen können, aber auch, warum sie abhörbar sind
 - Bob (Kontakt in der Zentrale) meldet sich **nur zweimal** im ganzen Spiel (Ende Level 1, Ende Level 3), **ausschließlich verschlüsselt**
 - Strikte Regel: Jede gesendete Nachricht wird verschlüsselt, jede empfangene muss entschlüsselt werden – kein Klartext-Funkverkehr, auch nicht durch Bob

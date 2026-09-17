@@ -1,9 +1,10 @@
 """Der Abschluss (Arbeitsplan 6.8): Warten, Einschlafen, die Rettung.
 
 Nach Bobs letzter Antwort ("Verstanden, Hilfe ist unterwegs") liegt man im
-**Nachtlager** in den Dünen: Feuer, Rucksack, das ausgeschaltete Funkgerät,
-darüber der Sternenhimmel (``grafik/nachtlager.svg``). Oben links steht, dass
-man wartet – und unten rechts der Knopf "Warten".
+**Nachtlager an der Oase** – dem Ort, den man in Level 3 verschlüsselt
+durchgegeben hat: Feuer, Rucksack, das ausgeschaltete Funkgerät, dahinter
+Wasser und Palmen, darüber der Sternenhimmel (``grafik/nachtlager.svg``). Oben
+links steht, dass man wartet – und unten rechts der Knopf "Warten".
 
 Dann fallen die Augen zu. Zwei Lider schieben sich über das Bild, öffnen sich
 noch zweimal halb, wie wenn man gegen den Schlaf ankämpft, und schließen sich.

@@ -216,7 +216,8 @@ INTRO = Erzaehltext(
         "mitzuhören, der auf derselben Frequenz lauscht – und Bobs "
         "Verschlüsselungshandbuch, Standardausrüstung, die du dir vor der "
         "Mission nie richtig angesehen hast.",
-        "In sicherer Entfernung vom Wrack bist du auf dich allein gestellt: "
+        "Drei Kilometer weiter, an einer kleinen Oase, schlägst du dein Lager "
+        "auf. Hier bist du fürs Erste sicher – und auf dich allein gestellt: "
         "kein Funkkontakt, nur das Handbuch. Deine Aufgabe: einen Weg finden, "
         "Kontakt zur Zentrale in Singapur aufzunehmen, ohne dass die Verfolger "
         "– die dieselbe Frequenz absuchen – deine Nachrichten mitlesen können.",
@@ -383,12 +384,13 @@ FUNKSPRUCH_STANDORT = Funkspruch(
     schluessel=SCHLUESSELWORT_DER_GESCHICHTE,
     einleitung=(
         "Jetzt zählt es: Du verschlüsselst deinen aktuellen Standort und "
-        "sendest ihn."
+        "sendest ihn – die Verfolger dürfen nicht erfahren, wo die Oase liegt."
     ),
     # Auch hier ist die Zahl ausgeschrieben – aus demselben Grund wie beim
-    # Funkspruch der Verfolger.
-    klartext="STANDORT DREI KILOMETER NORDWESTLICH VOM WRACK {initialen}",
-    selbst_zu_loesen="STANDORT DREI KILOMETER",
+    # Funkspruch der Verfolger. Das Wort, das niemand mitlesen darf, steht
+    # vorn: Die Oase wird von Hand verschlüsselt, nicht erst vom Knopf.
+    klartext="OASE DREI KILOMETER NORDWESTLICH VOM WRACK {initialen}",
+    selbst_zu_loesen="OASE DREI KILOMETER",
     weiterrechnen=(
         "Den Rest verschlüsselst du in Ruhe zu Ende, Zeile um Zeile mit dem "
         "Quadrat. Dann drückst du die Sendetaste."
@@ -424,7 +426,7 @@ NACHTHIMMEL = Erzaehltext(
     kennung="nachthimmel",
     absaetze=(
         "Du schaltest das Funkgerät aus und wartest.",
-        "Über der Wüste wird es still. Der Himmel ist klar, die Sterne stehen "
+        "Über der Oase wird es still. Der Himmel ist klar, die Sterne stehen "
         "so dicht, wie du sie in der Stadt nie gesehen hast.",
     ),
 )

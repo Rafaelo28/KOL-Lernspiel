@@ -738,9 +738,12 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 - **Umgesetzt** (`ui/abschluss.py`, Bilder aus `grafik/abschluss_zeichnen.py`),
   mit zwei Wünschen aus der Abnahme: Nach "Warten" schläft man ein, und es muss
   klar sein, dass der Hubschrauber Freunde bringt
-  - **Das Nachtlager:** Lagerfeuer, Rucksack, Decke und das ausgeschaltete
-    Funkgerät in den Dünen, darüber Mond und Sterne. Oben links der Text aus
-    `story.NACHTHIMMEL`, unten rechts der Knopf "Warten"
+  - **Das Nachtlager an der Oase:** Lagerfeuer, Rucksack, Decke und das
+    ausgeschaltete Funkgerät, dahinter das Wasser der Oase mit Palmen, darüber
+    Mond und Sterne. Oben links der Text aus `story.NACHTHIMMEL`, unten rechts
+    der Knopf "Warten". Die Oase kam nach der Abnahme dazu: Sie erklärt, warum
+    das Lager nicht am Wrack steht, und sie gibt dem Standort-Funkspruch in
+    Level 3 sein Geheimnis ("OASE DREI KILOMETER" wird von Hand verschlüsselt)
   - **Einschlafen:** Zwei Lider mit gebogener Kante schieben sich über das
     Bild, öffnen sich noch zweimal halb und schließen sich; auf Schwarz steht
     "Die Nacht vergeht." Hinter den geschlossenen Augen wechselt die Szene zum

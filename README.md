@@ -173,8 +173,8 @@ steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 | `titel` | Startbildschirm | Lichtreflexe und Funkeln auf dem Diamanten, Glanz über dem Schriftzug |
 | `figur_<kennung>` (5×) | Figurwahl | das Rollen-Symbol unter der Maus und das der gewählten Karte: Zahlenschloss, Lupe, Chip, Landkarte, Füller |
 | `wrack` | Story-Intro | Feuer, Rauch und Funken am Wrack |
-| `nachtlager` | Abschluss | das Lagerfeuer mit Flammen, Funken und Glut unter dem Sternenhimmel |
-| `morgen` | Abschluss | dieselbe Stelle im Morgengrauen: Rauch über der erloschenen Glut |
+| `nachtlager` | Abschluss | das Lagerfeuer an der Oase mit Flammen, Funken und Glut unter dem Sternenhimmel |
+| `morgen` | Abschluss | dieselbe Oase im Morgengrauen: Rauch über der erloschenen Glut |
 | `hubschrauber` | Abschluss | Haupt- und Heckrotor und das grüne Licht – das Spiel lässt ihn einfliegen und landen |
 
 ### Was in `crypto/` steckt

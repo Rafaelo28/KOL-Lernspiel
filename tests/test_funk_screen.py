@@ -449,13 +449,27 @@ def _pruefen_ob_alles_aufs_glas_passt(screen):
 
 
 @pytest.mark.parametrize("massstab", [1, 1.5])
-def test_der_screen_passt_ins_fenster(fenster, wurzel, platz):
-    """Mit der längsten Einleitung über dem Gerät – dem Feind-Funkspruch."""
-    screen = _zum_funkgeraet(fenster, 2)
-    assert screen.funkspruch is story.FUNKSPRUCH_VERFOLGER
-    wurzel.update_idletasks()
-    assert wurzel.winfo_reqwidth() <= platz[0]
-    assert wurzel.winfo_reqheight() <= platz[1]
+@pytest.mark.parametrize("level", [1, 2, 3])
+def test_der_screen_passt_ins_fenster(fenster, wurzel, platz, level):
+    """Bei jedem Funkspruch – auch bei dem mit der längsten Einleitung, dem Feind-Funkspruch.
+
+    Über dem Gerät steht der längere von Einleitung und Erzähltext zum Rest;
+    beide werden mitgeprüft.
+    """
+    screen = _zum_funkgeraet(fenster, level)
+    while isinstance(screen, funk.Funk):
+        for text in (screen.funkspruch.einleitung, screen.funkspruch.weiterrechnen or ""):
+            screen._erzaehlung.configure(text=text)
+            wurzel.update_idletasks()
+            assert wurzel.winfo_reqwidth() <= platz[0], f"{screen.funkspruch.kennung}: zu breit"
+            assert wurzel.winfo_reqheight() <= platz[1], f"{screen.funkspruch.kennung}: zu hoch"
+        screen.anzeige_vervollstaendigen()
+        _tippen(screen, screen.aufgabe.loesung)
+        screen.pruefen()
+        if screen.restknopf_sichtbar:
+            screen.rest_freigeben()
+        screen.pruefen()
+        screen = fenster.aktueller_screen
 
 
 def _rendern():

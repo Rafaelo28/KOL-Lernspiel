@@ -10,8 +10,10 @@ vorgerendert werden (``dokumentation/Animationen.md``)::
 
 Die Geschichte in Bildern
 ─────────────────────────
-Nach Bobs letzter Antwort wartet man im **Nachtlager** in den Dünen: Feuer,
-Rucksack, das ausgeschaltete Funkgerät, darüber der Sternenhimmel. Man legt
+Nach Bobs letzter Antwort wartet man im **Nachtlager an der Oase**: Feuer,
+Rucksack, das ausgeschaltete Funkgerät, dahinter Wasser und Palmen in einer
+Mulde zwischen den Dünen, darüber der Sternenhimmel. Es ist derselbe Ort, den
+man in Level 3 verschlüsselt durchgegeben hat. Man legt
 sich hin, die Augen fallen zu – das Schließen der Augen zeichnet das Spiel
 selbst über die Szene (``ui/abschluss.py``). Beim Aufwachen liegt dieselbe
 Stelle im **Morgengrauen** da, das Feuer ist aus. Dann kommt der
@@ -94,9 +96,139 @@ BERGE = ("M-20,600 L-20,548 L70,540 L120,508 L240,506 L280,532 L420,536 L470,512
          "L860,544 L900,522 L1010,520 L1060,546 L1260,550 L1300,518 L1440,516 L1490,544 L1620,548 L1620,600 Z")
 DUENE_FERN = huegelkette(598, 26, (260, 420), 11)
 DUENE_MITTE = huegelkette(662, 34, (340, 520), 23)
-# Der Boden vorn: links das Lager auf einer leichten Erhebung, rechts eben – dort landet der Hubschrauber.
-BODEN = ("M-40,910 L-40,726 C120,700 360,712 560,734 C760,756 900,770 1060,776 C1240,782 1420,770 1640,752 "
+# Der Boden vorn: links das Lager, rechts eben – dort landet der Hubschrauber. Sein Kamm
+# liegt tief genug, dass dahinter die Mulde mit dem Wasser der Oase zu sehen ist.
+BODEN = ("M-40,910 L-40,748 C120,736 360,748 560,762 C760,776 900,786 1060,792 C1240,798 1420,788 1640,772 "
          "L1640,910 Z")
+
+#: Das Ufer der Oase: der Wasserrand quer durch die Mulde, von links nach rechts.
+UFER = ((20, 716), (200, 696), (420, 683), (640, 680), (860, 686), (1080, 697), (1320, 714))
+#: Die Palmen am Wasser: x, Höhe, Neigung der Krone nach links oder rechts, Zufallsnummer.
+PALMEN = ((150, 300, -34, 5), (330, 250, 26, 9), (520, 335, -18, 14),
+          (1010, 290, 30, 21), (1215, 235, -26, 33))
+
+
+def _glatter_zug(punkte_liste):
+    """Ein weicher Linienzug durch die Punkte – für Ufer und Uferkanten."""
+    teile = [f"M{punkte_liste[0][0]},{punkte_liste[0][1]}"]
+    for (xa, ya), (xb, yb) in zip(punkte_liste, punkte_liste[1:]):
+        teile.append(f"Q{xa},{ya} {(xa + xb) / 2:.0f},{(ya + yb) / 2:.0f}")
+    teile.append(f"L{punkte_liste[-1][0]},{punkte_liste[-1][1]}")
+    return " ".join(teile)
+
+
+#: Die ganze Wasserfläche; nach unten deckt die vordere Düne sie ab. Licht und
+#: Spiegelungen werden darauf beschnitten, sonst lägen sie wie Pfützen im Sand.
+WASSER_FLAECHE = _glatter_zug(UFER) + f" L{UFER[-1][0]},860 L{UFER[0][0]},860 Z"
+
+
+def _ufer_y(x):
+    """Wie hoch das Ufer an der Stelle ``x`` liegt."""
+    for (xa, ya), (xb, yb) in zip(UFER, UFER[1:]):
+        if x <= xb:
+            return ya + (yb - ya) * (x - xa) / (xb - xa)
+    return UFER[-1][1]
+
+
+def palme(x, hoehe, neigung, seed, nacht):
+    """Eine Dattelpalme am Ufer: geschwungener Stamm mit Ringen, darüber ein Kranz aus Wedeln.
+
+    Das Licht kommt in beiden Szenen von rechts – nachts vom Mond, morgens von
+    der Sonne –, deshalb sind die Wedel nach rechts heller.
+    """
+    zufall = random.Random(seed)
+    stamm, ring = ("#241d33", "#3a3050") if nacht else ("#7d5a3a", "#a07c4e")
+    wedel, wedel_hell, rippe = ("#15303a", "#204b58", "#0e1f27") if nacht else ("#3d6b44", "#74a24e", "#2b4a30")
+    frucht = "#2b2238" if nacht else "#c07128"
+    fuss = _ufer_y(x) - 6
+    kx, ky = x + neigung, fuss - hoehe
+    dick, duenn = hoehe * .05, hoehe * .028
+    mitte_x, mitte_y = x + neigung * .3, fuss - hoehe * .55
+    teile = [f'<path d="M{x - dick:.0f},{fuss:.0f} Q{mitte_x - duenn:.0f},{mitte_y:.0f} {kx - duenn:.0f},{ky:.0f} '
+             f'L{kx + duenn:.0f},{ky:.0f} Q{mitte_x + dick:.0f},{mitte_y:.0f} {x + dick:.0f},{fuss:.0f} Z" '
+             f'fill="{stamm}"/>']
+    for i in range(1, 8):
+        s = i / 8
+        px = (1 - s) ** 2 * x + 2 * (1 - s) * s * mitte_x + s ** 2 * kx
+        py = (1 - s) ** 2 * fuss + 2 * (1 - s) * s * mitte_y + s ** 2 * ky
+        halb = (dick + (duenn - dick) * s) * .85
+        teile.append(f'<path d="M{px - halb:.0f},{py:.0f} Q{px:.0f},{py + 7:.0f} {px + halb:.0f},{py:.0f}" '
+                     f'fill="none" stroke="{ring}" stroke-width="2.5" opacity=".8"/>')
+    teile.append(f'<ellipse cx="{kx:.0f}" cy="{ky + 6:.0f}" rx="{duenn * 1.6:.0f}" ry="{duenn:.0f}" fill="{ring}"/>')
+    for i in range(3):
+        teile.append(f'<circle cx="{kx + (i - 1) * duenn * 1.3:.0f}" cy="{ky + 16 + (i % 2) * 7:.0f}" '
+                     f'r="{duenn * .5:.0f}" fill="{frucht}" opacity=".9"/>')
+    wedelzahl = 8
+    for i in range(wedelzahl):
+        grad = -168 + i * (156 / (wedelzahl - 1)) + zufall.uniform(-7, 7)
+        w = math.radians(grad)
+        laenge = hoehe * (.52 + zufall.uniform(-.07, .07))
+        quer = math.cos(w)
+        spitze = (kx + laenge * quer, ky + laenge * math.sin(w) + laenge * .45 * abs(quer))
+        steuer = ((kx + spitze[0]) / 2, (ky + spitze[1]) / 2 - laenge * .17)
+        laengs = (spitze[0] - kx, spitze[1] - ky)
+        weite = math.hypot(*laengs) or 1
+        senkrecht = (-laengs[1] / weite, laengs[0] / weite)
+        bauch = laenge * .12
+        teile.append(
+            f'<path d="M{kx:.0f},{ky:.0f} '
+            f'Q{steuer[0] + senkrecht[0] * bauch:.0f},{steuer[1] + senkrecht[1] * bauch:.0f} '
+            f'{spitze[0]:.0f},{spitze[1]:.0f} '
+            f'Q{steuer[0] - senkrecht[0] * bauch:.0f},{steuer[1] - senkrecht[1] * bauch:.0f} {kx:.0f},{ky:.0f} Z" '
+            f'fill="{wedel_hell if quer > 0 else wedel}"/>')
+        teile.append(f'<path d="M{kx:.0f},{ky:.0f} Q{steuer[0]:.0f},{steuer[1]:.0f} {spitze[0]:.0f},{spitze[1]:.0f}" '
+                     f'fill="none" stroke="{rippe}" stroke-width="2.5" opacity=".7"/>')
+    return "\n".join(teile)
+
+
+def schilf(x, breite, hoehe, seed, nacht):
+    """Ein Büschel Schilf am Wasser."""
+    zufall = random.Random(seed)
+    farbe = "#1a3038" if nacht else "#5c7a3e"
+    halme = []
+    for _ in range(7):
+        x0 = x + zufall.uniform(-breite, breite)
+        h = hoehe * zufall.uniform(.6, 1.2)
+        neigung = zufall.uniform(-.5, .5)
+        halme.append(f'<path d="M{x0:.0f},{_ufer_y(x0) + 4:.0f} Q{x0 + h * neigung * .4:.0f},'
+                     f'{_ufer_y(x0) - h * .6:.0f} {x0 + h * neigung:.0f},{_ufer_y(x0) - h:.0f}" fill="none" '
+                     f'stroke="{farbe}" stroke-width="3.5" stroke-linecap="round"/>')
+    return "\n".join(halme)
+
+
+def oase(nacht):
+    """Das Wasser der Oase mit Palmen und Schilf – hinter dem Lager in der Mulde.
+
+    Gezeichnet wird zwischen mittlerer Düne und Vordergrund: Die vordere Düne
+    deckt das untere Ende des Wassers ab, dadurch liegt es in einer Mulde und
+    nicht wie eine Pfütze auf dem Sand. Bewegt wird hier nichts – das Wasser
+    liegt ausserhalb der Ausschnitte, in denen Feuer und Rauch spielen.
+    """
+    zufall = random.Random(77)
+    kante = _glatter_zug(UFER)
+    teile = [f'<path d="{WASSER_FLAECHE}" fill="url(#wasser)"/>', '<g clip-path="url(#wasserflaeche)">']
+    # Die Spiegelung der Palmen: dunkle Streifen unter ihren Stämmen.
+    for x, hoehe, neigung, seed in PALMEN:
+        oben = _ufer_y(x)
+        teile.append(f'<path d="M{x - 13},{oben + 2:.0f} L{x + 13},{oben + 2:.0f} L{x + 7},{oben + 80:.0f} '
+                     f'L{x - 7},{oben + 80:.0f} Z" fill="{"#0b1030" if nacht else "#a06a55"}" opacity=".35" '
+                     f'filter="url(#weich8)"/>')
+    # Das Licht auf dem Wasser – Mond und Sonne stehen rechts.
+    teile.append(f'<ellipse cx="1210" cy="{_ufer_y(1210) + 40:.0f}" rx="150" ry="52" fill="url(#wasserglanz)"/>')
+    for _ in range(26):
+        x = zufall.uniform(60, 1290)
+        y = _ufer_y(x) + zufall.uniform(6, 78)
+        laenge = zufall.uniform(14, 52)
+        teile.append(f'<rect x="{x:.0f}" y="{y:.0f}" width="{laenge:.0f}" height="2.5" rx="1.2" '
+                     f'fill="{"#cdd7ff" if nacht else "#fff1cd"}" opacity="{zufall.uniform(.15, .5):.2f}"/>')
+    teile.append("</g>")
+    teile.append(f'<path d="{kante}" fill="none" stroke="{"#7b86c9" if nacht else "#fff0cd"}" stroke-width="3" '
+                 f'opacity=".45"/>')
+    for x, hoehe, neigung, seed in PALMEN:
+        teile.append(palme(x, hoehe, neigung, seed, nacht))
+    for x, breite, hoehe, seed in ((95, 45, 60, 3), (400, 55, 52, 6), (700, 50, 46, 12), (1150, 60, 54, 18)):
+        teile.append(schilf(x, breite, hoehe, seed, nacht))
+    return "\n".join(teile)
 
 
 def lager(nacht):
@@ -193,7 +325,7 @@ def nachtlager_svg():
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {B} {H}"
      data-breite="960" data-schleife-ms="4000" data-bilder="40" data-bereiche="{bx} {by} {bb} {bh}">
 <!--
-  Das Nachtlager in den Dünen – Szene für den Abschluss (Arbeitsplan 6.8).
+  Das Nachtlager an der Oase – Szene für den Abschluss (Arbeitsplan 6.8).
   Entsteht mit grafik/abschluss_zeichnen.py – dort ändern, nicht hier.
 
   Fürs Spiel vorrendern mit:
@@ -201,7 +333,8 @@ def nachtlager_svg():
   Bewegt wird nur das Feuer (data-bereiche). Oben links bleibt der Himmel ruhig: Dort steht im Spiel der Text.
 -->
 <title>Das Nachtlager</title>
-<desc>Nacht in der Wüste: ein klarer Sternenhimmel mit Milchstraße und Mondsichel über dunklen Dünen.
+<desc>Nacht an einer Oase: ein klarer Sternenhimmel mit Milchstraße und Mondsichel über dunklen Dünen.
+Hinter dem Lager liegt das Wasser der Oase, in dem sich das Mondlicht spiegelt, dahinter stehen Palmen.
 Vorn links brennt ein kleines Lagerfeuer zwischen Steinen, daneben liegen ein Rucksack, eine ausgebreitete
 Decke und das ausgeschaltete Funkgerät.</desc>
 <style>
@@ -239,6 +372,14 @@ Decke und das ausgeschaltete Funkgerät.</desc>
   <linearGradient id="boden" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#3a3354"/><stop offset="1" stop-color="#1c1830"/>
   </linearGradient>
+  <linearGradient id="wasser" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#151d4c"/><stop offset=".5" stop-color="#1e2a66"/>
+    <stop offset="1" stop-color="#2b3a7d"/>
+  </linearGradient>
+  <radialGradient id="wasserglanz" cx="1210" cy="740" r="170" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#dfe6ff" stop-opacity=".45"/><stop offset="1" stop-color="#dfe6ff" stop-opacity="0"/>
+  </radialGradient>
+  <clipPath id="wasserflaeche"><path d="{WASSER_FLAECHE}"/></clipPath>
   <radialGradient id="mondschein" cx="1360" cy="140" r="260" gradientUnits="userSpaceOnUse">
     <stop offset="0" stop-color="#dfe6ff" stop-opacity=".22"/><stop offset="1" stop-color="#dfe6ff" stop-opacity="0"/>
   </radialGradient>
@@ -289,6 +430,8 @@ Decke und das ausgeschaltete Funkgerät.</desc>
 <path d="{BERGE}" fill="url(#berge)"/>
 <path d="{DUENE_FERN}" fill="url(#duene-fern)"/>
 <path d="{DUENE_MITTE}" fill="url(#duene-mitte)"/>
+<!-- Die Oase in der Mulde: Wasser, Palmen, Schilf -->
+{oase(nacht=True)}
 <path d="{BODEN}" fill="url(#boden)"/>
 <!-- Mondlicht auf den Kämmen -->
 <path d="{DUENE_MITTE}" fill="none" stroke="#5a5f9a" stroke-width="2" opacity=".35"/>
@@ -319,7 +462,7 @@ def morgen_svg():
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {B} {H}"
      data-breite="960" data-schleife-ms="4000" data-bilder="40" data-bereiche="{bx} {by} {bb} {bh}">
 <!--
-  Dieselbe Stelle im Morgengrauen – Szene für den Abschluss (Arbeitsplan 6.8).
+  Dieselbe Oase im Morgengrauen – Szene für den Abschluss (Arbeitsplan 6.8).
   Entsteht mit grafik/abschluss_zeichnen.py – dort ändern, nicht hier.
 
   Fürs Spiel vorrendern mit:
@@ -328,9 +471,10 @@ def morgen_svg():
   der Hubschrauber, oben links steht der Text.
 -->
 <title>Das Lager am Morgen</title>
-<desc>Morgengrauen über denselben Dünen: Der Himmel geht von Blau über Rosa in ein warmes Orange über, rechts
-am Horizont kündigt sich die Sonne an, die letzten Sterne verblassen. Das Feuer ist aus, ein dünner Rauchfaden
-steigt auf; Rucksack, zurückgeschlagene Decke und Funkgerät liegen noch da. Rechts ist ebener Sand.</desc>
+<desc>Morgengrauen über derselben Oase: Der Himmel geht von Blau über Rosa in ein warmes Orange über, rechts
+am Horizont kündigt sich die Sonne an, die letzten Sterne verblassen. Im Wasser spiegelt sich das Morgenlicht,
+die Palmen sind grün. Das Feuer ist aus, ein dünner Rauchfaden steigt auf; Rucksack, zurückgeschlagene Decke
+und Funkgerät liegen noch da. Rechts neben der Oase ist ebener Sand.</desc>
 <style>
   /* Alle Dauern teilen 4 s. */
   .puff {{ transform-box: fill-box; transform-origin: center; opacity: 0; animation: aufsteigen 4s linear infinite; }}
@@ -363,6 +507,14 @@ steigt auf; Rucksack, zurückgeschlagene Decke und Funkgerät liegen noch da. Re
   <linearGradient id="boden" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#f2bf8c"/><stop offset="1" stop-color="#cf9168"/>
   </linearGradient>
+  <linearGradient id="wasser" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9ab8c4"/><stop offset=".4" stop-color="#6e97b0"/>
+    <stop offset="1" stop-color="#4d7391"/>
+  </linearGradient>
+  <radialGradient id="wasserglanz" cx="1210" cy="740" r="190" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#fff2c4" stop-opacity=".8"/><stop offset="1" stop-color="#fff2c4" stop-opacity="0"/>
+  </radialGradient>
+  <clipPath id="wasserflaeche"><path d="{WASSER_FLAECHE}"/></clipPath>
 {GEMEINSAME_DEFS}
 </defs>
 
@@ -375,6 +527,8 @@ steigt auf; Rucksack, zurückgeschlagene Decke und Funkgerät liegen noch da. Re
 <path d="{BERGE}" fill="url(#berge)"/>
 <path d="{DUENE_FERN}" fill="url(#duene-fern)"/>
 <path d="{DUENE_MITTE}" fill="url(#duene-mitte)"/>
+<!-- Die Oase in der Mulde: Wasser, Palmen, Schilf -->
+{oase(nacht=False)}
 <path d="{BODEN}" fill="url(#boden)"/>
 <!-- Lange Morgenschatten nach links, die Sonne steht rechts -->
 <path d="{DUENE_MITTE}" fill="none" stroke="#fff0d0" stroke-width="3" opacity=".35"/>
