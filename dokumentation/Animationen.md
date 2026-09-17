@@ -46,6 +46,9 @@ Gute Vorlagen für neue Animationen:
 | `grafik/stempel.svg` | Handbuch (6.4) | ein **durchsichtiges Standbild**: "STRENG GEHEIM" auf der Titelseite |
 | `grafik/stempel_geloest.svg` | Übung (6.5) | derselbe Bau in Grün: "GELÖST", sobald die Antwort stimmt |
 | `grafik/funkgeraet.svg` | Funkgerät (6.6) | ein **durchsichtiges Standbild**, das auf dem Buch steht; auf sein leeres Glas schreibt das Spiel |
+| `grafik/nachtlager.svg` | Abschluss (6.8) | eine große Szene wie das Wrack: das Lagerfeuer ist der Ausschnitt; Mond und Sterne stehen still im Hintergrund |
+| `grafik/morgen.svg` | Abschluss (6.8) | **dieselbe Stelle** im Morgengrauen – das Spiel wechselt hinter geschlossenen Augen von der einen Szene zur anderen (`Buehne.wechseln`) |
+| `grafik/hubschrauber.svg` | Abschluss (6.8) | eine **durchsichtige Figur**: Rotor, Winken und Licht in einer Schleife, der Ausschnitt ist das ganze Bild. Das Spiel schiebt sie mit `ui.animation.Figur` über die Szene und blättert ihre Bilder selbst weiter |
 
 Die Symbole der Figurwahl sind auf `FARBE_KARTE` aus `ui/stil.py` gemalt,
 sonst stünde auf jeder Karte ein Rechteck in einer anderen Farbe. Wer die
@@ -64,6 +67,13 @@ python3 grafik/rendern.py grafik/umblaettern.svg
 Das Funkgerät entsteht genauso aus einem Programm, `grafik/funkgeraet_zeichnen.py`:
 Glas und Lämpchen stehen dort in SVG-Einheiten und in `ui/funk.py` in Pixeln,
 und ein Test prüft im gerenderten Bild, dass das Spiel dort schreibt, wo Glas ist.
+
+Nachtlager, Morgen und Hubschrauber kommen aus `grafik/abschluss_zeichnen.py`
+(`python3 grafik/abschluss_zeichnen.py` schreibt alle drei). Die beiden Szenen
+entstehen aus denselben Formen – Dünen und Lager dürfen beim Wechsel nicht
+springen. Wo der Hubschrauber landet und wo der Text steht, rechnet
+`ui/abschluss.py` in Pixeln; ein Test prüft, dass er rechts neben dem Lager
+aufsetzt.
 
 Buch und Umblättern brauchen dasselbe Blatt – denselben ausgefransten Umriss, dieselbe
 viewBox –, sonst springt beim Umblättern die Kante. Wer am Buch etwas ändern

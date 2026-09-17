@@ -124,7 +124,7 @@ def test_spiel_und_werkzeug_kennen_dieselben_massstaebe():
 # ───────────────────────────────────────────────────────────────────────────
 
 tk = pytest.importorskip("tkinter")
-from ui.animation import Ablauf, Animation, Buehne  # noqa: E402
+from ui.animation import Ablauf, Animation, Buehne, Figur  # noqa: E402
 
 FARBEN = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff"]
 
@@ -365,5 +365,92 @@ def test_die_durchsichtigkeit_bleibt_beim_zerschneiden_erhalten(wurzel, tmp_path
     leinwand = tk.Canvas(wurzel, width=40, height=30)
     ablauf = Ablauf(leinwand, _probe_ablauf(wurzel, tmp_path))
     (_, folge), = ablauf._folgen
+    assert folge[0].transparency_get(0, 0)
+    assert not folge[0].transparency_get(5, 4)
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 4. Szenenwechsel und bewegte Figuren (für den Abschluss, 6.8)
+# ───────────────────────────────────────────────────────────────────────────
+
+def test_wechseln_tauscht_die_szene_und_laesst_liegen_was_darueber_liegt(wurzel, tmp_path):
+    buehne = Buehne(wurzel, _probeanimation(wurzel, tmp_path / "abend"))
+    alte_elemente = set(buehne.find_all())
+    alte_bilder = [str(bild) for bild in buehne._folgen[0]]
+    text = buehne.create_text(3, 3, text="Die Nacht vergeht.")
+    buehne.starten()
+    buehne.zeige_bild(3)
+
+    morgen = _probeanimation(wurzel, tmp_path / "morgen", spalten=3, bilder=3)
+    morgen.breite, morgen.hoehe = 60, 45
+    buehne.wechseln(morgen)
+
+    assert buehne.animation is morgen
+    assert (int(buehne.cget("width")), int(buehne.cget("height"))) == (60, 45)
+    assert [_farbe(bild) for bild in buehne._folgen[0]] == FARBEN[:3]
+    stapel = buehne.find_all()
+    assert not alte_elemente & set(stapel)
+    assert stapel == (buehne._hintergrund_element, buehne._elemente[0], text)
+    assert buehne.bild_nr == 0
+    assert buehne.laeuft
+    assert len(wurzel.tk.splitlist(wurzel.tk.call("after", "info"))) == 1
+    assert not any(name in wurzel.image_names() for name in alte_bilder)
+
+
+def test_eine_angehaltene_buehne_bleibt_beim_wechseln_stehen(wurzel, tmp_path):
+    buehne = Buehne(wurzel, _probeanimation(wurzel, tmp_path / "abend"))
+    buehne.wechseln(_probeanimation(wurzel, tmp_path / "morgen"))
+    assert not buehne.laeuft
+    assert wurzel.tk.call("after", "info") == ""
+
+
+def test_eine_szene_ohne_hintergrund_laesst_sich_einwechseln(wurzel, tmp_path):
+    buehne = Buehne(wurzel, _probeanimation(wurzel, tmp_path / "abend"))
+    buehne.wechseln(_probe_ablauf(wurzel, tmp_path / "ohne"))
+    assert buehne._hintergrund_element is None
+    assert buehne.find_all() == tuple(buehne._elemente)
+
+
+def test_eine_figur_zeigt_nur_ihre_ausschnitte_dort_wo_sie_steht(wurzel, tmp_path):
+    leinwand = tk.Canvas(wurzel, width=400, height=300)
+    figur = Figur(leinwand, _probeanimation(wurzel, tmp_path), x=100, y=50)
+    (element,) = figur.elemente
+    assert leinwand.find_all() == (element,), "Der Hintergrund käme doppelt über die Szene."
+    assert leinwand.coords(element) == [112.0, 56.0]            # 100 + 12, 50 + 6
+    assert leinwand.find_withtag(Figur.TAG) == (element,)
+    assert (figur.x, figur.y, figur.bild_nr) == (100, 50, 0)
+    assert _farbe_von(leinwand, element) == FARBEN[0]
+
+    figur.verschieben(-30, 7)
+    assert leinwand.coords(element) == [-18.0, 13.0]
+    assert (figur.x, figur.y) == (-30, 7)
+
+
+def test_eine_figur_blaettert_nur_wenn_man_sie_laesst(wurzel, tmp_path):
+    """Kein eigener Takt: Flug und Rotor bleiben im Takt dessen, der sie bewegt."""
+    leinwand = tk.Canvas(wurzel, width=400, height=300)
+    figur = Figur(leinwand, _probeanimation(wurzel, tmp_path))
+    assert wurzel.tk.call("after", "info") == ""
+    figur.zeige_bild(7)
+    assert figur.bild_nr == 2
+    assert _farbe_von(leinwand, figur.elemente[0]) == FARBEN[2]
+
+
+def test_eine_figur_raeumt_hinter_sich_auf(wurzel, tmp_path):
+    leinwand = tk.Canvas(wurzel, width=400, height=300)
+    anderes = leinwand.create_rectangle(0, 0, 5, 5)
+    figur = Figur(leinwand, _probeanimation(wurzel, tmp_path))
+    bilder = [str(bild) for _, folge in figur._folgen for bild in folge]
+    figur.entfernen()
+    assert leinwand.find_all() == (anderes,)
+    assert figur.elemente == ()
+    assert not any(name in wurzel.image_names() for name in bilder)
+
+
+def test_die_durchsichtigkeit_der_figur_bleibt_erhalten(wurzel, tmp_path):
+    """Der Hubschrauber ist kein Rechteck vor dem Morgenhimmel."""
+    leinwand = tk.Canvas(wurzel, width=400, height=300)
+    figur = Figur(leinwand, _probe_ablauf(wurzel, tmp_path))
+    (_, folge), = figur._folgen
     assert folge[0].transparency_get(0, 0)
     assert not folge[0].transparency_get(5, 4)

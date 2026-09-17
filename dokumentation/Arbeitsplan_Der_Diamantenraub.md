@@ -383,8 +383,8 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     abschliesst oder das Level wechselt, geht hier durch, und gespeichert wird
     dabei von selbst. So kann kein Screen das Speichern vergessen
   - `ui/ablauf.py` – welcher Screen wann kommt; hier setzt Phase 7 die Level
-    zusammen. Bis dahin stehen dort die Platzhalter aus `ui/platzhalter.py`,
-    die mit 6.2–6.8 wieder verschwinden
+    zusammen. Die Platzhalter-Screens, die dort anfangs standen
+    (`ui/platzhalter.py`), sind mit 6.2–6.8 wieder verschwunden
   - Der Takt wird im `finally` neu angemeldet – ein Fehler im Takt hält die
     Uhr nicht an
   - Fehler in Knöpfen erscheinen in der Meldungszeile. Tkinter schriebe sie
@@ -735,6 +735,39 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
 
 ### 6.8 Abschluss-Screen
 - Nachthimmel, Rettung, Schlusstext (Diamanten bleiben zurück)
+- **Umgesetzt** (`ui/abschluss.py`, Bilder aus `grafik/abschluss_zeichnen.py`),
+  mit zwei Wünschen aus der Abnahme: Nach "Warten" schläft man ein, und es muss
+  klar sein, dass der Hubschrauber Freunde bringt
+  - **Das Nachtlager:** Lagerfeuer, Rucksack, Decke und das ausgeschaltete
+    Funkgerät in den Dünen, darüber Mond und Sterne. Oben links der Text aus
+    `story.NACHTHIMMEL`, unten rechts der Knopf "Warten"
+  - **Einschlafen:** Zwei Lider mit gebogener Kante schieben sich über das
+    Bild, öffnen sich noch zweimal halb und schließen sich; auf Schwarz steht
+    "Die Nacht vergeht." Hinter den geschlossenen Augen wechselt die Szene zum
+    **Morgengrauen** (dieselbe Stelle, das Feuer ist aus). Das Geräusch der
+    Rotorblätter weckt, noch bevor man etwas sieht; dann blinzelt man, und der
+    Hubschrauber fliegt von rechts ein und landet neben dem Lager, sein
+    Schatten wächst auf dem Sand. Der Erzähltext liegt über den Lidern und
+    bleibt lesbar (neu in `content/story.py`: `EINSCHLAFEN`, `AUFWACHEN`,
+    `RETTUNG`)
+  - **Freunde, nicht Verfolger:** Der Hubschrauber ist dunkelgrün mit
+    Goldstreifen statt in Polizeifarben, auf seiner Seite glänzt groß ein
+    goldener Diamant – das Zeichen der Crew –, ein grünes Licht blinkt, und
+    aus der offenen Tür winkt jemand. Der Text nach der Landung beginnt mit
+    "Das ist nicht die Polizei" und nennt, woran man es sieht
+  - **Das Ende:** "Weiter" zeigt den Schlusstext aus dem Konzept, unten links
+    klein, wo die Messdaten liegen (ein zu langer Pfad wird vorn gekürzt,
+    Ordner und Datei bleiben stehen), und "Spiel beenden". Endete Level 3 am
+    Timer, steht das bis dahin unten links
+  - **Eine Uhr für alles:** Lider, Szenenwechsel und Flug hängen an der Zeit
+    seit dem Warten-Knopf (rund 15 Sekunden bis zur Landung). Der Takt liest
+    die echte Uhr ab: Ein langsamer Schulrechner überspringt Bilder, aber die
+    Rettung dauert nicht länger. `Abschluss.zu_zeit` stellt jeden Moment her –
+    so prüfen die Tests jeden Augenblick einzeln
+  - Neu in `ui/animation.py`: `Buehne.wechseln` tauscht die Szene unter
+    allem aus, was darüber liegt, und `Figur` ist eine durchsichtige
+    Animation, die sich verschieben lässt und ihre Bilder im Takt dessen
+    blättert, der sie bewegt
 
 ---
 

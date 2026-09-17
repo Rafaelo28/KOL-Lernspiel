@@ -418,13 +418,42 @@ FUNKSPRUCH_BOB_ZWEITE_ANTWORT = Funkspruch(
 #: Beschriftung des Buttons, der den Abschluss auslöst.
 BESCHRIFTUNG_WARTEN = "Warten"
 
+#: Das Nachtlager nach Bobs letzter Antwort (Arbeitsplan 6.8). Darunter steht
+#: der Knopf "Warten".
 NACHTHIMMEL = Erzaehltext(
     kennung="nachthimmel",
     absaetze=(
         "Du schaltest das Funkgerät aus und wartest.",
         "Über der Wüste wird es still. Der Himmel ist klar, die Sterne stehen "
         "so dicht, wie du sie in der Stadt nie gesehen hast.",
-        "Dann, weit entfernt, ein Geräusch. Rotorblätter.",
+    ),
+)
+
+#: Nach dem Warten-Knopf fallen die Augen zu. Der erste Absatz steht über dem
+#: Lager, während sie schwer werden, der zweite auf Schwarz.
+EINSCHLAFEN = Erzaehltext(
+    kennung="einschlafen",
+    absaetze=(
+        "Das Feuer knistert leise. Irgendwann werden dir die Augen schwer …",
+        "Die Nacht vergeht.",
+    ),
+)
+
+#: Beim Aufwachen am Morgen – kurz bevor der Hubschrauber zu sehen ist.
+AUFWACHEN = Erzaehltext(
+    kennung="aufwachen",
+    absaetze=("Ein Geräusch weckt dich, erst weit entfernt, dann immer näher: Rotorblätter!",),
+)
+
+#: Wenn der Hubschrauber gelandet ist. Gejagt wird die Crew von Polizei, CIA
+#: und Interpol – der Text sagt deshalb ausdrücklich, dass das Freunde sind,
+#: und nennt, woran man es sieht: den goldenen Diamanten, das Zeichen der Crew.
+RETTUNG = Erzaehltext(
+    kennung="rettung",
+    absaetze=(
+        "Das ist nicht die Polizei: Auf dem Hubschrauber glänzt ein goldener "
+        "Diamant – das Zeichen deiner Crew. Aus der offenen Tür winkt dir "
+        "jemand zu. Die Zentrale hat Wort gehalten.",
     ),
 )
 
@@ -473,5 +502,8 @@ ERZAEHLTEXTE = (
     EINSTIEG_LEVEL_3,
     REFLEXIONSFRAGE_LEVEL_3,
     NACHTHIMMEL,
+    EINSCHLAFEN,
+    AUFWACHEN,
+    RETTUNG,
     ABSCHLUSS,
 )

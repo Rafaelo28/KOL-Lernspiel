@@ -48,8 +48,8 @@ Nachschlagen ist erlaubt. :func:`nachschlagen` zeigt dasselbe Buch mit dem
 Knopf "Zurück zur Aufgabe". Die Aufgabe bleibt dabei offen, und ihre Uhr
 läuft weiter: Nachschlagen gehört zum Lösen. Den Rückweg gibt der Aufgaben-
 Screen als ``zurueck(fenster)`` mit; er baut sich frisch auf und setzt
-dieselbe Aufgabe fort, statt eine neue zu stellen – so macht es schon der
-Platzhalter der Übung in :mod:`ui.platzhalter`.
+dieselbe Aufgabe fort, statt eine neue zu stellen – so machen es die Übung
+(:mod:`ui.uebung`) und das Funkgerät (:mod:`ui.funk`).
 
 Warum eine Leinwand
 ───────────────────

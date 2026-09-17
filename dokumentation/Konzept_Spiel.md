@@ -161,6 +161,13 @@ Hubschrauber landet. Abschlusstext: "Du bist raus – lebend, aber mit leeren
 Händen. Der Diamantensack liegt noch im Wrack in der Wüste. Manchmal ist das
 Überleben der einzige Gewinn, den man mitnehmen kann."
 
+*Nachträglich entschieden:* Der Knopf "Warten" steht schon im Nachtlager unter
+dem Sternenhimmel. Danach fallen der Figur die Augen zu, die Nacht vergeht, und
+am Morgen weckt sie das Geräusch der Rotorblätter. Weil die Crew von Polizei,
+CIA und Interpol gejagt wird, zeigt der Hubschrauber groß den goldenen
+Diamanten der Crew, und jemand winkt aus der Tür – so ist klar, dass Freunde
+kommen und keine Verfolger.
+
 ---
 
 ### Notiz für Entwicklung:

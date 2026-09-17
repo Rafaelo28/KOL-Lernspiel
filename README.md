@@ -135,7 +135,6 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `hauptfenster.py` | Das eine Fenster: öffnet maximiert (F11 Vollbild), Kopfzeile mit Level, Screen-Wechsel, Takt. Zeigt bewusst keinen Countdown (Zeitdruck-Stress) |
 | `screen.py` | Die Grundform aller Screens |
 | `ablauf.py` | Welcher Screen wann kommt – hier setzt Phase 7 die Level zusammen |
-| `platzhalter.py` | Platzhalter-Screen für den Abschluss, bis der echte aus 6.8 da ist |
 | `stil.py` | Schriften, Farben und Abstände an einer Stelle – und der Maßstab: auf 1080p-Monitoren alles 1,5-mal so groß |
 | `animation.py` | Spielt vorgerenderte Animationen ab |
 | `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
@@ -147,6 +146,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `uebung.py` | Die Übungen im Buch: Aufgabe rechts, Werkzeug links, Rückmeldung mit Fehlerstelle, Stempel und Versuchszähler |
 | `lineal.py` | Das Lineal im Vigenère-Quadrat: Zeile und Spalte per Klick markieren, damit beim Nachschlagen niemand verrutscht |
 | `funk.py` | Die echten Funksprüche am Funkgerät: leuchtende Anzeige, Nachricht Zeichen für Zeichen, beim Empfangen der ganze Geheimtext, beim Senden nie; der Knopf für den Rest einer langen Nachricht |
+| `abschluss.py` | Das Ende: Nachtlager mit dem Knopf „Warten“, die Augen fallen zu, am Morgen landet der Hubschrauber der Crew; dann der Schlusstext und wo die Messdaten liegen |
 
 ### Animationen
 
@@ -162,7 +162,9 @@ das Spiel blättert die fertigen Bilder aus `content/animationen/` nur noch durc
 Zusatzpaket. Jede Animation gibt es in zwei Größen: 960 × 540 für kleine Bildschirme
 und 1440 × 810 (Unterordner `1.5x/`) für die 1080p-Schulmonitore. Das Buch des Handbuchs
 und das Umblättern darin sind selbst gezeichnete SVGs: `python3 grafik/buch_zeichnen.py`
-schreibt beide, danach werden sie wie jede Animation vorgerendert. Wie man eine neue
+schreibt beide, danach werden sie wie jede Animation vorgerendert. Genauso entstehen das
+Funkgerät (`grafik/funkgeraet_zeichnen.py`) und die Bilder des Abschlusses
+(`grafik/abschluss_zeichnen.py`). Wie man eine neue
 Animation anlegt und welche Regeln sie einhalten muss,
 steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 
@@ -171,6 +173,9 @@ steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
 | `titel` | Startbildschirm | Lichtreflexe und Funkeln auf dem Diamanten, Glanz über dem Schriftzug |
 | `figur_<kennung>` (5×) | Figurwahl | das Rollen-Symbol unter der Maus und das der gewählten Karte: Zahlenschloss, Lupe, Chip, Landkarte, Füller |
 | `wrack` | Story-Intro | Feuer, Rauch und Funken am Wrack |
+| `nachtlager` | Abschluss | das Lagerfeuer mit Flammen, Funken und Glut unter dem Sternenhimmel |
+| `morgen` | Abschluss | dieselbe Stelle im Morgengrauen: Rauch über der erloschenen Glut |
+| `hubschrauber` | Abschluss | Rotor, Heckrotor, das grüne Licht und die winkende Person in der Tür – das Spiel lässt ihn einfliegen und landen |
 
 ### Was in `crypto/` steckt
 
@@ -285,16 +290,15 @@ dürfen nicht im Repository landen.
 | 3     | Aufgaben-Generator                           | fertig  |
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
-| 6     | Tkinter-Oberfläche                           | in Arbeit (6.1–6.7 fertig) |
+| 6     | Tkinter-Oberfläche                           | fertig  |
 | 7     | Level zusammensetzen                         | offen   |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
 `main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom
 Titelbild über die Figurwahl und den Story-Intro mit der animierten
 Absturz-Szene, Bobs Handbuch, den Übungen darin und den Funksprüchen am
-Funkgerät durch alle drei Level bis zum Abschluss. Zu den Funksprüchen führt
-bis Phase 7 ein Platzhalter-Knopf unter den Übungen; der Abschluss ist noch
-ein Platzhalter und entsteht in 6.8.
+Funkgerät durch alle drei Level bis zur Rettung im Morgengrauen. Zu den
+Funksprüchen führt bis Phase 7 ein Platzhalter-Knopf unter den Übungen.
 
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).

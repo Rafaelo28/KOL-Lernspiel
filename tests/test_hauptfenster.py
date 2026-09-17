@@ -26,7 +26,7 @@ import main  # noqa: E402
 from content import charaktere  # noqa: E402
 from game.protokoll import KODIERUNG, TRENNZEICHEN  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
-from ui import ablauf, handbuch, hauptfenster, platzhalter, stil, uebung  # noqa: E402
+from ui import abschluss, ablauf, handbuch, hauptfenster, stil, uebung  # noqa: E402
 from ui.hauptfenster import Hauptfenster  # noqa: E402
 from ui.screen import Screen  # noqa: E402
 
@@ -625,9 +625,9 @@ def test_nach_dem_spielende_wird_nicht_gefragt(fenster):
     _bis_zur_uebung(fenster)
     for _ in range(3):
         _klick(fenster, "Level beenden")
-        if not isinstance(fenster.aktueller_screen, platzhalter.Abschluss):
+        if not isinstance(fenster.aktueller_screen, abschluss.Abschluss):
             _klick(fenster, "Zu den Übungen")
-    assert isinstance(fenster.aktueller_screen, platzhalter.Abschluss)
+    assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
     fenster.schliessen_anfragen()
     assert fenster.ist_geschlossen
 
@@ -701,7 +701,7 @@ def test_ein_zweiter_durchlauf_im_selben_fenster_ist_verboten(fenster):
 
 
 # ───────────────────────────────────────────────────────────────────────────
-# 8. Der ganze Weg durch die Platzhalter
+# 8. Der ganze Weg bis zum Abschluss
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, tmp_path):
@@ -715,9 +715,10 @@ def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, 
     _klick(fenster, "Level beenden")                  # Level 2 endet vorzeitig
     _klick(fenster, "Zu den Übungen")
     _klick(fenster, "Level beenden")                  # Level 3 ebenso
-    assert isinstance(fenster.aktueller_screen, platzhalter.Abschluss)
+    assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
+    assert fenster.aktueller_screen.hinweis == ""                # Level 3 endete nicht am Timer
     assert fenster.durchlauf.spielstand.ist_durchgespielt
-    assert fenster.kopfzeile == ("Geschafft", "")
+    assert fenster.kopfzeile == ("Die Rettung", "")
 
     zeilen = _zeilen(fenster)
     assert {z["pseudonym"] for z in zeilen} == {"ID 1-12"}   # so macht Excel kein Datum daraus
@@ -728,8 +729,23 @@ def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, 
     assert [z["abgebrochen"] for z in zeilen] == ["nein", "ja", "ja", "ja"]
     assert [p.name for p in tmp_path.iterdir()] == [fenster.durchlauf.protokoll.dateiname]
 
+    _klick(fenster, "Warten")                                  # die Augen fallen zu …
+    fenster.aktueller_screen.zu_zeit(abschluss.GELANDET)       # … bis der Hubschrauber gelandet ist
+    _klick(fenster, "Weiter")
     _klick(fenster, "Spiel beenden")
     assert fenster.ist_geschlossen
+
+
+def test_endet_level_3_am_timer_steht_es_im_abschluss(fenster, uhr):
+    _bis_zur_uebung(fenster)
+    _klick(fenster, "Level beenden")                  # Level 1 endet vorzeitig
+    _klick(fenster, "Zu den Übungen")
+    _klick(fenster, "Level beenden")                  # Level 2 ebenso
+    _klick(fenster, "Zu den Übungen")
+    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[3])
+    fenster._takt()                                   # Level 3 endet am Timer
+    assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
+    assert fenster.aktueller_screen.hinweis == abschluss.HINWEIS_ZEITABLAUF
 
 
 # ───────────────────────────────────────────────────────────────────────────

@@ -353,6 +353,7 @@ def test_es_gibt_ueberhaupt_module_zu_pruefen():
         "ui/uebung.py",
         "ui/lineal.py",
         "ui/funk.py",
+        "ui/abschluss.py",
     } <= namen
 
 

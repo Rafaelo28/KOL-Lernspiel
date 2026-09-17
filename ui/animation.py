@@ -169,9 +169,10 @@ class Buehne(tk.Canvas):
     def _laden(self):
         animation = self.animation
         self._hintergrund = None
+        self._hintergrund_element = None
         if animation.hintergrund is not None:
             self._hintergrund = tk.PhotoImage(master=self, file=str(animation.ordner / animation.hintergrund))
-            self.create_image(0, 0, image=self._hintergrund, anchor="nw")
+            self._hintergrund_element = self.create_image(0, 0, image=self._hintergrund, anchor="nw")
         for ausschnitt in animation.ausschnitte:
             folge = _folge_laden(self, animation, ausschnitt)
             self._folgen.append(folge)
@@ -181,6 +182,29 @@ class Buehne(tk.Canvas):
     def bild_nr(self):
         """Welches Bild der Schleife gerade zu sehen ist."""
         return self._bild_nr
+
+    def wechseln(self, animation):
+        """Tauscht die Szene aus – etwa vom Abend zum Morgen.
+
+        Was sonst auf der Leinwand liegt (Text, eine :class:`Figur` …), bleibt
+        darüber liegen. Lief die alte Szene, läuft die neue weiter.
+        """
+        lief = self.laeuft
+        self.anhalten()
+        for element in self._elemente + [self._hintergrund_element]:
+            if element is not None:
+                self.delete(element)
+        self.animation = animation
+        self._folgen, self._elemente, self._bild_nr = [], [], 0
+        self.configure(width=animation.breite, height=animation.hoehe)
+        self._laden()
+        # Die neuen Bilder unter alles, was schon dasteht – der Hintergrund ganz nach unten.
+        for element in reversed(self._elemente):
+            self.tag_lower(element)
+        if self._hintergrund_element is not None:
+            self.tag_lower(self._hintergrund_element)
+        if lief:
+            self.starten()
 
     @property
     def laeuft(self):
@@ -218,6 +242,69 @@ class Buehne(tk.Canvas):
         # grossen Maßstab belegt eine Szene um die 50 MB.
         self._folgen = []
         self._hintergrund = None
+
+
+class Figur:
+    """Eine bewegte Figur über einer Leinwand: eine durchsichtige Schleife, die sich verschieben lässt.
+
+    Gedacht für ein Bild, das sich in sich bewegt und dabei durch eine Szene
+    zieht – den Hubschrauber im Abschluss, dessen Rotoren sich drehen, während
+    er landet. Gezeigt werden die Bilder seiner Ausschnitte (sie decken die
+    Figur ganz ab, ein Hintergrund käme doppelt darüber). ``x`` und ``y`` sind
+    die linke obere Ecke auf der Leinwand.
+
+    Die Figur läuft nicht selbst im Takt: Wer sie bewegt, blättert auch ihre
+    Bilder weiter (:meth:`zeige_bild`). So bleiben Flug und Rotor im selben
+    Takt, und jeder Moment lässt sich genau ansteuern.
+    """
+
+    TAG = "figur"
+
+    def __init__(self, leinwand, animation, x=0, y=0):
+        self.leinwand = leinwand
+        self.animation = animation
+        self._x, self._y = x, y
+        self._bild_nr = 0
+        self._folgen = [(ausschnitt, _folge_laden(leinwand, animation, ausschnitt))
+                        for ausschnitt in animation.ausschnitte]
+        self._elemente = [leinwand.create_image(x + ausschnitt.x, y + ausschnitt.y, image=folge[0], anchor="nw",
+                                                tags=(self.TAG,))
+                          for ausschnitt, folge in self._folgen]
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def bild_nr(self):
+        return self._bild_nr
+
+    @property
+    def elemente(self):
+        """Die Bilder der Figur auf der Leinwand – etwa, um etwas darunter zu legen."""
+        return tuple(self._elemente)
+
+    def verschieben(self, x, y):
+        """Setzt die linke obere Ecke der Figur auf ``x, y``."""
+        self._x, self._y = x, y
+        for element, (ausschnitt, _) in zip(self._elemente, self._folgen):
+            self.leinwand.coords(element, x + ausschnitt.x, y + ausschnitt.y)
+
+    def zeige_bild(self, nr):
+        """Zeigt ein bestimmtes Bild der Schleife."""
+        self._bild_nr = nr % self.animation.bilder
+        for element, (_, folge) in zip(self._elemente, self._folgen):
+            self.leinwand.itemconfigure(element, image=folge[self._bild_nr])
+
+    def entfernen(self):
+        """Nimmt die Figur von der Leinwand und gibt ihre Bilder frei."""
+        for element in self._elemente:
+            self.leinwand.delete(element)
+        self._elemente, self._folgen = [], []
 
 
 class Ablauf:

@@ -12,8 +12,7 @@ Jedes Level beginnt mit seiner Handbuchseite, danach kommen die Übungen.
 Die ID vom Startbildschirm reist bis zur Figurwahl mit; mit der Figur beginnt
 der Durchlauf, und die ID wird sein Pseudonym.
 
-Wo die echten Screens noch fehlen, stehen die Platzhalter aus
-:mod:`ui.platzhalter`; in Phase 7 werden hier die Level zusammengesetzt.
+In Phase 7 werden hier die Level zusammengesetzt.
 
 Nach einem Levelwechsel wird sofort umgeschaltet, egal was gerade offen ist
 (Projektregel 1). Eine offene Aufgabe hat der Spielstand da schon als
@@ -23,7 +22,7 @@ abgebrochen abgelegt und der Durchlauf gespeichert.
 from functools import partial
 
 from content import story
-from ui import figurwahl, funk, handbuch, intro, platzhalter, startbildschirm, uebung
+from ui import abschluss, figurwahl, funk, handbuch, intro, startbildschirm, uebung
 from ui.hauptfenster import Hauptfenster
 
 #: Mit diesem Screen beginnt das Spiel.
@@ -97,7 +96,7 @@ def funksprueche_zeigen(fenster):
 def nach_levelwechsel(fenster, wechsel):
     """Zeigt, was auf ein Level folgt – das nächste Handbuch oder den Abschluss."""
     if wechsel.spielende:
-        fenster.zeige(platzhalter.Abschluss, durch_zeitablauf=wechsel.durch_zeitablauf)
+        fenster.zeige(abschluss.Abschluss, durch_zeitablauf=wechsel.durch_zeitablauf)
         return
     hinweis = (
         f"Die Zeit für Level {wechsel.altes_level} ist abgelaufen – weiter geht es "

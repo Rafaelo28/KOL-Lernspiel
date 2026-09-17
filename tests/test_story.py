@@ -282,6 +282,24 @@ def test_es_gibt_eine_beschriftung_fuer_den_warten_button():
     assert story.BESCHRIFTUNG_WARTEN.strip()
 
 
+def test_die_rettung_sagt_dass_es_freunde_sind():
+    """Gejagt wird die Crew von Polizei, CIA und Interpol – ein Hubschrauber
+    allein sähe am Ende wie die Festnahme aus (Arbeitsplan 6.8)."""
+    text = " ".join(story.RETTUNG.absaetze)
+    assert text.startswith("Das ist nicht die Polizei")
+    for stichwort in ("Diamant", "Crew", "winkt"):
+        assert stichwort in text
+
+
+def test_das_ende_kommt_in_der_richtigen_reihenfolge():
+    """Warten, einschlafen, aufwachen, gerettet – dann der Schlusstext."""
+    reihe = [story.NACHTHIMMEL, story.EINSCHLAFEN, story.AUFWACHEN, story.RETTUNG, story.ABSCHLUSS]
+    stellen = [story.ERZAEHLTEXTE.index(erzaehltext) for erzaehltext in reihe]
+    assert stellen == sorted(stellen)
+    assert "Rotorblätter" in " ".join(story.AUFWACHEN.absaetze)
+    assert len(story.EINSCHLAFEN.absaetze) == 2, "Der zweite Absatz steht allein auf Schwarz."
+
+
 # ───────────────────────────────────────────────────────────────────────────
 # 6. Die Wortlaute stammen aus dem Konzept
 # ───────────────────────────────────────────────────────────────────────────
