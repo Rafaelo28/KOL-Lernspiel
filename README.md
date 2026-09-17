@@ -140,7 +140,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `animation.py` | Spielt vorgerenderte Animationen ab |
 | `startbildschirm.py` | Der Startbildschirm: Titelbild mit funkelndem Diamanten, Feld für die ID, „Spiel starten“ |
 | `figurwahl.py` | Die Figurwahl: Vorgeschichte und fünf Karten mit Rollen-Symbol; erst wählen, dann bestätigen |
-| `intro.py` | Der Story-Intro: die Absturz-Szene mit dem Erzähltext, Absatz für Absatz |
+| `erzaehlszene.py` | Erzähltext vor einer Szene, Absatz für Absatz: der Story-Intro und die kurzen Texte zwischen den Aufgaben |
 | `handbuch.py` | Bobs Handbuch als aufgeschlagenes Buch: Doppelseiten zum Blättern (Knöpfe, Tasten, Mausrad, Seitenecken), umschlagende Blätter, das Vigenère-Quadrat; neben jedem Beispiel das Werkzeug mit markiertem Schritt; auch mitten in einer Aufgabe zum Nachschlagen |
 | `buchsatz.py` | Der Satz des Handbuchs: welcher Text auf welche Buchseite kommt – mit den Regeln aus dem Buchdruck |
 | `buchleinwand.py` | Das aufgeschlagene Buch als Leinwand – Bild, Schriften, Stempel, Zeichnen; Handbuch und Übung teilen es sich |
@@ -292,7 +292,7 @@ dürfen nicht im Repository landen.
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
 | 6     | Tkinter-Oberfläche                           | fertig  |
-| 7     | Level zusammensetzen                         | in Arbeit (7.1 fertig) |
+| 7     | Level zusammensetzen                         | in Arbeit (7.1–7.3 fertig) |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
 `main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom

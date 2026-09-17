@@ -16,7 +16,7 @@ tk = pytest.importorskip("tkinter")
 from content import charaktere, story  # noqa: E402
 from game import levelablauf, zusatzaufgaben  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
-from ui import ablauf, funk, handbuch, uebung  # noqa: E402
+from ui import ablauf, erzaehlszene, funk, handbuch, uebung  # noqa: E402
 
 FIGUR = charaktere.VIC_MORENO
 
@@ -92,6 +92,25 @@ def _loesen(fenster, sekunden=0.0, uhr=None):
 NORMALTEMPO = 60.0
 
 
+def _spielen_bis(fenster, uhr, bedingung, hoechstens=40):
+    """Löst Aufgabe um Aufgabe, bis ein Screen die Bedingung erfüllt."""
+    for _ in range(hoechstens):
+        screen = fenster.aktueller_screen
+        if bedingung(screen):
+            return screen
+        if getattr(screen, "aufgabe", None) is None:
+            screen.weiter()                              # Handbuch
+        else:
+            _loesen(fenster, NORMALTEMPO, uhr)
+    raise AssertionError("Der gesuchte Screen kam nie.")
+
+
+def _level_ablaufen_lassen(fenster, uhr, level):
+    """Lässt das Zeitfenster eines Levels ablaufen, ohne etwas zu lösen."""
+    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[level])
+    fenster._takt()
+
+
 # ───────────────────────────────────────────────────────────────────────────
 # 1. Die Reihenfolge im Level
 # ───────────────────────────────────────────────────────────────────────────
@@ -164,3 +183,85 @@ def test_eine_laufende_uebung_wird_nicht_abgebrochen(fenster, bei_der_uebung, uh
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1] - 1)
     assert fenster.aktueller_screen is screen
     assert screen.aufgabe is fenster.durchlauf.spielstand.aktuelle_aufgabe
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 4. Die Erzähltexte an ihrem Platz (7.2)
+# ───────────────────────────────────────────────────────────────────────────
+
+def test_beim_abgefangenen_funkspruch_kommt_der_hinweis_zur_haeufigkeitsanalyse(fenster, bei_der_uebung, uhr):
+    """Er gehört dorthin, wo ein sichtbar langer Geheimtext dasteht (Arbeitsplan 7.2)."""
+    screen = _spielen_bis(fenster, uhr,
+                          lambda s: isinstance(s, funk.Funk) and s.funkspruch is story.FUNKSPRUCH_VERFOLGER)
+    assert screen.hinweis == " ".join(story.HINWEIS_HAEUFIGKEITSANALYSE.absaetze)
+    assert screen.erzaehlung == story.FUNKSPRUCH_VERFOLGER.einleitung, "Zuerst die Einleitung …"
+    screen.anzeige_vervollstaendigen()
+    assert screen.erzaehlung == screen.hinweis, "… und dann, wenn alles dasteht, der Hinweis."
+
+
+def test_die_anderen_funksprueche_haben_keinen_hinweis(fenster, bei_der_uebung, uhr):
+    screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, funk.Funk))
+    assert screen.funkspruch is story.FUNKSPRUCH_ERSTER_RUF
+    assert screen.hinweis == ""
+    screen.anzeige_vervollstaendigen()
+    assert screen.erzaehlung == story.FUNKSPRUCH_ERSTER_RUF.einleitung
+
+
+def test_nach_dem_abgefangenen_funkspruch_kommt_der_uebergang_zu_level_3(fenster, bei_der_uebung, uhr):
+    """Er ist der Wendepunkt der Geschichte und bekommt deshalb eine eigene Szene."""
+    screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, erzaehlszene.Erzaehlszene))
+    assert screen.text == story.UEBERGANG_ZU_LEVEL_3.absaetze[0]
+    assert fenster.durchlauf.spielstand.aktuelles_level == 2, "Noch läuft Level 2 …"
+    for _ in story.UEBERGANG_ZU_LEVEL_3.absaetze:
+        screen.weiter()
+    handbuchseite = fenster.aktueller_screen
+    assert isinstance(handbuchseite, handbuch.Handbuch) and handbuchseite.seite.level == 3
+    assert handbuchseite.einleitung == story.EINSTIEG_LEVEL_3.absaetze
+
+
+def test_ohne_den_abgefangenen_funkspruch_kommt_kein_uebergang(fenster, bei_der_uebung, uhr):
+    """Er spricht davon, was der Feind funkt – wer das nie gehört hat, liest es nicht."""
+    for level in (1, 2):
+        _level_ablaufen_lassen(fenster, uhr, level)
+    screen = fenster.aktueller_screen
+    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 3
+    assert not fenster.durchlauf.spielstand.wurde_gestellt(story.FUNKSPRUCH_VERFOLGER)
+    assert screen.einleitung == story.EINSTIEG_LEVEL_3.absaetze
+
+
+def test_laeuft_die_zeit_ueber_dem_funkspruch_ab_faellt_der_uebergang_aus(fenster, bei_der_uebung, uhr):
+    """Projektregel 1: Ist die Zeit um, wird sofort gewechselt – ohne Erzählpause."""
+    _spielen_bis(fenster, uhr, lambda s: isinstance(s, funk.Funk)
+                 and s.funkspruch is story.FUNKSPRUCH_VERFOLGER)
+    _level_ablaufen_lassen(fenster, uhr, 2)
+    screen = fenster.aktueller_screen
+    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 3
+    assert screen.hinweis, "Stattdessen sagt der Hinweis über dem Buch, dass die Zeit ablief."
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 5. Level 3: die Reflexionsfrage vor dem Standort (7.3)
+# ───────────────────────────────────────────────────────────────────────────
+
+def test_vor_dem_standort_kommt_die_reflexionsfrage(fenster, bei_der_uebung, uhr):
+    """Erst die Frage allein, dann die Antwort – und dann erst das Funkgerät."""
+    frage, antwort = story.REFLEXIONSFRAGE_LEVEL_3.absaetze
+    screen = _spielen_bis(fenster, uhr,
+                          lambda s: isinstance(s, erzaehlszene.Erzaehlszene) and s.text == frage)
+    assert fenster.durchlauf.spielstand.aktuelles_level == 3
+    screen.weiter()
+    assert screen.text == antwort, "Die Antwort kommt erst auf Klick – vorher denkt man selbst nach."
+    screen.weiter()
+    funkgeraet = fenster.aktueller_screen
+    assert isinstance(funkgeraet, funk.Funk)
+    assert funkgeraet.funkspruch is story.FUNKSPRUCH_STANDORT
+
+
+def test_nach_dem_letzten_funkspruch_kommt_der_abschluss(fenster, bei_der_uebung, uhr):
+    from ui import abschluss
+
+    screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, abschluss.Abschluss), hoechstens=60)
+    assert fenster.durchlauf.spielstand.ist_durchgespielt
+    assert screen.hinweis == "", "Kein Level endete am Timer."
+    kennungen = [b.aufgabe.kennung for b in fenster.durchlauf.spielstand.erledigte_aufgaben]
+    assert kennungen[-2:] == ["standort", "bob_zweite_antwort"]

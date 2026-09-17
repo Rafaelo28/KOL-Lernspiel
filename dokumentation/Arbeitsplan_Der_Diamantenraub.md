@@ -471,7 +471,8 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     Funken, dem zurückgelassenen Diamantensack und Fußspuren, die vom Wrack
     wegführen (`grafik/wrack.svg`). Wie Animationen entstehen:
     `dokumentation/Animationen.md`
-  - `ui/intro.py` zeigt die drei Absätze aus `story.INTRO` nacheinander im
+  - `ui/erzaehlszene.py` (bis Phase 7 `ui/intro.py`) zeigt die drei Absätze
+    aus `story.INTRO` nacheinander im
     Nachthimmel oben rechts – dort bewegt sich nichts, und der Text liegt nicht
     über dem Feuer. Ein Absatz auf einmal: Neunzig Wörter am Stück über einer
     bewegten Szene wären zu viel
@@ -855,10 +856,27 @@ Hinweis auf die Häufigkeitsanalyse → Story-Übergang ohne Bob
   ähnlich langer Sätze üben (2.2), gibt es keine längste Übung mehr. Der
   Hinweis gehört zum Feind-Funkspruch: Dort liegt ein sichtbar langer
   Geheimtext vor den Spielenden (`story.HINWEIS_HAEUFIGKEITSANALYSE`)
+- **Umgesetzt:** Der Hinweis erscheint über dem Gerät, **sobald die Nachricht
+  ganz hereingekommen ist** – er tritt dort an die Stelle der Einleitung. Zwei
+  Gründe: Genau dann steht der lange Geheimtext vollständig auf dem Glas,
+  worauf der Satz zielt; und eine Zeile mehr passt über dem Gerät nicht mehr
+  ins Fenster (`ui/funk.py`, Parameter `hinweis`)
+- **Der Übergang zu Level 3** bekommt eine eigene Erzählszene am Ende von
+  Level 2 (`ui/erzaehlszene.py` vor dem Nachtlager): Er ist der Wendepunkt der
+  Geschichte, und über dem Handbuch von Level 3 hätte er zusammen mit dem
+  Einstieg nicht mehr ins Fenster gepasst. Er kommt nur, wenn der abgefangene
+  Funkspruch wirklich dran war – er spricht von ihm. Läuft die Zeit von
+  Level 2 ab, wird sofort gewechselt (Projektregel 1), und er entfällt
 
 ### 7.3 Level 3 (Vigenère)
 Handbuch inkl. Quadrat → Übungen → Reflexionsfrage → Standort senden →
 Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
+- **Umgesetzt:** Die Reflexionsfrage läuft als Erzählszene vor dem
+  Standort-Funkspruch: erst die Frage allein ("Warum hilft eine
+  Häufigkeitsanalyse hier nicht mehr direkt weiter?"), auf Klick die Antwort,
+  dann das Funkgerät (`ablauf.ERZAEHLUNG_VOR_FUNKSPRUCH`). Danach folgen
+  Standort und Bobs zweite Antwort, und mit dem Levelende der Abschluss aus
+  6.8 – dort steht der Warten-Knopf
 
 ### 7.4 Kompletter Durchlauf am Stück
 - Einmal von Start bis Ende ohne Abbruch durchspielen

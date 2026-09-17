@@ -720,11 +720,16 @@ def test_ein_zweiter_durchlauf_im_selben_fenster_ist_verboten(fenster):
 def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, tmp_path):
     """Ein Durchlauf, bei dem jede Aufgabe gelöst wird – vom Titel bis zur Rettung."""
     _bis_zur_uebung(fenster)
-    while not isinstance(fenster.aktueller_screen, abschluss.Abschluss):
-        uhr.weiter(60)                                # so schnell ist niemand: keine Zusatzaufgaben
-        _loesen(fenster)
-        if isinstance(fenster.aktueller_screen, handbuch.Handbuch):
-            _klick(fenster, "Zu den Übungen")         # das nächste Level beginnt
+    for _ in range(60):
+        screen = fenster.aktueller_screen
+        if isinstance(screen, abschluss.Abschluss):
+            break
+        if getattr(screen, "aufgabe", None) is None:
+            screen.weiter()                           # Handbuchseite oder Erzähltext
+        else:
+            uhr.weiter(60)                            # so schnell ist niemand: keine Zusatzaufgaben
+            _loesen(fenster)
+    assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
     assert fenster.aktueller_screen.hinweis == ""                # kein Level endete am Timer
     assert fenster.durchlauf.spielstand.ist_durchgespielt
     assert fenster.kopfzeile == ("Die Rettung", "")

@@ -124,9 +124,16 @@ class Funk(Screen):
     ``fortsetzen`` setzt den offenen Funkspruch fort, statt ihn neu zu stellen –
     so kommt man vom Nachschlagen zurück; ``entwurf`` ist, was dabei schon in
     der Eingabezeile stand.
+
+    ``hinweis`` ist ein Satz, der über dem Gerät erscheint, **sobald die
+    Nachricht ganz da ist** – beim abgefangenen Funkspruch der zur
+    Häufigkeitsanalyse (Arbeitsplan 7.2). Er tritt an die Stelle der
+    Einleitung, statt eine Zeile mehr zu brauchen: Der Platz über dem Gerät
+    ist knapp, und genau dann steht der lange Geheimtext vollständig auf dem
+    Glas – darauf zielt der Satz.
     """
 
-    def __init__(self, fenster, funkspruch, danach, fortsetzen=False, entwurf=""):
+    def __init__(self, fenster, funkspruch, danach, fortsetzen=False, entwurf="", hinweis=""):
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(handbuch.ABSTAND_KNAPP))
         self.funkspruch = funkspruch
@@ -146,11 +153,13 @@ class Funk(Screen):
         self._rueckmeldung_oben = 0
         self._rueckmeldung = []
 
-        # Über dem Gerät: die Einleitung aus der Geschichte, später der Erzähltext zum Rest.
+        # Über dem Gerät: die Einleitung aus der Geschichte, dann der Hinweis,
+        # später der Erzähltext zum Rest – immer in derselben Zeile.
+        self._hinweis = hinweis
         breite = handbuch.textbreite(self)
         erzaehlschrift = tkfont.nametofont(stil.SCHRIFT_ERZAEHLUNG)
         hoehe = max(len(umbrechen(text, erzaehlschrift, breite)) or 1
-                    for text in (funkspruch.einleitung, funkspruch.weiterrechnen))
+                    for text in (funkspruch.einleitung, funkspruch.weiterrechnen, hinweis))
         self._erzaehlung = tk.Label(self, text=funkspruch.einleitung, bg=stil.FARBE_NACHT, fg=stil.FARBE_SAND,
                                     font=stil.SCHRIFT_ERZAEHLUNG, anchor="nw", justify="left", wraplength=breite,
                                     height=hoehe)
@@ -197,6 +206,11 @@ class Funk(Screen):
     def erzaehlung(self):
         """Der Text über dem Gerät."""
         return self._erzaehlung.cget("text")
+
+    @property
+    def hinweis(self):
+        """Der Satz, der über dem Gerät steht, sobald die Nachricht ganz da ist – meist leer."""
+        return self._hinweis
 
     @property
     def ist_beendet(self):
@@ -316,6 +330,7 @@ class Funk(Screen):
         self._nachricht_zeichnen()
         if self.eingetippt:
             self.lampe("empfang", True)
+            self._hinweis_zeigen()
             return
         self.lampe("empfang", self._getippt // ZEICHEN_JE_TAKT % 4 < 2)
         self.spaeter(TAKT_MS, self._eintippen)
@@ -325,6 +340,17 @@ class Funk(Screen):
         self._getippt = len(self.aufgabe.anzeigetext)
         self._nachricht_zeichnen()
         self.lampe("empfang", self.funkspruch.richtung == story.EMPFANGEN)
+        self._hinweis_zeigen()
+
+    def _hinweis_zeigen(self):
+        """Der Hinweis tritt über dem Gerät an die Stelle der Einleitung.
+
+        Erst jetzt: Er spricht von dem Geheimtext, der nun ganz auf dem Glas
+        steht. Ist der Rest schon aufgelöst, steht dort der Erzähltext dazu –
+        der bleibt.
+        """
+        if self._hinweis and not self._rest_frei:
+            self._erzaehlung.configure(text=self._hinweis)
 
     def _nachricht_zeichnen(self):
         """Die Nachricht, soweit sie da ist: der zu rechnende Anfang hell und unterstrichen, der Rest matt."""

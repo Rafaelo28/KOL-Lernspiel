@@ -22,7 +22,7 @@ tk = pytest.importorskip("tkinter")
 from tkinter import font as tkfont  # noqa: E402
 
 from content import charaktere, story  # noqa: E402
-from ui import ablauf, figurwahl, hauptfenster, intro, stil  # noqa: E402
+from ui import ablauf, erzaehlszene, figurwahl, hauptfenster, stil  # noqa: E402
 from ui.animation import ANIMATIONSORDNER  # noqa: E402
 
 PROJEKT = Path(__file__).resolve().parent.parent
@@ -361,7 +361,7 @@ def test_mit_der_bestaetigung_beginnt_der_durchlauf(fenster):
     screen.bestaetigen()
     assert fenster.durchlauf.spielstand.figur == charaktere.AMARA_NWOSU
     assert fenster.durchlauf.spielstand.pseudonym == "2-07"   # die ID vom Startbildschirm
-    assert isinstance(fenster.aktueller_screen, intro.Intro)
+    assert isinstance(fenster.aktueller_screen, erzaehlszene.Erzaehlszene)
     assert fenster.durchlauf.spielstand.aktuelles_level is None   # die Uhr läuft noch nicht
 
 
@@ -373,4 +373,4 @@ def test_ein_zweites_bestaetigen_startet_keinen_zweiten_durchlauf(fenster):
     screen.bestaetigen()
     screen.bestaetigen()                       # der alte Screen ist schon abgerissen
     assert fenster.durchlauf.spielstand.figur == charaktere.VIC_MORENO
-    assert isinstance(fenster.aktueller_screen, intro.Intro)
+    assert isinstance(fenster.aktueller_screen, erzaehlszene.Erzaehlszene)

@@ -210,7 +210,7 @@ gelten für den Maßstab 1 und gehen durch `self.px(…)`.
 
 Die Bühne hält beim Screen-Wechsel von selbst an und gibt ihre Bilder frei.
 Text lässt sich mit `self.buehne.create_text(...)` über die Szene legen – so
-macht es `ui/intro.py`. Eine Bühne, die erst auf einen Klick hin laufen soll, zeigt
+macht es `ui/erzaehlszene.py`. Eine Bühne, die erst auf einen Klick hin laufen soll, zeigt
 bis dahin Bild 0; `anhalten()` und `zeige_bild(0)` setzen sie wieder zurück
 (so die Karten in `ui/figurwahl.py`).
 

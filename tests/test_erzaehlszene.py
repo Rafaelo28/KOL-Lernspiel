@@ -1,8 +1,9 @@
-"""Tests für den Story-Intro (Arbeitsplan 6.3): ui/intro.py.
+"""Tests für die Erzählszene (Arbeitsplan 6.3 und Phase 7): ui/erzaehlszene.py.
 
-Geprüft wird, was die Spielenden erleben: die drei Absätze nacheinander, die
+Geprüft wird, was die Spielenden erleben: die Absätze nacheinander, die
 laufende Szene dahinter, und dass die Uhr von Level 1 erst mit dem letzten
-Klick beginnt – der Intro kostet keine Levelzeit.
+Klick beginnt – der Intro kostet keine Levelzeit. Dieselbe Szene trägt in
+Phase 7 die kurzen Erzähltexte zwischen den Aufgaben.
 
 Braucht eine Bildschirmanzeige, sonst übersprungen.
 """
@@ -12,7 +13,7 @@ import pytest
 tk = pytest.importorskip("tkinter")
 
 from content import charaktere, story  # noqa: E402
-from ui import ablauf, figurwahl, handbuch, intro  # noqa: E402
+from ui import ablauf, erzaehlszene, figurwahl, handbuch  # noqa: E402
 
 
 @pytest.fixture
@@ -43,8 +44,11 @@ def aufrufe():
 
 @pytest.fixture
 def screen(fenster, aufrufe):
+    """Der Intro, wie ihn ui/ablauf.py zeigt: die Absturz-Szene mit dem Intro-Text."""
     fenster.starte_durchlauf(charaktere.VIC_MORENO)
-    return fenster.zeige(intro.Intro, danach=aufrufe.append)
+    return fenster.zeige(erzaehlszene.Erzaehlszene, absaetze=story.INTRO.absaetze,
+                         danach=aufrufe.append, titel=ablauf.TITEL_INTRO,
+                         szene=erzaehlszene.SZENE_WRACK, letzter_knopf=ablauf.KNOPF_HANDBUCH)
 
 
 def _knopftext(screen):
@@ -68,7 +72,7 @@ def test_weiter_blaettert_absatz_fuer_absatz(screen):
 def test_der_letzte_knopf_schlaegt_das_handbuch_auf(screen, aufrufe, fenster):
     for _ in range(len(story.INTRO.absaetze) - 1):
         screen.weiter()
-    assert _knopftext(screen) == intro.LETZTER_KNOPF
+    assert _knopftext(screen) == ablauf.KNOPF_HANDBUCH
     assert aufrufe == []
     screen.weiter()
     assert aufrufe == [fenster]
@@ -76,6 +80,7 @@ def test_der_letzte_knopf_schlaegt_das_handbuch_auf(screen, aufrufe, fenster):
 
 def test_die_szene_laeuft_sobald_der_intro_zu_sehen_ist(screen):
     assert screen.buehne.laeuft
+    assert screen.buehne.animation.name == erzaehlszene.SZENE_WRACK
 
 
 def test_der_schatten_zeigt_denselben_text(screen):
@@ -112,12 +117,31 @@ def test_der_intro_passt_ins_fenster(screen, wurzel, platz):
     assert wurzel.winfo_reqheight() <= platz[1]
 
 
+@pytest.mark.parametrize("massstab", [1, 1.5])
+@pytest.mark.parametrize("erzaehltext", [story.UEBERGANG_ZU_LEVEL_3, story.REFLEXIONSFRAGE_LEVEL_3],
+                         ids=lambda e: e.kennung)
+def test_auch_die_zwischentexte_passen_vor_ihre_szene(fenster, wurzel, platz, aufrufe, erzaehltext):
+    """Sie laufen vor dem Nachtlager – dort steht der Text oben links, neben dem Mond."""
+    fenster.starte_durchlauf(charaktere.VIC_MORENO)
+    screen = fenster.zeige(erzaehlszene.Erzaehlszene, absaetze=erzaehltext.absaetze,
+                           danach=aufrufe.append, titel="Probe", szene=erzaehlszene.SZENE_LAGER)
+    for nr in range(len(erzaehltext.absaetze)):
+        if nr:
+            screen.weiter()
+        screen.update_idletasks()
+        x0, y0, x1, y1 = screen.buehne.bbox(screen._text)
+        assert x0 >= 0 and y0 >= 0
+        assert x1 <= screen.buehne.animation.breite / 2, "Rechts steht der Mond."
+        assert y1 < screen.buehne.animation.hoehe * .45, "Unten liegt das Lager."
+    assert wurzel.winfo_reqwidth() <= platz[0] and wurzel.winfo_reqheight() <= platz[1]
+
+
 def test_der_intro_kostet_keine_levelzeit(fenster):
     """Die Uhr von Level 1 beginnt erst mit dem letzten Klick (Arbeitsplan 7.1)."""
     fenster.zeige(figurwahl.Figurwahl, danach=ablauf.figur_gewaehlt)
     fenster.aktueller_screen.waehle(charaktere.ELENA_DUARTE)
     fenster.aktueller_screen.bestaetigen()
-    assert isinstance(fenster.aktueller_screen, intro.Intro)
+    assert isinstance(fenster.aktueller_screen, erzaehlszene.Erzaehlszene)
     assert fenster.durchlauf.spielstand.aktuelles_level is None
     for _ in story.INTRO.absaetze:
         fenster.aktueller_screen.weiter()

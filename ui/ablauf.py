@@ -30,11 +30,32 @@ from functools import partial
 
 from content import story
 from game import levelablauf
-from ui import abschluss, figurwahl, funk, handbuch, intro, startbildschirm, uebung
+from ui import abschluss, erzaehlszene, figurwahl, funk, handbuch, startbildschirm, uebung
 from ui.hauptfenster import Hauptfenster
 
 #: Mit diesem Screen beginnt das Spiel.
 STARTSCREEN = startbildschirm.Startbildschirm
+
+#: Ein Satz aus der Geschichte, der über dem Funkgerät steht, sobald die
+#: Nachricht ganz da ist. Beim abgefangenen Funkspruch liegt dann ein sichtbar
+#: langer Geheimtext vor einem – dorthin gehört der Hinweis auf die
+#: Häufigkeitsanalyse (Arbeitsplan 7.2).
+HINWEIS_ZUM_FUNKSPRUCH = {
+    story.FUNKSPRUCH_VERFOLGER.kennung: " ".join(story.HINWEIS_HAEUFIGKEITSANALYSE.absaetze),
+}
+
+#: Die Erzählszenen und ihre Titel in der Kopfzeile.
+TITEL_INTRO = "Der Absturz"
+TITEL_UEBERGANG = "Zeit für etwas Stärkeres"
+TITEL_REFLEXION = "Kurz nachgedacht"
+#: Der letzte Knopf des Intros – danach beginnt die Uhr von Level 1.
+KNOPF_HANDBUCH = "Handbuch aufschlagen"
+
+#: Erzähltexte, die vor einem Funkspruch eingeblendet werden: vor dem eigenen
+#: Standort die Reflexionsfrage zu Level 3 (Arbeitsplan 7.3).
+ERZAEHLUNG_VOR_FUNKSPRUCH = {
+    story.FUNKSPRUCH_STANDORT.kennung: (story.REFLEXIONSFRAGE_LEVEL_3, TITEL_REFLEXION),
+}
 
 
 def figurwahl_zeigen(fenster, spieler_id):
@@ -54,7 +75,15 @@ def figur_gewaehlt(fenster, figur, spieler_id=None):
     im Spiel verlangt der Startbildschirm eine ID.
     """
     fenster.starte_durchlauf(figur, pseudonym=spieler_id)
-    fenster.zeige(intro.Intro, danach=level_1_beginnen)
+    erzaehlszene_zeigen(fenster, story.INTRO, TITEL_INTRO, danach=level_1_beginnen,
+                        szene=erzaehlszene.SZENE_WRACK, letzter_knopf=KNOPF_HANDBUCH)
+
+
+def erzaehlszene_zeigen(fenster, erzaehltext, titel, danach,
+                        szene=erzaehlszene.SZENE_LAGER, letzter_knopf=erzaehlszene.KNOPF_WEITER):
+    """Ein Erzähltext vor einer Szene – Absatz für Absatz (:mod:`ui.erzaehlszene`)."""
+    fenster.zeige(erzaehlszene.Erzaehlszene, absaetze=erzaehltext.absaetze, danach=danach,
+                  titel=titel, szene=szene, letzter_knopf=letzter_knopf)
 
 
 def level_1_beginnen(fenster):
@@ -86,7 +115,7 @@ def weiter_im_level(fenster):
     elif schritt.art == levelablauf.SCHRITT_FUNKSPRUCH:
         funkspruch_zeigen(fenster, schritt.funkspruch)
     else:
-        fenster.durchlauf.naechstes_level()
+        level_beenden(fenster)
 
 
 def uebung_zeigen(fenster, zusatzaufgabe=False):
@@ -95,8 +124,40 @@ def uebung_zeigen(fenster, zusatzaufgabe=False):
 
 
 def funkspruch_zeigen(fenster, funkspruch):
-    """Ein echter Funkspruch am Funkgerät – der nächste, der in diesem Level ansteht."""
-    fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=weiter_im_level)
+    """Ein echter Funkspruch am Funkgerät – der nächste, der in diesem Level ansteht.
+
+    Führt ein Erzähltext dorthin, kommt er davor: vor dem eigenen Standort die
+    Reflexionsfrage, mit der Level 3 aus den Übungen herausführt.
+    """
+    vorher = ERZAEHLUNG_VOR_FUNKSPRUCH.get(funkspruch.kennung)
+    if vorher is not None:
+        erzaehltext, titel = vorher
+        erzaehlszene_zeigen(fenster, erzaehltext, titel,
+                            danach=partial(funkgeraet_zeigen, funkspruch=funkspruch))
+        return
+    funkgeraet_zeigen(fenster, funkspruch)
+
+
+def funkgeraet_zeigen(fenster, funkspruch):
+    """Der Funkspruch am Gerät, ohne Vorrede."""
+    fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=weiter_im_level,
+                  hinweis=HINWEIS_ZUM_FUNKSPRUCH.get(funkspruch.kennung, ""))
+
+
+def level_beenden(fenster):
+    """Das Level ist durch – davor steht, was die Geschichte dazu noch sagt.
+
+    Nach dem abgefangenen Funkspruch ist das der Übergang zu Level 3 ("Der
+    Feind nutzt genau die Methode, die du gerade verwendest"). Wer ihn nie
+    gehört hat, liest ihn auch nicht – und wenn die Zeit von Level 2 abläuft,
+    wird ohnehin sofort gewechselt (Projektregel 1).
+    """
+    stand = fenster.durchlauf.spielstand
+    if stand.aktuelles_level == 2 and stand.wurde_gestellt(story.FUNKSPRUCH_VERFOLGER):
+        erzaehlszene_zeigen(fenster, story.UEBERGANG_ZU_LEVEL_3, TITEL_UEBERGANG,
+                            danach=lambda fenster: fenster.durchlauf.naechstes_level())
+        return
+    fenster.durchlauf.naechstes_level()
 
 
 def nach_levelwechsel(fenster, wechsel):
