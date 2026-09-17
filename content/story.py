@@ -384,8 +384,8 @@ EINSTIEG_LEVEL_3 = Erzaehltext(
 REFLEXIONSFRAGE_LEVEL_3 = Erzaehltext(
     kennung="reflexionsfrage_level_3",
     absaetze=(
-        "Kurz nachgedacht: Warum hilft eine Häufigkeitsanalyse hier nicht mehr "
-        "direkt weiter?",
+        "Warum hilft eine Häufigkeitsanalyse hier eigentlich nicht mehr direkt "
+        "weiter?",
         "Bei der Substitution steht ein Buchstabe immer für dasselbe "
         "Geheimzeichen. Bei Vigenère hängt es davon ab, welcher "
         "Schlüsselbuchstabe gerade an der Reihe ist – dasselbe E wird mal zu "
