@@ -885,6 +885,18 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
   absichtlich viele Fehlversuche mit Fortschritt eingeben, bis die Zeit
   knapp wird – alle Funksprüche des Levels müssen trotzdem drankommen (siehe
   "Vorrang" oben)
+- **Umgesetzt** (`tests/test_spielablauf.py`): Beide Durchläufe laufen als
+  Test von der Figurwahl bis zur Rettung. Der eine löst jede Aufgabe, der
+  andere rechnet an jeder Übung mit falschen, aber besser werdenden Eingaben
+  herum und lässt die Uhr laufen, bis die Zeit knapp wird. Beide kommen bei
+  allen fünf Funksprüchen an, keine Aufgabe wird abgebrochen; im Trödel-Fall
+  fallen die zweite Übung und die Zusatzaufgaben aus
+- **Durchgeklickt:** Ein Skript spielt das Spiel durch und fotografiert jeden
+  Screen – 38 Bilder vom Titelbild bis zum Abschluss, in der Reihenfolge
+  Handbuch → zwei Übungen → Funksprüche je Level, Übergangsszene nach Level 2,
+  Reflexionsfrage in Level 3. Nichts bleibt hängen, kein Screen springt
+- **Mutationstest der Ablaufregeln:** alle 24 Mutationen fallen auf (dafür
+  drei Tests ergänzt, eine überflüssige Abfrage entfernt)
 
 ---
 

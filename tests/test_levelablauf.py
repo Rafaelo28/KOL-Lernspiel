@@ -185,6 +185,19 @@ def test_wer_schnell_ist_bekommt_eine_zusatzaufgabe():
     assert stand.naechster_schritt.art == SCHRITT_ZUSATZAUFGABE
 
 
+def test_bei_knapper_zeit_ist_am_spielstand_keine_zusatzaufgabe_mehr_faellig():
+    """Auch wer schnell war, bekommt keine Extraaufgabe mehr, wenn die Funksprüche warten."""
+    uhr = Uhr()
+    stand = _stand(uhr)
+    for _ in range(BASIS_UEBUNGEN_JE_LEVEL):
+        stand.naechste_uebung()
+        _loese(stand, sekunden=1, uhr=uhr)
+    assert stand.zusatzaufgabe_faellig
+    uhr.weiter(stand.verbleibende_sekunden - _knappe_zeit(LEVEL_1))
+    assert not stand.zusatzaufgabe_faellig
+    assert stand.naechster_schritt.art == SCHRITT_FUNKSPRUCH
+
+
 def test_wer_troedelt_kommt_trotzdem_zum_funkspruch():
     """Der Fall aus dem Arbeitsplan: lange an den Übungen, aber die Geschichte läuft weiter."""
     uhr = Uhr()

@@ -147,13 +147,14 @@ def funkgeraet_zeigen(fenster, funkspruch):
 def level_beenden(fenster):
     """Das Level ist durch – davor steht, was die Geschichte dazu noch sagt.
 
-    Nach dem abgefangenen Funkspruch ist das der Übergang zu Level 3 ("Der
-    Feind nutzt genau die Methode, die du gerade verwendest"). Wer ihn nie
-    gehört hat, liest ihn auch nicht – und wenn die Zeit von Level 2 abläuft,
-    wird ohnehin sofort gewechselt (Projektregel 1).
+    Nach Level 2 ist das der Übergang zu Level 3 ("Der Feind nutzt genau die
+    Methode, die du gerade verwendest"). Hierher kommt man nur, wenn die
+    Funksprüche des Levels erledigt sind – der abgefangene war also dran, und
+    der Satz passt. Läuft dagegen die Zeit ab, wird sofort gewechselt
+    (Projektregel 1) und der Übergang entfällt.
     """
     stand = fenster.durchlauf.spielstand
-    if stand.aktuelles_level == 2 and stand.wurde_gestellt(story.FUNKSPRUCH_VERFOLGER):
+    if stand.aktuelles_level == 2:
         erzaehlszene_zeigen(fenster, story.UEBERGANG_ZU_LEVEL_3, TITEL_UEBERGANG,
                             danach=lambda fenster: fenster.durchlauf.naechstes_level())
         return

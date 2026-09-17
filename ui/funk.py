@@ -346,10 +346,10 @@ class Funk(Screen):
         """Der Hinweis tritt über dem Gerät an die Stelle der Einleitung.
 
         Erst jetzt: Er spricht von dem Geheimtext, der nun ganz auf dem Glas
-        steht. Ist der Rest schon aufgelöst, steht dort der Erzähltext dazu –
-        der bleibt.
+        steht. Wurde der Rest schon aufgelöst, schreibt :meth:`_stand_zeigen`
+        gleich danach den Erzähltext dazu darüber.
         """
-        if self._hinweis and not self._rest_frei:
+        if self._hinweis:
             self._erzaehlung.configure(text=self._hinweis)
 
     def _nachricht_zeichnen(self):

@@ -343,8 +343,13 @@ def test_der_knopf_fuer_den_rest_kommt_nach_dem_anfang_und_gibt_die_ganze_nachri
     assert screen.knopftext == funk.KNOPF_WEITER
 
 
-def test_ueber_dem_geraet_ist_von_anfang_an_platz_fuer_den_laengeren_der_beiden_texte(fenster):
-    """Sonst spränge das Gerät nach unten, wenn der Erzähltext zum Rest länger ist als die Einleitung."""
+@pytest.mark.parametrize("langer_text", ["einleitung", "weiterrechnen", "hinweis"])
+def test_ueber_dem_geraet_ist_von_anfang_an_platz_fuer_den_laengsten_text(fenster, langer_text):
+    """Sonst spränge das Gerät nach unten, sobald ein längerer Text darüberkommt.
+
+    Nacheinander stehen dort die Einleitung, der Hinweis aus der Geschichte und
+    der Erzähltext zum Rest – der Platz richtet sich nach dem längsten.
+    """
     from tkinter import font as tkfont
 
     from ui.buchsatz import umbrechen
@@ -352,9 +357,11 @@ def test_ueber_dem_geraet_ist_von_anfang_an_platz_fuer_den_laengeren_der_beiden_
     _zum_funkgeraet(fenster, 1)
     fenster.durchlauf.aufgabe_abschliessen()                  # der erste Ruf – für den Probefunkspruch Platz machen
     lang = " ".join([story.FUNKSPRUCH_BOB_ERSTE_ANTWORT.weiterrechnen] * 3)
-    funkspruch = story.FUNKSPRUCH_BOB_ERSTE_ANTWORT._replace(kennung="probe", einleitung="Es rauscht.",
-                                                             weiterrechnen=lang)
-    screen = fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=lambda f: None)
+    kurz = "Es rauscht."
+    texte = {feld: (lang if feld == langer_text else kurz) for feld in ("einleitung", "weiterrechnen")}
+    funkspruch = story.FUNKSPRUCH_BOB_ERSTE_ANTWORT._replace(kennung="probe", **texte)
+    screen = fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=lambda f: None,
+                           hinweis=lang if langer_text == "hinweis" else "")
     zeilen = len(umbrechen(lang, tkfont.nametofont(stil.SCHRIFT_ERZAEHLUNG), int(screen._erzaehlung.cget("wraplength"))))
     assert zeilen >= 2 and int(screen._erzaehlung.cget("height")) >= zeilen
 

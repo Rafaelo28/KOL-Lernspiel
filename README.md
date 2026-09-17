@@ -292,7 +292,7 @@ dürfen nicht im Repository landen.
 | 4     | Prüfung und Fehlerhandling                   | fertig  |
 | 5     | Zustand, Timer, CSV-Logging                  | fertig  |
 | 6     | Tkinter-Oberfläche                           | fertig  |
-| 7     | Level zusammensetzen                         | in Arbeit (7.1–7.3 fertig) |
+| 7     | Level zusammensetzen                         | fertig  |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
 `main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom

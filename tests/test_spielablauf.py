@@ -9,14 +9,17 @@ jemand bei den Übungen trödelt.
 Braucht eine Bildschirmanzeige, sonst übersprungen.
 """
 
+import time
+
 import pytest
 
 tk = pytest.importorskip("tkinter")
 
 from content import charaktere, story  # noqa: E402
 from game import levelablauf, zusatzaufgaben  # noqa: E402
+from game.aufgabe import QUELLE_FUNKSPRUCH  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
-from ui import ablauf, erzaehlszene, funk, handbuch, uebung  # noqa: E402
+from ui import abschluss, ablauf, erzaehlszene, funk, handbuch, uebung  # noqa: E402
 
 FIGUR = charaktere.VIC_MORENO
 
@@ -199,6 +202,19 @@ def test_beim_abgefangenen_funkspruch_kommt_der_hinweis_zur_haeufigkeitsanalyse(
     assert screen.erzaehlung == screen.hinweis, "… und dann, wenn alles dasteht, der Hinweis."
 
 
+def test_der_hinweis_kommt_auch_wenn_die_nachricht_von_selbst_fertig_wird(fenster, bei_der_uebung,
+                                                                            uhr, wurzel):
+    """Im Spiel tippt sich die Nachricht Zeichen für Zeichen aufs Glas – kein Test drückt dabei etwas."""
+    screen = _spielen_bis(fenster, uhr,
+                          lambda s: isinstance(s, funk.Funk) and s.funkspruch is story.FUNKSPRUCH_VERFOLGER)
+    ende = time.monotonic() + 5
+    while not screen.eingetippt and time.monotonic() < ende:
+        wurzel.update()
+        time.sleep(0.005)
+    assert screen.eingetippt, "Die Nachricht kam nicht ganz herein."
+    assert screen.erzaehlung == screen.hinweis
+
+
 def test_die_anderen_funksprueche_haben_keinen_hinweis(fenster, bei_der_uebung, uhr):
     screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, funk.Funk))
     assert screen.funkspruch is story.FUNKSPRUCH_ERSTER_RUF
@@ -258,10 +274,82 @@ def test_vor_dem_standort_kommt_die_reflexionsfrage(fenster, bei_der_uebung, uhr
 
 
 def test_nach_dem_letzten_funkspruch_kommt_der_abschluss(fenster, bei_der_uebung, uhr):
-    from ui import abschluss
-
     screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, abschluss.Abschluss), hoechstens=60)
     assert fenster.durchlauf.spielstand.ist_durchgespielt
     assert screen.hinweis == "", "Kein Level endete am Timer."
     kennungen = [b.aufgabe.kennung for b in fenster.durchlauf.spielstand.erledigte_aufgaben]
     assert kennungen[-2:] == ["standort", "bob_zweite_antwort"]
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 6. Der ganze Durchlauf (7.4)
+# ───────────────────────────────────────────────────────────────────────────
+
+def _gestellte_funksprueche(fenster):
+    return [b.aufgabe.kennung for b in fenster.durchlauf.spielstand.erledigte_aufgaben
+            if b.aufgabe.quelle == QUELLE_FUNKSPRUCH]
+
+
+def _durchspielen(fenster, uhr, vor_der_uebung=None, hoechstens=80):
+    """Spielt bis zum Abschluss. ``vor_der_uebung`` darf vorher noch etwas tun."""
+    for _ in range(hoechstens):
+        screen = fenster.aktueller_screen
+        if isinstance(screen, abschluss.Abschluss):
+            return screen
+        if getattr(screen, "aufgabe", None) is None:
+            screen.weiter()                       # Handbuchseite oder Erzähltext
+            continue
+        if vor_der_uebung is not None and isinstance(screen, uebung.Uebung):
+            vor_der_uebung(fenster, uhr)
+        _loesen(fenster, NORMALTEMPO, uhr)
+    raise AssertionError("Der Abschluss kam nie.")
+
+
+def _herumrechnen(fenster, uhr, versuche=3, sekunden=30.0):
+    """Falsche Eingaben, die jedes Mal einen Buchstaben näher an die Lösung kommen.
+
+    Solche Versuche zählen nicht gegen die Drei (Projektregel 2) – sie kosten
+    nur Zeit, und genau darum geht es hier.
+    """
+    screen = fenster.aktueller_screen
+    loesung = screen.aufgabe.loesung
+    falsch = "".join(z if z == " " else ("Q" if z != "Q" else "Z") for z in loesung)
+    for nr in range(1, versuche + 1):
+        uhr.weiter(sekunden)
+        screen._feld.delete(0, "end")
+        screen._feld.insert(0, loesung[:nr] + falsch[nr:])
+        screen.pruefen()
+    assert not fenster.durchlauf.spielstand.aktuelle_bearbeitung.loesung_angezeigt, (
+        "Wer Fortschritt macht, bekommt die Lösung nicht vorgesetzt."
+    )
+
+
+def test_ein_ganzer_durchlauf_kommt_bei_allen_funkspruechen_an(fenster, bei_der_uebung, uhr):
+    """Vom Start bis zur Rettung, jede Aufgabe gelöst – nirgends bleibt man hängen."""
+    _durchspielen(fenster, uhr)
+    stand = fenster.durchlauf.spielstand
+    assert stand.ist_durchgespielt
+    assert _gestellte_funksprueche(fenster) == [f.kennung for f in story.FUNKSPRUECHE]
+    assert all(not b.abgebrochen for b in stand.erledigte_aufgaben)
+    assert [stand.levelende(level) for level in (1, 2, 3)] == ["vorzeitig"] * 3
+
+
+def test_ein_troedel_durchlauf_kommt_trotzdem_bei_allen_funkspruechen_an(fenster, bei_der_uebung, uhr):
+    """Der Fall aus dem Arbeitsplan (7.4): an den Übungen wird getrödelt, bis die Zeit knapp wird.
+
+    Die Funksprüche tragen die Geschichte – sie müssen trotzdem alle drankommen.
+    """
+    def troedeln(fenster, uhr):
+        _herumrechnen(fenster, uhr)
+        stand = fenster.durchlauf.spielstand
+        grenze = (zusatzaufgaben.erwartete_dauer_funksprueche(stand.offene_funksprueche)
+                  + zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung())
+                  + zusatzaufgaben.MINDESTRESTZEIT_SEKUNDEN)
+        uhr.weiter(max(0.0, stand.verbleibende_sekunden - grenze + 1))   # gerade so unter die Grenze
+
+    _durchspielen(fenster, uhr, vor_der_uebung=troedeln)
+    stand = fenster.durchlauf.spielstand
+    assert _gestellte_funksprueche(fenster) == [f.kennung for f in story.FUNKSPRUECHE]
+    assert stand.uebungen_im_level(1) == 1, "Für die zweite Übung war die Zeit zu knapp …"
+    assert stand.zusatzaufgaben_im_level(1) == 0, "… und für eine Zusatzaufgabe erst recht."
+    assert all(not b.abgebrochen for b in stand.erledigte_aufgaben)
