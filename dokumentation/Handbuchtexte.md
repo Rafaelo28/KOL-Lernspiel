@@ -47,19 +47,6 @@ Verschlüsseln = im Alphabet **vorwärts** springen.
 Entschlüsseln = im Alphabet **rückwärts** springen.
 Am Rand des Alphabets (Z bzw. A) einfach am anderen Ende weitermachen.
 
-### Übungswörter (10 Stück – eins wird zufällig ausgewählt)
-
- 1. HUND
- 2. KATZE
- 3. MAUS
- 4. BURG
- 5. FELS
- 6. WALD
- 7. STERN
- 8. MOND
- 9. SAND
-10. TURM
-
 ---
 
 ## Seite 2: Die monoalphabetische Substitution
@@ -117,19 +104,6 @@ das "E". So lässt sich die Zuordnung Stück für Stück knacken. Das nennt man
 
 Je länger der Text, desto leichter wird er über Häufigkeitsanalyse knackbar
 – kurze Nachrichten sind sicherer als lange.
-
-### Übungssätze (10 Stück – einer wird zufällig ausgewählt)
-
- 1. ALLES OK
- 2. ICH BIN HIER
- 3. KOMM SCHNELL
- 4. WO BIST DU
- 5. BLEIB RUHIG
- 6. WEG IST FREI
- 7. GEFAHR NAH
- 8. ZEIT WIRD KNAPP
- 9. PLAN WIRD NEU
-10. HILFE WIRD GEBRAUCHT
 
 ---
 
@@ -196,17 +170,29 @@ Bei der einfachen Substitution steht jeder Buchstabe der Nachricht immer für da
 
 **Entschlüsseln** = In der Zeile des Schlüsselbuchstabens den Geheimbuchstaben suchen – der Spaltenkopf darüber ist der entschlüsselte Buchstabe.
 
+---
+
+## Übungssätze für alle drei Seiten
+
+Alle drei Seiten üben mit denselben zehn Sätzen. Sie sind ähnlich lang (10 bis
+14 Buchstaben): Eine Übung zu Seite 3 soll nicht schon wegen eines längeren
+Textes länger dauern als eine zu Seite 1 – schwerer wird es durch das
+Verfahren, nicht durch die Länge. *(Nachträglich entschieden. Vorher hatte jede
+Seite eine eigene Liste: Wörter mit 4–5 Buchstaben für Caesar, Sätze mit 7–18
+für die Substitution und 12–18 für Vigenère. Übernommen sind die Sätze, die
+schon 10 bis 14 Buchstaben lang waren.)*
+
 ### Übungssätze (10 Stück – einer wird zufällig ausgewählt)
 
- 1. ICH BIN IN SICHERHEIT
- 2. STANDORT UNBEKANNT
- 3. NAHE DEM WRACK
- 4. RICHTUNG NORDEN
- 5. KEIN WASSER MEHR
- 6. VERFOLGER SIND NAH
- 7. BRAUCHE SOFORT HILFE
- 8. BIN NOCH AM LEBEN
- 9. WARTE AUF RETTUNG
-10. SIGNAL WIRD SCHWACH
+ 1. ICH BIN HIER
+ 2. KOMM SCHNELL
+ 3. BLEIB RUHIG
+ 4. WEG IST FREI
+ 5. ZEIT WIRD KNAPP
+ 6. PLAN WIRD NEU
+ 7. NAHE DEM WRACK
+ 8. RICHTUNG NORDEN
+ 9. KEIN WASSER MEHR
+10. BIN NOCH AM LEBEN
 
 Ein technischer Hinweis für die Umsetzung: Bei allen drei Seiten sollte pro Übungsaufgabe zusätzlich zufällig entschieden werden, ob das gewählte Wort/der Satz **ver-** oder **entschlüsselt** werden soll (bei Verschlüsseln zeigt ihr den Klartext, bei Entschlüsseln müsst ihr das Wort vorher selbst mit demselben Schlüssel verschlüsseln und als Aufgabe anzeigen). Auch bei Level 3 sollte der zufällig gewählte Schlüssel (Schlüsselwort) mit variieren, nicht immer "ROT" – sonst wird die Aufgabe nach ein paar Durchläufen vorhersehbar. Zwei, drei kurze Schlüsselwörter (z. B. ROT, WEG, TAG) als weitere Zufallsauswahl würden das lösen.

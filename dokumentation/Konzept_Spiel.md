@@ -119,6 +119,12 @@ Satz → längere Nachricht), zufällig generiert. Bei der letzten, längeren
 Aufgabe der Hinweis: "Alle Zuordnungen durchprobieren würde ewig dauern –
 hier hilft nur eine Häufigkeitsanalyse."
 
+*Nachträglich entschieden:* Die Übungen werden nicht länger. Alle drei Level
+üben mit denselben zehn, ähnlich langen Sätzen (10–14 Buchstaben) – schwerer
+wird es durch das Verfahren, nicht durch die Länge, und die Bearbeitungszeiten
+der Level bleiben vergleichbar. Der Hinweis auf die Häufigkeitsanalyse kommt
+deshalb zum abgefangenen Funkspruch, der ja sichtbar lang ist.
+
 **Reale Anwendung – nur Empfangen:** Bevor du weiterfunken kannst, rauscht es
 im Gerät – ein fremder Funkspruch wird aufgefangen: "Quadrant 4 ist
 durchsucht, wir gehen jetzt auf Quadrant 7 – wir finden den Verräter." Die

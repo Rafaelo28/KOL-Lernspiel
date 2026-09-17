@@ -94,6 +94,13 @@ Beleg für die Prozessdokumentation.*
 ### 2.2 `content/uebungen.py`
 - Die 10 Caesar-Wörter, 10 Substitutionssätze, 10 Vigenère-Sätze
 - Liste der Vigenère-Schlüsselwörter (ROT, WEG, TAG, …)
+- **Nachtrag – ein Pool für alle Level:** Mit eigenen Listen je Seite wäre
+  eine Übung in Level 3 schon wegen ihres Textes länger gewesen als eine in
+  Level 1 (4–5 Buchstaben gegen 12–18), und in den Messdaten liesse sich nicht
+  trennen, was am Verfahren liegt und was an der Länge. Jetzt üben alle drei
+  Level mit denselben zehn Sätzen (`UEBUNGSTEXTE`), alle 10 bis 14 Buchstaben
+  lang – übernommen aus den früheren Listen. `Handbuchtexte.md` führt sie als
+  eine Liste für alle drei Seiten
 
 ### 2.3 `content/story.py`
 - Intro-Text (Absturz), Bobs zwei Funksprüche, der abgefangene Feind-Funkspruch,
@@ -122,6 +129,15 @@ Schlüssel, erwartete Lösung, Level.
 - Bei "entschlüsseln": Text vorher selbst verschlüsseln und **den** anzeigen
 - Bei Level 3 zusätzlich zufälliges Schlüsselwort
 - Kein Wort zweimal hintereinander im selben Level
+- **Nachtrag – der gemeinsame Pool wird verteilt** (siehe 2.2): Zöge jedes
+  Level frei aus denselben zehn Sätzen, käme ein Satz, den jemand in Level 1
+  verschlüsselt hat, in Level 2 womöglich zum Entschlüsseln wieder – und
+  liesse sich aus dem Gedächtnis eintippen. Deshalb wird der Pool einmal je
+  Durchlauf aus dem Seed gemischt und in drei Abschnitte geteilt (4, 3, 3
+  Sätze); jedes Level beginnt an seinem Abschnitt und geht der Reihe nach
+  weiter. Die ersten drei Übungen eines Levels kommen in keinem anderen vor,
+  zweimal hintereinander kommt kein Satz. Rekonstruieren lässt sich eine
+  Übung weiterhin aus Seed und Kennung (`uebung_nachbauen`)
 
 ### 3.3 Zufalls-Seed protokollierbar machen
 - Seed einmal pro Durchlauf setzen und ins Log schreiben, damit später
@@ -260,8 +276,9 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   Ablauf fest: "Übungsaufgaben (+ ggf. Zusatzaufgaben) → echte Sendeaufgabe
   → Bobs Antwort". Nach einem Funkspruch hat die Geschichte begonnen
 - **Die Restzeit wird am längsten Text im Pool gemessen**, nicht an der eben
-  gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest, und in
-  Level 2 liegen 7 gegen 18 Buchstaben dazwischen
+  gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest. (Seit
+  alle Level einen Pool haben, liegen nur noch 10 gegen 14 Buchstaben
+  dazwischen.)
 - Die Obergrenze gilt im Spielstand selbst: `naechste_uebung(zusatzaufgabe=True)`
   wird darüber hinaus abgewiesen, auch wenn die Oberfläche nicht vorher fragt
 
@@ -720,8 +737,13 @@ Bobs erste verschlüsselte Antwort entschlüsseln
   `ui/ablauf.py` (`level_1_beginnen`)
 
 ### 7.2 Level 2 (Substitution)
-Handbuch → Übungen mit steigender Textlänge → Hinweis auf Häufigkeitsanalyse →
-abgefangener Feind-Funkspruch (nur entschlüsseln) → Story-Übergang ohne Bob
+Handbuch → Übungen → abgefangener Feind-Funkspruch (nur entschlüsseln) mit dem
+Hinweis auf die Häufigkeitsanalyse → Story-Übergang ohne Bob
+- **Geändert:** Ursprünglich wurden die Übungen länger (Wort → Satz → längere
+  Nachricht), und die letzte trug den Hinweis. Seit alle Level aus einem Pool
+  ähnlich langer Sätze üben (2.2), gibt es keine längste Übung mehr. Der
+  Hinweis gehört zum Feind-Funkspruch: Dort liegt ein sichtbar langer
+  Geheimtext vor den Spielenden (`story.HINWEIS_HAEUFIGKEITSANALYSE`)
 
 ### 7.3 Level 3 (Vigenère)
 Handbuch inkl. Quadrat → Übungen → Reflexionsfrage → Standort senden →
@@ -801,6 +823,10 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 
 - [ ] Level-2-Zuordnungstrick (Tastatur) gegen den echten Testbogen (Anhang A2)
       gegenchecken – kollidiert er mit einer Testantwort?
+- [ ] **Übungssätze der Kontrollgruppe:** Das Spiel übt in allen drei Leveln
+      mit denselben zehn Sätzen (10–14 Buchstaben, `Handbuchtexte.md`). Die
+      Papieraufgaben der Frontalunterrichts-Gruppe sollten aus derselben Liste
+      kommen – sonst unterscheiden sich die Gruppen auch in der Textlänge.
 - [ ] **Übungsumfang gegen Anhang A4 abgleichen:** Die Spielgruppe rechnet pro
       echtem Funkspruch nur den Anfang von Hand (15–25 Buchstaben). Wenn die
       Frontalunterrichts-Gruppe auf Papier deutlich längere Texte bearbeitet,

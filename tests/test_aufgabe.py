@@ -200,7 +200,7 @@ def test_ein_falscher_rest_faellt_auf():
 # 4. Das Objekt trägt jede Übung aus dem Pool
 # ───────────────────────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("text", uebungen.UEBUNGSWOERTER_LEVEL_1, ids=lambda t: t)
+@pytest.mark.parametrize("text", uebungen.UEBUNGSTEXTE, ids=lambda t: t[:12])
 @pytest.mark.parametrize("richtung", [VERSCHLUESSELN, ENTSCHLUESSELN])
 def test_jede_caesar_uebung_laesst_sich_als_aufgabe_ausdruecken(text, richtung):
     """Vorgriff auf 3.2: Bei "entschlüsseln" wird der Geheimtext angezeigt."""
@@ -219,7 +219,7 @@ def test_jede_caesar_uebung_laesst_sich_als_aufgabe_ausdruecken(text, richtung):
     assert a.ist_geloest(a.loesung)
 
 
-@pytest.mark.parametrize("text", uebungen.UEBUNGSSAETZE_LEVEL_3, ids=lambda t: t[:12])
+@pytest.mark.parametrize("text", uebungen.UEBUNGSTEXTE, ids=lambda t: t[:12])
 @pytest.mark.parametrize("wort", uebungen.VIGENERE_SCHLUESSELWOERTER)
 def test_jede_vigenere_uebung_laesst_sich_als_aufgabe_ausdruecken(text, wort):
     anzeige = vigenere.verschluesseln(text, wort)
@@ -235,7 +235,7 @@ def test_jede_vigenere_uebung_laesst_sich_als_aufgabe_ausdruecken(text, wort):
     pruefe_aufgabe(a)
 
 
-@pytest.mark.parametrize("text", uebungen.UEBUNGSSAETZE_LEVEL_2, ids=lambda t: t[:12])
+@pytest.mark.parametrize("text", uebungen.UEBUNGSTEXTE, ids=lambda t: t[:12])
 def test_jede_substitutions_uebung_laesst_sich_als_aufgabe_ausdruecken(text):
     a = Aufgabe(
         kennung="l2",

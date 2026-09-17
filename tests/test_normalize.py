@@ -33,12 +33,9 @@ from crypto.normalize import (
 # ───────────────────────────────────────────────────────────────────────────
 
 # Das Uebungsmaterial des Handbuchs kommt seit Aufgabe 2.2 aus
-# content/uebungen.py. tests/test_uebungen.py haelt es gegen das Markdown der
-# Quelle; hier wird es nur benutzt.
-UEBUNGSWOERTER_CAESAR = list(uebungen.UEBUNGSWOERTER_LEVEL_1)
-UEBUNGSSAETZE_SUBSTITUTION = list(uebungen.UEBUNGSSAETZE_LEVEL_2)
-UEBUNGSSAETZE_VIGENERE = list(uebungen.UEBUNGSSAETZE_LEVEL_3)
-ALLE_UEBUNGSTEXTE = list(uebungen.ALLE_UEBUNGSTEXTE)
+# content/uebungen.py – ein Pool fuer alle drei Level. tests/test_uebungen.py
+# haelt es gegen das Markdown der Quelle; hier wird es nur benutzt.
+ALLE_UEBUNGSTEXTE = list(uebungen.UEBUNGSTEXTE)
 
 # Seite 2: Tastatur-Trick als Geheimalphabet
 # Q W E R T Z U I O P / A S D F G H J K L / Y X C V B N M
@@ -284,7 +281,7 @@ def test_normalisieren_ist_idempotent(eingabe):
     assert normalisieren(einmal) == einmal
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_SUBSTITUTION + UEBUNGSSAETZE_VIGENERE)
+@pytest.mark.parametrize("satz", ALLE_UEBUNGSTEXTE)
 def test_normalisieren_erhaelt_leerzeichenpositionen(satz):
     """Regel 3: Leerzeichen bleiben an genau denselben Stellen stehen."""
     positionen_vorher = [i for i, z in enumerate(satz) if z == LEERZEICHEN]
@@ -294,7 +291,7 @@ def test_normalisieren_erhaelt_leerzeichenpositionen(satz):
     assert len(ergebnis) == len(satz)
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_SUBSTITUTION + UEBUNGSSAETZE_VIGENERE)
+@pytest.mark.parametrize("satz", ALLE_UEBUNGSTEXTE)
 def test_normalisieren_erhaelt_leerzeichenpositionen_bei_kleinschreibung(satz):
     """Regel 3 gilt auch, wenn die Eingabe klein geschrieben wurde (Regel 1)."""
     ergebnis = normalisieren(satz.lower())

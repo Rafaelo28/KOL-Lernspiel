@@ -322,9 +322,11 @@ FUNKSPRUCH_VERFOLGER = Funkspruch(
     ),
 )
 
-#: Erscheint bei der letzten und längsten Übungsaufgabe von Level 2
-#: (Arbeitsplan 7.2). Er begründet, warum Durchprobieren nicht mehr reicht –
-#: eines der Lernziele aus Anhang A1.
+#: Erscheint zum abgefangenen Feind-Funkspruch in Level 2 (Arbeitsplan 7.2):
+#: Dort liegt ein sichtbar langer Geheimtext vor den Spielenden. Er begründet,
+#: warum Durchprobieren nicht mehr reicht – eines der Lernziele aus Anhang A1.
+#: (Ursprünglich stand er bei der längsten Übung; seit alle Level mit ähnlich
+#: langen Sätzen üben, gibt es die nicht mehr.)
 HINWEIS_HAEUFIGKEITSANALYSE = Erzaehltext(
     kennung="hinweis_haeufigkeitsanalyse",
     absaetze=(

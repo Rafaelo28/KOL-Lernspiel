@@ -237,9 +237,11 @@ def test_eine_abgebrochene_zeile_ist_von_drei_fehlversuchen_zu_unterscheiden(tmp
     stand = Spielstand(charaktere.VIC_MORENO, Zufallsquelle(99), "P10", zeitgeber=uhr)
     stand.starte_level(1)
     stand.naechste_uebung()
-    for nummer in range(3):
+    for _ in range(3):
         uhr.weiter(10)
-        stand.versuchen("X" * (nummer + 2))
+        # Immer dieselbe falsche Eingabe: Sie kommt nie näher an die Lösung,
+        # welcher Satz auch gezogen wurde – drei Versuche ohne Fortschritt.
+        stand.versuchen("XX")
     stand.aufgabe_abschliessen()
     stand.naechste_uebung()
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1])

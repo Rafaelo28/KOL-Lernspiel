@@ -33,11 +33,9 @@ from crypto.normalize import (
 
 # Das Übungsmaterial kommt seit Aufgabe 2.2 aus content/uebungen.py – dort
 # steht es einmal, und tests/test_uebungen.py hält es gegen das Markdown des
-# Handbuchs. Hier wird es nur noch benutzt, nicht mehr wiederholt.
-UEBUNGSWOERTER_LEVEL1 = uebungen.UEBUNGSWOERTER_LEVEL_1
-UEBUNGSSAETZE_LEVEL2 = uebungen.UEBUNGSSAETZE_LEVEL_2
-UEBUNGSSAETZE_LEVEL3 = uebungen.UEBUNGSSAETZE_LEVEL_3
-ALLE_UEBUNGSTEXTE = uebungen.ALLE_UEBUNGSTEXTE
+# Handbuchs. Hier wird es nur noch benutzt, nicht mehr wiederholt. Alle drei
+# Level ziehen aus diesem einen Pool.
+UEBUNGSTEXTE = uebungen.UEBUNGSTEXTE
 SCHLUESSELWOERTER = uebungen.VIGENERE_SCHLUESSELWOERTER
 
 # Die Caesar-Schlüssel sind kein Handbuch-Material, sondern bewusst gewählte
@@ -96,7 +94,7 @@ def test_formel_und_quadrat_stimmen_auch_beim_entschluesseln_ueberein():
             )
 
 
-@pytest.mark.parametrize("text", UEBUNGSSAETZE_LEVEL3)
+@pytest.mark.parametrize("text", UEBUNGSTEXTE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_ganze_saetze_lassen_sich_mit_dem_quadrat_nachvollziehen(text, schluesselwort):
     """Ein ganzer Übungssatz, Buchstabe für Buchstabe im Quadrat abgelesen.
@@ -121,7 +119,7 @@ def test_ganze_saetze_lassen_sich_mit_dem_quadrat_nachvollziehen(text, schluesse
 # 2. Rundlauf über das echte Handbuch-Material, alle drei Verfahren
 # ───────────────────────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("text", ALLE_UEBUNGSTEXTE)
+@pytest.mark.parametrize("text", UEBUNGSTEXTE)
 @pytest.mark.parametrize("schluessel", CAESAR_SCHLUESSEL)
 def test_rundlauf_caesar(text, schluessel):
     """entschluesseln(verschluesseln(x)) == x für alle Übungstexte."""
@@ -129,14 +127,14 @@ def test_rundlauf_caesar(text, schluessel):
     assert caesar.entschluesseln(geheim, schluessel) == normalisieren(text)
 
 
-@pytest.mark.parametrize("text", ALLE_UEBUNGSTEXTE)
+@pytest.mark.parametrize("text", UEBUNGSTEXTE)
 def test_rundlauf_substitution(text):
     """entschluesseln(verschluesseln(x)) == x für alle Übungstexte."""
     geheim = substitution.verschluesseln(text)
     assert substitution.entschluesseln(geheim) == normalisieren(text)
 
 
-@pytest.mark.parametrize("text", ALLE_UEBUNGSTEXTE)
+@pytest.mark.parametrize("text", UEBUNGSTEXTE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_rundlauf_vigenere(text, schluesselwort):
     """entschluesseln(verschluesseln(x)) == x für alle Übungstexte."""
@@ -148,7 +146,7 @@ def test_rundlauf_vigenere(text, schluesselwort):
 # 3. Die Textkonvention wirkt in allen drei Verfahren gleich
 # ───────────────────────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("text", ALLE_UEBUNGSTEXTE)
+@pytest.mark.parametrize("text", UEBUNGSTEXTE)
 def test_alle_verfahren_lassen_die_leerzeichen_an_ort_und_stelle(text):
     """Regel 3 muss in allen drei Verfahren identisch gelten."""
     klartext = normalisieren(text)
@@ -183,7 +181,7 @@ def test_alle_verfahren_normalisieren_ihre_eingabe_selbst(roh):
     assert vigenere.verschluesseln(roh, "WEG") == vigenere.verschluesseln(sauber, "WEG")
 
 
-@pytest.mark.parametrize("text", ALLE_UEBUNGSTEXTE)
+@pytest.mark.parametrize("text", UEBUNGSTEXTE)
 def test_jedes_ergebnis_ist_selbst_schon_normalisiert(text):
     """Der Geheimtext darf direkt angezeigt werden – ohne Nachbearbeitung."""
     for geheimtext in (
@@ -195,7 +193,7 @@ def test_jedes_ergebnis_ist_selbst_schon_normalisiert(text):
         assert set(geheimtext) <= set(ALPHABET) | {LEERZEICHEN}
 
 
-@pytest.mark.parametrize("text", ALLE_UEBUNGSTEXTE)
+@pytest.mark.parametrize("text", UEBUNGSTEXTE)
 def test_die_pruefung_aus_phase_4_akzeptiert_die_musterloesung(text):
     """vergleiche_tolerant() muss die richtige Lösung auch zerschrieben annehmen.
 

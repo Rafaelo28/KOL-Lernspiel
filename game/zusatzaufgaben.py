@@ -1,7 +1,7 @@
 """Adaptive Zusatzaufgaben (Arbeitsplan 5.4).
 
 Wer eine Aufgabe deutlich schneller löst als erwartet, bekommt eine weitere
-aus demselben Wortpool – damit die schnellen Kinder im festen Zeitfenster
+aus demselben Übungspool – damit die schnellen Kinder im festen Zeitfenster
 nicht dasitzen und warten, während die langsamen noch rechnen.
 
 Wie "erwartet" berechnet wird
@@ -49,9 +49,10 @@ kurz vor Schluss zu stellen heisst, sie unfertig abzubrechen – das frustriert
 und erzeugt eine Logzeile, die nur "Zeit war um" sagt.
 
 Welcher Text als Zusatzaufgabe kommt, steht vorher nicht fest. Gerechnet wird
-deshalb mit dem **längsten** Text im Pool des Levels, nicht mit der Aufgabe,
-die gerade gelöst wurde: In Level 2 liegen zwischen dem kürzesten und dem
-längsten Übungstext sieben gegen achtzehn Buchstaben.
+deshalb mit dem **längsten** Text im Pool, nicht mit der Aufgabe, die gerade
+gelöst wurde. Seit alle Level denselben Pool mit ähnlich langen Sätzen haben,
+liegen dazwischen nur noch 10 gegen 14 Buchstaben – aber auch vier Buchstaben
+mehr kosten eine Viertelminute.
 
 Warum nur Übungen eine Zusatzaufgabe auslösen
 ─────────────────────────────────────────────
@@ -113,27 +114,24 @@ def war_schnell(bearbeitung):
     return bearbeitung.benoetigte_sekunden < SCHNELL_WENN_UNTER_ANTEIL * erwartet
 
 
-def laengste_uebung(level):
-    """Die Buchstabenzahl des längsten Übungstextes eines Levels.
+def laengste_uebung():
+    """Die Buchstabenzahl des längsten Übungstextes – alle Level ziehen aus demselben Pool.
 
-    >>> laengste_uebung(1)
-    5
+    >>> laengste_uebung()
+    14
     """
-    return max(
-        len(_ohne_leerzeichen(text))
-        for text in _uebungen.UEBUNGSTEXTE_NACH_LEVEL[level]
-    )
+    return max(len(_ohne_leerzeichen(text)) for text in _uebungen.UEBUNGSTEXTE)
 
 
-def zeit_reicht_noch(level, verbleibende_sekunden):
-    """Bleibt genug Zeit, damit eine Zusatzaufgabe in ``level`` noch Sinn ergibt?
+def zeit_reicht_noch(verbleibende_sekunden):
+    """Bleibt im Level genug Zeit, damit eine Zusatzaufgabe noch Sinn ergibt?
 
     Gerechnet wird mit der **erwarteten** Dauer des längsten Textes im Pool,
     nicht mit dem eigenen Tempo: Sonst bekäme, wer besonders schnell war,
     noch kurz vor Schluss eine Aufgabe aufgedrückt. Und nicht mit der eben
     gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest.
     """
-    noetig = erwartete_dauer(laengste_uebung(level))
+    noetig = erwartete_dauer(laengste_uebung())
     return verbleibende_sekunden >= noetig + MINDESTRESTZEIT_SEKUNDEN
 
 
@@ -153,6 +151,4 @@ def ist_faellig(bearbeitung, verbleibende_sekunden, bisherige_zusatzaufgaben=0):
         return False
     if obergrenze_erreicht(bisherige_zusatzaufgaben):
         return False
-    return war_schnell(bearbeitung) and zeit_reicht_noch(
-        bearbeitung.aufgabe.level, verbleibende_sekunden
-    )
+    return war_schnell(bearbeitung) and zeit_reicht_noch(verbleibende_sekunden)

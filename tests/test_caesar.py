@@ -36,14 +36,26 @@ from crypto.normalize import (
 # Übungsmaterial aus dokumentation/Handbuchtexte.md
 # ---------------------------------------------------------------------------
 
-# Das Übungsmaterial kommt seit Aufgabe 2.2 aus content/uebungen.py.
-UEBUNGSWOERTER = list(uebungen.UEBUNGSWOERTER_LEVEL_1)
+# Das Übungsmaterial kommt seit Aufgabe 2.2 aus content/uebungen.py – ein Pool
+# für alle drei Level, lauter Sätze. Hier prüft es Regel 3 (Leerzeichen
+# bleiben stehen) an echten Sätzen.
+UEBUNGSSAETZE_MIT_LEERZEICHEN = list(uebungen.UEBUNGSTEXTE)
 
-# Level 2 und 3 zusammen – hier nur als mehrwortiges Testmaterial, um Regel 3
-# (Leerzeichen bleiben stehen) an echten Sätzen zu prüfen.
-UEBUNGSSAETZE_MIT_LEERZEICHEN = list(
-    uebungen.UEBUNGSSAETZE_LEVEL_2 + uebungen.UEBUNGSSAETZE_LEVEL_3
+# Einzelwörter ohne Leerzeichen als Gegenprobe, von Hand mit Schlüssel 3
+# gerechnet. Es sind die Übungswörter, die Handbuchseite 1 früher hatte.
+EINZELWOERTER_MIT_SCHLUESSEL_DREI = (
+    ("HUND", "KXQG"),
+    ("KATZE", "NDWCH"),
+    ("MAUS", "PDXV"),
+    ("BURG", "EXUJ"),
+    ("FELS", "IHOV"),
+    ("WALD", "ZDOG"),
+    ("STERN", "VWHUQ"),
+    ("MOND", "PRQG"),
+    ("SAND", "VDQG"),
+    ("TURM", "WXUP"),
 )
+EINZELWOERTER = [wort for wort, _ in EINZELWOERTER_MIT_SCHLUESSEL_DREI]
 
 
 # ---------------------------------------------------------------------------
@@ -95,23 +107,9 @@ def test_handbuch_alphabetzeile_fuer_schluessel_drei():
     assert caesar.verschluesseln(ALPHABET, 3) == "DEFGHIJKLMNOPQRSTUVWXYZABC"
 
 
-@pytest.mark.parametrize(
-    "klartext, geheimtext",
-    [
-        ("HUND", "KXQG"),
-        ("KATZE", "NDWCH"),
-        ("MAUS", "PDXV"),
-        ("BURG", "EXUJ"),
-        ("FELS", "IHOV"),
-        ("WALD", "ZDOG"),
-        ("STERN", "VWHUQ"),
-        ("MOND", "PRQG"),
-        ("SAND", "VDQG"),
-        ("TURM", "WXUP"),
-    ],
-)
-def test_alle_uebungswoerter_mit_schluessel_drei(klartext, geheimtext):
-    """Alle 10 Übungswörter von Seite 1, von Hand mit Schlüssel 3 gerechnet."""
+@pytest.mark.parametrize("klartext, geheimtext", EINZELWOERTER_MIT_SCHLUESSEL_DREI)
+def test_einzelwoerter_mit_schluessel_drei(klartext, geheimtext):
+    """Zehn Einzelwörter, von Hand mit Schlüssel 3 gerechnet."""
     assert caesar.verschluesseln(klartext, 3) == geheimtext
     assert caesar.entschluesseln(geheimtext, 3) == klartext
 
@@ -131,7 +129,7 @@ def test_alle_uebungswoerter_mit_schluessel_drei(klartext, geheimtext):
         ("TURM", 7, "ABYT"),
     ],
 )
-def test_uebungswoerter_mit_verschiedenen_schluesseln(
+def test_einzelwoerter_mit_verschiedenen_schluesseln(
     klartext, schluessel, geheimtext
 ):
     """Dieselben Wörter mit anderen Schlüsseln, ebenfalls von Hand gerechnet."""
@@ -291,7 +289,7 @@ def test_ergebnis_ist_selbst_schon_normalisiert():
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "text", UEBUNGSWOERTER + UEBUNGSSAETZE_MIT_LEERZEICHEN
+    "text", EINZELWOERTER + UEBUNGSSAETZE_MIT_LEERZEICHEN
 )
 @pytest.mark.parametrize("schluessel", [1, 3, 5, 13, 25, 26, 0, -3, 42])
 def test_rundlauf_ver_und_entschluesseln(text, schluessel):
@@ -301,7 +299,7 @@ def test_rundlauf_ver_und_entschluesseln(text, schluessel):
 
 
 @pytest.mark.parametrize(
-    "text", UEBUNGSWOERTER + UEBUNGSSAETZE_MIT_LEERZEICHEN
+    "text", EINZELWOERTER + UEBUNGSSAETZE_MIT_LEERZEICHEN
 )
 @pytest.mark.parametrize("schluessel", [2, 9, 17, -7])
 def test_rundlauf_in_der_gegenrichtung(text, schluessel):
@@ -315,7 +313,7 @@ def test_rundlauf_in_der_gegenrichtung(text, schluessel):
 
 
 @pytest.mark.parametrize(
-    "text", UEBUNGSWOERTER + UEBUNGSSAETZE_MIT_LEERZEICHEN
+    "text", EINZELWOERTER + UEBUNGSSAETZE_MIT_LEERZEICHEN
 )
 def test_gegen_die_unabhaengige_handbuch_referenz(text):
     """Modul und Nachschlage-Verfahren aus dem Handbuch müssen übereinstimmen."""

@@ -2,9 +2,10 @@
 
 Geprüft werden die vier Zusagen des Arbeitsplans – zufälliger Text, zufällige
 Richtung, bei "entschlüsseln" wird der Geheimtext angezeigt, kein Text zweimal
-hintereinander – und die Eigenschaft, an der Aufgabe 3.3 hängt: Derselbe Seed
-muss denselben Ablauf ergeben, sonst lässt sich später nicht rekonstruieren,
-wer welche Aufgaben bekommen hat.
+hintereinander –, dass die Level sich den Pool teilen, ohne sich ihre ersten
+Sätze gegenseitig vorwegzunehmen, und die Eigenschaft, an der Aufgabe 3.3
+hängt: Derselbe Seed muss denselben Ablauf ergeben, sonst lässt sich später
+nicht rekonstruieren, wer welche Aufgaben bekommen hat.
 
 Die Zufallstests laufen über viele Ziehungen mit festen Seeds. Ein einzelner
 Durchlauf beweist bei einem Generator nichts.
@@ -24,9 +25,11 @@ from game.aufgabe import (
     anwenden,
     pruefe_aufgabe,
 )
-from game.generator import Aufgabengenerator, aufgabe_aus_funkspruch
+from game.generator import Aufgabengenerator, abschnittsanfang, aufgabe_aus_funkspruch, uebung_nachbauen
+from game.zufallsquelle import Zufallsquelle
 
 LEVEL = (1, 2, 3)
+POOL = set(uebungen.UEBUNGSTEXTE)
 
 
 def _ziehungen(level, anzahl=200, seed=0):
@@ -34,33 +37,54 @@ def _ziehungen(level, anzahl=200, seed=0):
     return [generator.naechste_uebung(level) for _ in range(anzahl)]
 
 
+def _klartext(aufgabe):
+    return aufgabe.anzeigetext if aufgabe.richtung == VERSCHLUESSELN else aufgabe.loesung
+
+
 # ───────────────────────────────────────────────────────────────────────────
-# 1. Der Text kommt aus dem Pool des Levels
+# 1. Der Text kommt aus dem gemeinsamen Pool
 # ───────────────────────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("level", LEVEL)
-def test_der_klartext_stammt_immer_aus_dem_pool_des_levels(level):
-    pool = set(uebungen.UEBUNGSTEXTE_NACH_LEVEL[level])
+def test_der_klartext_stammt_immer_aus_dem_pool(level):
     for aufgabe in _ziehungen(level):
-        klartext = (
-            aufgabe.anzeigetext
-            if aufgabe.richtung == VERSCHLUESSELN
-            else aufgabe.loesung
-        )
-        assert klartext in pool, f"{klartext!r} steht nicht im Pool von Level {level}."
+        assert _klartext(aufgabe) in POOL, f"{_klartext(aufgabe)!r} steht nicht im Übungspool."
 
 
 @pytest.mark.parametrize("level", LEVEL)
 def test_auf_dauer_kommt_jeder_text_des_pools_dran(level):
-    """Sonst bekämen manche Übungswörter nie eine Chance."""
-    gezogen = set()
-    for aufgabe in _ziehungen(level, anzahl=400):
-        gezogen.add(
-            aufgabe.anzeigetext
-            if aufgabe.richtung == VERSCHLUESSELN
-            else aufgabe.loesung
-        )
-    assert gezogen == set(uebungen.UEBUNGSTEXTE_NACH_LEVEL[level])
+    """Sonst bekämen manche Übungssätze nie eine Chance."""
+    assert {_klartext(aufgabe) for aufgabe in _ziehungen(level, anzahl=len(POOL))} == POOL
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_die_ersten_uebungen_eines_levels_kommen_in_keinem_anderen_vor(seed):
+    """Sonst liesse sich ein Satz aus Level 1 in Level 2 aus dem Gedächtnis "entschlüsseln".
+
+    Der Pool wird geteilt: 4, 3 und 3 Sätze. So viele Übungen je Level sind
+    garantiert frei von Sätzen der anderen Level – mehr als die zwei Pflichtübungen.
+    """
+    quelle = Zufallsquelle(seed)
+    generator = Aufgabengenerator(quelle)
+    texte = {level: [_klartext(generator.naechste_uebung(level)) for _ in range(3 if level > 1 else 4)]
+             for level in LEVEL}
+    alle = [text for level in LEVEL for text in texte[level]]
+    assert len(set(alle)) == len(alle) == len(POOL), texte
+
+
+def test_die_abschnitte_teilen_den_pool_gleichmaessig():
+    assert [abschnittsanfang(level, 10) for level in LEVEL] == [0, 4, 7]
+    assert [abschnittsanfang(level, 9) for level in LEVEL] == [0, 3, 6]
+    assert [abschnittsanfang(level, 11) for level in LEVEL] == [0, 4, 8]
+
+
+def test_die_mischung_haengt_am_seed_und_an_nichts_sonst():
+    """Die Reihenfolge der Level darf die Sätze nicht verschieben – rekonstruiert wird je Level."""
+    vorwaerts, rueckwaerts = Aufgabengenerator(Zufallsquelle(77)), Aufgabengenerator(Zufallsquelle(77))
+    erst_level_1 = [_klartext(vorwaerts.naechste_uebung(level)) for level in (1, 1, 3, 3)]
+    erst_level_3 = [_klartext(rueckwaerts.naechste_uebung(level)) for level in (3, 3, 1, 1)]
+    assert erst_level_1 == erst_level_3[2:] + erst_level_3[:2]
+    assert _klartext(uebung_nachbauen(77, "uebung_l3_2")) == erst_level_1[3]
 
 
 @pytest.mark.parametrize("level", LEVEL)
@@ -71,13 +95,7 @@ def test_kein_text_kommt_zweimal_hintereinander(level, seed):
     Zweimal dasselbe Wort hintereinander wirkt wie ein Fehler im Spiel und
     verschenkt eine der wenigen Übungen im Zeitfenster.
     """
-    texte = []
-    for aufgabe in _ziehungen(level, anzahl=200, seed=seed):
-        texte.append(
-            aufgabe.anzeigetext
-            if aufgabe.richtung == VERSCHLUESSELN
-            else aufgabe.loesung
-        )
+    texte = [_klartext(aufgabe) for aufgabe in _ziehungen(level, anzahl=200, seed=seed)]
     wiederholungen = [
         (a, b) for a, b in zip(texte, texte[1:]) if a == b
     ]
@@ -90,12 +108,7 @@ def test_die_level_kommen_sich_nicht_in_die_quere():
     texte = {level: [] for level in LEVEL}
     for _ in range(60):
         for level in LEVEL:
-            aufgabe = generator.naechste_uebung(level)
-            texte[level].append(
-                aufgabe.anzeigetext
-                if aufgabe.richtung == VERSCHLUESSELN
-                else aufgabe.loesung
-            )
+            texte[level].append(_klartext(generator.naechste_uebung(level)))
     for level in LEVEL:
         folge = texte[level]
         assert not any(a == b for a, b in zip(folge, folge[1:]))
@@ -115,7 +128,7 @@ def test_beide_richtungen_kommen_vor(level):
 @pytest.mark.parametrize("level", LEVEL)
 def test_beim_entschluesseln_wird_der_geheimtext_angezeigt(level):
     """3.2: "Text vorher selbst verschlüsseln und den anzeigen"."""
-    pool = set(uebungen.UEBUNGSTEXTE_NACH_LEVEL[level])
+    pool = POOL
     geprueft = 0
     for aufgabe in _ziehungen(level):
         if aufgabe.richtung != ENTSCHLUESSELN:
@@ -132,10 +145,9 @@ def test_beim_entschluesseln_wird_der_geheimtext_angezeigt(level):
 
 @pytest.mark.parametrize("level", LEVEL)
 def test_beim_verschluesseln_wird_der_klartext_angezeigt(level):
-    pool = set(uebungen.UEBUNGSTEXTE_NACH_LEVEL[level])
     for aufgabe in _ziehungen(level):
         if aufgabe.richtung == VERSCHLUESSELN:
-            assert aufgabe.anzeigetext in pool
+            assert aufgabe.anzeigetext in POOL
 
 
 # ───────────────────────────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ Das Pflicht-Beispiel des Handbuchs (Seite 3, "HUND" mit "ROT"):
 'HUND'
 
 Und ein selbst durchgerechneter **mehrwortiger** Fall – daran hängt Regel 7.
-Übungssatz 3 von Handbuchseite 3 mit dem Schlüsselwort "TAG"::
+Der Übungssatz "NAHE DEM WRACK" mit dem Schlüsselwort "TAG"::
 
     Nachricht  N A H E   D E M   W R A C K
     Schlüssel  T A G T   A G T   A G T A G
@@ -56,11 +56,13 @@ from crypto.vigenere import entschluesseln, schluessel_ausrichten, verschluessel
 
 # Das Übungsmaterial und die Schlüsselwörter kommen seit Aufgabe 2.2 aus
 # content/uebungen.py. tests/test_uebungen.py hält sie gegen das Markdown des
-# Handbuchs; hier werden sie nur benutzt.
-UEBUNGSSAETZE_LEVEL3 = uebungen.UEBUNGSSAETZE_LEVEL_3
-UEBUNGSWOERTER_LEVEL1 = uebungen.UEBUNGSWOERTER_LEVEL_1
-UEBUNGSSAETZE_LEVEL2 = uebungen.UEBUNGSSAETZE_LEVEL_2
+# Handbuchs; hier werden sie nur benutzt. Alle drei Level üben mit diesem Pool.
+UEBUNGSSAETZE = uebungen.UEBUNGSTEXTE
 SCHLUESSELWOERTER = uebungen.VIGENERE_SCHLUESSELWOERTER
+
+# Kurze Einzelwörter ohne Leerzeichen als Gegenprobe – die Übungswörter, die
+# Handbuchseite 1 früher hatte.
+EINZELWOERTER = ("HUND", "KATZE", "MAUS", "BURG", "FELS", "WALD", "STERN", "MOND", "SAND", "TURM")
 
 # ───────────────────────────────────────────────────────────────────────────
 # Von Hand durchgerechnete Referenzwerte
@@ -73,18 +75,18 @@ HANDBERECHNETE_PAARE = (
     #   H(7)+R(17)=24 -> Y | U(20)+O(14)=34%26=8 -> I
     #   N(13)+T(19)=32%26=6 -> G | D(3)+R(17)=20 -> U
     ("HUND", "ROT", "YIGU"),
-    # Übungssatz Seite 2 Nr. 1, Schlüssel ROT. Schlüsselfolge R O T R O (Leer) T R:
+    # Zwei kurze Wörter, Schlüssel ROT. Schlüsselfolge R O T R O (Leer) T R:
     #   A(0)+R(17)=17 -> R | L(11)+O(14)=25 -> Z | L(11)+T(19)=30%26=4 -> E
     #   E(4)+R(17)=21 -> V | S(18)+O(14)=32%26=6 -> G | " "
     #   O(14)+T(19)=33%26=7 -> H | K(10)+R(17)=27%26=1 -> B
     ("ALLES OK", "ROT", "RZEVG HB"),
-    # Übungssatz Seite 3 Nr. 3, Schlüssel TAG (Schlüsselfolge TAGT AGT AGTAG):
+    # Übungssatz NAHE DEM WRACK, Schlüssel TAG (Schlüsselfolge TAGT AGT AGTAG):
     #   N+T=13+19=32%26=6 -> G | A+A=0 -> A | H+G=7+6=13 -> N | E+T=4+19=23 -> X
     #   D+A=3 -> D | E+G=4+6=10 -> K | M+T=12+19=31%26=5 -> F
     #   W+A=22 -> W | R+G=17+6=23 -> X | A+T=0+19=19 -> T
     #   C+A=2 -> C | K+G=10+6=16 -> Q
     ("NAHE DEM WRACK", "TAG", "GANX DKF WXTCQ"),
-    # Übungssatz Seite 3 Nr. 2, Schlüssel WEG (W=22, E=4, G=6):
+    # Zwei lange Wörter, Schlüssel WEG (W=22, E=4, G=6):
     #   S+W=18+22=40%26=14 -> O | T+E=19+4=23 -> X | A+G=0+6=6 -> G
     #   N+W=13+22=35%26=9 -> J | D+E=3+4=7 -> H | O+G=14+6=20 -> U
     #   R+W=17+22=39%26=13 -> N | T+E=19+4=23 -> X | " "
@@ -92,7 +94,7 @@ HANDBERECHNETE_PAARE = (
     #   K+W=10+22=32%26=6 -> G | A+E=0+4=4 -> E | N+G=13+6=19 -> T
     #   N+W=9 -> J | T+E=23 -> X
     ("STANDORT UNBEKANNT", "WEG", "OXGJHUNX AJFKGETJX"),
-    # Übungssatz Seite 3 Nr. 1, Schlüssel ROT (Schlüsselfolge ROT ROT RO TROTROTROT):
+    # Vier Wörter, Schlüssel ROT (Schlüsselfolge ROT ROT RO TROTROTROT):
     #   I+R=8+17=25 -> Z | C+O=2+14=16 -> Q | H+T=7+19=26%26=0 -> A
     #   B+R=1+17=18 -> S | I+O=8+14=22 -> W | N+T=13+19=32%26=6 -> G
     #   I+R=25 -> Z | N+O=13+14=27%26=1 -> B
@@ -100,7 +102,7 @@ HANDBERECHNETE_PAARE = (
     #   E+R=4+17=21 -> V | R+O=17+14=31%26=5 -> F | H+T=0 -> A | E+R=21 -> V
     #   I+O=22 -> W | T+T=19+19=38%26=12 -> M
     ("ICH BIN IN SICHERHEIT", "ROT", "ZQA SWG ZB LZQAVFAVWM"),
-    # Übungssatz Seite 3 Nr. 9, Schlüssel TAG (Schlüsselfolge TAGTA GTA GTAGTAG):
+    # Drei Wörter, Schlüssel TAG (Schlüsselfolge TAGTA GTA GTAGTAG):
     #   W+T=22+19=41%26=15 -> P | A+A=0 -> A | R+G=17+6=23 -> X
     #   T+T=38%26=12 -> M | E+A=4 -> E
     #   A+G=6 -> G | U+T=20+19=39%26=13 -> N | F+A=5 -> F
@@ -186,7 +188,7 @@ def test_regel7_schluesselzeile_ueberspringt_das_leerzeichen():
     assert schluessel_ausrichten("ALLES OK", "ROT") == "ROTRO TR"
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_LEVEL3 + UEBUNGSSAETZE_LEVEL2)
+@pytest.mark.parametrize("satz", UEBUNGSSAETZE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_regel7_geheimtext_ohne_leerzeichen_gleicht_zusammengeschriebenem_text(
     satz, schluesselwort
@@ -203,7 +205,7 @@ def test_regel7_geheimtext_ohne_leerzeichen_gleicht_zusammengeschriebenem_text(
     assert ohne_leerzeichen(mit_leerzeichen) == ohne
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_LEVEL3)
+@pytest.mark.parametrize("satz", UEBUNGSSAETZE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_regel7_gilt_auch_beim_entschluesseln(satz, schluesselwort):
     """Auch rückwärts darf das Leerzeichen den Schlüsselindex nicht weiterzählen."""
@@ -217,7 +219,7 @@ def test_regel7_gilt_auch_beim_entschluesseln(satz, schluesselwort):
 # ───────────────────────────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_LEVEL3 + UEBUNGSSAETZE_LEVEL2)
+@pytest.mark.parametrize("satz", UEBUNGSSAETZE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_regel3_leerzeichen_bleiben_an_denselben_stellen(satz, schluesselwort):
     """Geheimtext, Klartext und Schlüsselzeile haben dieselben Wortgrenzen."""
@@ -232,7 +234,7 @@ def test_regel3_leerzeichen_bleiben_an_denselben_stellen(satz, schluesselwort):
     assert _positionen_der_leerzeichen(schluesselzeile) == erwartete_positionen
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_LEVEL3)
+@pytest.mark.parametrize("satz", UEBUNGSSAETZE)
 def test_regel3_laenge_bleibt_erhalten(satz):
     """Klartext und Geheimtext sind gleich lang – sonst passt die Tabelle nicht."""
     normalisiert = normalisieren(satz)
@@ -251,25 +253,18 @@ def test_wortgrenzen_bleiben_wortweise_sichtbar():
 # ───────────────────────────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_LEVEL3)
+@pytest.mark.parametrize("satz", UEBUNGSSAETZE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
-def test_rundlauf_uebungssaetze_level3(satz, schluesselwort):
-    """Alle 10 Übungssätze von Handbuchseite 3, mit jedem Schlüsselwort."""
+def test_rundlauf_uebungssaetze(satz, schluesselwort):
+    """Alle 10 Übungssätze des Handbuchs, mit jedem Schlüsselwort."""
     assert entschluesseln(verschluesseln(satz, schluesselwort), schluesselwort) == satz
 
 
-@pytest.mark.parametrize("wort", UEBUNGSWOERTER_LEVEL1)
+@pytest.mark.parametrize("wort", EINZELWOERTER)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
-def test_rundlauf_uebungswoerter_level1(wort, schluesselwort):
-    """Die kurzen Einzelwörter von Seite 1 als Gegenprobe ohne Leerzeichen."""
+def test_rundlauf_einzelwoerter(wort, schluesselwort):
+    """Kurze Einzelwörter als Gegenprobe ohne Leerzeichen."""
     assert entschluesseln(verschluesseln(wort, schluesselwort), schluesselwort) == wort
-
-
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_LEVEL2)
-@pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
-def test_rundlauf_uebungssaetze_level2(satz, schluesselwort):
-    """Auch das mehrwortige Material von Seite 2 läuft sauber hin und zurück."""
-    assert entschluesseln(verschluesseln(satz, schluesselwort), schluesselwort) == satz
 
 
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
@@ -281,8 +276,8 @@ def test_rundlauf_in_der_anderen_reihenfolge(schluesselwort):
 
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_rundlauf_sehr_langer_text(schluesselwort):
-    """Sehr langer Text: 40 Wiederholungen aller 10 Übungssätze (über 7000 Zeichen)."""
-    langer_text = LEERZEICHEN.join(UEBUNGSSAETZE_LEVEL3 * 40)
+    """Sehr langer Text: 60 Wiederholungen aller 10 Übungssätze (über 7000 Zeichen)."""
+    langer_text = LEERZEICHEN.join(UEBUNGSSAETZE * 60)
     geheim = verschluesseln(langer_text, schluesselwort)
 
     assert len(geheim) == len(langer_text) > 7000
@@ -302,7 +297,7 @@ def test_rundlauf_mit_langem_schluesselwort():
 # ───────────────────────────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("satz", UEBUNGSSAETZE_LEVEL3)
+@pytest.mark.parametrize("satz", UEBUNGSSAETZE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_schluesselzeile_erklaert_den_geheimtext(satz, schluesselwort):
     """Handbuch-Formel Zeichen für Zeichen nachgerechnet.
@@ -466,7 +461,7 @@ def test_alphabetumbruch_beim_entschluesseln():
 
 def test_wiederholtes_schluesselwort_aendert_nichts():
     """"ROT" und "ROTROT" beschreiben dieselbe Schlüsselfolge."""
-    for satz in UEBUNGSSAETZE_LEVEL3:
+    for satz in UEBUNGSSAETZE:
         assert verschluesseln(satz, "ROT") == verschluesseln(satz, "ROTROT")
 
 

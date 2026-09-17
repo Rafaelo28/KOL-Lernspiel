@@ -6,13 +6,28 @@ nach Vorlage.
 
 Was der Arbeitsplan verlangt
 ────────────────────────────
-* zufälliges Wort bzw. zufälliger Satz aus dem Pool des Levels,
+* zufälliger Satz aus dem Übungspool – alle drei Level teilen sich einen
+  (``content/uebungen.py``),
 * zufällige Richtung (ver- oder entschlüsseln), aber nie zweimal dieselbe
   hintereinander – siehe unten,
 * bei "entschlüsseln" wird der Text vorher selbst verschlüsselt und **der**
   angezeigt,
 * bei Level 3 zusätzlich ein zufälliges Schlüsselwort,
 * kein Text zweimal hintereinander im selben Level.
+
+Wie der Pool auf die Level verteilt wird
+────────────────────────────────────────
+Alle drei Level üben mit denselben zehn Sätzen. Zöge jedes Level frei daraus,
+käme ein Satz, den jemand in Level 1 verschlüsselt hat, in Level 2 womöglich
+zum Entschlüsseln wieder – und liesse sich aus dem Gedächtnis eintippen. Die
+Zeit dafür stünde im Log, als wäre gerechnet worden.
+
+Deshalb wird der Pool einmal je Durchlauf gemischt und in drei Abschnitte
+geteilt (4, 3 und 3 Sätze). Jedes Level beginnt am Anfang seines Abschnitts
+und geht von dort der Reihe nach weiter, am Ende des Pools wieder von vorn.
+Die ersten drei Übungen eines Levels kommen so in keinem anderen Level vor;
+erst wer viele Zusatzaufgaben bekommt, trifft wieder auf Sätze aus einem
+anderen Level. Zweimal hintereinander kommt derselbe Satz nie.
 
 Warum der Zufall von aussen kommt
 ─────────────────────────────────
@@ -27,11 +42,12 @@ Im Spiel wird eine :class:`game.zufallsquelle.Zufallsquelle` übergeben. Sie
 führt je Level einen eigenen Zufallsstrom, damit zur Rekonstruktion einer
 Übung der Seed und ihre Nummer *unter den Übungen dieses Levels* genügen –
 unabhängig davon, wie viele Zusatzaufgaben in den Leveln davor angefallen
-sind. Diese Nummer steht in der Kennung (``uebung_l2_3`` ist die dritte Übung
+sind. Auch die Mischung des Pools hängt nur am Seed. Diese Nummer steht in der Kennung (``uebung_l2_3`` ist die dritte Übung
 in Level 2); :func:`uebung_nachbauen` liest sie dort heraus.
 
 Für kleine Prüfungen genügt auch eine schlichte ``random.Random``-Instanz;
-dann teilen sich alle Level einen Strom.
+dann teilen sich alle Level einen Strom, und aus ihm wird auch der Pool
+gemischt.
 
 Warum die Richtung nicht frei gewürfelt wird
 ────────────────────────────────────────────
@@ -104,10 +120,10 @@ class Aufgabengenerator:
     Derselbe Seed ergibt denselben Ablauf – das ist die Grundlage für
     Aufgabe 3.3:
 
-    >>> [a.loesung for a in [Aufgabengenerator(random.Random(1)).naechste_uebung(2)]]
-    ['AGDD LEIFTSS']
-    >>> [a.loesung for a in [Aufgabengenerator(random.Random(1)).naechste_uebung(2)]]
-    ['AGDD LEIFTSS']
+    >>> erste = Aufgabengenerator(random.Random(1)).naechste_uebung(2)
+    >>> zweite = Aufgabengenerator(random.Random(1)).naechste_uebung(2)
+    >>> erste == zweite
+    True
     """
 
     def __init__(self, zufall=None):
@@ -115,9 +131,9 @@ class Aufgabengenerator:
             zufall = Zufallsquelle.neu()
         self._quelle = zufall if isinstance(zufall, Zufallsquelle) else None
         self._gemeinsamer_strom = None if self._quelle else zufall
-        # Zuletzt gestellter Text bzw. Richtung je Level – für "nicht zweimal
-        # hintereinander dasselbe".
-        self._zuletzt = {}
+        self._reihenfolge = None
+        # Zuletzt gestellte Richtung je Level – für "nicht zweimal
+        # hintereinander dieselbe".
         self._zuletzt_richtung = {}
         self._zaehler = {}
 
@@ -129,11 +145,11 @@ class Aufgabengenerator:
         Unterschied – die Extraaufgabe kommt aus demselben Pool –, aber im Log
         müssen sich beide unterscheiden lassen.
         """
-        if level not in uebungen.UEBUNGSTEXTE_NACH_LEVEL:
+        if level not in _verfahren.VERFAHREN_NACH_LEVEL:
             raise ValueError(f"Level {level!r} gibt es nicht; erlaubt sind 1, 2, 3.")
 
         zufall = self._strom(level)
-        text = self._text_ziehen(level, zufall)
+        text = self._text_ziehen(level)
         richtung = self._richtung_ziehen(level, zufall)
         schluessel = _schluessel_ziehen(level, zufall)
         verfahren = _verfahren.VERFAHREN_NACH_LEVEL[level]
@@ -167,14 +183,16 @@ class Aufgabengenerator:
             return self._quelle.fuer_level(level)
         return self._gemeinsamer_strom
 
-    def _text_ziehen(self, level, zufall):
-        """Zieht einen Text, aber nie denselben wie beim letzten Mal."""
-        pool = uebungen.UEBUNGSTEXTE_NACH_LEVEL[level]
-        zuletzt = self._zuletzt.get(level)
-        moeglich = [text for text in pool if text != zuletzt] or list(pool)
-        gezogen = zufall.choice(moeglich)
-        self._zuletzt[level] = gezogen
-        return gezogen
+    def _text_ziehen(self, level):
+        """Der Text der nächsten Übung dieses Levels: der nächste in seinem Abschnitt des gemischten Pools."""
+        if self._reihenfolge is None:
+            if self._quelle is not None:
+                self._reihenfolge = self._quelle.gemischt(uebungen.UEBUNGSTEXTE)
+            else:
+                self._reihenfolge = tuple(self._gemeinsamer_strom.sample(uebungen.UEBUNGSTEXTE,
+                                                                         len(uebungen.UEBUNGSTEXTE)))
+        stelle = abschnittsanfang(level, len(self._reihenfolge)) + self._zaehler.get(level, 0)
+        return self._reihenfolge[stelle % len(self._reihenfolge)]
 
     def _richtung_ziehen(self, level, zufall):
         """Zieht die Richtung, aber nie zweimal hintereinander dieselbe."""
@@ -184,10 +202,20 @@ class Aufgabengenerator:
         self._zuletzt_richtung[level] = gezogen
         return gezogen
 
-    @property
-    def zuletzt_gestellt(self):
-        """Der zuletzt gezogene Text je Level – nur zum Nachsehen."""
-        return dict(self._zuletzt)
+
+
+def abschnittsanfang(level, poolgroesse):
+    """Wo im gemischten Pool der Abschnitt dieses Levels beginnt.
+
+    Der Pool wird so gleichmässig wie möglich auf die Level verteilt; was
+    übrig bleibt, bekommen die ersten Level – dort gibt es die meisten
+    Zusatzaufgaben, weil die Verfahren noch schnell gehen.
+
+    >>> [abschnittsanfang(level, 10) for level in (1, 2, 3)]
+    [0, 4, 7]
+    """
+    groesse, rest = divmod(poolgroesse, len(_verfahren.VERFAHREN_NACH_LEVEL))
+    return (level - 1) * groesse + min(level - 1, rest)
 
 
 def aufgabe_aus_funkspruch(funkspruch, initialen):

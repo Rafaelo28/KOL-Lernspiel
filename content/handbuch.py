@@ -45,8 +45,8 @@ nicht still von der Verschlüsselungslogik abweichen, vergleicht
 tatsächlich berechnet. Läuft eines der beiden auseinander, wird ein Test rot –
 und nicht erst eine Schülerin im Unterricht stutzig.
 
-Die Übungswörter und -sätze stehen nicht hier, sondern kommen in Aufgabe 2.2
-nach ``content/uebungen.py``.
+Die Übungssätze stehen nicht hier, sondern in ``content/uebungen.py`` – ein
+Pool für alle drei Seiten.
 """
 
 from typing import NamedTuple, Union

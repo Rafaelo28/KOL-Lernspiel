@@ -27,7 +27,9 @@ der Seed in seiner Spalte, die Übungsnummer in der Kennung (``uebung_l2_3``).
 
 Der Strom wird aus Seed und Level abgeleitet, nicht neu gewürfelt: Dieselbe
 Zufallsquelle liefert für dasselbe Level immer denselben Strom, für
-verschiedene Level aber verschiedene. Als Ableitung dient eine Zeichenkette,
+verschiedene Level aber verschiedene. Genauso entsteht die gemischte
+Reihenfolge des Übungspools, die sich alle drei Level teilen
+(:meth:`Zufallsquelle.gemischt`). Als Ableitung dient eine Zeichenkette,
 weil ``random.Random`` Zeichenketten über SHA-512 einliest – das Ergebnis ist
 damit über Prozessgrenzen und Rechner hinweg gleich. (Über ``hash()``
 abgeleitete Seeds wären das wegen der Hash-Randomisierung von Python **nicht**.)
@@ -127,6 +129,22 @@ class Zufallsquelle:
         if level not in self._stroeme:
             self._stroeme[level] = random.Random(f"{self._seed}:level{level}")
         return self._stroeme[level]
+
+    def gemischt(self, folge):
+        """Die ``folge`` in einer Reihenfolge, die nur vom Seed abhängt – bei jedem Aufruf dieselbe.
+
+        Damit mischt der Generator den Übungspool einmal für den ganzen
+        Durchlauf. Die Reihenfolge braucht einen eigenen Strom: Sie gilt für
+        alle Level, und die Ströme der Level sollen davon unberührt bleiben.
+
+        >>> Zufallsquelle(4711).gemischt("ABCDE") == Zufallsquelle(4711).gemischt("ABCDE")
+        True
+        >>> sorted(Zufallsquelle(4711).gemischt("ABCDE"))
+        ['A', 'B', 'C', 'D', 'E']
+        """
+        folge = list(folge)
+        random.Random(f"{self._seed}:reihenfolge").shuffle(folge)
+        return tuple(folge)
 
     def __repr__(self):
         return f"Zufallsquelle({self._seed})"

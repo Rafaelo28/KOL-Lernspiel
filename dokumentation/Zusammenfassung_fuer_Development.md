@@ -79,6 +79,7 @@ Wichtige technische Punkte daraus, die beim Bau zu beachten sind:
 - **Level 1 (Caesar):** 10 Übungswörter, Schlüssel wird vorgegeben.
 - **Level 2 (Substitution):** 10 Übungssätze, Zuordnungstabelle nach Tastatur-Trick (Q-W-E-R-T-Z-U-I-O-P / A-S-D-F-G-H-J-K-L / Y-X-C-V-B-N-M).
 - **Level 3 (Vigenère):** Erklärung erfolgt über das **Vigenère-Quadrat** (Nachschlagetabelle), nicht über Zahlenrechnung. 10 Übungssätze. Schlüsselwort **muss zufällig aus mehreren Optionen** gewählt werden (z. B. ROT, WEG, TAG) – nicht immer dasselbe Wort, sonst wird die Aufgabe vorhersehbar.
+- *Nachträglich entschieden:* Statt eigener Listen je Level üben alle drei Level mit **denselben zehn Sätzen** (10–14 Buchstaben, siehe `Handbuchtexte.md`) – damit die Übungen der Level ähnlich lang und die Bearbeitungszeiten vergleichbar sind.
 - **Für jede Übungsaufgabe in allen drei Leveln** muss einmal ver- und entschlüsselt werden
 - **Vollständiges Vigenère-Quadrat (26×26):** kann automatisch generiert werden, keine manuelle Eingabe nötig. Formel: In Zeile $k$ (Schlüsselbuchstabe) und Spalte $m$ (Nachrichtenbuchstabe) steht der Buchstabe mit Index $(k+m) \\bmod 26$, wobei $A=0$.
 

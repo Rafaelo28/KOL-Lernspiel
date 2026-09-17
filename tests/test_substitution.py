@@ -43,27 +43,28 @@ HANDBUCH_TABELLE = {
     "Y": "N", "Z": "M",
 }
 
-#: Die zehn Übungssätze von Handbuchseite 2, jeweils von Hand verschlüsselt.
-#: Beispielrechnung für Satz 1: A→Q, L→S, L→S, E→T, S→L | O→G, K→A.
-UEBUNGSSAETZE_LEVEL_2 = [
-    ("ALLES OK", "QSSTL GA"),
+#: Die zehn Übungssätze des Handbuchs (ein Pool für alle Level), jeweils von
+#: Hand verschlüsselt. Beispielrechnung für Satz 1: I→O, C→E, H→I | B→W, I→O,
+#: N→F | H→I, I→O, E→T, R→K.
+UEBUNGSSAETZE = [
     ("ICH BIN HIER", "OEI WOF IOTK"),
     ("KOMM SCHNELL", "AGDD LEIFTSS"),
-    ("WO BIST DU", "VG WOLY RX"),
     ("BLEIB RUHIG", "WSTOW KXIOU"),
     ("WEG IST FREI", "VTU OLY ZKTO"),
-    ("GEFAHR NAH", "UTZQIK FQI"),
     ("ZEIT WIRD KNAPP", "MTOY VOKR AFQHH"),
     ("PLAN WIRD NEU", "HSQF VOKR FTX"),
-    ("HILFE WIRD GEBRAUCHT", "IOSZT VOKR UTWKQXEIY"),
+    ("NAHE DEM WRACK", "FQIT RTD VKQEA"),
+    ("RICHTUNG NORDEN", "KOEIYXFU FGKRTF"),
+    ("KEIN WASSER MEHR", "ATOF VQLLTK DTIK"),
+    ("BIN NOCH AM LEBEN", "WOF FGEI QD STWTF"),
 ]
 
-#: Übungswörter von Handbuchseite 1 und Übungssätze von Seite 3 – reichen
-#: für den Rundlauf, auch wenn sie zu anderen Leveln gehören. Seit Aufgabe 2.2
-#: kommen sie aus content/uebungen.py, statt hier noch einmal dazustehen.
-WEITERE_UEBUNGSTEXTE = list(
-    uebungen.UEBUNGSWOERTER_LEVEL_1 + uebungen.UEBUNGSSAETZE_LEVEL_3
-)
+#: Weiteres Prüfmaterial für den Rundlauf: kurze Einzelwörter und längere
+#: Sätze, wie sie früher in den Übungslisten der Handbuchseiten 1 und 3 standen.
+WEITERE_UEBUNGSTEXTE = [
+    "HUND", "KATZE", "MAUS", "BURG", "FELS", "STERN",
+    "ICH BIN IN SICHERHEIT", "STANDORT UNBEKANNT", "VERFOLGER SIND NAH", "SIGNAL WIRD SCHWACH",
+]
 
 #: Atbash-Tabelle (A→Z, B→Y, …, Z→A) als zweite, unabhängige Zuordnung.
 #: Von Hand gebildet, indem das Alphabet rückwärts darunter geschrieben wird.
@@ -263,20 +264,20 @@ def test_tabelle_none_ist_die_tastatur_tabelle():
 # ───────────────────────────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("klartext, geheimtext", UEBUNGSSAETZE_LEVEL_2)
+@pytest.mark.parametrize("klartext, geheimtext", UEBUNGSSAETZE)
 def test_uebungssaetze_werden_richtig_verschluesselt(klartext, geheimtext):
     """Jeder Übungssatz aus dem Handbuch, Buchstabe für Buchstabe geprüft."""
     assert verschluesseln(klartext) == geheimtext
 
 
-@pytest.mark.parametrize("klartext, geheimtext", UEBUNGSSAETZE_LEVEL_2)
+@pytest.mark.parametrize("klartext, geheimtext", UEBUNGSSAETZE)
 def test_uebungssaetze_werden_richtig_entschluesselt(klartext, geheimtext):
     """Dieselben Sätze in der Gegenrichtung."""
     assert entschluesseln(geheimtext) == klartext
 
 
 @pytest.mark.parametrize(
-    "text", [satz for satz, _ in UEBUNGSSAETZE_LEVEL_2] + WEITERE_UEBUNGSTEXTE
+    "text", [satz for satz, _ in UEBUNGSSAETZE] + WEITERE_UEBUNGSTEXTE
 )
 def test_rundlauf_mit_uebungstexten(text):
     """entschluesseln(verschluesseln(x)) muss x zurückgeben."""
@@ -284,7 +285,7 @@ def test_rundlauf_mit_uebungstexten(text):
 
 
 @pytest.mark.parametrize(
-    "text", [satz for satz, _ in UEBUNGSSAETZE_LEVEL_2] + WEITERE_UEBUNGSTEXTE
+    "text", [satz for satz, _ in UEBUNGSSAETZE] + WEITERE_UEBUNGSTEXTE
 )
 def test_rundlauf_in_der_gegenrichtung(text):
     """Auch verschluesseln(entschluesseln(x)) muss x zurückgeben."""
@@ -347,7 +348,7 @@ def test_leerzeichen_bleiben_an_denselben_stellen(
     assert len(geheimtext) == len(klartext)
 
 
-@pytest.mark.parametrize("klartext, geheimtext", UEBUNGSSAETZE_LEVEL_2)
+@pytest.mark.parametrize("klartext, geheimtext", UEBUNGSSAETZE)
 def test_leerzeichen_zahl_bleibt_gleich(klartext, geheimtext):
     """In jedem Übungssatz stehen vorher und nachher gleich viele Lücken."""
     assert verschluesseln(klartext).count(" ") == klartext.count(" ")
@@ -429,7 +430,7 @@ def test_jeder_buchstabe_wird_immer_gleich_ersetzt():
 
 def test_sehr_langer_text_bleibt_korrekt():
     """Randfall Länge: 50 aneinandergehängte Übungssätze."""
-    klartext = " ".join(satz for satz, _ in UEBUNGSSAETZE_LEVEL_2) * 50
+    klartext = " ".join(satz for satz, _ in UEBUNGSSAETZE) * 50
     klartext = normalisieren(klartext)
     geheimtext = verschluesseln(klartext)
     assert len(geheimtext) == len(klartext)
@@ -438,7 +439,7 @@ def test_sehr_langer_text_bleibt_korrekt():
 
 def test_langer_text_stueckweise_gleich_dem_ganzen():
     """Positionsunabhängigkeit: Wort für Wort ergibt dasselbe wie am Stück."""
-    saetze = [satz for satz, _ in UEBUNGSSAETZE_LEVEL_2]
+    saetze = [satz for satz, _ in UEBUNGSSAETZE]
     einzeln = " ".join(verschluesseln(satz) for satz in saetze)
     am_stueck = verschluesseln(" ".join(saetze))
     assert einzeln == am_stueck
@@ -625,5 +626,5 @@ def test_die_klartexte_der_beispielpaare_stammen_aus_dem_uebungspool():
     dem Übungspool entsprechen, muss geprüft werden: Sonst prüft diese Datei
     irgendwann Sätze, die im Spiel gar nicht mehr vorkommen.
     """
-    klartexte = [paar[0] for paar in UEBUNGSSAETZE_LEVEL_2]
-    assert klartexte == list(uebungen.UEBUNGSSAETZE_LEVEL_2)
+    klartexte = [paar[0] for paar in UEBUNGSSAETZE]
+    assert klartexte == list(uebungen.UEBUNGSTEXTE)

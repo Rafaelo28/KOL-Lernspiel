@@ -42,9 +42,8 @@ from crypto.vigenere_quadrat import (
 # ───────────────────────────────────────────────────────────────────────────
 
 # Das Übungsmaterial und die Schlüsselwörter kommen seit Aufgabe 2.2 aus
-# content/uebungen.py.
-UEBUNGSWOERTER = list(uebungen.UEBUNGSWOERTER_LEVEL_1)
-UEBUNGSSAETZE = list(uebungen.UEBUNGSSAETZE_LEVEL_3)
+# content/uebungen.py – ein Pool für alle drei Level.
+UEBUNGSSAETZE = list(uebungen.UEBUNGSTEXTE)
 SCHLUESSELWOERTER = list(uebungen.VIGENERE_SCHLUESSELWOERTER)
 
 
@@ -417,12 +416,12 @@ def test_hilfsfunktionen_reproduzieren_das_handbuchbeispiel():
     ],
 )
 def test_handbuchsaetze_von_hand_nachgerechnet(klartext, schluesselwort, erwartet):
-    """Ganze Übungssätze aus dem Handbuch, Zelle für Zelle nachgezählt."""
+    """Ganze Sätze, Zelle für Zelle nachgezählt."""
     assert _mit_quadrat_verschluesseln(klartext, schluesselwort) == erwartet
     assert _mit_quadrat_entschluesseln(erwartet, schluesselwort) == klartext
 
 
-@pytest.mark.parametrize("klartext", UEBUNGSWOERTER + UEBUNGSSAETZE)
+@pytest.mark.parametrize("klartext", ["HUND", "KATZE"] + UEBUNGSSAETZE)
 @pytest.mark.parametrize("schluesselwort", SCHLUESSELWOERTER)
 def test_rundlauf_fuer_alle_uebungstexte(klartext, schluesselwort):
     """entschlüsseln(verschlüsseln(x)) == x für alle Texte des Handbuchs."""
@@ -485,7 +484,7 @@ def test_mehrere_woerter_werden_durchgehend_weiterverschluesselt():
 
 def test_sehr_langer_text_laeuft_sauber_durch():
     """Belastungsprobe: alle Übungssätze hintereinander, Rundlauf und Länge."""
-    langer_text = normalisieren(" ".join(UEBUNGSSAETZE * 5))
+    langer_text = normalisieren(" ".join(UEBUNGSSAETZE * 7))
     geheim = _mit_quadrat_verschluesseln(langer_text, "ROT")
 
     assert len(ohne_leerzeichen(langer_text)) > 750

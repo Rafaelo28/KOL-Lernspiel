@@ -109,6 +109,28 @@ def test_verschiedene_level_ergeben_verschiedene_stroeme():
     assert len(werte) == len(LEVEL)
 
 
+def test_die_mischung_des_pools_ist_bei_jedem_aufruf_dieselbe():
+    """Der Generator mischt einmal – aber auch ein zweiter Aufruf darf nichts verschieben."""
+    quelle = Zufallsquelle(4711)
+    erste = quelle.gemischt(range(10))
+    assert quelle.gemischt(range(10)) == erste
+    assert sorted(erste) == list(range(10)) and erste != tuple(range(10))
+
+
+def test_das_mischen_laesst_die_stroeme_der_level_unberuehrt():
+    """Sonst hinge die Richtung einer Übung davon ab, ob vorher gemischt wurde."""
+    quelle = Zufallsquelle(4711)
+    quelle.gemischt(range(10))
+    for level in (1, 2, 3):
+        assert quelle.fuer_level(level).random() == Zufallsquelle(4711).fuer_level(level).random()
+
+
+def test_verschiedene_seeds_mischen_verschieden():
+    """Sonst bekämen alle dieselben Sätze in derselben Reihenfolge – und könnten abschauen."""
+    reihenfolgen = {Zufallsquelle(seed).gemischt(range(10)) for seed in range(20)}
+    assert len(reihenfolgen) > 15
+
+
 # ───────────────────────────────────────────────────────────────────────────
 # 3. Rekonstruktion – der eigentliche Zweck
 # ───────────────────────────────────────────────────────────────────────────

@@ -65,7 +65,7 @@ python3 -m venv .venv
 Mitgeprüft werden auch die Doctests in `crypto/`, in denen die
 durchgerechneten Beispiele des Handbuchs stehen (`HUND` + Schlüssel 3 →
 `KXQG` und so weiter). Ein weiterer Test liest `dokumentation/Handbuchtexte.md`
-ein und vergleicht die 30 Übungswörter und -sätze mit denen im Code – wer eine
+ein und vergleicht die 10 Übungssätze mit denen im Code – wer eine
 Handbuchseite ändert, sieht am roten Test sofort, wo Text und Code
 auseinanderlaufen.
 
@@ -97,7 +97,7 @@ hereinrutscht und dass die Logik weder `print()` noch `input()` aufruft.
 | Modul | Inhalt |
 |-------|--------|
 | `handbuch.py` | Die drei Handbuchseiten, zerlegt in Absätze, Aufzählungen, Tabellen und Bobs Randnotizen; dazu die Schritte der Beispiele, das Werkzeug gegenüber und die Merkkarten zum Lösen |
-| `uebungen.py` | Die 30 Übungstexte, die Vigenère-Schlüsselwörter, die Caesar-Schlüssel |
+| `uebungen.py` | Die 10 Übungssätze (ein Pool für alle drei Level), die Vigenère-Schlüsselwörter, die Caesar-Schlüssel |
 | `story.py` | Erzähltexte und die fünf Funksprüche samt Teilaufgaben |
 | `charaktere.py` | Die fünf wählbaren Figuren und Bob |
 | `verfahren.py` | Die drei Verfahrenskennungen, gemeinsam für Handbuch und Story |
@@ -124,7 +124,7 @@ sofort, wo Text und Code auseinanderlaufen.
 | `spieler_id.py` | Die ID der Lehrkraft (`1-12`): prüft die Form X-XX und sagt genau, was fehlt |
 
 Der Seed wird einmal je Durchlauf gezogen und ins Log geschrieben. Damit lässt
-sich nach dem Experiment rekonstruieren, welche Übungswörter eine bestimmte
+sich nach dem Experiment rekonstruieren, welche Übungssätze eine bestimmte
 Person bekommen hat – sonst wäre eine lange Bearbeitungszeit nicht davon zu
 unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 
@@ -305,7 +305,7 @@ Die vollständige Aufgabenzerlegung steht in
 | [CLAUDE.md](CLAUDE.md) | Verbindliche Projektregeln und Textkonvention |
 | [dokumentation/Zusammenfassung_fuer_Development.md](dokumentation/Zusammenfassung_fuer_Development.md) | Konzeptentscheidungen, Zeitrahmen, Lernziele |
 | [dokumentation/Konzept_Spiel.md](dokumentation/Konzept_Spiel.md) | Rahmengeschichte und Level-Ablauf |
-| [dokumentation/Handbuchtexte.md](dokumentation/Handbuchtexte.md) | Die drei Handbuchseiten, Übungswörter und -sätze |
+| [dokumentation/Handbuchtexte.md](dokumentation/Handbuchtexte.md) | Die drei Handbuchseiten und die Übungssätze |
 | [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md) | Aufgabenzerlegung, Phasen 0–8 |
 | [dokumentation/Tipps-und-Tricks.md](dokumentation/Tipps-und-Tricks.md) | Hinweise zu Tkinter, Normalisierung, Logging |
 | [dokumentation/Commit_Regeln.md](dokumentation/Commit_Regeln.md) | Wann und wie committet wird |

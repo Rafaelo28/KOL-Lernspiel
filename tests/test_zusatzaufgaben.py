@@ -309,7 +309,7 @@ def test_kurz_vor_schluss_gibt_es_keine_zusatzaufgabe():
     uhr = Uhr()
     lauf = _schnelle_bearbeitung(uhr)
     assert zusatz.war_schnell(lauf)
-    assert not zusatz.zeit_reicht_noch(1, 30)
+    assert not zusatz.zeit_reicht_noch(30)
     assert not zusatz.ist_faellig(lauf, 30)
 
 
@@ -329,31 +329,26 @@ def test_die_obergrenze_je_level_greift():
     assert not zusatz.ist_faellig(lauf, 600, grenze + 5)
 
 
-@pytest.mark.parametrize("level", LEVEL)
-def test_die_laengste_uebung_stimmt_mit_dem_pool_ueberein(level):
+def test_die_laengste_uebung_stimmt_mit_dem_pool_ueberein():
     from content import uebungen
     from crypto.normalize import ohne_leerzeichen
 
-    laengen = [len(ohne_leerzeichen(t)) for t in uebungen.UEBUNGSTEXTE_NACH_LEVEL[level]]
-    assert zusatz.laengste_uebung(level) == max(laengen)
+    laengen = [len(ohne_leerzeichen(t)) for t in uebungen.UEBUNGSTEXTE]
+    assert zusatz.laengste_uebung() == max(laengen)
 
 
-@pytest.mark.parametrize("level", LEVEL)
-def test_die_restzeit_reicht_genau_ab_der_schwelle(level):
-    noetig = (
-        zusatz.erwartete_dauer(zusatz.laengste_uebung(level))
-        + zusatz.MINDESTRESTZEIT_SEKUNDEN
-    )
-    assert zusatz.zeit_reicht_noch(level, noetig)
-    assert not zusatz.zeit_reicht_noch(level, noetig - 1)
+def test_die_restzeit_reicht_genau_ab_der_schwelle():
+    noetig = zusatz.erwartete_dauer(zusatz.laengste_uebung()) + zusatz.MINDESTRESTZEIT_SEKUNDEN
+    assert zusatz.zeit_reicht_noch(noetig)
+    assert not zusatz.zeit_reicht_noch(noetig - 1)
 
 
 def test_die_restzeit_richtet_sich_nach_dem_laengsten_text_nicht_nach_dem_letzten():
-    """In Level 2 kann nach einem kurzen Wort ein Satz mit 18 Buchstaben kommen.
+    """Nach einem kurzen Satz kann ein längerer kommen.
 
     Wer "HUND" schnell gelöst hat und gerade genug Zeit für ein zweites
-    kurzes Wort hätte, bekäme sonst womöglich den langen Satz – und der würde
-    unfertig abgebrochen.
+    kurzes Wort hätte, bekäme sonst womöglich einen Satz mit 14 Buchstaben –
+    und der würde unfertig abgebrochen.
     """
     uhr = Uhr()
     kurz = Aufgabe("probe", 2, "substitution", VERSCHLUESSELN, None, "HUND", "IXFR")
@@ -362,7 +357,7 @@ def test_die_restzeit_richtet_sich_nach_dem_laengsten_text_nicht_nach_dem_letzte
     lauf.versuchen("IXFR")
     assert zusatz.war_schnell(lauf)
     knapp = zusatz.erwartete_dauer(4) + zusatz.MINDESTRESTZEIT_SEKUNDEN + 1
-    assert zusatz.laengste_uebung(2) > 4
+    assert zusatz.laengste_uebung() > 4
     assert not zusatz.ist_faellig(lauf, knapp)
 
 
