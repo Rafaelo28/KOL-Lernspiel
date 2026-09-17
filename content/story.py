@@ -182,6 +182,25 @@ class Funkspruch(NamedTuple):
     selbst_zu_loesen: str = ""
     weiterrechnen: str = ""
 
+    @property
+    def buchstaben_von_hand(self):
+        """Wie viele Buchstaben bei diesem Funkspruch von Hand gerechnet werden.
+
+        Der Anfang, wenn es eine Teilaufgabe gibt, sonst die ganze Nachricht.
+        Damit schätzt Phase 7, wie lange ein Funkspruch dauern wird, und stellt
+        ihn rechtzeitig vor die nächste Übung (``game/levelablauf.py``).
+
+        Die Initialen der Figur stehen erst beim Stellen im Text; ihre zwei
+        Buchstaben fallen bei der Schätzung nicht ins Gewicht.
+
+        >>> FUNKSPRUCH_STANDORT.buchstaben_von_hand
+        17
+        >>> FUNKSPRUCH_BOB_ZWEITE_ANTWORT.buchstaben_von_hand
+        27
+        """
+        text = self.selbst_zu_loesen or self.klartext.replace(PLATZHALTER_INITIALEN, "")
+        return sum(1 for zeichen in text if zeichen.isalpha())
+
 
 # ───────────────────────────────────────────────────────────────────────────
 # Vor Level 1 – der Raub und der Absturz

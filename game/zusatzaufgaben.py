@@ -54,6 +54,12 @@ gelöst wurde. Seit alle Level denselben Pool mit ähnlich langen Sätzen haben,
 liegen dazwischen nur noch 10 gegen 14 Buchstaben – aber auch vier Buchstaben
 mehr kosten eine Viertelminute.
 
+Reserviert wird dabei auch die Zeit für die **Funksprüche**, die im Level noch
+ausstehen (Vorrang-Regel, Arbeitsplan Phase 7): Sie tragen die Geschichte und
+dürfen nicht ausfallen, weil davor noch eine Übung lief. Was daraus für den
+Ablauf folgt, steht in :mod:`game.levelablauf`; hier steht nur, wie lange es
+voraussichtlich dauert.
+
 Warum nur Übungen eine Zusatzaufgabe auslösen
 ─────────────────────────────────────────────
 Die Zusammenfassung legt den Ablauf fest: "Übungsaufgaben (+ ggf.
@@ -114,6 +120,21 @@ def war_schnell(bearbeitung):
     return bearbeitung.benoetigte_sekunden < SCHNELL_WENN_UNTER_ANTEIL * erwartet
 
 
+def erwartete_dauer_funksprueche(funksprueche):
+    """Wie lange die angegebenen Funksprüche zusammen voraussichtlich dauern.
+
+    Gerechnet wird mit dem Teil, der von Hand gelöst wird – den Rest löst ein
+    Knopf auf (siehe ``content/story.py``).
+
+    >>> from content import story
+    >>> erwartete_dauer_funksprueche(story.FUNKSPRUECHE_NACH_LEVEL[1])
+    180.0
+    >>> erwartete_dauer_funksprueche(())
+    0
+    """
+    return sum(erwartete_dauer(funkspruch.buchstaben_von_hand) for funkspruch in funksprueche)
+
+
 def laengste_uebung():
     """Die Buchstabenzahl des längsten Übungstextes – alle Level ziehen aus demselben Pool.
 
@@ -123,15 +144,23 @@ def laengste_uebung():
     return max(len(_ohne_leerzeichen(text)) for text in _uebungen.UEBUNGSTEXTE)
 
 
-def zeit_reicht_noch(verbleibende_sekunden):
-    """Bleibt im Level genug Zeit, damit eine Zusatzaufgabe noch Sinn ergibt?
+def zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche=()):
+    """Bleibt im Level genug Zeit, damit noch eine Übung Sinn ergibt?
 
     Gerechnet wird mit der **erwarteten** Dauer des längsten Textes im Pool,
     nicht mit dem eigenen Tempo: Sonst bekäme, wer besonders schnell war,
     noch kurz vor Schluss eine Aufgabe aufgedrückt. Und nicht mit der eben
     gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest.
+
+    ``offene_funksprueche`` sind die Funksprüche, die im Level noch anstehen;
+    ihre Zeit wird mitreserviert (Vorrang-Regel, Arbeitsplan Phase 7).
+
+    >>> zeit_reicht_noch(900)
+    True
+    >>> zeit_reicht_noch(100)
+    False
     """
-    noetig = erwartete_dauer(laengste_uebung())
+    noetig = erwartete_dauer(laengste_uebung()) + erwartete_dauer_funksprueche(offene_funksprueche)
     return verbleibende_sekunden >= noetig + MINDESTRESTZEIT_SEKUNDEN
 
 
@@ -140,15 +169,15 @@ def obergrenze_erreicht(bisherige_zusatzaufgaben):
     return bisherige_zusatzaufgaben >= HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL
 
 
-def ist_faellig(bearbeitung, verbleibende_sekunden, bisherige_zusatzaufgaben=0):
+def ist_faellig(bearbeitung, verbleibende_sekunden, bisherige_zusatzaufgaben=0, offene_funksprueche=()):
     """Soll nach dieser Aufgabe eine Zusatzaufgabe gestellt werden?
 
     Alle vier Bedingungen müssen stimmen: Es war eine Übung, sie war schnell
-    genug gelöst, es bleibt genug Zeit, und die Obergrenze des Levels ist
-    noch nicht erreicht.
+    genug gelöst, es bleibt genug Zeit – auch für die noch offenen Funksprüche
+    des Levels –, und die Obergrenze des Levels ist noch nicht erreicht.
     """
     if bearbeitung.aufgabe.quelle != QUELLE_UEBUNG:
         return False
     if obergrenze_erreicht(bisherige_zusatzaufgaben):
         return False
-    return war_schnell(bearbeitung) and zeit_reicht_noch(verbleibende_sekunden)
+    return war_schnell(bearbeitung) and zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche)

@@ -339,6 +339,7 @@ def test_es_gibt_ueberhaupt_module_zu_pruefen():
         "content/charaktere.py",
         "game/__init__.py",
         "game/durchlauf.py",
+        "game/levelablauf.py",
         "game/spieler_id.py",
         "ui/__init__.py",
         "ui/hauptfenster.py",

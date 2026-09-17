@@ -76,6 +76,8 @@ zu einer Person führt die Lehrkraft getrennt.
 
 from content import story as _story
 from content import verfahren as _verfahren
+from game import levelablauf as _levelablauf
+from game.aufgabe import QUELLE_UEBUNG
 from game.bearbeitung import Bearbeitung
 from game.generator import Aufgabengenerator, aufgabe_aus_funkspruch
 from game.zeitfenster import fuer_level as _zeitfenster_fuer_level
@@ -315,6 +317,20 @@ class Spielstand:
             return LEVELENDE_LAEUFT
         return None
 
+    def uebungen_im_level(self, level=None):
+        """Wie viele Basis-Übungen dieses Levels schon erledigt sind – ohne Zusatzaufgaben.
+
+        Danach richtet sich, wann gefunkt wird (:mod:`game.levelablauf`).
+        """
+        level = level if level is not None else self._level
+        return sum(
+            1
+            for b in self._erledigt
+            if b.aufgabe.level == level
+            and b.aufgabe.quelle == QUELLE_UEBUNG
+            and not b.aufgabe.zusatzaufgabe
+        )
+
     def zusatzaufgaben_im_level(self, level=None):
         """Wie viele Zusatzaufgaben in diesem Level schon gestellt wurden."""
         level = level if level is not None else self._level
@@ -339,7 +355,23 @@ class Spielstand:
         if zuletzt.aufgabe.level != self._level:
             return False
         return _zusatzaufgabe_ist_faellig(
-            zuletzt, self.verbleibende_sekunden, self.zusatzaufgaben_im_level()
+            zuletzt, self.verbleibende_sekunden, self.zusatzaufgaben_im_level(),
+            self.offene_funksprueche,
+        )
+
+    @property
+    def naechster_schritt(self):
+        """Was im laufenden Level als Nächstes drankommt (:mod:`game.levelablauf`).
+
+        Gefragt wird, wenn eine Aufgabe fertig ist und die Oberfläche wissen
+        will, was sie zeigen soll: die nächste Übung, eine Zusatzaufgabe, den
+        nächsten Funkspruch – oder das Ende des Levels.
+        """
+        return _levelablauf.naechster_schritt(
+            erledigte_uebungen=self.uebungen_im_level(),
+            offene_funksprueche=self.offene_funksprueche,
+            verbleibende_sekunden=self.verbleibende_sekunden,
+            zusatzaufgabe_faellig=self.zusatzaufgabe_faellig,
         )
 
     def pruefe_zeitfenster(self):
@@ -401,6 +433,15 @@ class Spielstand:
             return ()
         return tuple(funkspruch for funkspruch in _story.FUNKSPRUECHE_NACH_LEVEL[self._level]
                      if funkspruch.kennung not in self._gestellte_funksprueche)
+
+    def wurde_gestellt(self, funkspruch):
+        """Kam dieser Funkspruch in diesem Durchlauf schon dran?
+
+        Die Geschichte fragt danach: Der Übergang zu Level 3 spricht vom
+        abgefangenen Funkspruch – wer ihn nie gesehen hat, soll den Satz auch
+        nicht lesen.
+        """
+        return funkspruch.kennung in self._gestellte_funksprueche
 
     def stelle_funkspruch(self, funkspruch):
         """Stellt einen echten Funkspruch als Aufgabe.
