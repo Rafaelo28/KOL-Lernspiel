@@ -118,7 +118,7 @@ sofort, wo Text und Code auseinanderlaufen.
 | `bearbeitung.py` | Versuchszähler, Lösungsanzeige, Weiterrechnen-Knopf |
 | `spielstand.py` | Der zentrale Zustand eines Durchlaufs: Figur, Level, laufende Aufgabe |
 | `zeitfenster.py` | Die 15/20/25-Minuten-Fenster der drei Level |
-| `zusatzaufgaben.py` | Entscheidet, wer eine Extraaufgabe bekommt |
+| `zusatzaufgaben.py` | Entscheidet, wann noch eine Extraaufgabe in die Restzeit passt – im Tempo des Kindes gerechnet |
 | `levelablauf.py` | Was im Level als Nächstes drankommt: Übung, Zusatzaufgabe, Funkspruch – oder Levelende |
 | `protokoll.py` | Schreibt das CSV eines Durchlaufs |
 | `durchlauf.py` | Spielstand und Protokoll in einer Hand – speichert von selbst, fängt den Zeitablauf ab |

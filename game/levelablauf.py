@@ -66,12 +66,14 @@ class Schritt(NamedTuple):
 
 
 def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_sekunden,
-                      zusatzaufgabe_faellig=False):
+                      zusatzaufgabe_faellig=False, tempo=1.0):
     """Was im laufenden Level auf die eben abgeschlossene Aufgabe folgt.
 
     ``erledigte_uebungen`` zählt nur die Basis-Übungen des Levels, nicht die
     Zusatzaufgaben. ``offene_funksprueche`` sind die des Levels, in
-    Spielreihenfolge.
+    Spielreihenfolge. ``tempo`` ist der Faktor aus
+    :func:`game.zusatzaufgaben.tempofaktor` – mit ihm rechnet die Vorrang-Regel
+    nicht im Mittel, sondern im Tempo dieses Kindes.
 
     Zuerst die Übungen, dann die Funksprüche – ausser die Zeit wird knapp:
 
@@ -85,7 +87,7 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
     >>> naechster_schritt(2, (), 900).art
     'levelende'
     """
-    zeit_fuer_uebung = _zusatzaufgaben.zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche)
+    zeit_fuer_uebung = _zusatzaufgaben.zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche, tempo)
     if zeit_fuer_uebung and erledigte_uebungen < BASIS_UEBUNGEN_JE_LEVEL:
         return Schritt(SCHRITT_UEBUNG)
     # Ob eine Zusatzaufgabe fällig ist, hat die Spiellogik schon entschieden –

@@ -96,6 +96,11 @@ def _loesen(fenster, sekunden=0.0, uhr=None):
 NORMALTEMPO = 60.0
 
 
+def _eine_zeile(texte):
+    """Texte zu einer Zeile zusammengezogen – egal, wo umbrochen wurde."""
+    return " ".join(" ".join(texte).split())
+
+
 def _spielen_bis(fenster, uhr, bedingung, hoechstens=40):
     """Löst Aufgabe um Aufgabe, bis ein Screen die Bedingung erfüllt."""
     for _ in range(hoechstens):
@@ -126,12 +131,16 @@ def test_nach_dem_handbuch_kommt_die_erste_uebung(bei_der_uebung):
 
 
 def test_nach_den_uebungen_kommt_das_funkgeraet(fenster, bei_der_uebung, uhr):
+    """Erst die Pflichtübungen, dann Zusatzaufgaben, solange Zeit ist – dann das Gerät."""
     for _ in range(levelablauf.BASIS_UEBUNGEN_JE_LEVEL):
         assert isinstance(fenster.aktueller_screen, uebung.Uebung)
+        assert not fenster.aktueller_screen.aufgabe.zusatzaufgabe
         _loesen(fenster, NORMALTEMPO, uhr)
-    screen = fenster.aktueller_screen
-    assert isinstance(screen, funk.Funk)
+    screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, funk.Funk))
     assert screen.funkspruch is story.FUNKSPRUCH_ERSTER_RUF
+    stand = fenster.durchlauf.spielstand
+    assert stand.uebungen_im_level(1) == levelablauf.BASIS_UEBUNGEN_JE_LEVEL
+    assert stand.zusatzaufgaben_im_level(1) > 0, "Die Restzeit wurde mit Übungen gefüllt."
 
 
 def test_nach_dem_letzten_funkspruch_beginnt_das_naechste_level(fenster, bei_der_uebung, uhr):
@@ -240,14 +249,37 @@ def test_nach_dem_abgefangenen_funkspruch_kommt_der_uebergang_zu_level_3(fenster
     assert handbuchseite.einleitung == story.EINSTIEG_LEVEL_3.absaetze
 
 
-def test_ohne_den_abgefangenen_funkspruch_kommt_kein_uebergang(fenster, bei_der_uebung, uhr):
-    """Er spricht davon, was der Feind funkt – wer das nie gehört hat, liest es nicht."""
-    for level in (1, 2):
-        _level_ablaufen_lassen(fenster, uhr, level)
+def test_verpasste_funksprueche_kann_man_hinterher_mitlesen(fenster, bei_der_uebung, uhr):
+    """Die Zeitfenster sind fix – aber die Geschichte soll nicht an der Uhr scheitern.
+
+    Wessen Zeit ablief, bevor die Funksprüche drankamen, bekommt sie danach
+    mit Lösung zu sehen: ohne Eingabe, ohne Uhr, ohne Zeile im Log.
+    """
+    _level_ablaufen_lassen(fenster, uhr, 1)
+    gelesen = []
+    while isinstance(fenster.aktueller_screen, funk.Funk):
+        screen = fenster.aktueller_screen
+        assert screen.nur_lesen
+        gelesen.append(screen.funkspruch)
+        loesung = screen.aufgabe.vollstaendige_loesung
+        if screen.funkspruch.richtung == story.EMPFANGEN:
+            assert loesung in _eine_zeile(screen.glastexte("rueckmeldung")), "Die Lösung steht da."
+        screen.weiter()
+    assert gelesen == list(story.FUNKSPRUECHE_NACH_LEVEL[1])
+    stand = fenster.durchlauf.spielstand
+    assert not [b for b in stand.erledigte_aufgaben if b.aufgabe.level == 1
+                and b.aufgabe.quelle == QUELLE_FUNKSPRUCH], "Im Log steht dafür nichts."
+    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
+
+
+def test_beim_mitlesen_gibt_es_nichts_einzutippen(fenster, bei_der_uebung, uhr):
+    _level_ablaufen_lassen(fenster, uhr, 1)
     screen = fenster.aktueller_screen
-    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 3
-    assert not fenster.durchlauf.spielstand.wurde_gestellt(story.FUNKSPRUCH_VERFOLGER)
-    assert screen.einleitung == story.EINSTIEG_LEVEL_3.absaetze
+    assert isinstance(screen, funk.Funk) and screen.nur_lesen
+    assert screen.knopftext == funk.KNOPF_WEITER
+    assert not screen.buch.find_withtag("eingabe"), "Kein Eingabefeld."
+    assert not screen.buch.find_withtag("eingabezeichen")
+    assert funk.AUFTRAG_NACHGELESEN[screen.funkspruch.richtung] in _eine_zeile(screen.glastexte("auftrag"))
 
 
 def test_auch_nach_zeitablauf_kommt_der_uebergang_wenn_der_funkspruch_dran_war(fenster, bei_der_uebung, uhr):

@@ -255,6 +255,16 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
 ### 5.4 Adaptive Zusatzaufgaben — `game/zusatzaufgaben.py`
 - Wer deutlich unter dem Schwellenwert liegt, bekommt eine Extra-Aufgabe aus
   demselben Wortpool
+- **Geändert nach der Durchsicht:** Nicht mehr das Tempo entscheidet, sondern
+  die Zeit. "Deutlich schneller" hiess bei einer mittleren Übung: unter
+  41 Sekunden für Lesen, Rechnen, Tippen und Prüfen – für die Zielgruppe
+  vermutlich unerreichbar. Die Funktion hätte im Klassenzimmer nie gegriffen,
+  und zwar lautlos. Dazu kommt: Der Pflichtteil eines Levels füllt nach den
+  Schätzungen nur 21–35 % seines Zeitfensters; ohne Zusatzaufgaben wäre der
+  Rest Leerlauf, und die Spielgruppe hätte deutlich weniger Lernzeit als die
+  Kontrollgruppe. Jetzt gilt: Solange die Restzeit für eine weitere Übung
+  **und** für die noch offenen Funksprüche reicht, kommt eine. Begrenzt wird
+  das durch die Obergrenze je Level und den Pool
 - Schwellenwerte stehen **an einer Stelle**, damit sie nach dem
   Pilotdurchlauf mit einem Handgriff angepasst werden können
 - **Nicht Sekunden je Buchstabe, sondern eine Gerade:**
@@ -831,6 +841,23 @@ In Zahlen: Die Funksprüche kosten voraussichtlich 180 s (Level 1), 120 s
 der fünfzehn Minuten verbraucht sind. 7.4 prüft den Fall am ganzen Durchlauf:
 Wer bei den Übungen bewusst trödelt, muss trotzdem bei allen Funksprüchen
 ankommen.
+
+**Nachgebessert nach der Durchsicht** – zwei Dinge fehlten:
+
+- **Gerechnet wird im eigenen Tempo** (`zusatzaufgaben.tempofaktor`). Mit dem
+  Mittelwert gerechnet, reservierte die Regel für ein Kind, das dreimal so
+  lange braucht, viel zu wenig: Es bekam nach der ersten Übung noch eine
+  zweite angeboten und verlor dafür Bobs Antwort. Der Faktor kommt aus den
+  eigenen erledigten Aufgaben (Summe der tatsächlichen durch Summe der
+  erwarteten Sekunden, gedeckelt auf 0,5 bis 3, abgebrochene Zeilen zählen
+  nicht) und geht in die Schätzung ein.
+- **Verpasste Funksprüche kann man mitlesen.** Reicht die Zeit trotzdem nicht,
+  wird das Zeitfenster **nicht** verlängert (Projektregel 1) – stattdessen
+  zeigt das Spiel den Funkspruch nach dem Levelwechsel mit Lösung: ohne
+  Eingabe, ohne Uhr, ohne Zeile im Log (`ablauf.funkspruch_nachlesen`,
+  `funk.Funk(nur_lesen=True)`). Das kostet Lesezeit statt Rechenzeit; die
+  Geschichte bleibt vollständig, die Messdaten vergleichbar. Eine fehlende
+  Zeile im Log heisst damit eindeutig: "kam nicht dran, nur gelesen"
 
 ### 7.1 Level 1 (Caesar)
 Handbuch → Übungen → Sendeaufgabe "Hallo, hört mich jemand? [Initialen]" →

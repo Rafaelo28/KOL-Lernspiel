@@ -4,8 +4,9 @@ Die Bearbeitungszeit ist der zentrale Messwert des Experiments. Zwei Dinge
 dürfen sie nicht verfälschen: die Zeit *zwischen* den Aufgaben und die Zeit
 *nach* der Entscheidung (Lösung lesen, Weiterrechnen-Knopf).
 
-Bei den Zusatzaufgaben geht es darum, dass die Entscheidung "war schnell" auch
-wirklich das Tempo misst und nicht die Länge der gezogenen Aufgabe.
+Bei den Zusatzaufgaben geht es darum, dass die Restzeit richtig geschätzt wird:
+mit dem längsten Text aus dem Pool, mit den noch offenen Funksprüchen und mit
+dem Tempo dieses Kindes (:func:`game.zusatzaufgaben.tempofaktor`).
 """
 
 import pytest
@@ -242,64 +243,63 @@ def test_die_erwartete_dauer_waechst_mit_der_laenge():
     assert len(set(dauern)) == len(dauern)
 
 
-def test_dieselbe_relative_leistung_wird_bei_jeder_laenge_gleich_bewertet():
-    """Der eigentliche Punkt des Modells.
-
-    Wer bei einer kurzen und bei einer langen Aufgabe jeweils die Hälfte der
-    erwarteten Zeit braucht, gilt in beiden Fällen als schnell.
-    """
-    uhr = Uhr()
-    for laenge, text, loesung in [(4, "HUND", "KXQG"), (13, "ZEIT WIRD KNAPP", "CHLW ZLUG NQDSS")]:
-        aufgabe = Aufgabe("probe", 1, "caesar", VERSCHLUESSELN, 3, text, loesung)
-        assert aufgabe.laenge_in_buchstaben == laenge
-        uhr.jetzt = 0
-        lauf = Bearbeitung(aufgabe, uhr)
-        uhr.weiter(zusatz.erwartete_dauer(laenge) * 0.5)
-        lauf.versuchen(loesung)
-        assert zusatz.war_schnell(lauf), f"{laenge} Buchstaben"
+def _geloeste_bearbeitung(uhr, sekunden, text="HUND", loesung="KXQG"):
+    """Eine gelöste Übung, die ``sekunden`` gedauert hat."""
+    aufgabe = Aufgabe("probe", 1, "caesar", VERSCHLUESSELN, 3, text, loesung)
+    uhr.jetzt = 0
+    lauf = Bearbeitung(aufgabe, uhr)
+    uhr.weiter(sekunden)
+    lauf.versuchen(loesung)
+    return lauf
 
 
-def test_wer_langsam_ist_gilt_bei_jeder_laenge_als_langsam():
+def test_ohne_erledigte_aufgaben_ist_der_tempofaktor_eins():
+    assert zusatz.tempofaktor(()) == 1.0
+
+
+def test_wer_doppelt_so_lange_braucht_hat_den_faktor_zwei():
+    """Der Faktor misst das Tempo, nicht die Länge der gezogenen Aufgabe."""
     uhr = Uhr()
     for text, loesung in [("HUND", "KXQG"), ("ZEIT WIRD KNAPP", "CHLW ZLUG NQDSS")]:
-        aufgabe = Aufgabe("probe", 1, "caesar", VERSCHLUESSELN, 3, text, loesung)
-        uhr.jetzt = 0
-        lauf = Bearbeitung(aufgabe, uhr)
-        uhr.weiter(zusatz.erwartete_dauer(aufgabe.laenge_in_buchstaben) * 1.2)
-        lauf.versuchen(loesung)
-        assert not zusatz.war_schnell(lauf)
+        laenge = len(text.replace(" ", ""))
+        lauf = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(laenge) * 2, text, loesung)
+        assert zusatz.tempofaktor([lauf]) == pytest.approx(2.0), text
 
 
-def test_eine_laufende_aufgabe_gilt_nie_als_schnell():
+def test_der_faktor_bleibt_in_seinen_grenzen():
+    """Eine liegengelassene Aufgabe soll nicht den ganzen Ablauf umwerfen."""
+    uhr = Uhr()
+    unten, oben = zusatz.TEMPO_GRENZEN
+    assert zusatz.tempofaktor([_geloeste_bearbeitung(uhr, 3600)]) == oben
+    assert zusatz.tempofaktor([_geloeste_bearbeitung(uhr, 0.5)]) == unten
+
+
+def test_abgebrochene_aufgaben_zaehlen_beim_tempo_nicht_mit():
+    """Dort ist die Zeit die bis zum Levelwechsel, keine Rechenzeit."""
     uhr = Uhr()
     lauf = Bearbeitung(_uebung(), uhr)
-    assert not zusatz.war_schnell(lauf)
-
-
-def test_wer_die_loesung_angezeigt_bekam_war_nicht_schnell():
-    """Auch wenn es kurz gedauert hat – gelernt hat er nichts."""
-    uhr = Uhr()
-    lauf = Bearbeitung(_uebung(), uhr)
-    for _ in range(HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT):
-        lauf.versuchen("AAAA")
-    assert lauf.loesung_angezeigt
-    assert not zusatz.war_schnell(lauf)
-
-
-def test_wer_beim_zeitablauf_abgebrochen_wurde_war_nicht_schnell():
-    uhr = Uhr()
-    lauf = Bearbeitung(_uebung(), uhr)
+    uhr.weiter(600)
     lauf.aufgeben()
-    assert not zusatz.war_schnell(lauf)
+    assert lauf.abgebrochen
+    assert zusatz.tempofaktor([lauf]) == 1.0
+
+
+def test_lange_aufgaben_wiegen_beim_tempo_schwerer():
+    """Gerechnet wird Summe durch Summe – sonst zöge eine kurze Aufgabe alles mit."""
+    uhr = Uhr()
+    kurz = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(4) * 3, "HUND", "KXQG")
+    lang = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(13), "ZEIT WIRD KNAPP", "CHLW ZLUG NQDSS")
+    faktor = zusatz.tempofaktor([kurz, lang])
+    assert 1.0 < faktor < 2.0, faktor
 
 
 # ───────────────────────────────────────────────────────────────────────────
 # 3. Restzeit und Obergrenze
 # ───────────────────────────────────────────────────────────────────────────
 
-def _schnelle_bearbeitung(uhr):
+def _erledigte_uebung(uhr, sekunden=1):
     lauf = Bearbeitung(_uebung(), uhr)
-    uhr.weiter(1)
+    uhr.weiter(sekunden)
     lauf.versuchen("KXQG")
     return lauf
 
@@ -307,22 +307,36 @@ def _schnelle_bearbeitung(uhr):
 def test_kurz_vor_schluss_gibt_es_keine_zusatzaufgabe():
     """Projektregel 1: Sie würde nur unfertig abgebrochen."""
     uhr = Uhr()
-    lauf = _schnelle_bearbeitung(uhr)
-    assert zusatz.war_schnell(lauf)
+    lauf = _erledigte_uebung(uhr)
     assert not zusatz.zeit_reicht_noch(30)
     assert not zusatz.ist_faellig(lauf, 30)
 
 
 def test_mit_genug_restzeit_gibt_es_eine():
     uhr = Uhr()
-    lauf = _schnelle_bearbeitung(uhr)
+    lauf = _erledigte_uebung(uhr)
     assert zusatz.ist_faellig(lauf, 600)
 
 
-def test_die_obergrenze_je_level_greift():
-    """Sonst liefe bei zu grosszügiger Schwelle eine Endlosschleife."""
+def test_auch_wer_langsam_war_bekommt_eine_solange_die_zeit_reicht():
+    """Seit Phase 7 entscheidet die Zeit, nicht das Tempo (siehe Modulkopf)."""
     uhr = Uhr()
-    lauf = _schnelle_bearbeitung(uhr)
+    langsam = _erledigte_uebung(uhr, sekunden=zusatz.erwartete_dauer(4) * 2)
+    assert zusatz.ist_faellig(langsam, 600)
+
+
+def test_wer_langsam_rechnet_braucht_mehr_restzeit():
+    """Der Tempofaktor verschiebt die Grenze – für Langsame früher."""
+    knapp = zusatz.erwartete_dauer(zusatz.laengste_uebung()) * 2 + zusatz.MINDESTRESTZEIT_SEKUNDEN
+    assert zusatz.zeit_reicht_noch(knapp, tempo=2.0)
+    assert not zusatz.zeit_reicht_noch(knapp - 1, tempo=2.0)
+    assert zusatz.zeit_reicht_noch(knapp - 1, tempo=1.0), "Wer schneller rechnet, hat länger Luft."
+
+
+def test_die_obergrenze_je_level_greift():
+    """Sonst liefe eine Endlosschleife, solange noch Zeit ist."""
+    uhr = Uhr()
+    lauf = _erledigte_uebung(uhr)
     grenze = zusatz.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL
     assert zusatz.ist_faellig(lauf, 600, grenze - 1)
     assert not zusatz.ist_faellig(lauf, 600, grenze)
@@ -355,7 +369,6 @@ def test_die_restzeit_richtet_sich_nach_dem_laengsten_text_nicht_nach_dem_letzte
     lauf = Bearbeitung(kurz, uhr)
     uhr.weiter(1)
     lauf.versuchen("IXFR")
-    assert zusatz.war_schnell(lauf)
     knapp = zusatz.erwartete_dauer(4) + zusatz.MINDESTRESTZEIT_SEKUNDEN + 1
     assert zusatz.laengste_uebung() > 4
     assert not zusatz.ist_faellig(lauf, knapp)
@@ -366,16 +379,17 @@ def test_die_obergrenze_ist_gesetzt_und_klein():
     assert 1 <= zusatz.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL <= 5
 
 
-def test_die_schwelle_liegt_unter_der_erwartung():
-    """"Deutlich schneller" muss auch deutlich heissen."""
-    assert 0 < zusatz.SCHNELL_WENN_UNTER_ANTEIL < 1
+def test_die_tempogrenzen_umschliessen_die_eins():
+    """Sonst wäre schon ein Kind im geschätzten Tempo aussergewöhnlich."""
+    unten, oben = zusatz.TEMPO_GRENZEN
+    assert 0 < unten < 1 < oben
 
 
 # ───────────────────────────────────────────────────────────────────────────
 # 4. Zusammenspiel mit dem Spielstand
 # ───────────────────────────────────────────────────────────────────────────
 
-def test_der_spielstand_bietet_nach_einer_schnellen_aufgabe_eine_zusatzaufgabe_an():
+def test_der_spielstand_bietet_nach_einer_uebung_eine_zusatzaufgabe_an():
     uhr = Uhr()
     stand = _stand(uhr)
     stand.starte_level(1)
@@ -386,14 +400,16 @@ def test_der_spielstand_bietet_nach_einer_schnellen_aufgabe_eine_zusatzaufgabe_a
     assert stand.zusatzaufgabe_faellig
 
 
-def test_nach_einer_langsamen_aufgabe_nicht():
+def test_nach_einer_sehr_langsamen_aufgabe_nicht():
+    """Nicht wegen des Tempos an sich, sondern weil die Zeit dann nicht mehr reicht."""
     uhr = Uhr()
     stand = _stand(uhr)
     stand.starte_level(1)
     aufgabe = stand.naechste_uebung()
-    uhr.weiter(zusatz.erwartete_dauer(aufgabe.laenge_in_buchstaben) * 1.5)
+    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1] * 0.75)
     stand.versuchen(aufgabe.loesung)
     stand.aufgabe_abschliessen()
+    assert stand.tempofaktor > 1
     assert not stand.zusatzaufgabe_faellig
 
 
@@ -490,30 +506,30 @@ def test_eine_eingabe_nach_dem_ende_stempelt_die_zeit_nicht_neu():
 # auseinander.
 
 @pytest.mark.parametrize("funkspruch", story.FUNKSPRUECHE, ids=lambda f: f.kennung)
-def test_ein_schnell_geloester_funkspruch_loest_keine_zusatzaufgabe_aus(funkspruch):
+def test_ein_funkspruch_loest_keine_zusatzaufgabe_aus(funkspruch):
     from game.generator import aufgabe_aus_funkspruch
 
     uhr = Uhr()
     lauf = Bearbeitung(aufgabe_aus_funkspruch(funkspruch, "VM"), uhr)
     uhr.weiter(1)
     lauf.versuchen(lauf.aufgabe.loesung)
-    assert zusatz.war_schnell(lauf)
     assert not zusatz.ist_faellig(lauf, 10_000)
 
 
-def test_wer_die_ganze_nachricht_schnell_rechnet_war_schnell():
+def test_wer_die_ganze_nachricht_rechnet_wird_an_ihr_gemessen():
     """Gemessen an der ganzen Nachricht, nicht am Anfang.
 
-    100 Sekunden für 15 Buchstaben sind langsam, für 78 sehr schnell.
+    100 Sekunden für 15 Buchstaben sind langsam, für 78 sehr schnell – der
+    Tempofaktor muss das auseinanderhalten.
     """
     uhr = Uhr()
     ganz = _bob(uhr)
     uhr.weiter(100)
     ganz.versuchen(ganz.aufgabe.vollstaendige_loesung)
-    assert zusatz.war_schnell(ganz)
 
     uhr = Uhr()
     anfang = _bob(uhr)
     uhr.weiter(100)
     anfang.versuchen(anfang.aufgabe.loesung)
-    assert not zusatz.war_schnell(anfang)
+
+    assert zusatz.tempofaktor([ganz]) < 1 < zusatz.tempofaktor([anfang])

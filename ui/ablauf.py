@@ -57,11 +57,12 @@ ERZAEHLUNG_VOR_FUNKSPRUCH = {
     story.FUNKSPRUCH_STANDORT.kennung: (story.REFLEXIONSFRAGE_LEVEL_3, TITEL_REFLEXION),
 }
 
-#: Erzähltexte zwischen zwei Leveln, als (Text, Titel, Funkspruch): Nach
-#: Level 2 kommt der Übergang zu Vigenère – aber nur, wenn der abgefangene
-#: Funkspruch dran war, denn er spricht von ihm (Arbeitsplan 7.2).
+#: Erzähltexte zwischen zwei Leveln: Nach Level 2 kommt der Übergang zu
+#: Vigenère (Arbeitsplan 7.2). Er spricht vom abgefangenen Funkspruch – und
+#: den hat bis dahin jeder gesehen: entweder selbst entschlüsselt oder gleich
+#: davor zum Mitlesen bekommen (:func:`funkspruch_nachlesen`).
 ERZAEHLUNG_NACH_LEVEL = {
-    2: (story.UEBERGANG_ZU_LEVEL_3, TITEL_UEBERGANG, story.FUNKSPRUCH_VERFOLGER),
+    2: (story.UEBERGANG_ZU_LEVEL_3, TITEL_UEBERGANG),
 }
 
 
@@ -157,17 +158,30 @@ def level_beenden(fenster):
 
 
 def nach_levelwechsel(fenster, wechsel):
-    """Zeigt, was auf ein Level folgt: der Übergang, das nächste Handbuch oder der Abschluss.
+    """Zeigt, was auf ein Level folgt: verpasste Funksprüche, der Übergang, das nächste Handbuch – oder der Abschluss.
 
-    Der Übergang steht **nach** dem Wechsel und damit im Zeitfenster des neuen
-    Levels. Vor dem Wechsel gezeigt, liefe er noch in der Zeit des alten: Wer
-    ihn langsam liest, hätte sein Level von "vorzeitig" auf "zeitablauf"
-    gekippt, obwohl alle Aufgaben erledigt waren – und beim Zeitablauf fiele er
-    ganz aus, obwohl der Funkspruch dran war, von dem er spricht.
+    **Verpasste Funksprüche zuerst.** Lief die Zeit ab, bevor sie drankamen,
+    wird trotzdem sofort gewechselt (Projektregel 1) – aber die Geschichte
+    soll nicht an der Uhr scheitern. Sie stehen deshalb hier noch einmal da,
+    zum Mitlesen: mit Lösung, ohne Eingabe, ohne Uhr. Das kostet Lesezeit
+    statt Rechenzeit und verlängert kein Zeitfenster.
+
+    **Dann der Übergang.** Er steht nach dem Wechsel und damit im Zeitfenster
+    des neuen Levels. Vor dem Wechsel gezeigt, liefe er noch in der Zeit des
+    alten: Wer ihn langsam liest, hätte sein Level von "vorzeitig" auf
+    "zeitablauf" gekippt, obwohl alle Aufgaben erledigt waren.
     """
+    danach = _nach_dem_wechsel(fenster, wechsel)
+    verpasst = fenster.durchlauf.spielstand.nicht_gestellte_funksprueche(wechsel.altes_level)
+    for funkspruch in reversed(verpasst):
+        danach = partial(funkspruch_nachlesen, funkspruch=funkspruch, danach=danach)
+    danach(fenster)
+
+
+def _nach_dem_wechsel(fenster, wechsel):
+    """Was nach dem Wechsel drankommt – als Aufruf, der nur noch das Fenster braucht."""
     if wechsel.spielende:
-        fenster.zeige(abschluss.Abschluss, durch_zeitablauf=wechsel.durch_zeitablauf)
-        return
+        return partial(abschluss_zeigen, durch_zeitablauf=wechsel.durch_zeitablauf)
     hinweis = (
         f"Die Zeit für Level {wechsel.altes_level} ist abgelaufen – weiter geht es "
         f"mit Level {wechsel.neues_level}."
@@ -176,11 +190,20 @@ def nach_levelwechsel(fenster, wechsel):
     )
     weiter = partial(handbuch_aufschlagen, level=wechsel.neues_level, hinweis=hinweis)
     uebergang = ERZAEHLUNG_NACH_LEVEL.get(wechsel.altes_level)
-    if uebergang is not None and fenster.durchlauf.spielstand.wurde_gestellt(uebergang[2]):
-        erzaehltext, titel, _ = uebergang
-        erzaehlszene_zeigen(fenster, erzaehltext, titel, danach=weiter)
-        return
-    weiter(fenster)
+    if uebergang is None:
+        return weiter
+    erzaehltext, titel = uebergang
+    return partial(erzaehlszene_zeigen, erzaehltext=erzaehltext, titel=titel, danach=weiter)
+
+
+def funkspruch_nachlesen(fenster, funkspruch, danach):
+    """Ein Funkspruch, für den die Zeit nicht mehr reichte – nur zum Mitlesen."""
+    fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=danach, nur_lesen=True)
+
+
+def abschluss_zeigen(fenster, durch_zeitablauf=False):
+    """Das Spiel ist vorbei: das Nachtlager, der Knopf "Warten" und die Rettung."""
+    fenster.zeige(abschluss.Abschluss, durch_zeitablauf=durch_zeitablauf)
 
 
 def oeffnen(wurzel, zeitgeber=None, protokollordner=None, massstab=None):

@@ -1,8 +1,29 @@
-"""Adaptive Zusatzaufgaben (Arbeitsplan 5.4).
+"""Zusatzaufgaben (Arbeitsplan 5.4).
 
-Wer eine Aufgabe deutlich schneller löst als erwartet, bekommt eine weitere
-aus demselben Übungspool – damit die schnellen Kinder im festen Zeitfenster
-nicht dasitzen und warten, während die langsamen noch rechnen.
+Wer mit den Pflichtaufgaben eines Levels durch ist und noch Zeit übrig hat,
+bekommt weitere Übungen aus demselben Pool – damit im festen Zeitfenster
+niemand dasitzt und wartet, während andere noch rechnen.
+
+Warum nicht nach Tempo
+──────────────────────
+Ursprünglich bekam eine Zusatzaufgabe, wer "deutlich schneller" war als
+erwartet: unter 60 % der geschätzten Zeit. Bei einer mittleren Übung
+(zwölf Buchstaben) hiess das **unter 41 Sekunden** für Lesen, Rechnen, Tippen
+und Prüfen. Für Sechst- bis Achtklässler, die das Verfahren gerade erst
+gesehen haben, ist das sehr sportlich – die Schwelle wäre vermutlich nie
+erreicht worden, und zwar **lautlos**: kein Fehler, kein Hinweis, nur eine
+Funktion, die im Klassenzimmer nie greift.
+
+Dazu kommt: Der Pflichtteil eines Levels füllt nach diesen Schätzungen nur
+ein Fünftel bis ein Drittel seines Zeitfensters. Ohne Zusatzaufgaben wäre der
+Rest Leerlauf – und die Spielgruppe hätte deutlich weniger Lernzeit als die
+Kontrollgruppe, die ihre 15/20/25 Minuten voll nutzt. Das wäre ein
+Unterschied zwischen den Gruppen, der nichts mit der Methode zu tun hat.
+
+Deshalb entscheidet jetzt die Zeit, nicht das Tempo: Solange die Restzeit
+für eine weitere Übung **und** für die noch offenen Funksprüche reicht, kommt
+eine. Begrenzt wird das durch :data:`HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL` und
+den Übungspool.
 
 Wie "erwartet" berechnet wird
 ─────────────────────────────
@@ -20,11 +41,12 @@ Gerechnet wird darum mit einer Geraden::
 
     erwartet = GRUNDZEIT + BUCHSTABEN * SEKUNDEN_JE_BUCHSTABE
 
-und "deutlich schneller" heisst: unter :data:`SCHNELL_WENN_UNTER_ANTEIL` davon.
+Gebraucht wird sie zweimal: um zu sehen, ob die Restzeit noch reicht, und um
+das eigene Tempo daran zu messen (:func:`tempofaktor`).
 
 Die Zahlen sind Schätzungen
 ───────────────────────────
-Alle drei stehen an genau dieser Stelle und gehören im Pilotdurchlauf
+Beide stehen an genau dieser Stelle und gehören im Pilotdurchlauf
 (Arbeitsplan 8.2) nachgemessen: zwei, drei Personen spielen lassen, im Log die
 Spalten ``sekunden`` und ``gerechnete_buchstaben`` gegeneinander auftragen und
 die Gerade daran anpassen – ohne die Zeilen mit ``abgebrochen = ja``, dort ist
@@ -80,15 +102,18 @@ ERWARTETE_GRUNDZEIT_SEKUNDEN = 20.0
 #: Zeit je Buchstabe, der von Hand gerechnet werden muss. Schätzwert.
 ERWARTETE_SEKUNDEN_JE_BUCHSTABE = 4.0
 
-#: Ab wann gilt jemand als "deutlich schneller"? Anteil der erwarteten Dauer.
-SCHNELL_WENN_UNTER_ANTEIL = 0.6
-
 #: So viele Zusatzaufgaben gibt es je Level höchstens.
 HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL = 3
 
 #: So viel Zeit muss im Level mindestens übrig sein, zusätzlich zu der Zeit,
 #: die die Zusatzaufgabe voraussichtlich kostet.
 MINDESTRESTZEIT_SEKUNDEN = 60.0
+
+#: In diesen Grenzen bleibt der Tempofaktor (siehe :func:`tempofaktor`). Nach
+#: oben, damit eine einzelne liegengelassene Aufgabe nicht den ganzen Ablauf
+#: umwirft; nach unten, damit niemand durch zwei Glückstreffer die Schätzung
+#: halbiert.
+TEMPO_GRENZEN = (0.5, 3.0)
 
 
 def erwartete_dauer(laenge_in_buchstaben):
@@ -103,21 +128,6 @@ def erwartete_dauer(laenge_in_buchstaben):
         ERWARTETE_GRUNDZEIT_SEKUNDEN
         + laenge_in_buchstaben * ERWARTETE_SEKUNDEN_JE_BUCHSTABE
     )
-
-
-def war_schnell(bearbeitung):
-    """War diese Aufgabe deutlich schneller gelöst als erwartet?
-
-    Nur eine wirklich **gelöste** Aufgabe zählt. Wer die Lösung angezeigt
-    bekommen hat, war nicht schnell, auch wenn es kurz gedauert hat – und wer
-    beim Zeitablauf abgebrochen wurde, erst recht nicht.
-    """
-    if bearbeitung.laeuft_noch:
-        return False
-    if not bearbeitung.geloest or bearbeitung.loesung_angezeigt:
-        return False
-    erwartet = erwartete_dauer(bearbeitung.gerechnete_buchstaben)
-    return bearbeitung.benoetigte_sekunden < SCHNELL_WENN_UNTER_ANTEIL * erwartet
 
 
 def erwartete_dauer_funksprueche(funksprueche):
@@ -135,6 +145,36 @@ def erwartete_dauer_funksprueche(funksprueche):
     return sum(erwartete_dauer(funkspruch.buchstaben_von_hand) for funkspruch in funksprueche)
 
 
+def tempofaktor(bearbeitungen):
+    """Wie viel langsamer oder schneller jemand rechnet, als oben geschätzt.
+
+    Eins heisst "wie geschätzt", zwei "doppelt so lange". Gezählt werden nur
+    Aufgaben, an denen wirklich gerechnet wurde: abgebrochene nicht (dort ist
+    die Zeit die bis zum Levelwechsel) und solche ohne gerechnete Buchstaben
+    auch nicht. Ohne solche Aufgaben ist der Faktor eins.
+
+    Warum das nötig ist: Die Gerade oben ist ein Mittelwert für alle. Die
+    Vorrang-Regel (:mod:`game.levelablauf`) soll aber gerade die Langsamen
+    davor schützen, dass ihnen am Ende die Funksprüche fehlen – und genau für
+    die reserviert ein Mittelwert zu wenig Zeit. Ein Kind, das dreimal so
+    lange braucht, bekäme sonst noch eine Übung angeboten und verlöre dafür
+    Bobs Antwort.
+
+    >>> tempofaktor(())
+    1.0
+    """
+    ist = soll = 0.0
+    for bearbeitung in bearbeitungen:
+        if bearbeitung.abgebrochen or not bearbeitung.gerechnete_buchstaben:
+            continue
+        ist += bearbeitung.benoetigte_sekunden
+        soll += erwartete_dauer(bearbeitung.gerechnete_buchstaben)
+    if not soll:
+        return 1.0
+    unten, oben = TEMPO_GRENZEN
+    return min(oben, max(unten, ist / soll))
+
+
 def laengste_uebung():
     """Die Buchstabenzahl des längsten Übungstextes – alle Level ziehen aus demselben Pool.
 
@@ -144,24 +184,27 @@ def laengste_uebung():
     return max(len(_ohne_leerzeichen(text)) for text in _uebungen.UEBUNGSTEXTE)
 
 
-def zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche=()):
+def zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche=(), tempo=1.0):
     """Bleibt im Level genug Zeit, damit noch eine Übung Sinn ergibt?
 
-    Gerechnet wird mit der **erwarteten** Dauer des längsten Textes im Pool,
-    nicht mit dem eigenen Tempo: Sonst bekäme, wer besonders schnell war,
-    noch kurz vor Schluss eine Aufgabe aufgedrückt. Und nicht mit der eben
+    Gerechnet wird mit dem **längsten** Text im Pool, nicht mit der eben
     gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest.
 
     ``offene_funksprueche`` sind die Funksprüche, die im Level noch anstehen;
     ihre Zeit wird mitreserviert (Vorrang-Regel, Arbeitsplan Phase 7).
+    ``tempo`` ist der Faktor aus :func:`tempofaktor`: Wer langsamer rechnet,
+    braucht für dieselbe Aufgabe länger, und die Grenze rückt entsprechend
+    früher. Der Sicherheitspuffer bleibt davon unberührt.
 
     >>> zeit_reicht_noch(900)
     True
     >>> zeit_reicht_noch(100)
     False
+    >>> zeit_reicht_noch(280), zeit_reicht_noch(280, tempo=3.0)
+    (True, False)
     """
     noetig = erwartete_dauer(laengste_uebung()) + erwartete_dauer_funksprueche(offene_funksprueche)
-    return verbleibende_sekunden >= noetig + MINDESTRESTZEIT_SEKUNDEN
+    return verbleibende_sekunden >= tempo * noetig + MINDESTRESTZEIT_SEKUNDEN
 
 
 def obergrenze_erreicht(bisherige_zusatzaufgaben):
@@ -169,15 +212,16 @@ def obergrenze_erreicht(bisherige_zusatzaufgaben):
     return bisherige_zusatzaufgaben >= HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL
 
 
-def ist_faellig(bearbeitung, verbleibende_sekunden, bisherige_zusatzaufgaben=0, offene_funksprueche=()):
+def ist_faellig(bearbeitung, verbleibende_sekunden, bisherige_zusatzaufgaben=0, offene_funksprueche=(),
+                tempo=1.0):
     """Soll nach dieser Aufgabe eine Zusatzaufgabe gestellt werden?
 
-    Alle vier Bedingungen müssen stimmen: Es war eine Übung, sie war schnell
-    genug gelöst, es bleibt genug Zeit – auch für die noch offenen Funksprüche
-    des Levels –, und die Obergrenze des Levels ist noch nicht erreicht.
+    Alle drei Bedingungen müssen stimmen: Es war eine Übung, es bleibt genug
+    Zeit – auch für die noch offenen Funksprüche des Levels –, und die
+    Obergrenze des Levels ist noch nicht erreicht.
     """
     if bearbeitung.aufgabe.quelle != QUELLE_UEBUNG:
         return False
     if obergrenze_erreicht(bisherige_zusatzaufgaben):
         return False
-    return war_schnell(bearbeitung) and zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche)
+    return zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche, tempo)

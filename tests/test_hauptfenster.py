@@ -26,7 +26,7 @@ import main  # noqa: E402
 from content import charaktere  # noqa: E402
 from game.protokoll import KODIERUNG, TRENNZEICHEN  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
-from ui import abschluss, ablauf, handbuch, hauptfenster, stil, uebung  # noqa: E402
+from ui import abschluss, ablauf, funk, handbuch, hauptfenster, stil, uebung  # noqa: E402
 from ui.hauptfenster import Hauptfenster  # noqa: E402
 from ui.screen import Screen  # noqa: E402
 
@@ -151,11 +151,26 @@ def _loesen(fenster):
     screen.weiter()
 
 
+def _nachlese_durchklicken(fenster):
+    """Klickt die Funksprüche weg, die nach einem Zeitablauf zum Mitlesen dastehen.
+
+    Seit Phase 7 bekommt man sie beim Levelwechsel mit Lösung zu sehen, damit
+    die Geschichte nicht an der Uhr scheitert (ui/ablauf.py).
+    """
+    while isinstance(fenster.aktueller_screen, funk.Funk) and fenster.aktueller_screen.nur_lesen:
+        fenster.aktueller_screen.weiter()
+    return fenster.aktueller_screen
+
+
 def _alle_level_ablaufen_lassen(fenster, uhr):
     """Lässt die Zeitfenster aller Level ablaufen – der schnellste Weg zum Abschluss."""
     for level in sorted(DAUER_JE_LEVEL_SEKUNDEN):
         uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[level])
         fenster._takt()
+        _nachlese_durchklicken(fenster)
+        if isinstance(fenster.aktueller_screen, ablauf.erzaehlszene.Erzaehlszene):
+            while isinstance(fenster.aktueller_screen, ablauf.erzaehlszene.Erzaehlszene):
+                fenster.aktueller_screen.weiter()
 
 
 def _zeilen(fenster):
@@ -461,6 +476,7 @@ def test_der_takt_schaltet_nach_ablauf_weiter(fenster, uhr):
     _bis_zum_handbuch(fenster)
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1])
     fenster._takt()
+    _nachlese_durchklicken(fenster)                 # die verpassten Funksprüche zum Mitlesen
     assert fenster.durchlauf.spielstand.aktuelles_level == 2
     assert fenster.kopfzeile == ("Handbuch – Level 2", "Level 2 · monoalphabetische Substitution")
 
@@ -508,7 +524,7 @@ def test_eine_zu_spaet_gestellte_uebung_schaltet_sofort_weiter(fenster, uhr):
     _bis_zum_handbuch(fenster)
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1] + 0.1)
     _klick(fenster, "Zu den Übungen")
-    screen = fenster.aktueller_screen
+    screen = _nachlese_durchklicken(fenster)
     assert isinstance(screen, handbuch.Handbuch)
     assert screen.titel == "Handbuch – Level 2"
     assert fenster.durchlauf.spielstand.aktuelle_aufgabe is None
@@ -528,9 +544,9 @@ def test_ein_screen_der_zu_frueh_stellt_verdeckt_den_levelwechsel_nicht(fenster,
     _bis_zum_handbuch(fenster)
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1] + 0.1)
     fenster.zeige(StelltImKonstruktor)
-    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
+    assert len(fenster.inhalt.winfo_children()) == 1, "Kein halb gebauter Screen bleibt liegen."
+    assert isinstance(_nachlese_durchklicken(fenster), handbuch.Handbuch)
     assert fenster.aktueller_screen.titel == "Handbuch – Level 2"
-    assert len(fenster.inhalt.winfo_children()) == 1
 
 
 def test_die_uebung_wird_erst_beim_anzeigen_gestellt(fenster, monkeypatch):
@@ -727,7 +743,7 @@ def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, 
         if getattr(screen, "aufgabe", None) is None:
             screen.weiter()                           # Handbuchseite oder Erzähltext
         else:
-            uhr.weiter(60)                            # so schnell ist niemand: keine Zusatzaufgaben
+            uhr.weiter(60)
             _loesen(fenster)
     assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
     assert fenster.aktueller_screen.hinweis == ""                # kein Level endete am Timer
@@ -737,8 +753,18 @@ def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, 
     zeilen = _zeilen(fenster)
     assert {z["pseudonym"] for z in zeilen} == {"ID 1-12"}   # so macht Excel kein Datum daraus
     assert fenster.durchlauf.protokoll.dateiname.startswith("durchlauf_1-12_")
-    assert [z["level"] for z in zeilen] == ["1", "1", "1", "1", "2", "2", "2", "3", "3", "3", "3"]
-    assert [z["kennung"] for z in zeilen][-2:] == ["standort", "bob_zweite_antwort"]
+    level = [z["level"] for z in zeilen]
+    assert level == sorted(level), "Die Zeilen stehen in der Reihenfolge des Spiels."
+    for nummer, funksprueche in ((1, ["erster_ruf", "bob_erste_antwort"]),
+                                 (2, ["verfolger"]),
+                                 (3, ["standort", "bob_zweite_antwort"])):
+        im_level = [z for z in zeilen if z["level"] == str(nummer)]
+        assert [z["kennung"] for z in im_level][-len(funksprueche):] == funksprueche, (
+            f"Level {nummer}: erst die Übungen, dann die Funksprüche."
+        )
+        uebungen = [z for z in im_level if z["quelle"] == "uebung"]
+        assert len(uebungen) >= 2, f"Level {nummer}: mindestens die zwei Pflichtübungen."
+        assert len({z["kennung"] for z in uebungen}) == len(uebungen), "Keine Übung doppelt."
     assert {z["levelende"] for z in zeilen} == {"vorzeitig"}
     assert {z["geloest"] for z in zeilen} == {"ja"}
     assert {z["abgebrochen"] for z in zeilen} == {"nein"}

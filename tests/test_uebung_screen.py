@@ -24,7 +24,7 @@ from game.aufgabe import VERSCHLUESSELN, Aufgabe, anwenden  # noqa: E402
 from game.bearbeitung import HINWEIS_FORTSCHRITT  # noqa: E402
 from game.rueckmeldung import rueckmeldung  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
-from ui import ablauf, handbuch, stil, uebung  # noqa: E402
+from ui import ablauf, funk, handbuch, stil, uebung  # noqa: E402
 
 LEVEL = (1, 2, 3)
 
@@ -81,6 +81,13 @@ def _zur_uebung(fenster, level=1):
             return screen
         _einen_schritt_weiter(fenster)
     raise AssertionError(f"Die erste Übung von Level {level} kam nie.")
+
+
+def _nachlese_durchklicken(fenster):
+    """Klickt die Funksprüche weg, die nach einem Zeitablauf zum Mitlesen dastehen (ui/ablauf.py)."""
+    while isinstance(fenster.aktueller_screen, funk.Funk) and fenster.aktueller_screen.nur_lesen:
+        fenster.aktueller_screen.weiter()
+    return fenster.aktueller_screen
 
 
 def _einen_schritt_weiter(fenster):
@@ -463,7 +470,7 @@ def test_laeuft_die_zeit_ab_wird_die_uebung_abgebrochen(fenster, uhr):
     screen = _zur_uebung(fenster)
     uhr.jetzt += DAUER_JE_LEVEL_SEKUNDEN[1]
     fenster._takt()
-    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
+    assert isinstance(_nachlese_durchklicken(fenster), handbuch.Handbuch)
     (erledigt,) = fenster.durchlauf.spielstand.erledigte_aufgaben
     assert erledigt.aufgabe is screen.aufgabe and erledigt.abgebrochen
 
@@ -475,7 +482,7 @@ def test_nach_dem_zeitablauf_wird_keine_uebung_mehr_gestellt(fenster, uhr):
     screen.pruefen()
     uhr.jetzt += DAUER_JE_LEVEL_SEKUNDEN[1]
     screen.weiter()                                    # stellt die nächste Übung – zu spät
-    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
+    assert isinstance(_nachlese_durchklicken(fenster), handbuch.Handbuch)
     assert fenster.aktueller_screen.seite is buch.SEITE_SUBSTITUTION
 
 

@@ -433,6 +433,9 @@ def test_laeuft_die_zeit_am_funkgeraet_ab_kommt_das_naechste_level(fenster, uhr)
     screen = _zum_funkgeraet(fenster, 1)
     uhr.jetzt += DAUER_JE_LEVEL_SEKUNDEN[1]
     fenster._takt()
+    # Was nicht mehr drankam, steht davor noch zum Mitlesen da (ui/ablauf.py).
+    while isinstance(fenster.aktueller_screen, funk.Funk) and fenster.aktueller_screen.nur_lesen:
+        fenster.aktueller_screen.weiter()
     assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
     assert fenster.aktueller_screen.seite.level == 2
     assert fenster.durchlauf.spielstand.erledigte_aufgaben[-1].aufgabe is screen.aufgabe

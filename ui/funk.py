@@ -61,6 +61,7 @@ from tkinter import font as tkfont
 
 from content import story, verfahren
 from game.aufgabe import ENTSCHLUESSELN
+from game.generator import aufgabe_aus_funkspruch
 from game.rueckmeldung import bezugsloesung, erste_abweichung
 from ui import handbuch, lineal, stil, uebung
 from ui.animation import Animation
@@ -88,6 +89,12 @@ AUFTRAG = {
     (story.EMPFANGEN, False): "Entschlüssele den Funkspruch:",
     (story.SENDEN, True): "Verschlüssele den hellen Anfang:",
     (story.SENDEN, False): "Verschlüssele den Funkspruch:",
+}
+#: Auf dem Glas, wenn die Zeit für diese Nachricht nicht mehr reichte und sie
+#: nur noch zum Mitlesen dasteht (Arbeitsplan Phase 7).
+AUFTRAG_NACHGELESEN = {
+    story.EMPFANGEN: "Die Zeit war zu knapp – hier zum Mitlesen:",
+    story.SENDEN: "Die Zeit war zu knapp – deine Figur hat selbst verschlüsselt:",
 }
 #: Vor dem Eingabefeld.
 EINGABEZEICHEN = "▸"
@@ -125,6 +132,11 @@ class Funk(Screen):
     so kommt man vom Nachschlagen zurück; ``entwurf`` ist, was dabei schon in
     der Eingabezeile stand.
 
+    ``nur_lesen`` zeigt den Funkspruch, ohne ihn zu stellen: Für ihn hat die
+    Zeit des Levels nicht mehr gereicht, und er steht nur noch da, damit die
+    Geschichte weitergeht (Arbeitsplan Phase 7). Es gibt dann keine Eingabe,
+    keine Uhr und keine Zeile im Log – nur die ganze Nachricht und "Weiter".
+
     ``hinweis`` ist ein Satz, der über dem Gerät erscheint, **sobald die
     Nachricht ganz da ist** – beim abgefangenen Funkspruch der zur
     Häufigkeitsanalyse (Arbeitsplan 7.2). Er tritt an die Stelle der
@@ -133,7 +145,8 @@ class Funk(Screen):
     Glas – darauf zielt der Satz.
     """
 
-    def __init__(self, fenster, funkspruch, danach, fortsetzen=False, entwurf="", hinweis=""):
+    def __init__(self, fenster, funkspruch, danach, fortsetzen=False, entwurf="", hinweis="",
+                 nur_lesen=False):
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(handbuch.ABSTAND_KNAPP))
         self.funkspruch = funkspruch
@@ -141,6 +154,7 @@ class Funk(Screen):
         self._danach = danach
         self._fortsetzen = fortsetzen
         self._entwurf = entwurf
+        self._nur_lesen = nur_lesen
         #: Der laufende Funkspruch als Aufgabe – gestellt beim Anzeigen, dann beginnt seine Uhr.
         self.aufgabe = None
         self.lineal = None
@@ -213,6 +227,11 @@ class Funk(Screen):
         return self._hinweis
 
     @property
+    def nur_lesen(self):
+        """Steht der Funkspruch nur zum Mitlesen da, weil die Zeit nicht reichte?"""
+        return self._nur_lesen
+
+    @property
     def ist_beendet(self):
         return self._beendet
 
@@ -239,9 +258,13 @@ class Funk(Screen):
         knopfart = dict(font=stil.SCHRIFT_FETT, highlightbackground=stil.FARBE_NACHT)
         self._nachschlagen_knopf = tk.Button(leiste, text=KNOPF_NACHSCHLAGEN, command=self._nachschlagen,
                                              **knopfart)
-        self._nachschlagen_knopf.pack(side="left")
+        if not self._nur_lesen:
+            # Beim Mitlesen gibt es nichts zu rechnen – also auch nichts nachzuschlagen.
+            self._nachschlagen_knopf.pack(side="left")
         senden = self.funkspruch.richtung == story.SENDEN
-        self._knopf = tk.Button(leiste, text=KNOPF_SENDEN if senden else KNOPF_PRUEFEN, command=self.pruefen,
+        aufschrift = KNOPF_WEITER if self._nur_lesen else (KNOPF_SENDEN if senden else KNOPF_PRUEFEN)
+        self._knopf = tk.Button(leiste, text=aufschrift,
+                                command=self.weiter if self._nur_lesen else self.pruefen,
                                 padx=self.px(stil.ABSTAND), **knopfart)
         self._knopf.pack(side="right")
         self._knopf.bind("<Return>", lambda _ereignis: self._knopf.invoke())
@@ -270,7 +293,14 @@ class Funk(Screen):
     # ── Anzeigen ───────────────────────────────────────────────────────────
 
     def beim_anzeigen(self):
-        """Hier wird der Funkspruch gestellt – mit ihm beginnt seine Uhr."""
+        """Hier wird der Funkspruch gestellt – mit ihm beginnt seine Uhr.
+
+        Beim Mitlesen wird nichts gestellt: Die Zeit dafür ist vorbei, es gibt
+        keine Uhr und keine Zeile im Log.
+        """
+        if self._nur_lesen:
+            self._nachlesen_zeigen()
+            return
         stand = self.durchlauf.spielstand
         # Zurück vom Nachschlagen: derselbe Funkspruch, seine Uhr lief weiter.
         aufgabe = stand.aktuelle_aufgabe if self._fortsetzen else self.durchlauf.stelle_funkspruch(self.funkspruch)
@@ -289,6 +319,16 @@ class Funk(Screen):
             self.anzeige_vervollstaendigen()
         self._stand_zeigen(stand.aktuelle_bearbeitung)
 
+    def _nachlesen_zeigen(self):
+        """Die ganze Nachricht zum Mitlesen – ohne Eingabe, ohne Uhr, ohne Log."""
+        self.aufgabe = aufgabe_aus_funkspruch(self.funkspruch, self.durchlauf.spielstand.figur.initialen)
+        seite = self.buch.werkzeug_zeichnen(self.funkspruch.level)
+        self.lineal = lineal.anlegen(self.buch, "links", seite.stuecke)
+        self._anzeige_zeichnen()
+        self.anzeige_vervollstaendigen()
+        self._rest_zeigen(self.aufgabe.vollstaendige_loesung, self.erzaehlung)
+        self._knopf.focus_set()
+
     def _anzeige_zeichnen(self):
         """Schreibt Kopf, Auftrag und den Platz für Nachricht und Eingabe aufs Glas."""
         leinwand, s, px = self.buch, self.schrift, self.px
@@ -306,7 +346,9 @@ class Funk(Screen):
         y += zeile + px(ABSTAND_KOPF)
         leinwand.create_line(x0, y, x1, y, fill=stil.FARBE_LEUCHTSCHRIFT_MATT, tags=("anzeige",))
         y += px(ABSTAND_KOPF)
-        for text in umbrechen(AUFTRAG[(funkspruch.richtung, aufgabe.hat_teilaufgabe)], s, x1 - x0):
+        auftrag = (AUFTRAG_NACHGELESEN[funkspruch.richtung] if self._nur_lesen
+                   else AUFTRAG[(funkspruch.richtung, aufgabe.hat_teilaufgabe)])
+        for text in umbrechen(auftrag, s, x1 - x0):
             leinwand.create_text(x0, y, text=text, anchor="nw", font=s, fill=stil.FARBE_LEUCHTSCHRIFT,
                                  tags=("anzeige", "auftrag"))
             y += zeile
@@ -315,6 +357,10 @@ class Funk(Screen):
         self._zeilen = tuple(umbrechen(aufgabe.anzeigetext, s, x1 - x0))
         y += len(self._zeilen) * zeile + px(ABSTAND_NACHRICHT)
 
+        if self._nur_lesen:
+            # Kein Eingabefeld – der Platz gehört der Nachricht.
+            self._rueckmeldung_oben = y
+            return
         feldhoehe = round(zeile * FELDHOEHE)
         leinwand.create_text(x0, y + feldhoehe // 2, text=EINGABEZEICHEN, anchor="w", font=self._fett,
                              fill=stil.FARBE_LEUCHTSCHRIFT_HELL, tags=("anzeige", "eingabezeichen"))

@@ -30,7 +30,7 @@ from content import charaktere, story  # noqa: E402
 from content import handbuch as buch  # noqa: E402
 from crypto.normalize import ALPHABET  # noqa: E402
 from crypto.vigenere_quadrat import erzeuge_quadrat  # noqa: E402
-from ui import ablauf, animation, buchleinwand, buchsatz, handbuch, stil, uebung  # noqa: E402
+from ui import ablauf, animation, buchleinwand, buchsatz, funk, handbuch, stil, uebung  # noqa: E402
 
 LEVEL = (1, 2, 3)
 PROJEKT = Path(__file__).resolve().parent.parent
@@ -985,6 +985,13 @@ def test_die_kopfzeile_nennt_das_level(fenster, aufrufe):
 
 # ── Im Spielablauf ─────────────────────────────────────────────────────────
 
+def _nachlese_durchklicken(fenster):
+    """Klickt die Funksprüche weg, die nach einem Zeitablauf zum Mitlesen dastehen (ui/ablauf.py)."""
+    while isinstance(fenster.aktueller_screen, funk.Funk) and fenster.aktueller_screen.nur_lesen:
+        fenster.aktueller_screen.weiter()
+    return fenster.aktueller_screen
+
+
 def _bis_zum_handbuch(fenster):
     fenster.aktueller_screen._feld.insert(0, "1-12")
     fenster.aktueller_screen.starten()
@@ -1014,7 +1021,7 @@ def test_nach_dem_handbuch_kommen_die_uebungen(fenster):
 def test_nach_einem_levelwechsel_liegt_die_naechste_seite_auf(fenster):
     _bis_zum_handbuch(fenster)
     fenster.durchlauf.naechstes_level()
-    screen = fenster.aktueller_screen
+    screen = _nachlese_durchklicken(fenster)
     assert isinstance(screen, handbuch.Handbuch)
     assert screen.seite is buch.SEITE_SUBSTITUTION
     assert screen.einleitung == story.EINSTIEG_LEVEL_2.absaetze
@@ -1027,7 +1034,7 @@ def test_ist_die_zeit_abgelaufen_sagt_das_buch_es(fenster, uhr):
     _bis_zum_handbuch(fenster)
     uhr.jetzt += DAUER_JE_LEVEL_SEKUNDEN[1]
     fenster._takt()
-    screen = fenster.aktueller_screen
+    screen = _nachlese_durchklicken(fenster)
     assert screen.seite is buch.SEITE_SUBSTITUTION
     assert "Level 1 ist abgelaufen" in screen.hinweis
 
@@ -1069,6 +1076,7 @@ def test_zurueck_vom_nachschlagen_geht_es_mit_derselben_uebung_weiter(fenster, u
 def test_nachschlagen_im_naechsten_level_zeigt_dessen_seite(fenster):
     _bis_zum_handbuch(fenster)
     fenster.durchlauf.naechstes_level()
+    _nachlese_durchklicken(fenster)
     fenster.aktueller_screen.weiter()
     fenster.aktueller_screen._nachschlagen()
     assert fenster.aktueller_screen.seite is buch.SEITE_SUBSTITUTION
@@ -1083,7 +1091,7 @@ def test_laeuft_die_zeit_beim_nachschlagen_ab_kommt_das_naechste_level(fenster, 
     fenster.aktueller_screen._nachschlagen()
     uhr.jetzt += DAUER_JE_LEVEL_SEKUNDEN[1]
     fenster._takt()
-    screen = fenster.aktueller_screen
+    screen = _nachlese_durchklicken(fenster)
     assert screen.seite is buch.SEITE_SUBSTITUTION
     assert screen.knopftext == handbuch.KNOPF_WEITER       # kein "Zurück zur Aufgabe" mehr
     assert fenster.durchlauf.spielstand.erledigte_aufgaben[0].abgebrochen

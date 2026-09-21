@@ -85,6 +85,7 @@ from game.zusatzaufgaben import (
     HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL,
     ist_faellig as _zusatzaufgabe_ist_faellig,
     obergrenze_erreicht as _obergrenze_erreicht,
+    tempofaktor as _tempofaktor,
 )
 from game.zufallsquelle import SEED_OBERGRENZE, Zufallsquelle
 
@@ -356,8 +357,21 @@ class Spielstand:
             return False
         return _zusatzaufgabe_ist_faellig(
             zuletzt, self.verbleibende_sekunden, self.zusatzaufgaben_im_level(),
-            self.offene_funksprueche,
+            self.offene_funksprueche, self.tempofaktor,
         )
+
+    @property
+    def tempofaktor(self):
+        """Wie schnell diese Person rechnet, gemessen an ihren eigenen Aufgaben.
+
+        Gemessen wird am laufenden Level, solange dort schon etwas erledigt
+        ist – die Verfahren sind unterschiedlich aufwendig, ein Vigenère-Feld
+        nachzuschlagen dauert länger als im Alphabet abzuzählen. Zu Beginn
+        eines Levels zählen die Aufgaben der Level davor; ganz am Anfang ist
+        der Faktor eins (:func:`game.zusatzaufgaben.tempofaktor`).
+        """
+        im_level = [b for b in self._erledigt if b.aufgabe.level == self._level]
+        return _tempofaktor(im_level or self._erledigt)
 
     @property
     def naechster_schritt(self):
@@ -372,6 +386,7 @@ class Spielstand:
             offene_funksprueche=self.offene_funksprueche,
             verbleibende_sekunden=self.verbleibende_sekunden,
             zusatzaufgabe_faellig=self.zusatzaufgabe_faellig,
+            tempo=self.tempofaktor,
         )
 
     def pruefe_zeitfenster(self):
@@ -429,19 +444,19 @@ class Spielstand:
     @property
     def offene_funksprueche(self):
         """Die Funksprüche des laufenden Levels, die noch nicht gestellt wurden – in Spielreihenfolge."""
-        if self._level is None:
-            return ()
-        return tuple(funkspruch for funkspruch in _story.FUNKSPRUECHE_NACH_LEVEL[self._level]
-                     if funkspruch.kennung not in self._gestellte_funksprueche)
+        return self.nicht_gestellte_funksprueche(self._level)
 
-    def wurde_gestellt(self, funkspruch):
-        """Kam dieser Funkspruch in diesem Durchlauf schon dran?
+    def nicht_gestellte_funksprueche(self, level):
+        """Die Funksprüche eines Levels, die nie gestellt wurden – in Spielreihenfolge.
 
-        Die Geschichte fragt danach: Der Übergang zu Level 3 spricht vom
-        abgefangenen Funkspruch – wer ihn nie gesehen hat, soll den Satz auch
-        nicht lesen.
+        Für das laufende Level heisst das "steht noch aus". Für ein Level, das
+        vorbei ist, heisst es "kam nicht mehr dran": Die Zeit lief ab, bevor
+        sie an der Reihe waren (Projektregel 1). Die Oberfläche zeigt solche
+        Funksprüche danach zum Mitlesen – die Geschichte soll nicht an der Uhr
+        scheitern.
         """
-        return funkspruch.kennung in self._gestellte_funksprueche
+        return tuple(funkspruch for funkspruch in _story.FUNKSPRUECHE_NACH_LEVEL.get(level, ())
+                     if funkspruch.kennung not in self._gestellte_funksprueche)
 
     def stelle_funkspruch(self, funkspruch):
         """Stellt einen echten Funkspruch als Aufgabe.

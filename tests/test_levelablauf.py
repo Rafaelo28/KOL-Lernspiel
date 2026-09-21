@@ -145,11 +145,11 @@ def test_je_mehr_funksprueche_offen_sind_desto_frueher_greift_der_vorrang():
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_der_spielstand_fuehrt_durch_das_ganze_level():
-    """Zwei Übungen, dann beide Funksprüche von Level 1, dann ist das Level durch."""
+    """Zwei Übungen, dann Zusatzaufgaben, solange Zeit ist, dann die Funksprüche."""
     uhr = Uhr()
     stand = _stand(uhr)
     gesehen = []
-    for _ in range(6):
+    for _ in range(20):
         schritt = stand.naechster_schritt
         gesehen.append(schritt.art if schritt.funkspruch is None else schritt.funkspruch.kennung)
         if schritt.art == SCHRITT_LEVELENDE:
@@ -159,7 +159,13 @@ def test_der_spielstand_fuehrt_durch_das_ganze_level():
         else:
             stand.naechste_uebung(zusatzaufgabe=schritt.art == SCHRITT_ZUSATZAUFGABE)
         _loese(stand, uhr=uhr)
-    assert gesehen == ["uebung", "uebung", "erster_ruf", "bob_erste_antwort", "levelende"]
+    uebungen = gesehen[:BASIS_UEBUNGEN_JE_LEVEL]
+    zusatz = [art for art in gesehen if art == SCHRITT_ZUSATZAUFGABE]
+    assert uebungen == [SCHRITT_UEBUNG] * BASIS_UEBUNGEN_JE_LEVEL, "Erst die Pflichtübungen …"
+    assert zusatz, "… dann Zusatzaufgaben, solange die Zeit reicht …"
+    assert gesehen[-3:] == ["erster_ruf", "bob_erste_antwort", SCHRITT_LEVELENDE], (
+        "… und zum Schluss die Funksprüche, bevor das Level endet."
+    )
 
 
 def test_uebungen_im_level_zaehlt_die_zusatzaufgaben_nicht_mit():
@@ -175,25 +181,40 @@ def test_uebungen_im_level_zaehlt_die_zusatzaufgaben_nicht_mit():
     assert stand.naechster_schritt.art == SCHRITT_UEBUNG
 
 
-def test_wer_schnell_ist_bekommt_eine_zusatzaufgabe():
+def test_nach_den_pflichtuebungen_kommt_eine_zusatzaufgabe():
+    """Nicht mehr nach Tempo, sondern solange die Zeit reicht (siehe game/zusatzaufgaben.py)."""
     uhr = Uhr()
     stand = _stand(uhr)
     for _ in range(BASIS_UEBUNGEN_JE_LEVEL):
         stand.naechste_uebung()
-        _loese(stand, sekunden=1, uhr=uhr)
+        _loese(stand, uhr=uhr)
     assert stand.zusatzaufgabe_faellig
     assert stand.naechster_schritt.art == SCHRITT_ZUSATZAUFGABE
 
 
-def test_bei_knapper_zeit_ist_am_spielstand_keine_zusatzaufgabe_mehr_faellig():
-    """Auch wer schnell war, bekommt keine Extraaufgabe mehr, wenn die Funksprüche warten."""
+def test_wer_sehr_langsam_ist_bekommt_keine_zusatzaufgabe():
+    """Der Tempofaktor rechnet mit dem eigenen Tempo – nicht mit dem Mittelwert."""
     uhr = Uhr()
     stand = _stand(uhr)
     for _ in range(BASIS_UEBUNGEN_JE_LEVEL):
         stand.naechste_uebung()
-        _loese(stand, sekunden=1, uhr=uhr)
+        _loese(stand, sekunden=250, uhr=uhr)
+    assert stand.tempofaktor > 2
+    assert not stand.zusatzaufgabe_faellig
+    assert stand.naechster_schritt.art == SCHRITT_FUNKSPRUCH
+
+
+def test_bei_knapper_zeit_ist_am_spielstand_keine_zusatzaufgabe_mehr_faellig():
+    """Wird die Zeit knapp, gibt es keine Extraaufgabe mehr – die Funksprüche gehen vor."""
+    uhr = Uhr()
+    stand = _stand(uhr)
+    for _ in range(BASIS_UEBUNGEN_JE_LEVEL):
+        stand.naechste_uebung()
+        _loese(stand, uhr=uhr)
     assert stand.zusatzaufgabe_faellig
-    uhr.weiter(stand.verbleibende_sekunden - _knappe_zeit(LEVEL_1))
+    noetig = stand.tempofaktor * (zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung())
+                                  + zusatzaufgaben.erwartete_dauer_funksprueche(LEVEL_1))
+    uhr.weiter(stand.verbleibende_sekunden - noetig - zusatzaufgaben.MINDESTRESTZEIT_SEKUNDEN + 1)
     assert not stand.zusatzaufgabe_faellig
     assert stand.naechster_schritt.art == SCHRITT_FUNKSPRUCH
 
@@ -214,12 +235,14 @@ def test_wer_troedelt_kommt_trotzdem_zum_funkspruch():
 def test_ein_gestellter_funkspruch_ist_nicht_mehr_offen():
     uhr = Uhr()
     stand = _stand(uhr)
-    assert not stand.wurde_gestellt(LEVEL_1[0])
+    assert stand.offene_funksprueche == LEVEL_1
     stand.stelle_funkspruch(LEVEL_1[0])
-    assert stand.wurde_gestellt(LEVEL_1[0])
-    assert not stand.wurde_gestellt(LEVEL_1[1])
     _loese(stand, uhr=uhr)
     assert stand.offene_funksprueche == (LEVEL_1[1],)
+    assert stand.nicht_gestellte_funksprueche(1) == (LEVEL_1[1],)
+    assert stand.nicht_gestellte_funksprueche(2) == story.FUNKSPRUECHE_NACH_LEVEL[2], (
+        "Für ein Level, das noch nicht lief, ist alles offen."
+    )
 
 
 def test_ausserhalb_eines_levels_gibt_es_nichts_zu_tun():
