@@ -1,7 +1,7 @@
 """Die Übungstexte aus dem Handbuch (Arbeitsplan 2.2).
 
-Quelle ist ``dokumentation/Handbuchtexte.md``. Es gibt **einen** Pool mit zehn
-Sätzen für alle drei Level. Aus ihm zieht der Aufgaben-Generator (Phase 3) –
+Quelle ist ``dokumentation/Handbuchtexte.md``. Es gibt **einen** Pool mit
+achtzehn Sätzen für alle drei Level. Aus ihm zieht der Aufgaben-Generator (Phase 3) –
 dadurch bekommen nicht alle dieselbe Aufgabe, und es lässt sich nicht abschauen.
 
 Diese Datei ist die **einzige** Stelle im Code, an der die Übungstexte stehen.
@@ -26,10 +26,16 @@ ihres Textes länger gedauert als eine in Level 1, und in den Messdaten liesse
 sich nicht trennen, was am Verfahren liegt und was an der Länge. Schwerer
 werden die Level durch das Verfahren, nicht durch längere Texte.
 
-Nachträglich entschieden: Alle drei Level üben mit denselben zehn Sätzen, und
-die sind ähnlich lang – 10 bis 14 Buchstaben. Es sind genau die Sätze der
-früheren Listen, die in diesem Bereich lagen. Jeder hat Wortgrenzen, damit
+Nachträglich entschieden: Alle drei Level üben mit denselben Sätzen, und die
+sind ähnlich lang – 10 bis 14 Buchstaben. Die ersten zehn sind genau die Sätze
+der früheren Listen, die in diesem Bereich lagen. Jeder hat Wortgrenzen, damit
 die Regeln 3 und 7 der Textkonvention im Spiel sichtbar werden.
+
+Später kamen acht dazu. Seit die Zusatzaufgaben nach der Restzeit kommen und
+nicht mehr nach dem Tempo (:mod:`game.zusatzaufgaben`), übt man in einem Level
+bis zu sechsmal. Mit zehn Texten bekäme jedes Level nur drei bis vier eigene –
+ab der vierten Übung hätte sich etwas wiederholt. Mit achtzehn sind es genau
+sechs je Level: zwei Pflichtübungen und vier Zusatzaufgaben, alle verschieden.
 
 Weil derselbe Satz so in mehreren Leveln vorkommen kann, verteilt der
 Generator den Pool auf die Level (siehe :mod:`game.generator`): Wer einen Satz
@@ -52,6 +58,14 @@ UEBUNGSTEXTE = (
     "RICHTUNG NORDEN",
     "KEIN WASSER MEHR",
     "BIN NOCH AM LEBEN",
+    "OASE IST NAH",
+    "SAND UEBERALL",
+    "FEUER IST AUS",
+    "WARTE AUF UNS",
+    "FUNK IST STARK",
+    "NIMM DIE KARTE",
+    "SPUREN IM SAND",
+    "HALT DICH BEREIT",
 )
 
 

@@ -26,7 +26,9 @@ from game.aufgabe import (
     pruefe_aufgabe,
 )
 from game.generator import Aufgabengenerator, abschnittsanfang, aufgabe_aus_funkspruch, uebung_nachbauen
+from game.levelablauf import BASIS_UEBUNGEN_JE_LEVEL
 from game.zufallsquelle import Zufallsquelle
+from game.zusatzaufgaben import HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL
 
 LEVEL = (1, 2, 3)
 POOL = set(uebungen.UEBUNGSTEXTE)
@@ -57,23 +59,41 @@ def test_auf_dauer_kommt_jeder_text_des_pools_dran(level):
     assert {_klartext(aufgabe) for aufgabe in _ziehungen(level, anzahl=len(POOL))} == POOL
 
 
+def _abschnittsgroesse(level):
+    """Wie viele eigene Texte der Abschnitt eines Levels hat."""
+    ende = abschnittsanfang(level + 1, len(POOL)) if level < max(LEVEL) else len(POOL)
+    return ende - abschnittsanfang(level, len(POOL))
+
+
 @pytest.mark.parametrize("seed", range(20))
 def test_die_ersten_uebungen_eines_levels_kommen_in_keinem_anderen_vor(seed):
     """Sonst liesse sich ein Satz aus Level 1 in Level 2 aus dem Gedächtnis "entschlüsseln".
 
-    Der Pool wird geteilt: 4, 3 und 3 Sätze. So viele Übungen je Level sind
-    garantiert frei von Sätzen der anderen Level – mehr als die zwei Pflichtübungen.
+    Der Pool wird auf die Level aufgeteilt; so viele Übungen je Level sind
+    garantiert frei von Sätzen der anderen Level.
     """
     quelle = Zufallsquelle(seed)
     generator = Aufgabengenerator(quelle)
-    texte = {level: [_klartext(generator.naechste_uebung(level)) for _ in range(3 if level > 1 else 4)]
+    texte = {level: [_klartext(generator.naechste_uebung(level))
+                     for _ in range(_abschnittsgroesse(level))]
              for level in LEVEL}
     alle = [text for level in LEVEL for text in texte[level]]
     assert len(set(alle)) == len(alle) == len(POOL), texte
 
 
+def test_ein_level_hat_genug_eigene_texte_fuer_alle_seine_uebungen():
+    """Zwei Pflichtübungen plus alle Zusatzaufgaben – und kein Satz doppelt.
+
+    Sonst bekäme ausgerechnet das Kind, das am meisten übt, denselben Satz
+    zweimal (siehe content/uebungen.py und game/zusatzaufgaben.py).
+    """
+    hoechstens = BASIS_UEBUNGEN_JE_LEVEL + HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL
+    for level in LEVEL:
+        assert _abschnittsgroesse(level) >= hoechstens, f"Level {level}"
+
+
 def test_die_abschnitte_teilen_den_pool_gleichmaessig():
-    assert [abschnittsanfang(level, 10) for level in LEVEL] == [0, 4, 7]
+    assert [abschnittsanfang(level, 18) for level in LEVEL] == [0, 6, 12]
     assert [abschnittsanfang(level, 9) for level in LEVEL] == [0, 3, 6]
     assert [abschnittsanfang(level, 11) for level in LEVEL] == [0, 4, 8]
 

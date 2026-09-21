@@ -43,7 +43,7 @@ HANDBUCH_TABELLE = {
     "Y": "N", "Z": "M",
 }
 
-#: Die zehn Übungssätze des Handbuchs (ein Pool für alle Level), jeweils von
+#: Die achtzehn Übungssätze des Handbuchs (ein Pool für alle Level), jeweils von
 #: Hand verschlüsselt. Beispielrechnung für Satz 1: I→O, C→E, H→I | B→W, I→O,
 #: N→F | H→I, I→O, E→T, R→K.
 UEBUNGSSAETZE = [
@@ -57,6 +57,14 @@ UEBUNGSSAETZE = [
     ("RICHTUNG NORDEN", "KOEIYXFU FGKRTF"),
     ("KEIN WASSER MEHR", "ATOF VQLLTK DTIK"),
     ("BIN NOCH AM LEBEN", "WOF FGEI QD STWTF"),
+    ("OASE IST NAH", "GQLT OLY FQI"),
+    ("SAND UEBERALL", "LQFR XTWTKQSS"),
+    ("FEUER IST AUS", "ZTXTK OLY QXL"),
+    ("WARTE AUF UNS", "VQKYT QXZ XFL"),
+    ("FUNK IST STARK", "ZXFA OLY LYQKA"),
+    ("NIMM DIE KARTE", "FODD ROT AQKYT"),
+    ("SPUREN IM SAND", "LHXKTF OD LQFR"),
+    ("HALT DICH BEREIT", "IQSY ROEI WTKTOY"),
 ]
 
 #: Weiteres Prüfmaterial für den Rundlauf: kurze Einzelwörter und längere
@@ -260,7 +268,7 @@ def test_tabelle_none_ist_die_tastatur_tabelle():
 
 
 # ───────────────────────────────────────────────────────────────────────────
-# 4. Die zehn Übungssätze, von Hand durchgerechnet
+# 4. Die achtzehn Übungssätze, von Hand durchgerechnet
 # ───────────────────────────────────────────────────────────────────────────
 
 

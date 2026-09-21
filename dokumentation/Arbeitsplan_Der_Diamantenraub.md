@@ -98,9 +98,11 @@ Beleg für die Prozessdokumentation.*
   eine Übung in Level 3 schon wegen ihres Textes länger gewesen als eine in
   Level 1 (4–5 Buchstaben gegen 12–18), und in den Messdaten liesse sich nicht
   trennen, was am Verfahren liegt und was an der Länge. Jetzt üben alle drei
-  Level mit denselben zehn Sätzen (`UEBUNGSTEXTE`), alle 10 bis 14 Buchstaben
+  Level mit denselben Sätzen (`UEBUNGSTEXTE`), alle 10 bis 14 Buchstaben
   lang – übernommen aus den früheren Listen. `Handbuchtexte.md` führt sie als
-  eine Liste für alle drei Seiten
+  eine Liste für alle drei Seiten. **Nachtrag aus Phase 7:** Der Pool ist auf
+  achtzehn Sätze gewachsen, damit jedes Level genug eigene Texte für seine
+  zwei Pflichtübungen und alle Zusatzaufgaben hat (siehe 5.4)
 
 ### 2.3 `content/story.py`
 - Intro-Text (Absturz), Bobs zwei Funksprüche, der abgefangene Feind-Funkspruch,
@@ -130,13 +132,13 @@ Schlüssel, erwartete Lösung, Level.
 - Bei Level 3 zusätzlich zufälliges Schlüsselwort
 - Kein Wort zweimal hintereinander im selben Level
 - **Nachtrag – der gemeinsame Pool wird verteilt** (siehe 2.2): Zöge jedes
-  Level frei aus denselben zehn Sätzen, käme ein Satz, den jemand in Level 1
+  Level frei aus demselben Pool, käme ein Satz, den jemand in Level 1
   verschlüsselt hat, in Level 2 womöglich zum Entschlüsseln wieder – und
   liesse sich aus dem Gedächtnis eintippen. Deshalb wird der Pool einmal je
-  Durchlauf aus dem Seed gemischt und in drei Abschnitte geteilt (4, 3, 3
-  Sätze); jedes Level beginnt an seinem Abschnitt und geht der Reihe nach
-  weiter. Die ersten drei Übungen eines Levels kommen in keinem anderen vor,
-  zweimal hintereinander kommt kein Satz. Rekonstruieren lässt sich eine
+  Durchlauf aus dem Seed gemischt und in drei gleich grosse Abschnitte
+  geteilt (bei achtzehn Sätzen je sechs); jedes Level beginnt an seinem
+  Abschnitt und geht der Reihe nach weiter. Alle Übungen eines Levels kommen
+  in keinem anderen vor, zweimal hintereinander kommt kein Satz. Rekonstruieren lässt sich eine
   Übung weiterhin aus Seed und Kennung (`uebung_nachbauen`)
 
 ### 3.3 Zufalls-Seed protokollierbar machen
@@ -272,10 +274,13 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   eine feste Grundzeit (lesen, Schlüssel nachschlagen, tippen), die nichts mit
   ihrer Länge zu tun hat. Ein reines "Sekunden je Buchstabe" würde am Ende die
   Länge der gezogenen Aufgabe messen statt das Tempo der Person
-- **Obergrenze je Level** (`HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL`): Der Pool hat
-  zehn Texte, danach wiederholen sie sich – und eine versehentlich zu
-  grosszügige Schwelle liefe sonst bis zum Zeitablauf durch, ohne dass die
-  Person je zum Funkspruch käme
+- **Obergrenze je Level** (`HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL`): Jedes Level
+  hat nur seinen Abschnitt des Pools, danach wiederholen sich die Texte – und
+  eine versehentlich zu grosszügige Schwelle liefe sonst bis zum Zeitablauf
+  durch, ohne dass die Person je zum Funkspruch käme. Die Grenze und die
+  Abschnittsgrösse gehören zusammen: Zwei Pflichtübungen plus vier
+  Zusatzaufgaben sind sechs Texte je Level, also achtzehn im Pool
+  (`tests/test_generator.py` prüft das)
 - Eine Zusatzaufgabe kurz vor Schluss wird nicht gestellt (Projektregel 1: sie
   würde nur unfertig abgebrochen)
 - **Im Pilotdurchlauf nachmessen:** die Spalten `sekunden` und
@@ -992,7 +997,7 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 - [ ] Level-2-Zuordnungstrick (Tastatur) gegen den echten Testbogen (Anhang A2)
       gegenchecken – kollidiert er mit einer Testantwort?
 - [ ] **Übungssätze der Kontrollgruppe:** Das Spiel übt in allen drei Leveln
-      mit denselben zehn Sätzen (10–14 Buchstaben, `Handbuchtexte.md`). Die
+      mit denselben achtzehn Sätzen (10–14 Buchstaben, `Handbuchtexte.md`). Die
       Papieraufgaben der Frontalunterrichts-Gruppe sollten aus derselben Liste
       kommen – sonst unterscheiden sich die Gruppen auch in der Textlänge.
 - [ ] **Übungsumfang gegen Anhang A4 abgleichen:** Die Spielgruppe rechnet pro

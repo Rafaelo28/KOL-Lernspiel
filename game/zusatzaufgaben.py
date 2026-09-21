@@ -57,8 +57,8 @@ Warum es eine Obergrenze gibt
 :data:`HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL` begrenzt, wie viele Extraaufgaben
 ein Level hergibt. Zwei Gründe:
 
-* Der Übungspool hat zehn Texte. Nach ein paar Zusatzaufgaben wiederholen sie
-  sich, und aus dem Üben wird stures Abarbeiten.
+* Der Pool gibt je Level sechs Texte her. Danach wiederholen sie sich, und aus
+  dem Üben wird stures Abarbeiten.
 * Wäre die Schwelle nach dem Pilotdurchlauf versehentlich zu grosszügig
   gesetzt, liefe sonst eine Endlosschleife bis zum Zeitablauf – im Log stünden
   dann hundert Zeilen, die nichts aussagen, und die Person käme nie zum
@@ -102,8 +102,11 @@ ERWARTETE_GRUNDZEIT_SEKUNDEN = 20.0
 #: Zeit je Buchstabe, der von Hand gerechnet werden muss. Schätzwert.
 ERWARTETE_SEKUNDEN_JE_BUCHSTABE = 4.0
 
-#: So viele Zusatzaufgaben gibt es je Level höchstens.
-HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL = 3
+#: So viele Zusatzaufgaben gibt es je Level höchstens. Zusammen mit den zwei
+#: Pflichtübungen sind das sechs – genau so viele Texte, wie der Pool je Level
+#: hergibt (achtzehn, gleichmässig auf drei Level verteilt). Danach würden sich
+#: die Sätze wiederholen.
+HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL = 4
 
 #: So viel Zeit muss im Level mindestens übrig sein, zusätzlich zu der Zeit,
 #: die die Zusatzaufgabe voraussichtlich kostet.

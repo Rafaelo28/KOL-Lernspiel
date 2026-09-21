@@ -174,15 +174,18 @@ Bei der einfachen Substitution steht jeder Buchstabe der Nachricht immer für da
 
 ## Übungssätze für alle drei Seiten
 
-Alle drei Seiten üben mit denselben zehn Sätzen. Sie sind ähnlich lang (10 bis
+Alle drei Seiten üben mit denselben achtzehn Sätzen. Sie sind ähnlich lang (10 bis
 14 Buchstaben): Eine Übung zu Seite 3 soll nicht schon wegen eines längeren
 Textes länger dauern als eine zu Seite 1 – schwerer wird es durch das
 Verfahren, nicht durch die Länge. *(Nachträglich entschieden. Vorher hatte jede
 Seite eine eigene Liste: Wörter mit 4–5 Buchstaben für Caesar, Sätze mit 7–18
 für die Substitution und 12–18 für Vigenère. Übernommen sind die Sätze, die
-schon 10 bis 14 Buchstaben lang waren.)*
+schon 10 bis 14 Buchstaben lang waren. Später kamen acht Sätze dazu, damit
+jedes Level sechs eigene hat: Seit die Zusatzaufgaben nach der Restzeit kommen,
+übt man in einem Level bis zu sechsmal, und kein Satz soll sich dabei
+wiederholen.)*
 
-### Übungssätze (10 Stück – einer wird zufällig ausgewählt)
+### Übungssätze (18 Stück – einer wird zufällig ausgewählt)
 
  1. ICH BIN HIER
  2. KOMM SCHNELL
@@ -194,5 +197,13 @@ schon 10 bis 14 Buchstaben lang waren.)*
  8. RICHTUNG NORDEN
  9. KEIN WASSER MEHR
 10. BIN NOCH AM LEBEN
+11. OASE IST NAH
+12. SAND UEBERALL
+13. FEUER IST AUS
+14. WARTE AUF UNS
+15. FUNK IST STARK
+16. NIMM DIE KARTE
+17. SPUREN IM SAND
+18. HALT DICH BEREIT
 
 Ein technischer Hinweis für die Umsetzung: Bei allen drei Seiten sollte pro Übungsaufgabe zusätzlich zufällig entschieden werden, ob das gewählte Wort/der Satz **ver-** oder **entschlüsselt** werden soll (bei Verschlüsseln zeigt ihr den Klartext, bei Entschlüsseln müsst ihr das Wort vorher selbst mit demselben Schlüssel verschlüsseln und als Aufgabe anzeigen). Auch bei Level 3 sollte der zufällig gewählte Schlüssel (Schlüsselwort) mit variieren, nicht immer "ROT" – sonst wird die Aufgabe nach ein paar Durchläufen vorhersehbar. Zwei, drei kurze Schlüsselwörter (z. B. ROT, WEG, TAG) als weitere Zufallsauswahl würden das lösen.

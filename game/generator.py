@@ -17,17 +17,18 @@ Was der Arbeitsplan verlangt
 
 Wie der Pool auf die Level verteilt wird
 ────────────────────────────────────────
-Alle drei Level üben mit denselben zehn Sätzen. Zöge jedes Level frei daraus,
+Alle drei Level üben mit denselben achtzehn Sätzen. Zöge jedes Level frei daraus,
 käme ein Satz, den jemand in Level 1 verschlüsselt hat, in Level 2 womöglich
 zum Entschlüsseln wieder – und liesse sich aus dem Gedächtnis eintippen. Die
 Zeit dafür stünde im Log, als wäre gerechnet worden.
 
 Deshalb wird der Pool einmal je Durchlauf gemischt und in drei Abschnitte
-geteilt (4, 3 und 3 Sätze). Jedes Level beginnt am Anfang seines Abschnitts
-und geht von dort der Reihe nach weiter, am Ende des Pools wieder von vorn.
-Die ersten drei Übungen eines Levels kommen so in keinem anderen Level vor;
-erst wer viele Zusatzaufgaben bekommt, trifft wieder auf Sätze aus einem
-anderen Level. Zweimal hintereinander kommt derselbe Satz nie.
+geteilt – bei achtzehn Sätzen je sechs. Jedes Level beginnt am Anfang seines
+Abschnitts und geht von dort der Reihe nach weiter, am Ende des Pools wieder
+von vorn. Die sechs Übungen eines Levels kommen so in keinem anderen Level
+vor, und sechs sind genau so viele, wie ein Level überhaupt stellen kann
+(zwei Pflichtübungen und alle Zusatzaufgaben). Zweimal hintereinander kommt
+derselbe Satz nie.
 
 Warum der Zufall von aussen kommt
 ─────────────────────────────────
