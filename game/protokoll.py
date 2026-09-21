@@ -28,6 +28,10 @@ Zeilen, bei denen Vorsicht geboten ist
 * ``abgebrochen = ja``: Das Level endete, während die Aufgabe noch lief. In
   ``sekunden`` steht dann die Zeit bis zum Levelwechsel, keine Rechenzeit.
   Für Zeitauswertungen herausfiltern.
+* ``geloest = ja`` **zusammen mit** ``loesung_angezeigt = ja``: Die Lösung
+  stand nach drei Versuchen ohne Fortschritt schon da und wurde abgetippt.
+  Eine Lösungsquote zählt deshalb nur Zeilen mit ``loesung_angezeigt = nein``;
+  sonst zählt sie das Abschreiben mit.
 * ``lineal_klicks`` zählt, wie oft jemand beim Lösen das Lineal im
   Vigenère-Quadrat bewegt hat (nur Level 3, sonst 0). Eine Zeit mit Lineal
   ist nicht ohne Weiteres mit einer ohne vergleichbar.

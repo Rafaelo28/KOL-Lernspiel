@@ -18,6 +18,7 @@ tk = pytest.importorskip("tkinter")
 from content import charaktere, story  # noqa: E402
 from game import levelablauf, zusatzaufgaben  # noqa: E402
 from game.aufgabe import QUELLE_FUNKSPRUCH  # noqa: E402
+from game.spielstand import LEVELENDE_VORZEITIG  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
 from ui import abschluss, ablauf, erzaehlszene, funk, handbuch, uebung  # noqa: E402
 
@@ -227,7 +228,11 @@ def test_nach_dem_abgefangenen_funkspruch_kommt_der_uebergang_zu_level_3(fenster
     """Er ist der Wendepunkt der Geschichte und bekommt deshalb eine eigene Szene."""
     screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, erzaehlszene.Erzaehlszene))
     assert screen.text == story.UEBERGANG_ZU_LEVEL_3.absaetze[0]
-    assert fenster.durchlauf.spielstand.aktuelles_level == 2, "Noch läuft Level 2 …"
+    stand = fenster.durchlauf.spielstand
+    assert stand.aktuelles_level == 3, "Gelesen wird schon in der Zeit von Level 3 …"
+    assert stand.levelende(2) == LEVELENDE_VORZEITIG, (
+        "… sonst kippte Level 2 vom Lesen aus auf 'zeitablauf', obwohl alles erledigt war."
+    )
     for _ in story.UEBERGANG_ZU_LEVEL_3.absaetze:
         screen.weiter()
     handbuchseite = fenster.aktueller_screen
@@ -245,14 +250,23 @@ def test_ohne_den_abgefangenen_funkspruch_kommt_kein_uebergang(fenster, bei_der_
     assert screen.einleitung == story.EINSTIEG_LEVEL_3.absaetze
 
 
-def test_laeuft_die_zeit_ueber_dem_funkspruch_ab_faellt_der_uebergang_aus(fenster, bei_der_uebung, uhr):
-    """Projektregel 1: Ist die Zeit um, wird sofort gewechselt – ohne Erzählpause."""
+def test_auch_nach_zeitablauf_kommt_der_uebergang_wenn_der_funkspruch_dran_war(fenster, bei_der_uebung, uhr):
+    """Gesehen hat man ihn – dann gehört der Satz dazu, der davon spricht.
+
+    Gewechselt wird trotzdem sofort (Projektregel 1); gelesen wird danach, in
+    der Zeit von Level 3.
+    """
     _spielen_bis(fenster, uhr, lambda s: isinstance(s, funk.Funk)
                  and s.funkspruch is story.FUNKSPRUCH_VERFOLGER)
     _level_ablaufen_lassen(fenster, uhr, 2)
     screen = fenster.aktueller_screen
-    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 3
-    assert screen.hinweis, "Stattdessen sagt der Hinweis über dem Buch, dass die Zeit ablief."
+    assert isinstance(screen, erzaehlszene.Erzaehlszene)
+    assert screen.text == story.UEBERGANG_ZU_LEVEL_3.absaetze[0]
+    for _ in story.UEBERGANG_ZU_LEVEL_3.absaetze:
+        screen.weiter()
+    handbuchseite = fenster.aktueller_screen
+    assert isinstance(handbuchseite, handbuch.Handbuch) and handbuchseite.seite.level == 3
+    assert handbuchseite.hinweis, "Der Hinweis auf den Zeitablauf steht danach über dem Buch."
 
 
 # ───────────────────────────────────────────────────────────────────────────

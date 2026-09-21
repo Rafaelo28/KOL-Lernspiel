@@ -528,3 +528,21 @@ def test_glas_und_laempchen_liegen_im_bild_dort_wo_das_spiel_schreibt(massstab):
         r, g, b, a = punkt(stil.skaliert(x, massstab), stil.skaliert(y, massstab))
         assert a == 255 and max(r, g, b) < 70
     assert punkt(2, 2)[3] == 0
+
+
+def test_die_nachricht_kommt_auch_nach_einem_fehler_zu_ende(fenster, wurzel, monkeypatch):
+    """Sonst bliebe der Geheimtext auf halber Strecke stehen – und mit ihm die Aufgabe."""
+    screen = _funkspruch(fenster, 1, "bob_erste_antwort")
+    stolpert = [True]
+    echt = funk.Funk._nachricht_zeichnen
+
+    def einmal_stolpern(self):
+        if stolpert:
+            stolpert.clear()
+            raise RuntimeError("Probe: das Zeichnen misslingt einmal")
+        echt(self)
+
+    monkeypatch.setattr(funk.Funk, "_nachricht_zeichnen", einmal_stolpern)
+    _warten(wurzel, lambda: screen.eingetippt)
+    assert not stolpert, "Der Fehler muss wirklich aufgetreten sein."
+    assert _eine_zeile(screen.glastexte("nachricht")) == screen.aufgabe.anzeigetext

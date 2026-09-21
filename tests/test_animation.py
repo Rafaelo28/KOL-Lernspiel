@@ -454,3 +454,13 @@ def test_die_durchsichtigkeit_der_figur_bleibt_erhalten(wurzel, tmp_path):
     (_, folge), = figur._folgen
     assert folge[0].transparency_get(0, 0)
     assert not folge[0].transparency_get(5, 4)
+
+
+def test_die_buehne_laeuft_auch_nach_einem_fehler_weiter(wurzel, tmp_path, monkeypatch):
+    """Ein kaputtes Einzelbild darf die Szene nicht anhalten – wie beim Takt des Hauptfensters."""
+    buehne = Buehne(wurzel, _probeanimation(wurzel, tmp_path))
+    buehne.starten()
+    monkeypatch.setattr(Buehne, "zeige_bild", lambda *_: 1 / 0)
+    with pytest.raises(ZeroDivisionError):
+        buehne._weiter()
+    assert buehne.laeuft

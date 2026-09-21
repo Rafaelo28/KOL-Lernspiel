@@ -231,8 +231,12 @@ class Buehne(tk.Canvas):
             self.itemconfigure(element, image=folge[self._bild_nr])
 
     def _weiter(self):
-        self.zeige_bild(self._bild_nr + 1)
-        self._auftrag = self.after(self.animation.takt_ms, self._weiter)
+        # Der nächste Takt auch nach einem Fehler – ein kaputtes Einzelbild darf
+        # die Szene nicht anhalten (wie beim Takt des Hauptfensters).
+        try:
+            self.zeige_bild(self._bild_nr + 1)
+        finally:
+            self._auftrag = self.after(self.animation.takt_ms, self._weiter)
 
     def destroy(self):
         # Beim Abriss des Screens mit abräumen – sonst liefe ein after() ins Leere.

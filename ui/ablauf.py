@@ -57,6 +57,13 @@ ERZAEHLUNG_VOR_FUNKSPRUCH = {
     story.FUNKSPRUCH_STANDORT.kennung: (story.REFLEXIONSFRAGE_LEVEL_3, TITEL_REFLEXION),
 }
 
+#: Erzähltexte zwischen zwei Leveln, als (Text, Titel, Funkspruch): Nach
+#: Level 2 kommt der Übergang zu Vigenère – aber nur, wenn der abgefangene
+#: Funkspruch dran war, denn er spricht von ihm (Arbeitsplan 7.2).
+ERZAEHLUNG_NACH_LEVEL = {
+    2: (story.UEBERGANG_ZU_LEVEL_3, TITEL_UEBERGANG, story.FUNKSPRUCH_VERFOLGER),
+}
+
 
 def figurwahl_zeigen(fenster, spieler_id):
     """Nach dem Startbildschirm: Wer aus der Crew bist du?
@@ -145,24 +152,19 @@ def funkgeraet_zeigen(fenster, funkspruch):
 
 
 def level_beenden(fenster):
-    """Das Level ist durch – davor steht, was die Geschichte dazu noch sagt.
-
-    Nach Level 2 ist das der Übergang zu Level 3 ("Der Feind nutzt genau die
-    Methode, die du gerade verwendest"). Hierher kommt man nur, wenn die
-    Funksprüche des Levels erledigt sind – der abgefangene war also dran, und
-    der Satz passt. Läuft dagegen die Zeit ab, wird sofort gewechselt
-    (Projektregel 1) und der Übergang entfällt.
-    """
-    stand = fenster.durchlauf.spielstand
-    if stand.aktuelles_level == 2:
-        erzaehlszene_zeigen(fenster, story.UEBERGANG_ZU_LEVEL_3, TITEL_UEBERGANG,
-                            danach=lambda fenster: fenster.durchlauf.naechstes_level())
-        return
+    """Das Level ist durch – weiter zum nächsten (oder zum Abschluss)."""
     fenster.durchlauf.naechstes_level()
 
 
 def nach_levelwechsel(fenster, wechsel):
-    """Zeigt, was auf ein Level folgt – das nächste Handbuch oder den Abschluss."""
+    """Zeigt, was auf ein Level folgt: der Übergang, das nächste Handbuch oder der Abschluss.
+
+    Der Übergang steht **nach** dem Wechsel und damit im Zeitfenster des neuen
+    Levels. Vor dem Wechsel gezeigt, liefe er noch in der Zeit des alten: Wer
+    ihn langsam liest, hätte sein Level von "vorzeitig" auf "zeitablauf"
+    gekippt, obwohl alle Aufgaben erledigt waren – und beim Zeitablauf fiele er
+    ganz aus, obwohl der Funkspruch dran war, von dem er spricht.
+    """
     if wechsel.spielende:
         fenster.zeige(abschluss.Abschluss, durch_zeitablauf=wechsel.durch_zeitablauf)
         return
@@ -172,7 +174,13 @@ def nach_levelwechsel(fenster, wechsel):
         if wechsel.durch_zeitablauf
         else ""
     )
-    handbuch_aufschlagen(fenster, wechsel.neues_level, hinweis)
+    weiter = partial(handbuch_aufschlagen, level=wechsel.neues_level, hinweis=hinweis)
+    uebergang = ERZAEHLUNG_NACH_LEVEL.get(wechsel.altes_level)
+    if uebergang is not None and fenster.durchlauf.spielstand.wurde_gestellt(uebergang[2]):
+        erzaehltext, titel, _ = uebergang
+        erzaehlszene_zeigen(fenster, erzaehltext, titel, danach=weiter)
+        return
+    weiter(fenster)
 
 
 def oeffnen(wurzel, zeitgeber=None, protokollordner=None, massstab=None):

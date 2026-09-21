@@ -274,8 +274,20 @@ class Abschluss(Screen):
         self.spaeter(TAKT_MS, self._takt)
 
     def _takt(self):
-        # Läuft weiter, solange der Screen steht – der Rotor dreht sich auch nach der Landung.
-        self.zu_zeit(round((self._zeitgeber() - self._beginn) * 1000))
+        """Liest die Uhr ab und meldet sich gleich wieder an.
+
+        Läuft weiter, solange der Screen steht – der Rotor dreht sich auch nach
+        der Landung. Stolpert das Zeichnen eines Augenblicks, wird nicht weiter
+        getaktet, sondern sofort gelandet: Der Abschluss ist der letzte Screen,
+        und sein Knopf ist während der Animation abgeschaltet – ohne diesen
+        Ausweg bliebe das Spiel hier stehen. Der Fehler selbst kommt durch und
+        landet in der Meldungszeile des Fensters.
+        """
+        try:
+            self.zu_zeit(round((self._zeitgeber() - self._beginn) * 1000))
+        except Exception:
+            self._gelandet()
+            raise
         self.spaeter(TAKT_MS, self._takt)
 
     def zu_zeit(self, ms):
@@ -295,10 +307,15 @@ class Abschluss(Screen):
         if ms >= FLUG[0][0]:
             self._hubschrauber_bewegen(ms)
         if self._einmal("gelandet", ms, GELANDET):
+            self._gelandet()
+
+    def _gelandet(self):
+        """Der Hubschrauber ist unten: der Text zur Rettung und der Knopf "Weiter"."""
+        if self.phase == "nacht":
             self.phase = "gerettet"
-            self._text_setzen(story.RETTUNG.absaetze)
-            self._knopf.configure(text=KNOPF_WEITER, state="normal", command=self.weiter)
-            self._knopf.focus_set()
+        self._text_setzen(story.RETTUNG.absaetze)
+        self._knopf.configure(text=KNOPF_WEITER, state="normal", command=self.weiter)
+        self._knopf.focus_set()
 
     def _einmal(self, name, ms, ab):
         """Ist ``ms`` so weit, dass ``name`` passiert – und ist es noch nicht passiert?"""

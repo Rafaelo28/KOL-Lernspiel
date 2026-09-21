@@ -534,3 +534,19 @@ def test_zu_jedem_bild_ist_genau_eine_rotorstellung_zu_sehen():
         assert stelle == fenster / 2
         gesehen.append(nr)
     assert sorted(gesehen) == list(range(zeichnung.STELLUNGEN)), "Jede Stellung kommt genau einmal dran."
+
+
+def test_stolpert_die_animation_wird_sofort_gelandet(screen, monkeypatch):
+    """Der Abschluss ist der letzte Screen, und sein Knopf ist währenddessen aus.
+
+    Bliebe er nach einem Fehler stehen, käme man nur noch über das Fensterkreuz
+    weiter. Also: sofort landen, damit es weitergeht.
+    """
+    screen.warten()
+    monkeypatch.setattr(abschluss.Abschluss, "lider", lambda *_: 1 / 0)
+    with pytest.raises(ZeroDivisionError):
+        screen._takt()
+    assert screen.phase == "gerettet"
+    assert screen.knopf_bereit and screen.knopftext == abschluss.KNOPF_WEITER
+    screen.weiter()
+    assert screen.phase == "ende"

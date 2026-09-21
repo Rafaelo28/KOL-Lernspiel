@@ -325,15 +325,22 @@ class Funk(Screen):
         self._rueckmeldung_oben = y + feldhoehe + px(ABSTAND_NACHRICHT)
 
     def _eintippen(self):
-        """Die Nachricht kommt Zeichen für Zeichen herein – das Empfangslämpchen flackert dazu."""
-        self._getippt = min(len(self.aufgabe.anzeigetext), self._getippt + ZEICHEN_JE_TAKT)
-        self._nachricht_zeichnen()
-        if self.eingetippt:
-            self.lampe("empfang", True)
-            self._hinweis_zeigen()
-            return
-        self.lampe("empfang", self._getippt // ZEICHEN_JE_TAKT % 4 < 2)
-        self.spaeter(TAKT_MS, self._eintippen)
+        """Die Nachricht kommt Zeichen für Zeichen herein – das Empfangslämpchen flackert dazu.
+
+        Der nächste Takt wird auch dann angemeldet, wenn das Zeichnen stolpert
+        (wie beim Takt des Hauptfensters): Sonst bliebe die Nachricht auf
+        halber Strecke stehen. Weil jeder Takt ein Stück weiterrückt, endet das
+        Eintippen so oder so.
+        """
+        try:
+            self._getippt = min(len(self.aufgabe.anzeigetext), self._getippt + ZEICHEN_JE_TAKT)
+            self._nachricht_zeichnen()
+            self.lampe("empfang", True if self.eingetippt else self._getippt // ZEICHEN_JE_TAKT % 4 < 2)
+            if self.eingetippt:
+                self._hinweis_zeigen()
+        finally:
+            if not self.eingetippt:
+                self.spaeter(TAKT_MS, self._eintippen)
 
     def anzeige_vervollstaendigen(self):
         """Die ganze Nachricht steht sofort da – etwa nach dem Nachschlagen."""
