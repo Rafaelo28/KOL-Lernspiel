@@ -64,6 +64,10 @@ def test_die_symbole_sind_auf_die_kartenfarbe_gemalt(figur, groesse):
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -78,6 +82,7 @@ def wurzel():
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab):
+    """Ein Hauptfenster, das ins Testverzeichnis schreibt; Rückfragen beantwortet es mit Ja."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
@@ -85,11 +90,13 @@ def fenster(wurzel, tmp_path, massstab):
 
 @pytest.fixture
 def gewaehlt():
+    """Eine leere Liste, in der die bestätigte Figur landet."""
     return []
 
 
 @pytest.fixture
 def screen(fenster, gewaehlt):
+    """Die Figurwahl, deren Ergebnis in ``gewaehlt`` geschrieben wird."""
     return fenster.zeige(figurwahl.Figurwahl, danach=lambda _fenster, figur: gewaehlt.append(figur))
 
 
@@ -156,6 +163,11 @@ def test_ein_klick_auf_eine_karte_waehlt_nur_aus(screen, gewaehlt, fenster, ausl
 
 
 def _mit_allen_kindern(widget):
+    """Das Bedienelement und alles, was darin steckt – beliebig tief.
+
+    Das ``yield`` gibt die Elemente eines nach dem anderen heraus, statt
+    erst eine ganze Liste zu bauen.
+    """
     yield widget
     for kind in widget.winfo_children():
         yield from _mit_allen_kindern(kind)

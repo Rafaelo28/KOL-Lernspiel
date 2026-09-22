@@ -25,6 +25,10 @@ from ui.lineal import Lineal  # noqa: E402
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -39,6 +43,7 @@ def wurzel():
 
 @pytest.fixture
 def benutzt():
+    """Eine leere Liste, in der jede Bewegung des Lineals landet."""
     return []
 
 
@@ -46,6 +51,7 @@ def benutzt():
 def lineal(wurzel, massstab, benutzt):
     """Ein Buch mit dem Quadrat auf der linken Seite – wie neben einer Vigenère-Übung."""
     def px(wert):
+        """Rechnet eine Pixelangabe auf den Maßstab um – wie ``Screen.px``, nur ohne Screen."""
         return stil.skaliert(wert, massstab)
 
     leinwand = Buchleinwand(wurzel, massstab, px)
@@ -78,6 +84,7 @@ def _texte_in(leinwand, rechteck, waagrecht=False):
 
 
 def _rechteck(lineal, tag):
+    """Die Ecken des markierten Rechtecks auf der linken Seite: (x0, y0, x1, y1)."""
     (element,) = lineal.leinwand.find_withtag(f"{tag}&&links")
     return lineal.leinwand.coords(element)
 

@@ -91,6 +91,12 @@ class Zufallsquelle:
     """
 
     def __init__(self, seed):
+        """Merkt sich den Seed – die Zufallsströme entstehen erst, wenn ein Level sie braucht.
+
+        Der Seed muss eine ganze Zahl im erlaubten Bereich sein; sonst
+        scheitert der Durchlauf hier und nicht erst beim Rekonstruieren einer
+        Aufgabe aus dem Log.
+        """
         if isinstance(seed, bool) or not isinstance(seed, int):
             raise TypeError(
                 f"Der Seed muss eine ganze Zahl (int) sein, nicht "
@@ -147,4 +153,5 @@ class Zufallsquelle:
         return tuple(folge)
 
     def __repr__(self):
+        """Kurzfassung für die Fehlersuche – so erscheint das Objekt in Meldungen und im Debugger."""
         return f"Zufallsquelle({self._seed})"

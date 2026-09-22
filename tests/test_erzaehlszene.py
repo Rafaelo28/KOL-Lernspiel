@@ -18,6 +18,10 @@ from ui import ablauf, erzaehlszene, figurwahl, handbuch  # noqa: E402
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -32,6 +36,7 @@ def wurzel():
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab):
+    """Ein Hauptfenster, das ins Testverzeichnis schreibt; Rückfragen beantwortet es mit Ja."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
@@ -39,6 +44,7 @@ def fenster(wurzel, tmp_path, massstab):
 
 @pytest.fixture
 def aufrufe():
+    """Eine leere Liste, in der landet, was nach der Szene aufgerufen wird."""
     return []
 
 
@@ -52,6 +58,7 @@ def screen(fenster, aufrufe):
 
 
 def _knopftext(screen):
+    """Was gerade auf dem Knopf der Szene steht."""
     return screen._knopf.cget("text")
 
 

@@ -26,9 +26,11 @@ class Schrift:
     """Eine ausgedachte Schrift: 10 Pixel je Zeichen, 20 je Zeile."""
 
     def measure(self, text):
+        """Wie breit dieser Text wäre: zehn Pixel je Zeichen."""
         return ZEICHEN * len(text)
 
     def metrics(self, was):
+        """Zeilenhöhe und Oberlänge dieser ausgedachten Schrift."""
         return {"linespace": ZEILE, "ascent": 15}[was]
 
 
@@ -36,10 +38,12 @@ SCHRIFTEN = buchsatz.Schriften(*(Schrift() for _ in buchsatz.Schriften._fields))
 
 
 def px(wert):
+    """Im Test wird nicht skaliert – ein Pixel bleibt ein Pixel."""
     return wert
 
 
 def _seite(*abschnitte, titel="K"):
+    """Eine Handbuchseite aus den übergebenen Abschnitten, sonst mit festen Angaben."""
     return buch.Handbuchseite(level=1, titel=titel, verfahren="caesar", abschnitte=abschnitte)
 
 
@@ -49,10 +53,12 @@ def _absatz(zeilen):
 
 
 def _setzen(seite, breite=200, hoehe=200, stempel=None):
+    """Setzt eine Seite mit der ausgedachten Schrift auf ein Blatt von 200 × 200 Pixeln."""
     return buchsatz.setzen(seite, SCHRIFTEN, breite, hoehe, px, stempel=stempel)
 
 
 def _zeilen(buchseite, *arten):
+    """Alle Textzeilen einer gesetzten Seite – auf Wunsch nur die von bestimmter Art."""
     return [s for s in buchseite.stuecke if isinstance(s, Zeile) and (not arten or s.art in arten)]
 
 
@@ -79,10 +85,12 @@ def test_umbrechen_ohne_text_gibt_keine_zeilen():
 # ── Verteilen auf Seiten ───────────────────────────────────────────────────
 
 def _kiste(hoehe, trennbar=True, vorher=0, neue_seite=False, name=""):
+    """Eine Kiste mit dieser Höhe; ``name`` steckt als einziges Stück darin, damit man sie wiedererkennt."""
     return buchsatz._Kiste(hoehe, (name,), vorher, trennbar, neue_seite)
 
 
 def _namen(seiten):
+    """Die Namen der Kisten, Seite für Seite – so lässt sich die Verteilung ablesen."""
     return [[kiste.stuecke[0] for kiste, _ in seite] for seite in seiten]
 
 
@@ -175,6 +183,7 @@ def test_eine_randnotiz_bleibt_bei_dem_worauf_sie_sich_bezieht():
 # ── Tabellen, Quadrat, Merksatz ────────────────────────────────────────────
 
 def _raster(satz):
+    """Alle Tabellen eines gesetzten Kapitels, über alle Seiten hinweg."""
     return [s for seite in satz.seiten for s in seite.stuecke if isinstance(s, Raster)]
 
 
@@ -258,6 +267,7 @@ SCHRITTE = (buch.Schritt(spalte="A", kreuzung="C"), buch.Schritt(spalte="B", kre
 
 
 def _werkzeug(seite):
+    """Die Tabellen auf einer Seite – das Werkzeug steht auf der rechten."""
     return [s for s in seite.stuecke if isinstance(s, Raster)]
 
 
@@ -269,6 +279,7 @@ def _ist_werkzeugseite(seite, werkzeug=WERKZEUG):
 
 
 def _abschnitte_auf(seite):
+    """Die Überschriften, die auf dieser Seite stehen."""
     return [z.text for z in _zeilen(seite, "abschnitt")]
 
 
@@ -346,6 +357,7 @@ def test_das_quadrat_als_werkzeug_steht_auf_jeder_seite_daneben():
 
 
 def _beispiel(*bloecke, schritte=SCHRITTE, ueberschrift="Beispiel"):
+    """Ein Abschnitt mit Werkzeug und Schritten – die Form, um die es beim Umbruch von Beispielen geht."""
     return buch.Abschnitt(ueberschrift, bloecke, gegenueber=WERKZEUG, schritte=schritte)
 
 

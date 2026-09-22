@@ -29,15 +29,27 @@ _spec.loader.exec_module(zeichnung)
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht.
+
+    So lässt sich die Nacht vorspulen, ohne wirklich zu warten.
+    """
+
     def __init__(self):
+        """Beginnt bei 100 Sekunden – irgendein Wert, Hauptsache nicht null."""
         self.jetzt = 100.0
 
     def __call__(self):
+        """Der Screen fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige (etwa auf einem Server), werden die
+    Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -52,6 +64,7 @@ def wurzel():
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab):
+    """Ein Hauptfenster mit laufendem Durchlauf, das ins Testverzeichnis schreibt."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     fenster.starte_durchlauf(charaktere.VIC_MORENO, pseudonym="1-12")
@@ -60,20 +73,24 @@ def fenster(wurzel, tmp_path, massstab):
 
 @pytest.fixture
 def uhr():
+    """Die stellbare Uhr für den Abschluss-Screen."""
     return Uhr()
 
 
 @pytest.fixture
 def screen(fenster, uhr):
+    """Der Abschluss-Screen, der an der stellbaren Uhr hängt."""
     return fenster.zeige(abschluss.Abschluss, zeitgeber=uhr)
 
 
 def _gelandet(screen):
+    """Spult bis zu dem Moment vor, in dem der Hubschrauber gelandet ist."""
     screen.warten()
     screen.zu_zeit(GELANDET)
 
 
 def _angemeldet(wurzel):
+    """Alle Aufträge, die gerade bei Tk für später angemeldet sind (``after``)."""
     return wurzel.tk.splitlist(wurzel.tk.call("after", "info"))
 
 
@@ -161,6 +178,7 @@ def test_die_augen_kaempfen_zweimal_gegen_den_schlaf(screen):
 
 
 def _mitte_der_kanten(screen):
+    """Die Höhe beider Lidkanten in der Bildmitte – daran sieht man, wie weit die Augen zu sind."""
     oben, unten = screen.lidkanten()
     return oben[len(oben) // 2][1], unten[len(unten) // 2][1]
 
@@ -248,6 +266,7 @@ def test_hinter_geschlossenen_augen_wird_es_morgen(screen):
 
 
 def zwischenwert_lider(zeit):
+    """Wie weit die Lider zu diesem Zeitpunkt geschlossen sind."""
     return abschluss.zwischenwert(LIDER, zeit)
 
 

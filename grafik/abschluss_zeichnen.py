@@ -64,10 +64,17 @@ rnd = random.Random(2031)
 
 
 def punkte(liste):
+    """Schreibt Punktpaare so, wie SVG sie in ``points="…"`` erwartet: ``x,y x,y …``."""
     return " ".join(f"{x:.1f},{y:.1f}" for x, y in liste)
 
 
 def sterne(anzahl, oben, unten, deckkraft=(0.35, 1.0), groesse=(0.7, 2.0), farbe="#fff6e6"):
+    """Streut Sterne zwischen die Höhen ``oben`` und ``unten`` und gibt sie als SVG-Kreise zurück.
+
+    Größe und Deckkraft werden ausgewürfelt, damit der Himmel nicht wie ein
+    Raster aussieht – aber immer mit demselben Zufall (:data:`rnd`), sonst
+    stünden die Sterne nach jedem Neuzeichnen woanders.
+    """
     teile = []
     for _ in range(anzahl):
         x, y = rnd.uniform(0, B), rnd.uniform(oben, unten)
@@ -320,6 +327,7 @@ GEMEINSAME_DEFS = '''
 
 
 def nachtlager_svg():
+    """Die SVG-Datei des Nachtlagers an der Oase – die Szene, in der man einschläft."""
     fx, fy = FEUER
     bx, by, bb, bh = FEUER_BEREICH
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {B} {H}"
@@ -458,6 +466,7 @@ def rauch():
 
 
 def morgen_svg():
+    """Die SVG-Datei derselben Stelle im Morgengrauen – hier landet später der Hubschrauber."""
     bx, by, bb, bh = RAUCH_BEREICH
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {B} {H}"
      data-breite="960" data-schleife-ms="4000" data-bilder="40" data-bereiche="{bx} {by} {bb} {bh}">
@@ -568,16 +577,28 @@ FARBE_BLATT = "#1b1f21"
 
 
 def _auf_scheibe(zentrum, rx, ry, winkel, anteil=1.0):
+    """Der Punkt auf der Rotorscheibe unter diesem Winkel.
+
+    Die Scheibe ist eine Ellipse mit den Halbachsen ``rx`` und ``ry`` – von
+    schräg oben gesehen ist der Kreis des Rotors flachgedrückt. ``anteil``
+    unter 1 bleibt innerhalb der Scheibe (für die Blattspitze).
+    """
     w = math.radians(winkel)
     return zentrum[0] + rx * anteil * math.cos(w), zentrum[1] + ry * anteil * math.sin(w)
 
 
 def _wisch(zentrum, rx, ry, von, bis, deckkraft):
+    """Ein Tortenstück der Rotorscheibe als blasses Polygon – die Unschärfe hinter einem Blatt."""
     rand = [_auf_scheibe(zentrum, rx, ry, von + (bis - von) * i / 8) for i in range(9)]
     return f'<polygon points="{punkte([zentrum] + rand)}" fill="{FARBE_BLATT}" opacity="{deckkraft}"/>'
 
 
 def _blatt(zentrum, rx, ry, winkel, breite, spitze=None):
+    """Ein Rotorblatt als Strich von der Nabe zum Rand der Scheibe.
+
+    Mit ``spitze`` bekommt das äussere Achtel eine zweite Farbe – die
+    Markierung, an der man die Drehung erkennt.
+    """
     x0, y0 = zentrum
     x1, y1 = _auf_scheibe(zentrum, rx, ry, winkel)
     teile = [f'<line x1="{x0}" y1="{y0}" x2="{x1:.1f}" y2="{y1:.1f}" stroke="{FARBE_BLATT}" '
@@ -635,6 +656,7 @@ def rotoren():
 
 
 def hubschrauber_svg():
+    """Die SVG-Datei des Hubschraubers: durchsichtig, mit drehenden Rotoren und blinkendem Licht."""
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320"
      data-breite="340" data-schleife-ms="800" data-bilder="16" data-bereiche="0 0 680 320" data-durchsichtig="ja">
 <!--
@@ -736,6 +758,7 @@ goldenen Diamanten auf der Seite. Die Rotoren drehen sich, und am Heck blinkt ei
 """
 
 def main():
+    """Schreibt alle drei SVG-Dateien nach ``grafik/`` – das tut ein Aufruf dieser Datei."""
     for name, inhalt in (("nachtlager", nachtlager_svg()), ("morgen", morgen_svg()),
                          ("hubschrauber", hubschrauber_svg())):
         ziel = ORDNER / f"{name}.svg"

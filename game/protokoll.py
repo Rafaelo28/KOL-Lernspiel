@@ -251,6 +251,13 @@ class Protokoll:
     """
 
     def __init__(self, spielstand, ordner=None, zeitpunkt=None):
+        """Legt das Protokoll an und bestimmt jetzt schon seinen Dateinamen.
+
+        Geschrieben wird erst später und immer wieder neu
+        (:meth:`schreiben`). ``ordner`` ist ohne Angabe ``logs/``;
+        ``zeitpunkt`` setzt den Zeitstempel im Dateinamen fest und ist nur
+        für Tests gedacht.
+        """
         self.spielstand = spielstand
         self.ordner = Path(ordner if ordner is not None else STANDARDORDNER)
         self.dateiname = dateiname(spielstand, zeitpunkt)

@@ -169,6 +169,7 @@ def test_kein_abschnitt_und_kein_text_ist_leer(seite):
 
 
 def _randnotizen(seite):
+    """Alle Randnotizen einer Handbuchseite, über alle Abschnitte hinweg."""
     return [block for abschnitt in seite.abschnitte for block in abschnitt.bloecke
             if isinstance(block, Randnotiz)]
 

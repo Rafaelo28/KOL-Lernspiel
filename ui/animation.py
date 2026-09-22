@@ -80,6 +80,14 @@ class Animation:
     """
 
     def __init__(self, name, ordner=None, massstab=1):
+        """Liest die Beschreibung einer gerenderten Animation ein.
+
+        ``name`` ist der Ordnername unter ``content/animationen/``,
+        ``massstab`` entscheidet zwischen dem kleinen und dem grossen
+        Bildsatz. Fehlt die Animation, sagt der Fehler gleich dazu, mit
+        welchem Befehl sie zu rendern ist – sie liegt nicht im Repository,
+        sondern entsteht aus der SVG in ``grafik/``.
+        """
         self.name = name
         self.massstab = massstab
         self.ordner = Path(ordner if ordner is not None else ANIMATIONSORDNER) / name / unterordner(massstab)
@@ -117,6 +125,7 @@ class Animation:
         return self.bilder * self.takt_ms
 
     def __repr__(self):
+        """Kurzfassung für die Fehlersuche – so erscheint das Objekt in Meldungen und im Debugger."""
         return f"Animation({self.name!r}, {self.breite}×{self.hoehe}, {self.bilder} Bilder)"
 
 
@@ -150,6 +159,13 @@ class Buehne(tk.Canvas):
     """Eine Leinwand, auf der eine :class:`Animation` läuft."""
 
     def __init__(self, master, animation, **optionen):
+        """Baut die Leinwand in der Grösse der Animation und lädt ihre Bilder.
+
+        ``master`` ist das Bedienelement, in dem die Bühne stehen soll –
+        meist der Screen selbst. Alles Weitere (``optionen``) reicht Tkinter
+        an die Leinwand durch. Abgespielt wird noch nichts; das beginnt
+        :meth:`starten`.
+        """
         # Zuerst, damit destroy() auch nach einem Ladefehler funktioniert.
         self.animation = animation
         self._auftrag = None
@@ -167,6 +183,12 @@ class Buehne(tk.Canvas):
             raise
 
     def _laden(self):
+        """Legt den Hintergrund auf die Leinwand und darüber je Ausschnitt ein Bild.
+
+        Diese Bilder werden später nur noch ausgetauscht – das ist die ganze
+        Animation. Die Bildfolgen bleiben in ``self._folgen`` liegen: Gibt
+        Python sie frei, verschwinden sie bei Tkinter auch von der Leinwand.
+        """
         animation = self.animation
         self._hintergrund = None
         self._hintergrund_element = None
@@ -208,6 +230,7 @@ class Buehne(tk.Canvas):
 
     @property
     def laeuft(self):
+        """Läuft die Schleife gerade?"""
         return self._auftrag is not None
 
     def starten(self):
@@ -231,6 +254,7 @@ class Buehne(tk.Canvas):
             self.itemconfigure(element, image=folge[self._bild_nr])
 
     def _weiter(self):
+        """Ein Takt der Schleife: nächstes Bild zeigen und sich gleich wieder vormerken."""
         # Der nächste Takt auch nach einem Fehler – ein kaputtes Einzelbild darf
         # die Szene nicht anhalten (wie beim Takt des Hauptfensters).
         try:
@@ -239,6 +263,11 @@ class Buehne(tk.Canvas):
             self._auftrag = self.after(self.animation.takt_ms, self._weiter)
 
     def destroy(self):
+        """Reisst die Leinwand ab – Tkinter ruft das beim Abriss des Screens von selbst.
+
+        Hier wird zusätzlich aufgeräumt, was Tkinter nicht von allein
+        loswird: der laufende Takt und die geladenen Bilder.
+        """
         # Beim Abriss des Screens mit abräumen – sonst liefe ein after() ins Leere.
         self.anhalten()
         super().destroy()
@@ -265,6 +294,7 @@ class Figur:
     TAG = "figur"
 
     def __init__(self, leinwand, animation, x=0, y=0):
+        """Lädt die Bilder der Figur und setzt sie an die Stelle ``x, y`` der Leinwand."""
         self.leinwand = leinwand
         self.animation = animation
         self._x, self._y = x, y
@@ -277,14 +307,17 @@ class Figur:
 
     @property
     def x(self):
+        """Die linke Kante der Figur auf der Leinwand."""
         return self._x
 
     @property
     def y(self):
+        """Die obere Kante der Figur auf der Leinwand."""
         return self._y
 
     @property
     def bild_nr(self):
+        """Welches Bild der Schleife gerade zu sehen ist."""
         return self._bild_nr
 
     @property
@@ -328,6 +361,13 @@ class Ablauf:
     TAG = "ablauf"
 
     def __init__(self, leinwand, animation, x=0, y=0, bilder=None):
+        """Bereitet einen einmaligen Ablauf über einer schon vorhandenen Leinwand vor.
+
+        Die Bilder werden hier geladen – ausser es werden mit ``bilder``
+        welche von einem früheren Ablauf derselben Animation
+        weitergereicht. Auf die Leinwand gelegt wird noch nichts; das
+        geschieht erst in :meth:`abspielen`.
+        """
         self.leinwand = leinwand
         self.animation = animation
         self._x, self._y = x, y
@@ -343,6 +383,7 @@ class Ablauf:
 
     @property
     def laeuft(self):
+        """Läuft der Ablauf gerade – oder liegen wenigstens noch seine Bilder auf der Leinwand?"""
         return self._auftrag is not None or bool(self._elemente)
 
     def abspielen(self, rueckwaerts=False, bei_bild=None, danach=None):
@@ -366,6 +407,12 @@ class Ablauf:
         return True
 
     def _schritt(self, reihenfolge, i, bei_bild, danach):
+        """Zeigt das ``i``-te Bild und merkt das nächste vor; nach dem letzten wird aufgeräumt.
+
+        Die Funktion ruft sich also über die Uhr immer wieder selbst auf, bis
+        ``reihenfolge`` durch ist. Danach kommen die Bilder von der Leinwand
+        und ``danach()`` an die Reihe.
+        """
         self._auftrag = None
         if i >= len(reihenfolge):
             self.abbrechen()

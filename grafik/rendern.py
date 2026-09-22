@@ -126,6 +126,13 @@ class Bereich(NamedTuple):
 
 
 class Einstellungen(NamedTuple):
+    """Alles, was im ``<svg>``-Element über eine Animation steht – gelesen und geprüft.
+
+    Aus diesen Angaben entsteht später ``animation.json`` neben den Bildern;
+    was die einzelnen Felder bedeuten, steht im Kopf dieser Datei und in
+    ``dokumentation/Animationen.md``.
+    """
+
     name: str
     viewbox: tuple
     breite: int
@@ -159,6 +166,7 @@ class Bild(NamedTuple):
 # ── Einstellungen aus der SVG ──────────────────────────────────────────────
 
 def _kopf(svg_text):
+    """Sucht das ``<svg …>``-Element am Anfang der Datei – dort stehen alle Angaben zur Animation."""
     treffer = re.search(r"<svg\b[^>]*>", svg_text)
     if not treffer:
         raise ValueError("In der Datei steht kein <svg>-Element.")
@@ -166,6 +174,11 @@ def _kopf(svg_text):
 
 
 def _attribut(kopf, name, pflicht=True):
+    """Liest ein Attribut aus dem ``<svg>``-Element, etwa ``data-bilder``.
+
+    Fehlt es, gibt es ohne ``pflicht`` ein ``None`` und sonst einen Fehler,
+    der gleich auf die Dokumentation verweist.
+    """
     treffer = re.search(rf'\s{re.escape(name)}\s*=\s*"([^"]*)"', kopf)
     if treffer:
         return treffer.group(1).strip()
@@ -175,6 +188,7 @@ def _attribut(kopf, name, pflicht=True):
 
 
 def _ganze_zahl(kopf, name):
+    """Liest ein Attribut als positive ganze Zahl – sonst mit einer klaren Meldung abbrechen."""
     wert = _attribut(kopf, name)
     try:
         zahl = int(wert)
@@ -433,6 +447,7 @@ def png_lesen(daten):
 def png_schreiben(breite, hoehe, zeilen, kanaele=4):
     """Baut ein 8-Bit-PNG aus Zeilen (RGB bei ``kanaele=3``, RGBA bei 4)."""
     def stueck(art, inhalt):
+        """Verpackt einen PNG-Block: Länge, Art, Inhalt und eine Prüfsumme darüber."""
         return struct.pack(">I", len(inhalt)) + art + inhalt + struct.pack(">I", zlib.crc32(art + inhalt))
 
     farbtyp = 2 if kanaele == 3 else 6
@@ -666,6 +681,11 @@ def _satz_schreiben(svg_text, einstellungen, ordner, quelle, bild_machen, ausgab
 
 
 def main(argumente=None):
+    """Der Aufruf von der Kommandozeile: rendert eine SVG-Datei und meldet, was dabei herauskam.
+
+    Rückgabewert ist der Rückgabecode des Programms – 0, wenn es geklappt
+    hat, sonst 1 mit einer Meldung auf der Fehlerausgabe.
+    """
     parser = argparse.ArgumentParser(description="Rendert eine SVG-Animation für das Spiel vor.")
     parser.add_argument("svg", type=pathlib.Path, help="die SVG-Datei, z. B. grafik/wrack.svg")
     parser.add_argument("--ohne-pruefung", action="store_true",

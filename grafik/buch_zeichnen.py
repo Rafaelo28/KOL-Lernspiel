@@ -53,6 +53,7 @@ rnd = random.Random(1904)
 
 
 def pfad(punkte, zu=True):
+    """Schreibt Punkte als SVG-Pfad: hin zum ersten, dann Linien zu den übrigen, mit ``zu`` zurück zum Anfang."""
     return "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in punkte) + (" Z" if zu else "")
 
 
@@ -376,6 +377,11 @@ def abstand(punkt, fuss, normale):
 
 
 def gespiegelt(punkt, fuss, normale):
+    """Der Punkt, wenn man ihn an der Knicklinie umklappt – so wandert die Ecke beim Umblättern.
+
+    Gemessen wird sein Abstand zur Linie (:func:`abstand`); dann wird er um
+    das Doppelte davon auf die andere Seite gesetzt.
+    """
     d = abstand(punkt, fuss, normale)
     return punkt[0] - 2 * d * normale[0], punkt[1] - 2 * d * normale[1]
 
@@ -529,6 +535,7 @@ def umblaettern_svg():
 
 
 def main():
+    """Schreibt beide SVG-Dateien nach ``grafik/`` – das Buch und das Umblättern."""
     for name, svg in (("buch.svg", buch_svg()), ("umblaettern.svg", umblaettern_svg())):
         (ORDNER / name).write_text(svg, encoding="utf-8")
         print("geschrieben:", ORDNER / name)

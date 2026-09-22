@@ -26,6 +26,7 @@ _spec.loader.exec_module(rendern)
 
 
 def _png_groesse(datei):
+    """Breite und Höhe eines PNG, direkt aus seinem Dateikopf gelesen."""
     kopf = Path(datei).read_bytes()[:24]
     assert kopf[:8] == b"\x89PNG\r\n\x1a\n", f"{datei} ist kein PNG"
     return struct.unpack(">II", kopf[16:24])
@@ -43,6 +44,7 @@ ECHTE = [(ordner / rendern.unterordner(massstab), massstab)
 
 
 def _satz_id(satz):
+    """Ein kurzer Name für einen Bildsatz – so heisst der Fall später im Testbericht."""
     ordner, massstab = satz
     return ordner.name if massstab == 1 else f"{ordner.parent.name}@{massstab:g}"
 
@@ -131,6 +133,10 @@ FARBEN = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff"]
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -185,6 +191,7 @@ def _probeanimation(wurzel, ordner, spalten=2, bilder=5, blatt_zu_klein=False):
 
 
 def _farbe(bild):
+    """Die Farbe eines Bildes an einer festen Stelle, als ``#rrggbb``."""
     return "#%02x%02x%02x" % tuple(bild.get(5, 4))
 
 
@@ -320,6 +327,7 @@ def test_ein_ablauf_ohne_hintergrund_wird_gelesen(wurzel, tmp_path):
 
 
 def _farbe_von(leinwand, element):
+    """Die Farbe des Bildes, das gerade an diesem Element der Leinwand hängt."""
     bild = leinwand.itemcget(element, "image")
     return "#%02x%02x%02x" % tuple(leinwand.tk.call(bild, "get", 5, 4))
 
@@ -332,6 +340,7 @@ def test_ein_ablauf_zeigt_seine_bilder_der_reihe_nach_und_raeumt_dann_auf(wurzel
     gesehen, fertig = [], []
 
     def bei_bild(nr, anzahl):
+        """Wird nach jedem Bild gerufen und schreibt mit, was zu sehen war."""
         (element,) = leinwand.find_withtag(Ablauf.TAG)
         gesehen.append((_farbe_von(leinwand, element), nr, anzahl))
 

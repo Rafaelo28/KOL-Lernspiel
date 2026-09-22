@@ -44,6 +44,12 @@ class Screen(tk.Frame):
     fuellt_fenster = False
 
     def __init__(self, fenster):
+        """Baut den leeren Rahmen im Hauptfenster; die Bedienelemente kommen in den Unterklassen dazu.
+
+        ``fenster`` ist das :class:`ui.hauptfenster.Hauptfenster`. Der Screen
+        merkt es sich, weil er darüber an den Durchlauf, den Maßstab und die
+        Kopfzeile kommt.
+        """
         # Oben und unten nur der halbe Abstand: Der Screen steht ohnehin in der
         # Mitte des Fensters, und auf einem 1080p-Monitor zählt im grossen
         # Maßstab jede Zeile (siehe tests/test_startbildschirm.py).
@@ -82,9 +88,17 @@ class Screen(tk.Frame):
         """Gleich wird der Screen abgerissen."""
 
     def spaeter(self, millisekunden, funktion):
-        """Wie ``after()``, aber beim Wechsel automatisch abgemeldet."""
+        """Ruft ``funktion`` erst nach einer Wartezeit auf, ohne das Fenster so lange anzuhalten.
+
+        Tkinter kennt dafür ``after()``: "diesen Aufruf für später vormerken".
+        Hier kommt eine Sicherung dazu – wird der Screen vorher abgeräumt
+        (:meth:`abraeumen`), wird auch der vorgemerkte Aufruf abgemeldet.
+        Sonst liefe er ins Leere und griffe auf Bedienelemente zu, die es
+        nicht mehr gibt.
+        """
 
         def ausfuehren():
+            """Streicht den Auftrag von der Liste und ruft dann die Funktion."""
             self._auftraege.discard(auftrag)
             funktion()
 

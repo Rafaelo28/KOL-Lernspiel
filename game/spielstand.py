@@ -133,6 +133,16 @@ class Spielstand:
     """
 
     def __init__(self, figur, zufallsquelle=None, pseudonym=None, zeitgeber=None):
+        """Beginnt einen Durchlauf mit der gewählten Figur.
+
+        Ohne ``zufallsquelle`` wird eine neue gezogen, ohne ``pseudonym``
+        eines aus dem Seed gebaut (im Spiel kommt es vom Startbildschirm).
+        ``zeitgeber`` ist die Uhr, an der die Zeitfenster hängen; Tests geben
+        eine eigene mit.
+
+        Ein Level läuft danach noch nicht – das beginnt
+        :meth:`starte_level`.
+        """
         if figur is None:
             raise ValueError(
                 "Ohne gewählte Figur geht es nicht: Ihre Initialen "
@@ -510,12 +520,21 @@ class Spielstand:
         self._bearbeitung = None
 
     # ── Innere Hilfen ──────────────────────────────────────────────────────
+    #
+    # Die vier ``_verlange_…``-Methoden sind Wächter: Jede prüft eine
+    # Bedingung und wirft einen Fehler, wenn sie nicht stimmt. Sie stehen am
+    # Anfang der öffentlichen Methoden. Gemeint sind sie nicht als
+    # Fehlermeldung für die Spielenden, sondern als Reissleine für uns: Ein
+    # Screen, der die Reihenfolge durcheinanderbringt, fällt sofort auf und
+    # nicht erst beim Auswerten der Logdateien.
 
     def _verlange_level(self):
+        """Wächter: Es muss ein Level laufen."""
         if self._level is None:
             raise ValueError("Es läuft kein Level – zuerst starte_level().")
 
     def _verlange_restzeit(self):
+        """Wächter: Das Zeitfenster darf nicht schon abgelaufen sein."""
         if self.zeit_ist_um:
             raise ZeitIstUm(
                 f"Die Zeit für Level {self._level} ist um – hier wird keine "
@@ -523,6 +542,7 @@ class Spielstand:
             )
 
     def _verlange_freie_bahn(self):
+        """Wächter: Es darf keine Aufgabe mehr offen sein."""
         if self._bearbeitung is not None:
             raise ValueError(
                 f"Aufgabe {self._bearbeitung.aufgabe.kennung!r} läuft noch. "
@@ -531,6 +551,7 @@ class Spielstand:
             )
 
     def _verlange_aufgabe(self):
+        """Wächter: Es muss gerade eine Aufgabe laufen."""
         if self._bearbeitung is None:
             raise ValueError(
                 "Es läuft keine Aufgabe – zuerst naechste_uebung() oder "
@@ -538,6 +559,7 @@ class Spielstand:
             )
 
     def __repr__(self):
+        """Kurzfassung für die Fehlersuche – so erscheint das Objekt in Meldungen und im Debugger."""
         laeuft = self.aktuelle_aufgabe.kennung if self.aktuelle_aufgabe else None
         return (
             f"Spielstand({self.pseudonym!r}, figur={self.figur.kennung!r}, "

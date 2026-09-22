@@ -38,6 +38,10 @@ PROJEKT = Path(__file__).resolve().parent.parent
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -51,20 +55,26 @@ def wurzel():
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Das Spiel fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
 
 @pytest.fixture
 def uhr():
+    """Die stellbare Uhr – ohne sie liefe im Test die echte Zeit mit."""
     return Uhr()
 
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab, uhr):
+    """Ein Hauptfenster an der stellbaren Uhr, das ins Testverzeichnis schreibt."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=uhr, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
@@ -72,10 +82,12 @@ def fenster(wurzel, tmp_path, massstab, uhr):
 
 @pytest.fixture
 def aufrufe():
+    """Eine leere Liste, in der landet, was nach dem Handbuch aufgerufen wird."""
     return []
 
 
 def _buch(fenster, level, aufrufe, **optionen):
+    """Zeigt die Handbuchseite eines Levels und gibt den Screen zurück."""
     return fenster.zeige(handbuch.Handbuch, level=level, danach=aufrufe.append, **optionen)
 
 
@@ -106,6 +118,7 @@ FLIESSTEXT = {"kapitel", "abschnitt", "absatz", "betont", "punkt", "tabellentite
 
 
 def _art(screen, element):
+    """Die Textart eines Elements auf der Leinwand (Absatz, Überschrift …), sonst ``None``."""
     return next((tag for tag in screen.buch.gettags(element) if tag in FLIESSTEXT), None)
 
 
@@ -145,6 +158,7 @@ def _erwartet(seite):
 
 
 def _hat_quadrat(buchseite):
+    """Steht auf dieser gesetzten Seite das Vigenère-Quadrat?"""
     return any(isinstance(s, buchsatz.Quadrat) for s in buchseite.stuecke)
 
 
@@ -155,6 +169,7 @@ def _quadrat(screen):
 
 
 def _hat_geheimtabelle(buchseite):
+    """Steht auf dieser Seite die Tabelle mit der Zeile "Geheim"?"""
     zellen = {z for s in buchseite.stuecke if isinstance(s, buchsatz.Raster) for zeile in s.zeilen for z in zeile}
     return "Geheim" in zellen
 
@@ -167,6 +182,7 @@ def _aufschlagen_bei(screen, bedingung):
 
 
 def _zeilen_im_satz(screen, seite, *arten):
+    """Die Texte bestimmter Art auf einer gesetzten Seite."""
     return [z.text for z in screen.satz.seiten[seite].stuecke if isinstance(z, buchsatz.Zeile) and z.art in arten]
 
 
@@ -219,6 +235,7 @@ def test_die_seiten_sind_nummeriert(fenster, aufrufe):
 
 
 def _leer(screen):
+    """Wie eine leere Seite aussieht – zum Vergleich mit dem, was im Buch steht."""
     x0, y0, x1, y1 = screen.flaeche("links")
     return buchsatz.leerseite(x1 - x0, y1 - y0, screen.px).stuecke
 
@@ -412,6 +429,7 @@ def test_die_felder_des_quadrats_sind_gross_genug_zum_lesen(fenster, aufrufe, ma
 # ── Beispiele: das Werkzeug gegenüber, der Schritt markiert ────────────────
 
 def _beispiele(seite):
+    """Die Abschnitte einer Handbuchseite, die ein Werkzeug daneben haben – mit ihrer Nummer."""
     return [(nr, a) for nr, a in enumerate(seite.abschnitte) if a.gegenueber is not None]
 
 
@@ -609,6 +627,7 @@ def test_ohne_beispiel_gibt_es_nichts_zu_markieren(fenster, aufrufe, ausloesen):
 
 
 def _markierung_der_doppelseite_pruefen(screen):
+    """Prüft, dass auf der offenen Doppelseite der erste Schritt markiert ist – und sonst nichts."""
     if screen.schritte:
         assert screen.schritt == screen.schritte[0]
         _markierung_pruefen(screen, screen.schritt)
@@ -660,6 +679,7 @@ def test_der_textmarker_liegt_unter_der_schrift_und_auf_dem_papier(fenster, aufr
     stapel = leinwand.find_all()
 
     def lage(auswahl):
+        """Die Plätze der ausgewählten Elemente im Stapel der Leinwand – wer liegt über wem?"""
         return [stapel.index(e) for e in leinwand.find_withtag(auswahl)]
 
     assert leinwand.type(stapel[0]) == "image"                                  # ganz unten das Buch
@@ -695,6 +715,7 @@ def test_der_textmarker_steht_nicht_ueber_die_textflaeche_hinaus(fenster, aufruf
 # ── Alles auf dem Papier ───────────────────────────────────────────────────
 
 def _ueberlappen(a, b, luft=1):
+    """Überschneiden sich zwei Rechtecke (x0, y0, x1, y1)? Eine Linie Luft zählt nicht."""
     return a[0] + luft < b[2] and b[0] + luft < a[2] and a[1] + luft < b[3] and b[1] + luft < a[3]
 
 
@@ -724,6 +745,7 @@ def test_nichts_ragt_ueber_die_textflaeche_und_kein_text_liegt_auf_einem_anderen
 
 
 def _rendern():
+    """Lädt ``grafik/rendern.py`` nach – es gehört zu keinem Paket und lässt sich nicht einfach importieren."""
     spec = importlib.util.spec_from_file_location("rendern", PROJEKT / "grafik" / "rendern.py")
     modul = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modul)
@@ -742,6 +764,7 @@ def test_die_textflaechen_liegen_auf_dem_papier_des_buchbilds(massstab):
     bild = _rendern().png_lesen((ordner / "hintergrund.png").read_bytes())
 
     def farbe(x, y):
+        """Die Farbe eines Bildpunkts im gerenderten Bild (Rot, Grün, Blau)."""
         return tuple(bild.zeilen[y][x * bild.kanaele:x * bild.kanaele + 3])
 
     for flaeche in (buchleinwand.TEXT_LINKS, buchleinwand.TEXT_RECHTS):
@@ -779,6 +802,7 @@ def test_im_grossen_massstab_darf_der_text_darueber_breiter_werden(fenster, aufr
 # ── Blättern ───────────────────────────────────────────────────────────────
 
 def _mitte(bereich, screen):
+    """Der Mittelpunkt eines Bereichs, schon im Maßstab des Screens."""
     x0, y0, x1, y1 = (screen.px(wert) for wert in bereich)
     return (x0 + x1) // 2, (y0 + y1) // 2
 
@@ -926,6 +950,7 @@ def test_die_bilder_werden_nur_einmal_geladen(fenster, aufrufe, monkeypatch):
 
 def test_ohne_bilder_wird_eben_ohne_umschlagen_geblaettert(fenster, aufrufe, monkeypatch):
     def laden(name, **optionen):
+        """Lädt Animationen wie sonst – nur die Umblätter-Bilder gibt es hier nicht."""
         if name == "umblaettern":
             raise FileNotFoundError(name)
         return animation.Animation(name, **optionen)
@@ -993,6 +1018,7 @@ def _nachlese_durchklicken(fenster):
 
 
 def _bis_zum_handbuch(fenster):
+    """Klickt sich vom Startbildschirm bis zur Handbuchseite von Level 1 durch."""
     fenster.aktueller_screen._feld.insert(0, "1-12")
     fenster.aktueller_screen.starten()
     fenster.aktueller_screen.waehle(charaktere.JONAS_BERG)

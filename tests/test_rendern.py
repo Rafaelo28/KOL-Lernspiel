@@ -29,6 +29,7 @@ _spec.loader.exec_module(rendern)
 
 
 def _svg(bereiche="80 20 60 40", schleife=800, bilder=8, breite=200, viewbox="0 0 200 100"):
+    """Eine kleine SVG-Datei mit den Angaben, die das Rendern erwartet."""
     teile = [f'viewBox="{viewbox}"', f'data-breite="{breite}"',
              f'data-schleife-ms="{schleife}"', f'data-bilder="{bilder}"']
     if bereiche is not None:
@@ -66,6 +67,7 @@ def _png(breite, hoehe, zeilen, kanaele=3, filter_je_zeile=None):
         vorher = zeile
 
     def stueck(art, inhalt):
+        """Verpackt einen PNG-Block: Länge, Art, Inhalt und eine Prüfsumme darüber."""
         return struct.pack(">I", len(inhalt)) + art + inhalt + struct.pack(">I", zlib.crc32(art + inhalt))
 
     farbtyp = 2 if kanaele == 3 else 6
@@ -90,6 +92,11 @@ class FalscherFirefox:
         self.aufrufe = []
 
     def __call__(self, html, breite, hoehe):
+        """Tut so, als hätte Firefox die Seite fotografiert, und malt das Bild selbst.
+
+        Gelesen wird dafür aus dem HTML, welche Einzelbilder mit welchem
+        Ausschnitt darin stehen – so lässt sich prüfen, was das Rendern verlangt hat.
+        """
         self.aufrufe.append((breite, hoehe, html.count('class="kopie"')))
         grund = self.HINTERGRUND
         if self.szene_ohne_grund:
@@ -247,6 +254,7 @@ def test_bewegung_ausserhalb_des_ausschnitts_wird_gemeldet():
 def test_eine_schleife_die_nicht_nahtlos_ist_wird_gemeldet():
     """Der Punkt läuft einfach weiter – nach 800 ms steht er woanders."""
     def geradeaus(t_ms):
+        """Eine Bewegung, die immer weiterläuft – am Ende der Schleife also nicht dort ist, wo sie begann."""
         return 20 + (t_ms - rendern.T0_MS) * .1, 50
 
     svg = _svg(bereiche="0 0 200 100")
@@ -273,6 +281,7 @@ def test_eine_stehende_szene_braucht_keinen_ausschnitt_und_meldet_nichts():
 # ───────────────────────────────────────────────────────────────────────────
 
 def _svg_datei(tmp_path, **einstellungen):
+    """Schreibt eine solche SVG-Datei ins Testverzeichnis."""
     datei = tmp_path / "probe.svg"
     datei.write_text(_svg(**einstellungen), encoding="utf-8")
     return datei
@@ -353,6 +362,7 @@ def test_die_einzelbilder_zeigen_die_zeitpunkte_der_reihe_nach(tmp_path):
     zeiten = []
 
     def merken(t_ms):
+        """Schreibt mit, zu welchen Zeitpunkten gerendert wurde, und bewegt sich wie sonst."""
         zeiten.append(t_ms)
         return im_kreis(t_ms)
 
@@ -391,6 +401,7 @@ def test_main_meldet_fehler_und_gibt_eins_zurueck(tmp_path, capsys):
 # ───────────────────────────────────────────────────────────────────────────
 
 def _svg_mit(schalter, bereiche="85 15 50 50", schleife=800, bilder=8):
+    """Eine SVG-Datei mit den angegebenen Schaltern (Standbild, durchsichtig, einmalig)."""
     teile = ['viewBox="0 0 200 100"', 'data-breite="200"']
     if schleife is not None:
         teile += [f'data-schleife-ms="{schleife}"', f'data-bilder="{bilder}"']
@@ -401,6 +412,7 @@ def _svg_mit(schalter, bereiche="85 15 50 50", schleife=800, bilder=8):
 
 
 def _datei(tmp_path, text):
+    """Schreibt diesen Text als SVG-Datei ins Testverzeichnis."""
     datei = tmp_path / "probe.svg"
     datei.write_text(text, encoding="utf-8")
     return datei
@@ -450,6 +462,7 @@ def test_ein_standbild_wird_ohne_pruefung_als_hintergrund_geschrieben(tmp_path):
 def test_durchsichtig_machen_rechnet_den_alphakanal_aus():
     """Nichts gemalt → ganz durchsichtig; deckend → wie gemalt; ein Schatten → halb."""
     def zeile(*pixel):
+        """Baut eine Bildzeile aus einzelnen Farbwerten."""
         return bytes(wert for p in pixel for wert in p)
 
     schwarz = _png(3, 1, [zeile((0, 0, 0), (200, 50, 10), (0, 0, 0))])
@@ -486,6 +499,7 @@ def test_ein_einmaliger_ablauf_beginnt_bei_null_und_wird_nicht_auf_die_naht_gepr
     zeiten = []
 
     def merken(t_ms):
+        """Schreibt mit, zu welchen Zeitpunkten gerendert wurde, und läuft dabei geradeaus."""
         zeiten.append(t_ms)
         return geradeaus(t_ms)
 

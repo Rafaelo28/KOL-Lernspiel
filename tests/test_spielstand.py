@@ -32,6 +32,7 @@ FIGUR = charaktere.VIC_MORENO
 
 
 def _stand(seed=4711, figur=FIGUR, pseudonym="P01"):
+    """Ein Spielstand mit festem Seed – so kommen immer dieselben Aufgaben."""
     return Spielstand(figur, Zufallsquelle(seed), pseudonym)
 
 
@@ -445,6 +446,7 @@ def test_auch_ein_durchlauf_ohne_eine_einzige_richtige_loesung_endet():
 def test_derselbe_seed_ergibt_denselben_ablauf():
     """Grundlage der Rekonstruktion aus Aufgabe 3.3."""
     def ablauf(seed):
+        """Spielt drei Übungen je Level durch und gibt die Aufgabentexte zurück."""
         stand = _stand(seed=seed)
         texte = []
         stand.starte_level(LEVEL[0])
@@ -583,17 +585,23 @@ def test_mitten_im_spiel_gilt_es_noch_nicht_als_durchgespielt():
 # sofort wieder ab – übrig bliebe eine Logzeile ohne jede Bearbeitung.
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht, und lässt sich vorspulen."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Der Spielstand fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
 def _stand_mit_uhr(uhr, seed=4711):
+    """Ein Spielstand, dessen Zeitfenster an der stellbaren Uhr hängen."""
     return Spielstand(FIGUR, Zufallsquelle(seed), "P01", zeitgeber=uhr)
 
 

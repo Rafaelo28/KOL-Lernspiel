@@ -35,11 +35,13 @@ POOL = set(uebungen.UEBUNGSTEXTE)
 
 
 def _ziehungen(level, anzahl=200, seed=0):
+    """Viele Übungen eines Levels hintereinander – so lassen sich Verteilungen prüfen."""
     generator = Aufgabengenerator(random.Random(seed))
     return [generator.naechste_uebung(level) for _ in range(anzahl)]
 
 
 def _klartext(aufgabe):
+    """Der Klartext einer Aufgabe, egal in welche Richtung sie geht."""
     return aufgabe.anzeigetext if aufgabe.richtung == VERSCHLUESSELN else aufgabe.loesung
 
 

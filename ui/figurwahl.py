@@ -83,7 +83,14 @@ class Karte(tk.Frame):
     """
 
     def __init__(self, master, figur, beim_klick, massstab=1):
+        """Baut die Karte einer Figur: Siegel mit Initialen, Name, Rolle.
+
+        ``beim_klick(figur)`` wird gerufen, wenn irgendwo auf die Karte
+        geklickt wird.
+        """
+
         def px(wert):
+            """Rechnet eine Pixelangabe auf den Maßstab um – wie ``Screen.px``, nur ohne Screen."""
             return stil.skaliert(wert, massstab)
 
         super().__init__(
@@ -135,6 +142,7 @@ class Karte(tk.Frame):
 
     @property
     def gewaehlt(self):
+        """Ist diese Karte gerade die ausgewählte?"""
         return self._gewaehlt
 
     @property
@@ -164,9 +172,15 @@ class Karte(tk.Frame):
             self.buehne.zeige_bild(0)
 
     def _rand(self, farbe):
+        """Färbt den Rahmen der Karte um – Gold heisst gewählt."""
         self.config(highlightbackground=farbe, highlightcolor=farbe)
 
     def _maus_drauf(self, _ereignis):
+        """Der Mauszeiger kommt auf die Karte: heller Rahmen, das Symbol läuft an.
+
+        Das ``_ereignis`` liefert Tkinter mit; hier wird es nicht gebraucht –
+        daher der Unterstrich im Namen.
+        """
         self._unter_maus = True
         if not self._gewaehlt:
             self._rand(stil.FARBE_KARTENRAND_HELL)
@@ -183,6 +197,7 @@ class Karte(tk.Frame):
         return pfad == str(self) or pfad.startswith(str(self) + ".")
 
     def _maus_weg(self, ereignis):
+        """Der Mauszeiger verlässt die Karte: Rahmen und Symbol wieder wie vorher."""
         # Beim Wechsel von der Karte auf ihren Namen meldet Tk ebenfalls ein
         # Verlassen – dann steht der Zeiger aber noch auf der Karte.
         drunter = self.winfo_containing(ereignis.x_root, ereignis.y_root)
@@ -195,9 +210,22 @@ class Karte(tk.Frame):
 
 
 class Figurwahl(Screen):
+    """Die Vorgeschichte und darunter die fünf Figuren zur Auswahl.
+
+    Gewählt wird mit der Maus oder den Pfeiltasten, bestätigt mit dem Knopf
+    rechts. Erst dann beginnt der Durchlauf – die Initialen der Figur
+    unterschreiben später jeden gesendeten Funkspruch.
+    """
+
     titel = "Wähle deine Figur"
 
     def __init__(self, fenster, danach, figuren=charaktere.SPIELBARE_CHARAKTERE):
+        """Baut Vorgeschichte, Kartenreihe und Bestätigungsknopf.
+
+        ``danach(fenster, figur)`` wird mit der bestätigten Figur gerufen.
+        ``figuren`` sind sonst die fünf aus :mod:`content.charaktere`; Tests
+        geben eigene mit.
+        """
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT)
         self._danach = danach
@@ -239,9 +267,11 @@ class Figurwahl(Screen):
 
     @property
     def knopftext(self):
+        """Was auf dem Knopf steht – ohne Wahl eine Aufforderung, sonst "Als … spielen"."""
         return self._knopf.cget("text")
 
     def beim_anzeigen(self):
+        """Der Screen steht: Der Knopf bekommt die Tastatur."""
         # Auf dem Knopf liegen Enter und die Pfeiltasten.
         self._knopf.focus_set()
 
@@ -269,6 +299,7 @@ class Figurwahl(Screen):
         self._danach(self.fenster, self._gewaehlt)
 
     def _knopf_beschriften(self):
+        """Stellt den Knopf auf die gewählte Figur ein – ohne Wahl bleibt er abgeschaltet."""
         if self._gewaehlt is None:
             self._knopf.config(text=KNOPF_OHNE_WAHL, state="disabled")
         else:

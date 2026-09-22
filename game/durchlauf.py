@@ -79,6 +79,12 @@ class Durchlauf:
     """
 
     def __init__(self, spielstand, protokoll, bei_levelwechsel=None, bei_speicherproblem=None):
+        """Verbindet einen Spielstand mit dem Protokoll, in das er geschrieben wird.
+
+        Die beiden Rückrufe sind freiwillig. Wer keinen angibt, bekommt
+        :func:`_nichts` – dann passiert nach aussen hin nichts. Im Spiel
+        meldet sich dort die Oberfläche an, in Tests oft niemand.
+        """
         self.spielstand = spielstand
         self.protokoll = protokoll
         self.bei_levelwechsel = bei_levelwechsel or _nichts
@@ -118,6 +124,12 @@ class Durchlauf:
         return self._nach_levelwechsel(altes_level)
 
     def _nach_levelwechsel(self, altes_level):
+        """Räumt einen Levelwechsel auf: beschreiben, sichern, Bescheid geben.
+
+        Baut die Beschreibung des Wechsels zusammen, schreibt den Stand ins
+        CSV und ruft ``bei_levelwechsel``. Zurückgegeben wird der
+        :class:`Levelwechsel`; die öffentlichen Methoden reichen ihn weiter.
+        """
         wechsel = Levelwechsel(
             altes_level=altes_level,
             neues_level=self.spielstand.aktuelles_level,
@@ -216,4 +228,5 @@ class Durchlauf:
         )
 
     def __repr__(self):
+        """Kurzfassung für die Fehlersuche – so erscheint das Objekt in Meldungen und im Debugger."""
         return f"Durchlauf({self.spielstand!r}, datei={self.protokoll.dateiname!r})"

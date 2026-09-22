@@ -25,13 +25,18 @@ FIGUR = charaktere.JONAS_BERG
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht, und lässt sich vorspulen."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Der Durchlauf fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
@@ -39,10 +44,12 @@ class Mitschrift:
     """Sammelt, was der Durchlauf über seine Rückrufe meldet."""
 
     def __init__(self):
+        """Zwei leere Listen – eine je Rückruf."""
         self.levelwechsel = []
         self.speicherprobleme = []
 
     def rueckrufe(self):
+        """Die beiden Rückrufe, fertig zum Übergeben an ``Durchlauf.neu``."""
         return {
             "bei_levelwechsel": self.levelwechsel.append,
             "bei_speicherproblem": self.speicherprobleme.append,
@@ -51,27 +58,32 @@ class Mitschrift:
 
 @pytest.fixture
 def uhr():
+    """Die stellbare Uhr für den Durchlauf."""
     return Uhr()
 
 
 @pytest.fixture
 def mitschrift():
+    """Die Mitschrift der Rückrufe."""
     return Mitschrift()
 
 
 @pytest.fixture
 def durchlauf(tmp_path, uhr, mitschrift):
+    """Ein Durchlauf, der ins Testverzeichnis schreibt und an Uhr und Mitschrift hängt."""
     return Durchlauf.neu(
         FIGUR, pseudonym="P03", zeitgeber=uhr, protokollordner=tmp_path, **mitschrift.rueckrufe()
     )
 
 
 def _zeilen(durchlauf):
+    """Die geschriebene CSV-Datei, Zeile für Zeile als Wörterbuch."""
     with open(durchlauf.protokoll.pfad, newline="", encoding=KODIERUNG) as datei:
         return list(csv.DictReader(datei, delimiter=TRENNZEICHEN))
 
 
 def _loesen(durchlauf):
+    """Löst die laufende Aufgabe richtig und schliesst sie ab."""
     stand = durchlauf.spielstand
     stand.versuchen(stand.aktuelle_aufgabe.loesung)
     durchlauf.aufgabe_abschliessen()
@@ -81,10 +93,12 @@ class Speicher:
     """Ersetzt Protokoll.schreiben: scheitert, solange ``gesperrt`` ist."""
 
     def __init__(self, protokoll):
+        """Merkt sich das echte Schreiben und beginnt gesperrt."""
         self._echt = protokoll.schreiben
         self.gesperrt = True
 
     def __call__(self):
+        """Scheitert wie eine schreibgeschützte Datei – oder schreibt doch, wenn die Sperre weg ist."""
         if self.gesperrt:
             raise PermissionError(13, "Zugriff verweigert")
         return self._echt()
@@ -319,6 +333,7 @@ def test_andere_fehler_beim_speichern_kommen_durch(durchlauf, monkeypatch):
     durchlauf.starte_level()
 
     def kaputt():
+        """Scheitert mit einem Fehler, den der Durchlauf nicht abfangen darf."""
         raise KeyError("Programmierfehler")
 
     monkeypatch.setattr(durchlauf.protokoll, "schreiben", kaputt)

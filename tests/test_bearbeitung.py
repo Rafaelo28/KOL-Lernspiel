@@ -24,10 +24,12 @@ FUNKSPRUCH_IDS = [f.kennung for f in story.FUNKSPRUECHE]
 
 
 def _uebung():
+    """Eine feste Übung zum Durchspielen: HUND mit Caesar und Schlüssel 3."""
     return Aufgabe("probe", 1, "caesar", VERSCHLUESSELN, 3, "HUND", "KXQG")
 
 
 def _alle_uebungen(je_level=10):
+    """Viele Übungen aus allen drei Leveln – für Prüfungen, die über den ganzen Pool laufen."""
     generator = Aufgabengenerator(Zufallsquelle(4711))
     return [
         generator.naechste_uebung(level) for level in LEVEL for _ in range(je_level)

@@ -285,6 +285,7 @@ LOGIKPAKETE = (crypto, game, content)
 
 
 def _quelldateien(*pakete):
+    """Alle Python-Dateien dieser Pakete, in fester Reihenfolge."""
     dateien = []
     for paket in pakete:
         dateien.extend(Path(paket.__file__).parent.glob("*.py"))
@@ -292,10 +293,12 @@ def _quelldateien(*pakete):
 
 
 def _logik_quelldateien():
+    """Die Dateien der drei Pakete ohne Oberfläche: crypto, game, content."""
     return _quelldateien(*LOGIKPAKETE)
 
 
 def _alle_paket_quelldateien():
+    """Die Dateien aller vier Pakete, also einschliesslich ui."""
     return _quelldateien(crypto, game, content, ui)
 
 

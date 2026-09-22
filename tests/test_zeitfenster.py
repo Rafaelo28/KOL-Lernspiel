@@ -30,16 +30,20 @@ class Uhr:
     """Eine Uhr, die man vorstellen kann."""
 
     def __init__(self, start=0.0):
+        """Beginnt bei ``start`` Sekunden."""
         self.jetzt = float(start)
 
     def __call__(self):
+        """Das Zeitfenster fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
 def _stand(uhr, seed=4711):
+    """Ein Spielstand, dessen Zeitfenster an der stellbaren Uhr hängen."""
     return Spielstand(
         charaktere.VIC_MORENO, Zufallsquelle(seed), "P01", zeitgeber=uhr
     )

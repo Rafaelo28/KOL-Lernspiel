@@ -32,13 +32,18 @@ from ui.screen import Screen  # noqa: E402
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht, und lässt sich vorspulen."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Das Spiel fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
@@ -50,11 +55,13 @@ class Rueckfrage:
     """
 
     def __init__(self, *antworten, vorher=None):
+        """Nimmt die Antworten entgegen, die der Reihe nach gegeben werden sollen."""
         self.antworten = list(antworten)
         self.fragen = []
         self.vorher = vorher
 
     def __call__(self, titel, text, **_):
+        """Der Dialog wird gestellt: Frage mitschreiben und die nächste Antwort zurückgeben."""
         self.fragen.append((titel, text))
         if self.vorher is not None:
             self.vorher()
@@ -67,10 +74,12 @@ class Speicher:
     """Ersetzt Protokoll.schreiben: scheitert, solange ``gesperrt`` ist."""
 
     def __init__(self, protokoll):
+        """Merkt sich das echte Schreiben und beginnt gesperrt."""
         self._echt = protokoll.schreiben
         self.gesperrt = True
 
     def __call__(self):
+        """Scheitert wie eine schreibgeschützte Datei – oder schreibt doch, wenn die Sperre weg ist."""
         if self.gesperrt:
             raise PermissionError(13, "Zugriff verweigert")
         return self._echt()
@@ -78,6 +87,10 @@ class Speicher:
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -92,11 +105,13 @@ def wurzel():
 
 @pytest.fixture
 def uhr():
+    """Die stellbare Uhr – ohne sie liefe im Test die echte Zeit mit."""
     return Uhr()
 
 
 @pytest.fixture
 def fenster(wurzel, uhr, tmp_path, massstab):
+    """Ein Hauptfenster an der stellbaren Uhr; seine Rückfragen beantworten Attrappen."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=uhr, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = Rueckfrage()
     fenster.frage_nochmal = Rueckfrage()
@@ -116,10 +131,12 @@ def _knopf(widget, anfang):
 
 
 def _klick(fenster, anfang):
+    """Drückt den Knopf, dessen Aufschrift so beginnt – wie ein Klick mit der Maus."""
     _knopf(fenster.aktueller_screen, anfang).invoke()
 
 
 def _bis_zum_handbuch(fenster):
+    """Klickt sich vom Startbildschirm bis zur Handbuchseite von Level 1 durch."""
     fenster.aktueller_screen._feld.insert(0, "1-12")          # die ID von der Lehrkraft
     _klick(fenster, "Spiel starten")
     fenster.aktueller_screen.waehle(charaktere.VIC_MORENO)   # was ein Klick auf die Karte tut
@@ -130,6 +147,7 @@ def _bis_zum_handbuch(fenster):
 
 
 def _bis_zur_uebung(fenster):
+    """Klickt weiter bis zur ersten Übung von Level 1."""
     _bis_zum_handbuch(fenster)
     _klick(fenster, "Zu den Übungen")
 
@@ -174,6 +192,7 @@ def _alle_level_ablaufen_lassen(fenster, uhr):
 
 
 def _zeilen(fenster):
+    """Die geschriebene CSV-Datei, Zeile für Zeile als Wörterbuch."""
     with open(fenster.durchlauf.protokoll.pfad, newline="", encoding=KODIERUNG) as datei:
         return list(csv.DictReader(datei, delimiter=TRENNZEICHEN))
 
@@ -184,19 +203,23 @@ class Probe(Screen):
     titel = "Probe"
 
     def __init__(self, fenster, name="probe", ereignisse=None):
+        """Baut den Probe-Screen und schreibt gleich mit, dass er gebaut wurde."""
         super().__init__(fenster)
         self.name = name
         self.ereignisse = ereignisse if ereignisse is not None else []
         self.ereignisse.append(("gebaut", name))
 
     def beim_anzeigen(self):
+        """Schreibt mit, dass der Screen jetzt zu sehen ist."""
         self.ereignisse.append(("angezeigt", self.name))
 
     def beim_verlassen(self):
+        """Schreibt mit, dass der Screen gleich abgerissen wird."""
         self.ereignisse.append(("verlassen", self.name))
 
 
 def _probefenster(wurzel, ereignisse, uhr=None, tmp_path=None):
+    """Ein Hauptfenster, das statt des Spiels nur Probe-Screens zeigt und alles mitschreibt."""
     return Hauptfenster(
         wurzel,
         lambda fenster: Probe(fenster, "start", ereignisse),
@@ -251,11 +274,13 @@ class Fensterzustand:
     """
 
     def __init__(self, kennt_zoomed_zustand):
+        """Beginnt im Zustand "normal", ohne gesetzte Attribute."""
         self.kennt_zoomed_zustand = kennt_zoomed_zustand
         self.werte = {}
         self.zustand = "normal"
 
     def state(self, neu=None):
+        """Fragt den Fensterzustand ab oder setzt ihn – "zoomed" kennt nicht jedes System."""
         if neu is None:
             return self.zustand
         if neu == "zoomed" and not self.kennt_zoomed_zustand:
@@ -263,12 +288,14 @@ class Fensterzustand:
         self.zustand = neu
 
     def attributes(self, name, *wert):
+        """Fragt ein Fensterattribut ab oder setzt es, wie Tk es täte."""
         if not wert:
             return self.werte.get(name, 0)
         self.werte[name] = int(bool(wert[0]))
 
 
 def _bildschirm(monkeypatch, wurzel, breite, hoehe):
+    """Tut so, als hätte der Bildschirm diese Größe – ohne einen solchen zu brauchen."""
     monkeypatch.setattr(wurzel, "winfo_screenwidth", lambda: breite)
     monkeypatch.setattr(wurzel, "winfo_screenheight", lambda: hoehe)
 
@@ -336,6 +363,8 @@ def test_nicht_maximiert_wird_das_fenster_nie_groesser_als_der_bildschirm(wurzel
 
 
 class Fuellend(Screen):
+    """Ein Screen, der den ganzen Platz im Fenster einnehmen will – wie das Handbuch."""
+
     fuellt_fenster = True
 
 
@@ -402,6 +431,7 @@ def test_ein_screen_weiss_ob_er_noch_angezeigt_wird(fenster):
 
 
 def _warten(wurzel, sekunden):
+    """Lässt das Fenster so viele Sekunden lang arbeiten, damit angemeldete Aufträge laufen."""
     ende = time.monotonic() + sekunden
     while time.monotonic() < ende:
         wurzel.update()
@@ -417,6 +447,7 @@ def test_ein_spaeter_auftrag_feuert_wenn_der_screen_bleibt(fenster, wurzel):
 
 
 def _angemeldete_auftraege(wurzel):
+    """Alle Aufträge, die gerade bei Tk für später angemeldet sind (``after``)."""
     return set(wurzel.tk.splitlist(wurzel.tk.call("after", "info")))
 
 
@@ -499,6 +530,7 @@ def test_ein_fehler_im_takt_haelt_die_uhr_nicht_an(fenster, monkeypatch):
     _bis_zum_handbuch(fenster)
 
     def kaputt():
+        """Scheitert – für die Frage, ob ein Fehler im Takt die Uhr anhält."""
         raise RuntimeError("Fehler im Takt")
 
     monkeypatch.setattr(fenster.durchlauf, "takt", kaputt)
@@ -535,6 +567,7 @@ class StelltImKonstruktor(Screen):
     """Hält sich nicht an die Regel und stellt schon beim Bauen eine Aufgabe."""
 
     def __init__(self, fenster):
+        """Ein Screen, der schon im Konstruktor eine Übung stellt – genau das soll auffallen."""
         super().__init__(fenster)
         fenster.durchlauf.naechste_uebung()
 
@@ -560,6 +593,7 @@ def test_die_uebung_wird_erst_beim_anzeigen_gestellt(fenster, monkeypatch):
     echt = uebung.Uebung.beim_anzeigen
 
     def beobachten(screen):
+        """Schreibt mit, welche Aufgabe beim Anzeigen schon gestellt war."""
         beobachtet.append(screen.durchlauf.spielstand.aktuelle_aufgabe)
         echt(screen)
 
@@ -598,6 +632,7 @@ def test_ein_fehler_in_einem_knopf_wird_angezeigt(fenster, capsys):
     """Tkinter schriebe ihn nur auf die Konsole – die sieht im Klassenzimmer keiner."""
 
     def kaputt():
+        """Scheitert mit einer Meldung – für die Frage, ob ein Knopffehler angezeigt wird."""
         raise RuntimeError("Probefehler")
 
     knopf = tk.Button(fenster.aktueller_screen, command=kaputt)
@@ -610,6 +645,7 @@ def test_ein_fehler_in_einem_knopf_wird_angezeigt(fenster, capsys):
 
 def test_ein_fehler_ohne_text_nennt_wenigstens_seine_art(fenster):
     def kaputt():
+        """Scheitert ohne Meldung – dann muss wenigstens die Fehlerart dastehen."""
         raise RuntimeError()
 
     tk.Button(fenster.aktueller_screen, command=kaputt).invoke()
@@ -682,6 +718,7 @@ def test_ein_erneuter_versuch_beim_schliessen_rettet_die_daten(fenster, monkeypa
     monkeypatch.setattr(fenster.durchlauf.protokoll, "schreiben", speicher)
 
     def datei_in_excel_geschlossen():
+        """Gibt die Datei wieder frei – als hätte jemand Excel geschlossen."""
         speicher.gesperrt = False
 
     fenster.frage_ja_nein = Rueckfrage(True)
@@ -698,7 +735,10 @@ def test_nach_dem_schliessen_laeuft_kein_takt_mehr(fenster):
 
 
 class StolpertBeimVerlassen(Screen):
+    """Ein Screen, bei dem das Abräumen scheitert."""
+
     def beim_verlassen(self):
+        """Scheitert beim Abräumen – der Wechsel muss trotzdem klappen."""
         raise RuntimeError("Fehler beim Abräumen")
 
 
@@ -796,6 +836,7 @@ def test_die_messdaten_landen_neben_main_py():
 
 def test_ohne_bildschirm_meldet_main_das_verstaendlich(monkeypatch, capsys):
     def ohne_anzeige(*_, **__):
+        """Tut so, als gäbe es keine Bildschirmanzeige."""
         raise tk.TclError("no display name and no $DISPLAY environment variable")
 
     monkeypatch.setattr(tk, "Tk", ohne_anzeige)
@@ -815,6 +856,7 @@ def test_main_oeffnet_das_spiel_mit_dem_startscreen(wurzel, monkeypatch):
     echt_oeffnen = ablauf.oeffnen
 
     def oeffnen_und_merken(neue_wurzel, **kwargs):
+        """Öffnet das Spiel wie sonst und merkt sich, womit."""
         fenster = echt_oeffnen(neue_wurzel, **kwargs)
         geoeffnet.append((fenster, kwargs))
         return fenster

@@ -37,6 +37,7 @@ FUNKSPRUCH_IDS = [f.kennung for f in story.FUNKSPRUECHE]
 
 
 def _alle_uebungen(je_level=15):
+    """Viele echte Übungen aus allen drei Leveln."""
     generator = Aufgabengenerator(Zufallsquelle(4711))
     return [
         generator.naechste_uebung(level)
@@ -187,6 +188,10 @@ def test_es_gibt_fuer_jedes_verfahren_einen_hinweis():
 # ───────────────────────────────────────────────────────────────────────────
 
 def _meldungen_zu_falschen_eingaben():
+    """Geht alle Aufgaben mit je vier typischen Fehlern durch und liefert die Rückmeldung dazu.
+
+    Das ``yield`` gibt jeden Fall einzeln heraus, statt erst alle zu sammeln.
+    """
     aufgaben = _alle_uebungen() + FUNKSPRUCH_AUFGABEN
     for aufgabe in aufgaben:
         for eingabe in (

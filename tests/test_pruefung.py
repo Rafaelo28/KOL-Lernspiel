@@ -22,10 +22,12 @@ LEVEL = (1, 2, 3)
 
 
 def _uebung(anzeigetext="HUND", loesung="KXQG"):
+    """Eine Übung mit frei wählbarem Text und Lösung – sonst HUND mit Caesar."""
     return Aufgabe("probe", 1, "caesar", VERSCHLUESSELN, 3, anzeigetext, loesung)
 
 
 def _alle_uebungen(anzahl=60):
+    """Viele echte Übungen aus allen drei Leveln."""
     generator = Aufgabengenerator(Zufallsquelle(4711))
     return [
         generator.naechste_uebung(level)

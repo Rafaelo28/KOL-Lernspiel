@@ -24,6 +24,21 @@ der Durchlauf, und die ID wird sein Pseudonym.
 Nach einem Levelwechsel wird sofort umgeschaltet, egal was gerade offen ist
 (Projektregel 1). Eine offene Aufgabe hat der Spielstand da schon als
 abgebrochen abgelegt und der Durchlauf gespeichert.
+
+Wie "danach" weitergereicht wird
+────────────────────────────────
+Kein Screen weiss, was nach ihm kommt. Stattdessen bekommt jeder eine
+Funktion mit – sie heisst überall ``danach`` –, die er aufruft, wenn er
+fertig ist. So steht der ganze Weg hier und nicht verteilt über zehn
+Dateien.
+
+Oft soll diese Funktion aber mehr wissen als nur das Fenster, zum Beispiel
+*welcher* Funkspruch nachzulesen ist. Dafür steht ``functools.partial``:
+``partial(f, x=1)`` ist "die Funktion ``f``, bei der ``x`` schon eingetragen
+ist". Herauskommt wieder eine Funktion, die sich später mit dem Rest
+aufrufen lässt – hier immer mit dem Fenster. ``partial(funkspruch_nachlesen,
+funkspruch=bobs_antwort, danach=weiter)`` ist also: "lies Bobs Antwort nach
+und mach dann mit ``weiter``".
 """
 
 from functools import partial

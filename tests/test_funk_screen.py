@@ -34,6 +34,10 @@ FIGUR = charaktere.VIC_MORENO
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -47,20 +51,26 @@ def wurzel():
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Das Spiel fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
 
 @pytest.fixture
 def uhr():
+    """Die stellbare Uhr – ohne sie liefe im Test die echte Zeit mit."""
     return Uhr()
 
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab, uhr):
+    """Ein Hauptfenster an der stellbaren Uhr, das ins Testverzeichnis schreibt."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=uhr, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
@@ -94,6 +104,7 @@ def _zum_funkgeraet(fenster, level=1):
 
 
 def _uebung_loesen(screen):
+    """Löst die Übung, die gerade dasteht, richtig und geht weiter."""
     _tippen(screen, screen.aufgabe.loesung)
     screen.pruefen()
     screen.weiter()
@@ -109,6 +120,7 @@ def _funkspruch(fenster, level, kennung):
 
 
 def _loesen(screen):
+    """Löst den Funkspruch am Gerät ganz: Nachricht abwarten, tippen, prüfen, Rest auflösen, weiter."""
     screen.anzeige_vervollstaendigen()
     _tippen(screen, screen.aufgabe.loesung)
     screen.pruefen()
@@ -118,6 +130,7 @@ def _loesen(screen):
 
 
 def _tippen(screen, text):
+    """Schreibt ``text`` in die Eingabezeile – wie von Hand eingetippt."""
     screen._feld.delete(0, "end")
     screen._feld.insert(0, text)
 
@@ -135,10 +148,15 @@ def _alle_texte(screen):
 
 
 def _eine_zeile(texte):
+    """Klebt die Texte zu einer Zeile zusammen, ohne doppelte Leerzeichen."""
     return " ".join(" ".join(texte).split())
 
 
 def _warten(wurzel, bedingung, sekunden=5):
+    """Lässt das Fenster arbeiten, bis ``bedingung()`` stimmt – und bricht nach einer Weile ab.
+
+    Gebraucht für alles, was im Takt passiert, etwa die eintreffende Nachricht.
+    """
     ende = time.monotonic() + sekunden
     while not bedingung():
         assert time.monotonic() < ende, "Das hat zu lange gedauert."
@@ -237,6 +255,7 @@ def test_beim_senden_steht_der_klartext_da_und_nie_der_geheimtext(fenster, kennu
     assert screen.knopftext == funk.KNOPF_SENDEN
 
     def geheimtext_zu_sehen():
+        """Steht der Geheimtext irgendwo auf dem Bildschirm? Beim Senden darf er das nie."""
         alles = _eine_zeile(_alle_texte(screen)).replace(" ", "")
         return geheim.replace(" ", "") in alles or aufgabe.loesung.replace(" ", "") in alles
 
@@ -465,6 +484,7 @@ def test_alles_passt_aufs_glas_auch_die_laengste_rueckmeldung(fenster, level):
 
 
 def _pruefen_ob_alles_aufs_glas_passt(screen):
+    """Prüft, dass kein Text über den Rand des Glases hinausragt."""
     luft = 2
     gx, gy = screen.px(funk.GERAET[0]), screen.px(funk.GERAET[1])
     x0, y0, x1, y1 = (gx + screen.px(funk.GLAS[0]), gy + screen.px(funk.GLAS[1]),
@@ -501,6 +521,7 @@ def test_der_screen_passt_ins_fenster(fenster, wurzel, platz, level):
 
 
 def _rendern():
+    """Lädt ``grafik/rendern.py`` nach – es gehört zu keinem Paket und lässt sich nicht einfach importieren."""
     spec = importlib.util.spec_from_file_location("rendern", PROJEKT / "grafik" / "rendern.py")
     modul = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modul)
@@ -519,6 +540,7 @@ def test_glas_und_laempchen_liegen_im_bild_dort_wo_das_spiel_schreibt(massstab):
     assert bild.kanaele == 4
 
     def punkt(x, y):
+        """Die vier Farbwerte eines Bildpunkts (Rot, Grün, Blau, Deckkraft)."""
         return tuple(bild.zeilen[y][x * 4:x * 4 + 4])
 
     x0, y0, x1, y1 = (stil.skaliert(wert, massstab) for wert in funk.GLAS)
@@ -540,6 +562,7 @@ def test_die_nachricht_kommt_auch_nach_einem_fehler_zu_ende(fenster, wurzel, mon
     echt = funk.Funk._nachricht_zeichnen
 
     def einmal_stolpern(self):
+        """Lässt das Zeichnen genau einmal misslingen und arbeitet danach normal weiter."""
         if stolpert:
             stolpert.clear()
             raise RuntimeError("Probe: das Zeichnen misslingt einmal")

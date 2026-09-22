@@ -51,10 +51,20 @@ QUELLEN = (QUELLE_UEBUNG, QUELLE_FUNKSPRUCH)
 
 
 def _substitution_verschluesseln(text, schluessel):
+    """Verschlüsselt für Level 2 – und gleicht dabei nur die Bezeichnungen an.
+
+    In :data:`VERFAHRENSFUNKTIONEN` werden alle drei Verfahren gleich
+    aufgerufen: ``funktion(text, schluessel)``. Die Substitution nennt ihr
+    zweites Argument aber ``tabelle``, und im Spiel ist es immer ``None`` –
+    das heisst dort "nimm die Tastatur-Tabelle aus dem Handbuch". Diese eine
+    Zeile übersetzt zwischen beiden Sichtweisen, damit oben in der Tabelle
+    kein Sonderfall nötig ist.
+    """
     return substitution.verschluesseln(text, schluessel)
 
 
 def _substitution_entschluesseln(text, schluessel):
+    """Entschlüsselt für Level 2 – Gegenstück zu :func:`_substitution_verschluesseln`."""
     return substitution.entschluesseln(text, schluessel)
 
 

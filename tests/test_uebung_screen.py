@@ -31,6 +31,10 @@ LEVEL = (1, 2, 3)
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -44,20 +48,26 @@ def wurzel():
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Das Spiel fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
 
 @pytest.fixture
 def uhr():
+    """Die stellbare Uhr – ohne sie liefe im Test die echte Zeit mit."""
     return Uhr()
 
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab, uhr):
+    """Ein Hauptfenster an der stellbaren Uhr, das ins Testverzeichnis schreibt."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=uhr, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
@@ -113,6 +123,7 @@ def _eine_zeile(texte):
 
 
 def _tippen(screen, text):
+    """Schreibt ``text`` in das Schreibfeld – wie von Hand eingetippt."""
     screen._feld.delete(0, "end")
     screen._feld.insert(0, text)
 

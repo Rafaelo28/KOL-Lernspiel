@@ -43,6 +43,11 @@ class Lineal:
     """
 
     def __init__(self, leinwand, seite, quadrat, bei_benutzung=None):
+        """Merkt sich, über welchem Quadrat das Lineal liegt; gezeichnet ist noch nichts.
+
+        Angelegt wird es erst durch einen Klick (:meth:`klicken`), der
+        :attr:`zeile` und :attr:`spalte` setzt.
+        """
         self.leinwand = leinwand
         self.seite = seite
         self.quadrat = quadrat

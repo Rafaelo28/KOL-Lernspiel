@@ -21,21 +21,28 @@ from game.zufallsquelle import Zufallsquelle
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht, und lässt sich vorspulen."""
+
     def __init__(self, start=0.0):
+        """Beginnt bei ``start`` Sekunden."""
         self.jetzt = float(start)
 
     def __call__(self):
+        """Die Bearbeitung fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
 def _uebung():
+    """Eine feste Übung zum Durchspielen: HUND mit Caesar und Schlüssel 3."""
     return Aufgabe("probe", 1, "caesar", VERSCHLUESSELN, 3, "HUND", "KXQG")
 
 
 def _stand(uhr, seed=4711):
+    """Ein Spielstand, dessen Zeitfenster an der stellbaren Uhr hängen."""
     return Spielstand(charaktere.VIC_MORENO, Zufallsquelle(seed), "P01", zeitgeber=uhr)
 
 
@@ -179,6 +186,7 @@ def test_eine_frische_aufgabe_ist_nicht_abgebrochen():
 # Buchstaben gerechnet – seine Zeit gehört zu dieser Zahl.
 
 def _bob(uhr):
+    """Die Bearbeitung von Bobs erster Antwort – eine lange Aufgabe mit Teilaufgabe."""
     from game.generator import aufgabe_aus_funkspruch
 
     return Bearbeitung(aufgabe_aus_funkspruch(story.FUNKSPRUCH_BOB_ERSTE_ANTWORT, "VM"), uhr)
@@ -298,6 +306,7 @@ def test_lange_aufgaben_wiegen_beim_tempo_schwerer():
 # ───────────────────────────────────────────────────────────────────────────
 
 def _erledigte_uebung(uhr, sekunden=1):
+    """Eine Übung, die nach ``sekunden`` richtig gelöst wurde."""
     lauf = Bearbeitung(_uebung(), uhr)
     uhr.weiter(sekunden)
     lauf.versuchen("KXQG")

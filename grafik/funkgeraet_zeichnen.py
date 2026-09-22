@@ -168,6 +168,7 @@ def kratzer():
 
 
 def funkgeraet_svg():
+    """Die SVG-Datei des Funkgeräts – ein Standbild, auf dessen Glas das Spiel später schreibt."""
     gx0, gy0, gx1, gy1 = GX0, GY0, GX1, GY1
     px0, py0, px1, py1 = PX0, PY0, PX1, PY1
     rx0, ry0, rx1, ry1 = RAHMEN
@@ -328,6 +329,7 @@ zwei Lämpchen für Empfang und Senden mit Kippschaltern und die Schlitze des La
 
 
 def main():
+    """Schreibt die SVG-Datei nach ``grafik/`` – das tut ein Aufruf dieser Datei."""
     ziel = ORDNER / "funkgeraet.svg"
     ziel.write_text(funkgeraet_svg(), encoding="utf-8")
     print(f"geschrieben: {ziel}")

@@ -317,6 +317,7 @@ Die vollständige Aufgabenzerlegung steht in
 | [dokumentation/Konzept_Spiel.md](dokumentation/Konzept_Spiel.md) | Rahmengeschichte und Level-Ablauf |
 | [dokumentation/Handbuchtexte.md](dokumentation/Handbuchtexte.md) | Die drei Handbuchseiten und die Übungssätze |
 | [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md) | Aufgabenzerlegung, Phasen 0–8 |
+| [dokumentation/Code_Lesehilfe.md](dokumentation/Code_Lesehilfe.md) | Die Bausteine im Quelltext – für alle, die nicht täglich Python schreiben |
 | [dokumentation/Tipps-und-Tricks.md](dokumentation/Tipps-und-Tricks.md) | Hinweise zu Tkinter, Normalisierung, Logging |
 | [dokumentation/Commit_Regeln.md](dokumentation/Commit_Regeln.md) | Wann und wie committet wird |
 | [dokumentation/Animationen.md](dokumentation/Animationen.md) | Wie Animationen entstehen und ins Spiel kommen |

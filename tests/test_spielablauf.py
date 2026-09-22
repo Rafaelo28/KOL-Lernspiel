@@ -26,18 +26,27 @@ FIGUR = charaktere.VIC_MORENO
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht, und lässt sich vorspulen."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Das Spiel fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -52,11 +61,13 @@ def wurzel():
 
 @pytest.fixture
 def uhr():
+    """Die stellbare Uhr – ohne sie liefe im Test die echte Zeit mit."""
     return Uhr()
 
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab, uhr):
+    """Ein Hauptfenster an der stellbaren Uhr, das ins Testverzeichnis schreibt."""
     fenster = ablauf.oeffnen(wurzel, zeitgeber=uhr, protokollordner=tmp_path, massstab=massstab)
     fenster.frage_ja_nein = lambda *_, **__: True
     return fenster
@@ -332,6 +343,7 @@ def test_nach_dem_letzten_funkspruch_kommt_der_abschluss(fenster, bei_der_uebung
 # ───────────────────────────────────────────────────────────────────────────
 
 def _gestellte_funksprueche(fenster):
+    """Die Kennungen aller Funksprüche, die im Durchlauf wirklich gestellt wurden."""
     return [b.aufgabe.kennung for b in fenster.durchlauf.spielstand.erledigte_aufgaben
             if b.aufgabe.quelle == QUELLE_FUNKSPRUCH]
 
@@ -386,6 +398,7 @@ def test_ein_troedel_durchlauf_kommt_trotzdem_bei_allen_funkspruechen_an(fenster
     Die Funksprüche tragen die Geschichte – sie müssen trotzdem alle drankommen.
     """
     def troedeln(fenster, uhr):
+        """Lässt so viel Zeit verstreichen, dass gerade keine weitere Übung mehr hineinpasst."""
         _herumrechnen(fenster, uhr)
         stand = fenster.durchlauf.spielstand
         grenze = (zusatzaufgaben.erwartete_dauer_funksprueche(stand.offene_funksprueche)

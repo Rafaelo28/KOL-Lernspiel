@@ -52,6 +52,7 @@ class Buchleinwand(Buehne):
     """
 
     def __init__(self, master, massstab, px, **optionen):
+        """Lädt das Bild des aufgeschlagenen Buchs und legt die Schriften an, mit denen darauf geschrieben wird."""
         self.px = px
         self.massstab = massstab
         self._massstab = massstab
@@ -303,6 +304,12 @@ class Buchleinwand(Buehne):
                 self._kreuzung_zeichnen(seite, "text", ((links, oben, kreuzung[2], kreuzung[3]),), kreuzung)
 
     def _kreuzung_zeichnen(self, seite, unter, baender, kreuzung):
+        """Malt die Markierung eines Schritts: die Bänder zum Feld hin und das Feld selbst.
+
+        ``unter`` sagt, unter welche schon gezeichneten Stücke die Bänder
+        gehören – über den Grund, aber unter die Buchstaben. Der rote Rand um
+        das Feld kommt zuletzt und damit obenauf.
+        """
         marken = (seite, "markierung")
         elemente = [self.create_rectangle(*band, fill=stil.FARBE_MARKIERUNG, width=0, tags=marken)
                     for band in baender]

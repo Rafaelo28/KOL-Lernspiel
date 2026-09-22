@@ -57,6 +57,13 @@ class Erzaehlszene(Screen):
     """
 
     def __init__(self, fenster, absaetze, danach, titel, szene=SZENE_WRACK, letzter_knopf=KNOPF_WEITER):
+        """Baut die Szene mit dem Erzähltext darüber.
+
+        ``absaetze`` sind die Abschnitte des Texts – einer nach dem anderen,
+        weitergeschaltet per Knopf. ``danach(fenster)`` wird gerufen, wenn der
+        letzte gelesen ist; ``letzter_knopf`` ist dessen Aufschrift, weil dort
+        meist etwas Konkretes folgt ("Handbuch aufschlagen").
+        """
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT)
         self.titel = titel
@@ -95,9 +102,11 @@ class Erzaehlszene(Screen):
 
     @property
     def knopftext(self):
+        """Was gerade auf dem Knopf steht – beim letzten Absatz ``letzter_knopf``."""
         return self._knopf.cget("text")
 
     def _absatz_zeigen(self):
+        """Schreibt den aktuellen Absatz auf die Szene und stellt Zähler und Knopf darauf ein."""
         absatz = self._absaetze[self._nr]
         self.buehne.itemconfigure(self._schatten, text=absatz)
         self.buehne.itemconfigure(self._text, text=absatz)
@@ -106,6 +115,7 @@ class Erzaehlszene(Screen):
         self._knopf.config(text=self._letzter_knopf if letzter else KNOPF_WEITER)
 
     def beim_anzeigen(self):
+        """Der Screen steht: Die Szene läuft an, der Knopf bekommt die Tastatur."""
         self.buehne.starten()
         self._knopf.focus_set()
 

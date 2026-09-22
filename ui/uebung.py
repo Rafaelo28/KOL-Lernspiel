@@ -135,6 +135,11 @@ class Uebung(Screen):
     """
 
     def __init__(self, fenster, danach, fortsetzen=False, entwurf="", zusatzaufgabe=False):
+        """Baut die Übungsseite: das Buch als Leinwand, darunter die Knopfleiste.
+
+        Die Aufgabe wird hier noch **nicht** gezogen – das geschieht in
+        :meth:`beim_anzeigen`, weil mit ihr die Uhr der Aufgabe beginnt.
+        """
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(handbuch.ABSTAND_KNAPP))
         self.titel = f"Übung – Level {fenster.durchlauf.spielstand.aktuelles_level}"
@@ -172,6 +177,7 @@ class Uebung(Screen):
 
     @property
     def knopftext(self):
+        """Was auf dem grossen Knopf rechts steht: "Prüfen" oder "Weiter"."""
         return self._knopf.cget("text")
 
     @property
@@ -190,6 +196,7 @@ class Uebung(Screen):
     # ── Bauen ──────────────────────────────────────────────────────────────
 
     def _leiste_bauen(self):
+        """Baut die Knopfleiste unter dem Buch: links Nachschlagen, rechts Prüfen."""
         leiste = tk.Frame(self, bg=stil.FARBE_NACHT)
         leiste.pack(side="top", fill="x", pady=(self.px(handbuch.ABSTAND_KNAPP), 0))
         knopfart = dict(font=stil.SCHRIFT_FETT, highlightbackground=stil.FARBE_NACHT)
@@ -308,6 +315,13 @@ class Uebung(Screen):
         self._ergebnis_zeigen(stand.versuchen(self.eingabe))
 
     def _ergebnis_zeigen(self, ergebnis):
+        """Schreibt die Rückmeldung zu einem Versuch auf die Buchseite und markiert die Fehlerstelle.
+
+        Je nach Ergebnis steht dort Lob und ein Stempel, eine Meldung mit der
+        ersten falschen Stelle, der Hinweis auf Fortschritt, die Zahl der
+        übrigen Versuche – oder die Lösung, wenn drei Versuche ohne
+        Fortschritt vorbei sind.
+        """
         zeilen = []
         self.buch.delete("fehlerstelle", "stempel")
         if ergebnis.richtig:

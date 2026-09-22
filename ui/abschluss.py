@@ -145,6 +145,15 @@ class Abschluss(Screen):
     titel = "Die Rettung"
 
     def __init__(self, fenster, durch_zeitablauf=False, zeitgeber=time.monotonic):
+        """Baut das Nachtlager: Szene, Erzähltext, Augenlider und den Knopf "Warten".
+
+        ``durch_zeitablauf`` sagt, ob das Spiel am Timer endete – dann steht
+        ein anderer Text da. ``zeitgeber`` ist die Uhr, an der die Rettung
+        hängt; Tests geben eine eigene mit und spulen damit vor.
+
+        Los geht nichts von allein: Die Nacht beginnt erst mit dem Knopf
+        (:meth:`warten`).
+        """
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT)
         self._zeitgeber = zeitgeber
@@ -194,10 +203,12 @@ class Abschluss(Screen):
 
     @property
     def knopftext(self):
+        """Was gerade auf dem grossen Knopf steht."""
         return self._knopf.cget("text")
 
     @property
     def knopf_bereit(self):
+        """Lässt sich der Knopf gerade drücken? Während der Nacht nicht."""
         return self._knopf.cget("state") != "disabled"
 
     @property
@@ -207,6 +218,7 @@ class Abschluss(Screen):
 
     @property
     def nachttext_sichtbar(self):
+        """Steht "Die Nacht vergeht." auf dem dunklen Bild?"""
         return self.buehne.itemcget(self._nachttext, "state") != "hidden"
 
     @property
@@ -219,6 +231,7 @@ class Abschluss(Screen):
     def lidkanten(self):
         """Die Unterkante des oberen und die Oberkante des unteren Lids – je als Punkte (x, y) von links nach rechts."""
         def kante(element):
+            """Zieht aus einem Lid-Vieleck seine Kante: die Punkte ohne die zwei Ecken aussen."""
             werte = self.buehne.coords(element)[2:-2]
             return list(zip(werte[::2], werte[1::2]))
         return kante(self._lid_oben), kante(self._lid_unten)
@@ -226,6 +239,7 @@ class Abschluss(Screen):
     # ── Zeichnen ───────────────────────────────────────────────────────────
 
     def _text_setzen(self, absaetze):
+        """Schreibt den Erzähltext auf die Szene – zweimal, versetzt, für den Schatten darunter."""
         text = "\n\n".join(absaetze)
         self.buehne.itemconfigure(self._schatten, text=text)
         self.buehne.itemconfigure(self._text, text=text)
@@ -260,6 +274,7 @@ class Abschluss(Screen):
     # ── Der Ablauf ─────────────────────────────────────────────────────────
 
     def beim_anzeigen(self):
+        """Der Screen steht: Die Szene läuft an, der Knopf bekommt die Tastatur."""
         self.buehne.starten()
         self._knopf.focus_set()
 
@@ -325,6 +340,13 @@ class Abschluss(Screen):
         return True
 
     def _hubschrauber_bewegen(self, ms):
+        """Setzt den Hubschrauber an die Stelle, an der er nach ``ms`` Millisekunden sein soll.
+
+        Die Bahn steht als wenige Stützpunkte in :data:`FLUG`; dazwischen
+        rechnet :func:`zwischenwert`. Beim ersten Aufruf wird die Figur
+        angelegt – vorher gibt es keinen Hubschrauber. Die Rotoren drehen
+        sich mit, weil auch ihr Bild aus derselben Zeit folgt.
+        """
         flug = tuple((t, (self.px(links), self.px(oben))) for t, (links, oben) in FLUG)
         x, y = (round(wert) for wert in zwischenwert(flug, ms))
         if self.hubschrauber is None:

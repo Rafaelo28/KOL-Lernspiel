@@ -137,6 +137,13 @@ class Handbuch(Screen):
     """
 
     def __init__(self, fenster, level, danach, knopf=KNOPF_WEITER, hinweis="", einleitung=()):
+        """Baut das aufgeschlagene Buch: Zeilen darüber, die Leinwand mit den zwei Seiten, die Knopfleiste.
+
+        Gezeichnet wird die erste Doppelseite gleich mit; was auf welcher
+        Seite steht, kommt aus :mod:`content.handbuch`. ``knopf`` ist die
+        Aufschrift unten rechts – beim Nachschlagen mitten in einer Aufgabe
+        steht dort "Zurück zur Aufgabe".
+        """
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(ABSTAND_KNAPP))
         self.titel = f"Handbuch – Level {level}"
@@ -174,14 +181,17 @@ class Handbuch(Screen):
 
     @property
     def hinweis(self):
+        """Die Warnzeile ganz oben – leer, wenn es nichts zu warnen gibt."""
         return self._hinweis.cget("text") if self._hinweis else ""
 
     @property
     def einleitung(self):
+        """Die Absätze des Einstiegs über dem Buch."""
         return tuple(zeile.cget("text") for zeile in self._einleitung)
 
     @property
     def knopftext(self):
+        """Was auf dem Knopf unten rechts steht."""
         return self._knopf.cget("text")
 
     @property
@@ -191,10 +201,12 @@ class Handbuch(Screen):
 
     @property
     def anzahl_doppelseiten(self):
+        """Wie oft man umblättern kann – zwei Seiten je Doppelseite, die letzte notfalls allein."""
         return (len(self.satz.seiten) + 1) // 2
 
     @property
     def seitenanzeige(self):
+        """Die Zeile "Doppelseite 1 von 3" in der Knopfleiste."""
         return self._seitenanzeige.cget("text")
 
     @property
@@ -230,6 +242,7 @@ class Handbuch(Screen):
     # ── Bauen ──────────────────────────────────────────────────────────────
 
     def _zeile(self, text, farbe, schrift):
+        """Hängt eine Textzeile über das Buch – oder ``None``, wenn es nichts zu schreiben gibt."""
         if not text:
             return None
         # Ohne Abstand darunter: Hinweis und Einstieg lesen sich wie ein Absatz,
@@ -244,6 +257,7 @@ class Handbuch(Screen):
         return textbreite(self)
 
     def _leiste_bauen(self, knopf):
+        """Baut die Leiste unter dem Buch: zwei Blätterknöpfe, die Seitenanzeige, der Weiter-Knopf."""
         leiste = tk.Frame(self, bg=stil.FARBE_NACHT)
         leiste.pack(side="top", fill="x", pady=(self.px(ABSTAND_KNAPP), 0))
         knopfart = dict(font=stil.SCHRIFT_FETT, highlightbackground=stil.FARBE_NACHT)
@@ -261,6 +275,12 @@ class Handbuch(Screen):
         self._knopf.bind("<Return>", lambda _ereignis: self._knopf.invoke())
 
     def _bedienung_binden(self):
+        """Legt fest, was Tastatur und Maus auf der Buchleinwand auslösen.
+
+        Pfeile und Bild-Tasten blättern, Hoch und Runter gehen von Schritt zu
+        Schritt, das Mausrad blättert ebenfalls, ein Klick trifft eine
+        Buchecke oder eine Schrittmarke.
+        """
         leinwand = self.buch
         for taste, richtung in (("<Left>", -1), ("<Prior>", -1), ("<Right>", 1), ("<Next>", 1)):
             leinwand.bind(taste, lambda _ereignis, richtung=richtung: self.blaettern(richtung))
@@ -274,10 +294,12 @@ class Handbuch(Screen):
         leinwand.bind("<Leave>", lambda _ereignis: self._maus_ueber(None))
 
     def _erster_schritt(self):
+        """Die erste Schrittmarke der Doppelseite – ``None`` auf Seiten ohne Anleitung."""
         schritte = self.schritte
         return schritte[0] if schritte else None
 
     def _leiste_aktualisieren(self):
+        """Stellt Blätterknöpfe und Seitenanzeige auf die Doppelseite ein, die gerade offen ist."""
         self._zurueckblaettern.configure(state="normal" if self._doppelseite > 0 else "disabled")
         weiter_moeglich = self._doppelseite < self.anzahl_doppelseiten - 1
         self._vorblaettern.configure(state="normal" if weiter_moeglich else "disabled")
@@ -286,6 +308,7 @@ class Handbuch(Screen):
     # ── Zeichnen ───────────────────────────────────────────────────────────
 
     def _seiten_zeichnen(self):
+        """Zeichnet beide Seiten der offenen Doppelseite neu."""
         self._seite_zeichnen("links")
         self._seite_zeichnen("rechts")
 
@@ -409,11 +432,13 @@ class Handbuch(Screen):
     # ── Maus und Tasten ────────────────────────────────────────────────────
 
     def _per_knopf(self, richtung):
+        """Blättert auf Knopfdruck und gibt die Tastatur danach dem Buch zurück."""
         self.blaettern(richtung)
         # Danach sollen die Pfeiltasten gleich wieder im Buch blättern.
         self.buch.focus_set()
 
     def _mausrad(self, ereignis):
+        """Blättert mit dem Mausrad – nach oben zurück, nach unten vor."""
         # Windows meldet je Raste 120, macOS und Touchpads kleinere Werte.
         if ereignis.delta:
             self.blaettern(-1 if ereignis.delta > 0 else 1)
@@ -424,6 +449,7 @@ class Handbuch(Screen):
         Für einen Schritt ist das Ziel seine Schrittmarke, sonst ``None``.
         """
         def drin(bereich):
+            """Liegt der geklickte Punkt in diesem Rechteck (links, oben, rechts, unten)?"""
             x0, y0, x1, y1 = (self.px(wert) for wert in bereich)
             return x0 <= x <= x1 and y0 <= y <= y1
 
@@ -467,11 +493,13 @@ class Handbuch(Screen):
     # ── Screen ─────────────────────────────────────────────────────────────
 
     def beim_anzeigen(self):
+        """Der Screen steht: Das Buch bekommt die Tastatur, die Umblätter-Bilder werden vorgeladen."""
         # Mit dem Fokus auf dem Buch blättern die Pfeiltasten.
         self.buch.focus_set()
         self.spaeter(VORLADEN_MS, self._umblaettern)
 
     def beim_verlassen(self):
+        """Bricht ein laufendes Umblättern ab, bevor der Screen abgerissen wird."""
         if self._ablauf is not None:
             self._ablauf.abbrechen()
 

@@ -17,6 +17,10 @@ from ui import ablauf, figurwahl, hauptfenster, startbildschirm  # noqa: E402
 
 @pytest.fixture
 def wurzel():
+    """Ein verstecktes Tk-Fenster für die Tests – und am Ende wieder weg.
+
+    Gibt es keine Bildschirmanzeige, werden die Tests übersprungen statt rot.
+    """
     try:
         wurzel = tk.Tk()
     except tk.TclError as fehler:
@@ -31,11 +35,13 @@ def wurzel():
 
 @pytest.fixture
 def fenster(wurzel, tmp_path, massstab):
+    """Ein Hauptfenster, das ins Testverzeichnis schreibt."""
     return ablauf.oeffnen(wurzel, zeitgeber=lambda: 0.0, protokollordner=tmp_path, massstab=massstab)
 
 
 @pytest.fixture
 def screen(fenster):
+    """Der Startbildschirm – er ist der erste Screen des Spiels."""
     return fenster.aktueller_screen
 
 
@@ -47,6 +53,7 @@ def tippen(screen, ausloesen):
     eigene, die das Zeichen an der Schreibmarke einfügt.
     """
     def tippen(text):
+        """Tippt den Text Zeichen für Zeichen ins Feld, wie es eine Person täte."""
         for zeichen in text:
             ausloesen(screen._feld, "<KeyPress>", zeichen=zeichen)
             screen._feld.insert("insert", zeichen)
@@ -66,6 +73,7 @@ def test_das_titelbild_laeuft_sobald_es_zu_sehen_ist(screen):
 
 
 def _rahmen(screen, element):
+    """Das Rechteck, das ein Element auf der Leinwand einnimmt: (x0, y0, x1, y1)."""
     screen.update_idletasks()
     return screen.buehne.bbox(element)
 

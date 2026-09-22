@@ -33,6 +33,25 @@ Textfläche. Gemessen wird mit genau den Tk-Schriften, mit denen
 
 Die erste Seite ist die Titelseite: der Titel des Handbuchs, darunter der
 Inhalt des Kapitels mit Seitenzahlen und der Stempel "STRENG GEHEIM".
+
+Der Weg durch diese Datei
+─────────────────────────
+Gesetzt wird in drei Schritten; :func:`setzen` ganz unten ruft sie der Reihe
+nach auf:
+
+1. Der :class:`_Setzer` liest die Handbuchseite Block für Block und macht
+   daraus **Kisten** (:class:`_Kiste`) – jede Kiste ein Stück, das nicht
+   auseinandergerissen werden darf: eine Textzeile, eine Tabelle, die
+   Merksatz-Karte. Er weiss, wie hoch jede wird, weil er mit denselben
+   Schriften misst, mit denen später gezeichnet wird.
+2. Die Kisten sammeln sich im :class:`_Fluss` – in Lesereihenfolge, mit
+   Merkern daran, was zusammenbleiben oder eine neue Seite beginnen muss.
+3. :func:`seiten_verteilen` schneidet den Fluss in Seiten, und zwar an den
+   Stellen, an denen es erlaubt ist.
+
+Übrig bleiben :class:`Buchseite`-Objekte mit den **Stücken** darauf (Zeile,
+Raster, Quadrat, Karte …) und deren Lage in Pixeln. Gezeichnet werden sie
+erst in :mod:`ui.buchleinwand`.
 """
 
 import math
@@ -98,6 +117,7 @@ def schriften(master, massstab):
     hand = stil.erste_schrift(master, stil.HANDSCHRIFTEN)
 
     def schrift(groesse, **art):
+        """Eine Schrift der Buchfamilie in dieser Größe, schon auf den Maßstab umgerechnet."""
         return tkfont.Font(root=master, family=familie, size=stil.skaliert(groesse, massstab), **art)
 
     notiz = (tkfont.Font(root=master, family=hand, size=stil.skaliert(NOTIZGROESSE, massstab)) if hand
@@ -179,10 +199,12 @@ class Raster(NamedTuple):
 
     @property
     def breite(self):
+        """Wie breit die Tabelle wird: die Beschriftungsspalte plus alle Zellen."""
         return self.beschriftungsbreite + (len(self.zeilen[0]) - 1) * self.zellbreite
 
     @property
     def hoehe(self):
+        """Wie hoch die Tabelle wird – alle Zeilenhöhen zusammen."""
         return sum(self.zeilenhoehen)
 
     def oben(self, zeile):
@@ -199,6 +221,7 @@ class Quadrat(NamedTuple):
 
     @property
     def kante(self):
+        """Die Seitenlänge des ganzen Quadrats: 26 Buchstaben plus Kopfzeile beziehungsweise Kopfspalte."""
         return 27 * self.feld
 
 
@@ -307,11 +330,19 @@ class _Fluss:
     """Sammelt die Kisten in Lesereihenfolge und merkt sich, was zusammenbleiben muss."""
 
     def __init__(self):
+        """Beginnt mit einem leeren Fluss – ohne Kisten und ohne offene Merker."""
         self.kisten = []
         self._festhalten = False
         self._neue_seite = False
 
     def dazu(self, kiste):
+        """Hängt eine Kiste hinten an und wendet dabei an, was vorgemerkt war.
+
+        Vorgemerkt sein kann: "bleibt bei der vorigen Kiste"
+        (:meth:`festhalten`) oder "beginnt eine neue Seite"
+        (:meth:`danach_neue_seite`). Beides gilt nur für die nächste Kiste
+        und ist danach wieder vergessen.
+        """
         if self._festhalten:
             kiste = kiste._replace(trennbar=False)
         if self._neue_seite:
@@ -329,6 +360,11 @@ class _Fluss:
 
 
 def _verschoben(stueck, dy):
+    """Dasselbe Stück, nur ``dy`` Pixel weiter unten.
+
+    Die Stücke sind unveränderliche Objekte (``NamedTuple``); statt sie zu
+    verschieben, entsteht hier eine Kopie mit anderem ``y``.
+    """
     return stueck._replace(y=stueck.y + dy)
 
 
@@ -336,6 +372,7 @@ class _Setzer:
     """Macht aus einer Handbuchseite den Fluss aus Kisten."""
 
     def __init__(self, schriften, breite, hoehe, px):
+        """Merkt sich Schriften und das Format einer Seite; gesetzt wird noch nichts."""
         self.s = schriften
         self.breite = breite
         self.hoehe = hoehe
@@ -343,6 +380,7 @@ class _Setzer:
         self.fluss = _Fluss()
 
     def zeilenhoehe(self, schrift):
+        """Wie hoch eine Zeile in dieser Schrift wird – Zeilenabstand inklusive."""
         return getattr(self.s, schrift).metrics("linespace")
 
     # Absätze, Überschriften, Aufzählungen
@@ -350,6 +388,11 @@ class _Setzer:
     def absatz(self, text, schrift="text", farbe=stil.FARBE_TINTE, art="absatz", vorher=None, einzug=0,
                zeichen="", ausrichtung="links", marke=(), trennbar_davor=True, schritt=None, zusammen=False):
         """Ein Absatz als Zeilen-Kisten, mit Schusterjungen- und Hurenkinder-Regel.
+
+        Die beiden Namen kommen aus dem Buchdruck und meinen eine einzelne
+        Zeile eines Absatzes, die allein unten auf einer Seite stehen bleibt
+        oder allein oben auf der nächsten ankommt. Beides sieht schlecht aus
+        und wird hier verhindert:
 
         Vor der i-ten Zeile (ab 0) darf eine Seite nur enden, wenn davor und
         danach je mindestens zwei Zeilen stehen – und gar nicht, wenn der
@@ -373,6 +416,7 @@ class _Setzer:
                                    marke=marke if nr == 0 else ()))
 
     def ueberschrift(self, text, schrift="abschnitt", art="abschnitt", marke=()):
+        """Setzt eine Überschrift – mit Abstand davor und ohne Umbruch zu dem, was folgt."""
         self.absatz(text, schrift, stil.FARBE_ROTSTIFT, art, vorher=self.px(ABSTAND_VOR_ABSCHNITT),
                     marke=marke)
         # Die Überschrift nimmt den Anfang des Folgenden mit auf ihre Seite.
@@ -512,6 +556,7 @@ class _Setzer:
             raise TypeError(f"Diesen Block kennt das Handbuch nicht: {block!r}")
 
     def kapiteltitel(self, seite):
+        """Setzt den Titel einer Handbuchseite ganz oben – der erste Absatz bleibt bei ihm."""
         self.absatz(seite.titel, "kapitel", stil.FARBE_ROTSTIFT, "kapitel", vorher=0)
         self.fluss.festhalten()
 

@@ -1,4 +1,23 @@
-"""Gemeinsame Hilfen für die Oberflächen-Tests."""
+"""Gemeinsame Hilfen für die Oberflächen-Tests.
+
+Diese Datei heisst ``conftest.py``, weil pytest genau diesen Namen sucht: Was
+hier steht, kennt jede Testdatei im Ordner, ganz ohne Import.
+
+Was eine Fixture ist
+────────────────────
+Eine **Fixture** ist eine Vorbereitung, die pytest einem Test in die Hand
+gibt. Ein Test, der ``platz`` in seiner Klammer stehen hat, bekommt das, was
+die Funktion ``platz`` unten zurückgibt – pytest ruft sie vorher auf. So
+steht die Vorbereitung an einer Stelle, statt in jedem Test noch einmal.
+
+Eine Fixture darf selbst welche verlangen (``platz`` verlangt ``massstab``),
+und mit ``yield`` statt ``return`` räumt sie hinterher wieder auf: Alles nach
+dem ``yield`` läuft, wenn der Test vorbei ist – so schliessen die Tests ihre
+Fenster wieder.
+
+Die gemeinsamen Fixtures dieses Projekts stehen hier; die Fenster selbst
+legt jede Testdatei für sich an (dort heissen sie ``wurzel`` und ``fenster``).
+"""
 
 import re
 

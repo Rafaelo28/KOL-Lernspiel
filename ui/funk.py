@@ -147,6 +147,12 @@ class Funk(Screen):
 
     def __init__(self, fenster, funkspruch, danach, fortsetzen=False, entwurf="", hinweis="",
                  nur_lesen=False):
+        """Baut das Funkgerät: Einleitung, Gerät mit Glas, Eingabezeile und Knopfleiste.
+
+        Die Aufgabe wird hier noch **nicht** gestellt – erst in
+        :meth:`beim_anzeigen`, denn mit ihr beginnt ihre Uhr. Was die
+        einzelnen Schalter bedeuten, steht oben bei der Klasse.
+        """
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(handbuch.ABSTAND_KNAPP))
         self.funkspruch = funkspruch
@@ -210,10 +216,12 @@ class Funk(Screen):
 
     @property
     def knopftext(self):
+        """Was auf dem grossen Knopf rechts steht: "Senden", "Prüfen" oder "Weiter"."""
         return self._knopf.cget("text")
 
     @property
     def restknopf_sichtbar(self):
+        """Steht der Knopf für den Rest der Nachricht gerade in der Leiste?"""
         return bool(self._restknopf.winfo_manager())
 
     @property
@@ -233,6 +241,7 @@ class Funk(Screen):
 
     @property
     def ist_beendet(self):
+        """Ist der geprüfte Teil entschieden – gelöst oder aufgelöst?"""
         return self._beendet
 
     @property
@@ -253,6 +262,7 @@ class Funk(Screen):
     # ── Bauen ──────────────────────────────────────────────────────────────
 
     def _leiste_bauen(self):
+        """Baut die Knopfleiste unter dem Gerät: Nachschlagen, der grosse Knopf, der für den Rest."""
         leiste = tk.Frame(self, bg=stil.FARBE_NACHT)
         leiste.pack(side="top", fill="x", pady=(self.px(handbuch.ABSTAND_KNAPP), 0))
         knopfart = dict(font=stil.SCHRIFT_FETT, highlightbackground=stil.FARBE_NACHT)
@@ -279,6 +289,7 @@ class Funk(Screen):
                 gx + self.px(GLAS[2]) - rand, gy + self.px(GLAS[3]) - rand)
 
     def _lampen_zeichnen(self):
+        """Malt die beiden Kontrolllampen auf das Gerät – dunkel; angehen tun sie im Betrieb."""
         gx, gy = self.px(GERAET[0]), self.px(GERAET[1])
         for name, (x, y, r) in (("empfang", LAMPE_EMPFANG), ("senden", LAMPE_SENDEN)):
             x, y, r = gx + self.px(x), gy + self.px(y), self.px(r)
@@ -441,6 +452,12 @@ class Funk(Screen):
         self._ergebnis_zeigen(stand.versuchen(self.eingabe))
 
     def _ergebnis_zeigen(self, ergebnis):
+        """Schreibt die Rückmeldung zu einem Versuch auf das Glas und markiert die Fehlerstelle.
+
+        Was dort steht, hängt am Ergebnis: Lob, eine Meldung mit der ersten
+        falschen Stelle, der Hinweis auf Fortschritt – und, wenn die drei
+        Versuche ohne Fortschritt aufgebraucht sind, die Lösung selbst.
+        """
         self.buch.delete("fehlerstelle")
         zeilen = []
         if ergebnis.richtig:
@@ -520,6 +537,11 @@ class Funk(Screen):
     # ── Ende des Funkspruchs ───────────────────────────────────────────────
 
     def _restknopf_wartet(self):
+        """Wartet gerade der Knopf für den Rest der Nachricht?
+
+        Dann geht es nicht sofort weiter: Erst muss der Rest aufgelöst
+        werden, sonst verschwände die halbe Nachricht aus der Geschichte.
+        """
         return self.restknopf_sichtbar
 
     def _beenden(self):
@@ -552,6 +574,12 @@ class Funk(Screen):
         self._knopf.focus_set()
 
     def _rest_zeigen(self, vollstaendige_nachricht, erzaehltext):
+        """Zeigt, was der Knopf aufgelöst hat: den Erzähltext über dem Gerät, die Nachricht auf dem Glas.
+
+        Beim Empfangen steht die ganze entschlüsselte Nachricht da. Beim
+        Senden nicht – dort ist sie der Geheimtext, den man selbst hätte
+        tippen sollen; sichtbar wird nur, dass sie abgegangen ist.
+        """
         self._rest_frei = True
         self._erzaehlung.configure(text=erzaehltext)
         if self.funkspruch.richtung == story.EMPFANGEN:

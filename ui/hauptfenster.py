@@ -131,6 +131,12 @@ class Hauptfenster:
     def __init__(
         self, wurzel, startscreen, bei_levelwechsel, zeitgeber=None, protokollordner=None, massstab=None
     ):
+        """Richtet das Fenster ein und zeigt den ersten Screen.
+
+        Was die einzelnen Angaben bedeuten, steht oben bei der Klasse. Hier
+        entsteht der Rahmen (Kopfzeile, Meldungszeile, Inhaltsbereich), der
+        Takt für die Zeitfenster wird angeworfen und der Startscreen gebaut.
+        """
         self.wurzel = wurzel
         #: Der Maßstab des Fensters – siehe :mod:`ui.stil`. Er gilt für die
         #: ganze Sitzung; die Bilder dazu werden je Screen geladen.
@@ -179,6 +185,11 @@ class Hauptfenster:
         return stil.skaliert(wert, self.massstab)
 
     def _rahmen_bauen(self):
+        """Baut, was in jedem Screen gleich bleibt: Kopfzeile, Trennlinie, Meldungszeile, Inhaltsbereich.
+
+        Die Screens selbst kommen später in den Inhaltsbereich und werden
+        dort ausgetauscht; dieser Rahmen bleibt stehen.
+        """
         # Alles im Nachthimmel des Spiels: Eine helle Leiste in Grau oder Weiss
         # sähe über dem Buch und den Szenen aus wie ein Formular.
         self.wurzel.configure(bg=stil.FARBE_NACHT)
@@ -276,6 +287,7 @@ class Hauptfenster:
         return self.durchlauf
 
     def _levelwechsel(self, wechsel):
+        """Meldung des Durchlaufs, dass ein Level zu Ende ist – Kopfzeile nachziehen, Ablauf fragen."""
         self._kopfzeile_aktualisieren()
         self._bei_levelwechsel(self, wechsel)
 
@@ -299,6 +311,7 @@ class Hauptfenster:
                 self._takt_auftrag = self.wurzel.after(TAKT_MILLISEKUNDEN, self._takt)
 
     def _kopfzeile_aktualisieren(self):
+        """Schreibt Titel des Screens und "Level 2 · Substitution" in die Kopfzeile."""
         if self._geschlossen:
             return
         self._titelanzeige.config(text=self._screen.titel if self._screen else "")
@@ -326,6 +339,7 @@ class Hauptfenster:
         return self._meldungszeile.cget("text")
 
     def _speicherproblem(self, hinweis):
+        """Meldung des Durchlaufs, dass das Speichern hakt – oder wieder klappt (dann leerer Hinweis)."""
         self._speichermeldung = (
             f"{hinweis} Beim nächsten Speichern wird es erneut versucht." if hinweis else ""
         )
@@ -341,6 +355,7 @@ class Hauptfenster:
         self._meldungen_zeigen()
 
     def _meldungen_zeigen(self):
+        """Zeigt Speicher- und Fehlermeldung unten im Fenster – und blendet die Zeile aus, wenn nichts ansteht."""
         if self._geschlossen:
             return
         text = "\n".join(t for t in (self._speichermeldung, self._fehlermeldung) if t)
@@ -414,4 +429,5 @@ class Hauptfenster:
 
     @property
     def ist_geschlossen(self):
+        """Wurde das Fenster schon geschlossen? Danach wird nichts mehr gezeichnet."""
         return self._geschlossen

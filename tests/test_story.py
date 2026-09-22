@@ -26,6 +26,7 @@ BEISPIEL_INITIALEN = "VM"
 
 #: Ein Funkspruch, wie ihn das Spiel anzeigt: Platzhalter schon ersetzt.
 def _fertiger_klartext(funkspruch, initialen=BEISPIEL_INITIALEN):
+    """Der Klartext eines Funkspruchs mit eingesetzten Initialen – so, wie er im Spiel steht."""
     return funkspruch.klartext.format(initialen=initialen)
 
 

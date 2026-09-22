@@ -33,13 +33,18 @@ ZEITPUNKT = datetime(2026, 9, 10, 14, 5, 30)
 
 
 class Uhr:
+    """Eine Uhr zum Stellen: Sie gibt zurück, was in ``jetzt`` steht, und lässt sich vorspulen."""
+
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Der Spielstand fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
@@ -71,6 +76,7 @@ def _durchlauf(uhr=None, figur=charaktere.ELENA_DUARTE, pseudonym="P07", seed=20
 
 
 def _gelesen(pfad):
+    """Die geschriebene CSV-Datei, Zeile für Zeile als Wörterbuch."""
     with open(pfad, newline="", encoding=KODIERUNG) as datei:
         return list(csv.DictReader(datei, delimiter=TRENNZEICHEN))
 
@@ -463,6 +469,7 @@ def test_ein_laufendes_level_steht_als_laufend_drin(tmp_path):
 # ziehen keinen Zufall, zählen aber in der Aufgabennummer mit.
 
 def _gemischter_durchlauf(uhr, seed):
+    """Spielt einen Durchlauf mit allem durch, was ins Log kommt: Funksprüche, Übungen, Zusatzaufgaben."""
     stand = Spielstand(charaktere.AMARA_NWOSU, Zufallsquelle(seed), "P42", zeitgeber=uhr)
     stand.starte_level(LEVEL[0])
     for level in LEVEL:
@@ -534,6 +541,7 @@ class Stromausfall(BaseException):
 
 
 def _drei_aufgaben(tmp_path):
+    """Ein Spielstand mit drei gelösten Aufgaben und einer noch offenen – schon geschrieben."""
     uhr = Uhr()
     stand = Spielstand(charaktere.VIC_MORENO, Zufallsquelle(1), "P01", zeitgeber=uhr)
     protokoll = Protokoll(stand, ordner=tmp_path, zeitpunkt=ZEITPUNKT)
@@ -555,7 +563,10 @@ def test_ein_abbruch_mitten_im_schreiben_laesst_die_alte_fassung_stehen(tmp_path
     vorher = protokoll.pfad.read_bytes()
 
     class AbbruchNachEinerZeile(csv.DictWriter):
+        """Ein Schreiber, der mitten in der Datei abbricht."""
+
         def writerows(self, reihen):
+            """Schreibt nur die erste Zeile und bricht dann ab – wie ein Stromausfall mittendrin."""
             self.writerow(list(reihen)[0])
             raise Stromausfall
 
@@ -573,6 +584,7 @@ def test_scheitert_das_ersetzen_bleibt_die_alte_fassung_stehen(tmp_path, monkeyp
     vorher = protokoll.pfad.read_bytes()
 
     def gesperrt(quelle, ziel):
+        """Lässt das Ersetzen der Datei scheitern, als wäre sie in Excel geöffnet."""
         raise PermissionError("Die Datei ist in einem anderen Programm geöffnet.")
 
     monkeypatch.setattr(protokollmodul.os, "replace", gesperrt)
@@ -587,6 +599,7 @@ def test_nach_einem_fehlschlag_holt_das_naechste_schreiben_alles_nach(tmp_path, 
     stand, protokoll = _drei_aufgaben(tmp_path)
 
     def gesperrt(quelle, ziel):
+        """Lässt das Ersetzen der Datei scheitern, als wäre sie in Excel geöffnet."""
         raise PermissionError("Die Datei ist in einem anderen Programm geöffnet.")
 
     with monkeypatch.context() as m:
@@ -619,6 +632,8 @@ def test_ein_sehr_langes_pseudonym_verhindert_das_schreiben_nicht(tmp_path):
 
 def test_im_dateinamen_wird_das_pseudonym_gekuerzt():
     class Probe:
+        """Ein Spielstand-Ersatz, der nur ein Pseudonym hat – mehr braucht der Dateiname nicht."""
+
         pseudonym = "ä" * 500
 
     name = dateiname(Probe(), ZEITPUNKT)

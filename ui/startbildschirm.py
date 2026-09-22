@@ -64,6 +64,11 @@ class Startbildschirm(Screen):
     titel = "Willkommen"
 
     def __init__(self, fenster, danach):
+        """Baut den Titelbildschirm mit dem Eingabefeld für die Pseudonym-ID.
+
+        ``danach(fenster, spieler_id)`` wird mit der geprüften ID gerufen,
+        sobald sie stimmt – von da an geht es zur Figurwahl weiter.
+        """
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT)
         self._danach = danach
@@ -130,10 +135,12 @@ class Startbildschirm(Screen):
         return self.buehne.itemcget(self._hinweis, "fill") == stil.FARBE_WARNUNG
 
     def _hinweis_setzen(self, text, farbe):
+        """Schreibt die Zeile unter dem Eingabefeld – in Rot, wenn die ID nicht stimmt."""
         self.buehne.itemconfigure(self._hinweis_schatten, text=text)
         self.buehne.itemconfigure(self._hinweis, text=text, fill=farbe)
 
     def beim_anzeigen(self):
+        """Der Screen steht: Die Szene läuft an, das Eingabefeld bekommt die Tastatur."""
         self.buehne.starten()
         self._feld.focus_set()
 

@@ -63,6 +63,13 @@ class Zeitfenster:
     """
 
     def __init__(self, dauer_sekunden, zeitgeber=None):
+        """Startet die Uhr – ab jetzt läuft die Zeit dieses Levels.
+
+        ``dauer_sekunden`` steht danach fest; verlängern lässt sich ein
+        Zeitfenster nicht (Projektregel 1). ``zeitgeber`` ist die Funktion,
+        die die Uhrzeit liefert – ohne Angabe die Systemuhr, in Tests eine
+        Attrappe wie im Beispiel oben.
+        """
         if isinstance(dauer_sekunden, bool) or not isinstance(
             dauer_sekunden, (int, float)
         ):
@@ -115,6 +122,7 @@ class Zeitfenster:
         return f"{sekunden // 60:02d}:{sekunden % 60:02d}"
 
     def __repr__(self):
+        """Kurzfassung für die Fehlersuche – so erscheint das Objekt in Meldungen und im Debugger."""
         return (
             f"Zeitfenster({self.dauer_sekunden:.0f}s, "
             f"rest={self.restzeit_text}, abgelaufen={self.ist_abgelaufen})"

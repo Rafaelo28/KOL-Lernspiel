@@ -34,16 +34,20 @@ class Uhr:
     """Eine Uhr, die nur weitergeht, wenn ein Test sie weiterstellt."""
 
     def __init__(self):
+        """Beginnt bei null Sekunden."""
         self.jetzt = 0.0
 
     def __call__(self):
+        """Der Spielstand fragt die Uhr wie eine Funktion: ``zeitgeber()``."""
         return self.jetzt
 
     def weiter(self, sekunden):
+        """Spult um so viele Sekunden vor."""
         self.jetzt += sekunden
 
 
 def _stand(uhr=None, seed=4711):
+    """Ein Spielstand mit begonnenem Level 1 und festem Seed."""
     stand = Spielstand(FIGUR, Zufallsquelle(seed), "P01", zeitgeber=uhr)
     stand.starte_level(1)
     return stand

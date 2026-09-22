@@ -128,6 +128,17 @@ class Aufgabengenerator:
     """
 
     def __init__(self, zufall=None):
+        """Nimmt die Zufallsquelle entgegen, aus der später alle Aufgaben gezogen werden.
+
+        Erlaubt ist eine :class:`~game.zufallsquelle.Zufallsquelle` – so
+        läuft es im Spiel, damit sich jede Aufgabe aus dem Seed
+        rekonstruieren lässt – oder ein einfaches ``random.Random``, das
+        ältere Tests benutzen. Ohne Angabe wird eine neue Zufallsquelle
+        gezogen.
+
+        Gemischt wird hier noch nichts: Die Reihenfolge des Übungspools
+        entsteht erst, wenn die erste Übung gebraucht wird.
+        """
         if zufall is None:
             zufall = Zufallsquelle.neu()
         self._quelle = zufall if isinstance(zufall, Zufallsquelle) else None

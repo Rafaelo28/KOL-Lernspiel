@@ -190,6 +190,12 @@ class Bearbeitung:
     """
 
     def __init__(self, aufgabe, zeitgeber=None):
+        """Beginnt den Verlauf einer Aufgabe: Die Uhr läuft, null Versuche, nichts gelöst.
+
+        ``zeitgeber`` ist die Funktion, die die aktuelle Uhrzeit liefert.
+        Ohne Angabe ist das die Systemuhr; Tests reichen eine eigene herein
+        und können die Zeit damit vorspulen, statt wirklich zu warten.
+        """
         self.aufgabe = aufgabe
         self._zeitgeber = zeitgeber if zeitgeber is not None else time.monotonic
         self._beginn = self._zeitgeber()
@@ -242,6 +248,13 @@ class Bearbeitung:
 
     @property
     def geloest(self):
+        """Steht am Ende die richtige Antwort da?
+
+        Das gilt auch, wenn die Lösung vorher eingeblendet und dann
+        abgetippt wurde. Wer später auswertet, wie viele Aufgaben wirklich
+        selbst gelöst wurden, muss deshalb beide Angaben zusammen lesen –
+        diese und :attr:`loesung_angezeigt` (siehe :mod:`game.protokoll`).
+        """
         return self._geloest
 
     @property
@@ -251,6 +264,12 @@ class Bearbeitung:
 
     @property
     def loesung_angezeigt(self):
+        """Wurde die Lösung eingeblendet?
+
+        Das passiert nach drei Versuchen ohne Fortschritt (3-Versuche-Regel)
+        oder wenn das Level endet, während die Aufgabe noch läuft
+        (:meth:`aufgeben`).
+        """
         return self._loesung_angezeigt
 
     @property
@@ -498,6 +517,7 @@ class Bearbeitung:
             self._ende = self._zeitgeber()
 
     def __repr__(self):
+        """Kurzfassung für die Fehlersuche – so erscheint das Objekt in Meldungen und im Debugger."""
         return (
             f"Bearbeitung({self.aufgabe.kennung!r}, versuche={self._versuche}, "
             f"geloest={self._geloest}, loesung_angezeigt={self._loesung_angezeigt}, "

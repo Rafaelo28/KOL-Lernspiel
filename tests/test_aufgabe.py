@@ -259,6 +259,7 @@ def test_jede_substitutions_uebung_laesst_sich_als_aufgabe_ausdruecken(text):
 # Initialen ist Testbequemlichkeit und gehört bewusst nicht in den Generator:
 # Im Spiel steht die gewählte Figur immer fest.
 def _aus_funkspruch(funkspruch, initialen="VM"):
+    """Baut die Aufgabe zu einem Funkspruch – mit festen Initialen, damit die Lösung immer dieselbe ist."""
     return aufgabe_aus_funkspruch(funkspruch, initialen)
 
 
