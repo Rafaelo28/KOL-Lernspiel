@@ -67,8 +67,10 @@ bis zur Rettung. Mit `✕` verschwindet die Leiste, mit `F9` kommt sie zurück.
 Am Spiel ändert der Schalter nichts: dieselben Screens, dieselben Regeln,
 dieselben Zeitfenster – sie lassen sich nur überspringen. Die Messdaten der
 Testläufe landen in `logs/testmodus/`, und vor ihrem Pseudonym steht
-`TEST-`; sie können also nicht mit den echten durcheinandergeraten. Mehr
-dazu im Kopf von [ui/testmodus.py](ui/testmodus.py).
+`TEST-`; sie können also nicht mit den echten durcheinandergeraten.
+
+Die Kurzanleitung mit allen Sprungzielen steht in
+[dokumentation/Testmodus.md](dokumentation/Testmodus.md).
 
 ### Tests
 
@@ -343,3 +345,4 @@ Die vollständige Aufgabenzerlegung steht in
 | [dokumentation/Tipps-und-Tricks.md](dokumentation/Tipps-und-Tricks.md) | Hinweise zu Tkinter, Normalisierung, Logging |
 | [dokumentation/Commit_Regeln.md](dokumentation/Commit_Regeln.md) | Wann und wie committet wird |
 | [dokumentation/Animationen.md](dokumentation/Animationen.md) | Wie Animationen entstehen und ins Spiel kommen |
+| [dokumentation/Testmodus.md](dokumentation/Testmodus.md) | Kurzanleitung für `main.py --testmodus` |

@@ -5,7 +5,8 @@ Start::
     python3 main.py --testmodus
 
 Gedacht ist er für den Entwicklungsrechner – um Stichproben zu machen, ohne
-jedes Mal ein ganzes Level zu spielen. Im Unterricht läuft das Spiel ohne
+jedes Mal ein ganzes Level zu spielen. Wie man ihn bedient, steht kurz und
+ohne Code in ``dokumentation/Testmodus.md``. Im Unterricht läuft das Spiel ohne
 diesen Schalter, und dann gibt es hier nichts: Kein Screen des Spiels weiss
 von diesem Modul, und keine Spielregel ändert sich.
 
