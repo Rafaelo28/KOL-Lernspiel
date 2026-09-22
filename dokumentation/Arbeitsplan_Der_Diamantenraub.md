@@ -935,7 +935,13 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 ## Phase 8 – Test und Verteilung
 
 ### 8.1 Zeitmessung im Selbsttest
-- Selbst durchspielen und stoppen: Sind 15/20/25 Min realistisch?
+- Selbst durchspielen und stoppen: Sind 15/20/25 Min realistisch? Dafür das
+  Spiel **ohne** Schalter starten – gemessen wird der echte Ablauf
+- Für Stichproben an einzelnen Stellen der Geschichte gibt es den Testmodus
+  (`python3 main.py --testmodus`, siehe `ui/testmodus.py`): Aufgaben lösen
+  sich per Knopf, Level lassen sich beenden oder ablaufen lassen, und jede
+  Story-Stelle ist direkt anzuspringen. Seine Logdateien landen getrennt in
+  `logs/testmodus/` und taugen **nicht** als Messdaten
 
 ### 8.2 Pilotdurchlauf mit 2–3 Personen
 - Ziel: Schwellenwert für Zusatzaufgaben kalibrieren (Aufgabe 5.4)

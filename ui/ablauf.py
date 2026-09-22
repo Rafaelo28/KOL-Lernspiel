@@ -217,8 +217,13 @@ def funkspruch_nachlesen(fenster, funkspruch, danach):
 
 
 def abschluss_zeigen(fenster, durch_zeitablauf=False):
-    """Das Spiel ist vorbei: das Nachtlager, der Knopf "Warten" und die Rettung."""
-    fenster.zeige(abschluss.Abschluss, durch_zeitablauf=durch_zeitablauf)
+    """Das Spiel ist vorbei: das Nachtlager, der Knopf "Warten" und die Rettung.
+
+    Die Nacht läuft an der Uhr des Fensters (:attr:`ui.hauptfenster.Hauptfenster.zeitgeber`)
+    und damit im Spiel an der Systemuhr – so wie jede andere Zeit auch.
+    """
+    fenster.zeige(abschluss.Abschluss, durch_zeitablauf=durch_zeitablauf,
+                  zeitgeber=fenster.zeitgeber)
 
 
 def oeffnen(wurzel, zeitgeber=None, protokollordner=None, massstab=None):

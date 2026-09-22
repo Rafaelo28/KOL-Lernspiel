@@ -49,6 +49,27 @@ Arbeitsverzeichnis heraus; die Messdaten landen immer in `logs/` neben
 Fehlt Tkinter, meldet `main.py` das im Klartext mit Installationshinweis,
 statt mit einem Stacktrace abzubrechen.
 
+### Testmodus
+
+Zum Durchklicken der Geschichte – nicht für den Unterricht:
+
+```bash
+python3 main.py --testmodus
+```
+
+Unter dem Spiel erscheint dann eine rote Leiste: **Lösung eintragen** füllt
+die richtige Antwort ein und prüft sie, **Level beenden** schaltet weiter wie
+nach erledigter Arbeit, **Zeit ablaufen lassen** lässt das Zeitfenster
+sofort enden (und überspringt am Ende die Nacht bis zur Rettung), und
+**Springe zu** führt direkt zu einzelnen Stellen der Geschichte – vom Intro
+bis zur Rettung. Mit `✕` verschwindet die Leiste, mit `F9` kommt sie zurück.
+
+Am Spiel ändert der Schalter nichts: dieselben Screens, dieselben Regeln,
+dieselben Zeitfenster – sie lassen sich nur überspringen. Die Messdaten der
+Testläufe landen in `logs/testmodus/`, und vor ihrem Pseudonym steht
+`TEST-`; sie können also nicht mit den echten durcheinandergeraten. Mehr
+dazu im Kopf von [ui/testmodus.py](ui/testmodus.py).
+
 ### Tests
 
 Einzige Entwicklungsabhängigkeit ist `pytest`. Die Fenstertests in
@@ -65,7 +86,7 @@ python3 -m venv .venv
 Mitgeprüft werden auch die Doctests in `crypto/`, in denen die
 durchgerechneten Beispiele des Handbuchs stehen (`HUND` + Schlüssel 3 →
 `KXQG` und so weiter). Ein weiterer Test liest `dokumentation/Handbuchtexte.md`
-ein und vergleicht die 10 Übungssätze mit denen im Code – wer eine
+ein und vergleicht die 18 Übungssätze mit denen im Code – wer eine
 Handbuchseite ändert, sieht am roten Test sofort, wo Text und Code
 auseinanderlaufen.
 
@@ -148,6 +169,7 @@ unterscheiden, dass jemand zufällig den längsten Satz erwischt hat.
 | `lineal.py` | Das Lineal im Vigenère-Quadrat: Zeile und Spalte per Klick markieren, damit beim Nachschlagen niemand verrutscht |
 | `funk.py` | Die echten Funksprüche am Funkgerät: leuchtende Anzeige, Nachricht Zeichen für Zeichen, beim Empfangen der ganze Geheimtext, beim Senden nie; der Knopf für den Rest einer langen Nachricht |
 | `abschluss.py` | Das Ende: Nachtlager mit dem Knopf „Warten“, die Augen fallen zu, am Morgen landet der Hubschrauber der Crew; dann der Schlusstext und wo die Messdaten liegen |
+| `testmodus.py` | Kein Teil des Spiels: die Leiste für `--testmodus`, mit der sich Aufgaben lösen, Level überspringen und Story-Stellen anspringen lassen |
 
 ### Animationen
 

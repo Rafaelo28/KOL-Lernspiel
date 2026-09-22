@@ -67,6 +67,7 @@ versuchen.
 """
 
 import sys
+import time
 import tkinter as tk
 import traceback
 from tkinter import messagebox
@@ -183,6 +184,17 @@ class Hauptfenster:
     def px(self, wert):
         """Eine Pixelangabe aus dem Maßstab 1 in den Maßstab dieses Fensters."""
         return stil.skaliert(wert, self.massstab)
+
+    @property
+    def zeitgeber(self):
+        """Die Uhr dieses Fensters – im Spiel die Systemuhr.
+
+        Der Durchlauf bekommt sie beim Start, und Screens, die selbst eine
+        Uhr brauchen (der Abschluss), holen sie sich hier. So hängt alles an
+        derselben Zeit: Tests und der Testmodus geben eine gestellte Uhr mit
+        und können damit auch die Nacht am Ende vorspulen.
+        """
+        return self._zeitgeber if self._zeitgeber is not None else time.monotonic
 
     def _rahmen_bauen(self):
         """Baut, was in jedem Screen gleich bleibt: Kopfzeile, Trennlinie, Meldungszeile, Inhaltsbereich.
