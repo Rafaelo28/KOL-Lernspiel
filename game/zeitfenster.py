@@ -112,14 +112,10 @@ class Zeitfenster:
     def restzeit_text(self):
         """Die Restzeit als "MM:SS" für die Anzeige.
 
-        Aufgerundet: Solange auch nur eine Sekunde übrig ist, steht dort nicht
-        "00:00". Sonst zeigte die Anzeige das Ende an, während noch Zeit war.
-
         >>> Zeitfenster(61, zeitgeber=lambda: 0).restzeit_text
         '01:01'
         """
-        sekunden = math.ceil(self.verbleibende_sekunden)
-        return f"{sekunden // 60:02d}:{sekunden % 60:02d}"
+        return als_text(self.verbleibende_sekunden)
 
     def __repr__(self):
         """Kurzfassung für die Fehlersuche – so erscheint das Objekt in Meldungen und im Debugger."""
@@ -127,6 +123,19 @@ class Zeitfenster:
             f"Zeitfenster({self.dauer_sekunden:.0f}s, "
             f"rest={self.restzeit_text}, abgelaufen={self.ist_abgelaufen})"
         )
+
+
+def als_text(sekunden):
+    """Sekunden als "MM:SS" für die Anzeige.
+
+    Aufgerundet: Solange auch nur eine Sekunde übrig ist, steht dort nicht
+    "00:00". Sonst zeigte die Anzeige das Ende an, während noch Zeit war.
+
+    >>> als_text(61), als_text(0.2), als_text(0)
+    ('01:01', '00:01', '00:00')
+    """
+    ganze = math.ceil(sekunden)
+    return f"{ganze // 60:02d}:{ganze % 60:02d}"
 
 
 def fuer_level(level, zeitgeber=None):

@@ -29,8 +29,20 @@ Das verlängert kein Zeitfenster und ändert am Ablauf schneller Kinder nichts;
 es sortiert nur um, was in der verbleibenden Zeit zuerst drankommt. Eine schon
 laufende Aufgabe bricht es nie ab – gefragt wird erst, wenn eine Aufgabe
 fertig ist. Läuft die Zeit trotzdem ab, während noch gerechnet wird, greift
-weiter Regel 1: Das Level endet, ein Funkspruch kann ausfallen. Seltener als
-vorher, aber nicht ausgeschlossen.
+weiter Regel 1: Das Level endet sofort. Der Funkspruch fällt deshalb nicht
+aus – nach dem Wechsel steht er zum Mitlesen da (Regel 1, "Kein Funkspruch
+geht verloren"); gerechnet hat ihn dann aber niemand.
+
+Und wenn nichts mehr ansteht
+────────────────────────────
+Ist der letzte Funkspruch eines Levels erzählt, hat die Vorrang-Regel nichts
+mehr zu reservieren. Dann füllen weitere Übungen die Restzeit, solange die
+Mindestrestzeit bleibt und die Obergrenze der Zusatzaufgaben es zulässt.
+Sonst endete das Level in dem Moment, in dem die Geschichte durch ist – und
+wer langsam gerechnet hat, sässe die letzten Minuten ab, während die
+Kontrollgruppe weiterarbeitet. Eine dabei angefangene Übung wird am Levelende
+abgebrochen und steht so im Log; die Auswertung filtert solche Zeilen ohnehin
+heraus.
 
 Warum zwei Basis-Übungen
 ────────────────────────

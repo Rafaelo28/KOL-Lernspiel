@@ -922,7 +922,19 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
   andere rechnet an jeder Übung mit falschen, aber besser werdenden Eingaben
   herum und lässt die Uhr laufen, bis die Zeit knapp wird. Beide kommen bei
   allen fünf Funksprüchen an, keine Aufgabe wird abgebrochen; im Trödel-Fall
-  fallen die zweite Übung und die Zusatzaufgaben aus
+  bekommen die Funksprüche den Vortritt und die Übung kommt danach
+- **Nachtrag zum Zeitablauf (nach der Durchsicht mit Rafael):** Drei Regeln
+  sind dazugekommen, alle drei in CLAUDE.md unter Regel 1:
+  1. **Die Uhr des neuen Levels startet erst mit seiner Handbuchseite.** Was
+     dazwischen gelesen wird, gehört zu keinem Zeitfenster – sonst nimmt das
+     Nachlesen ausgerechnet dem langsamen Kind die Rechenzeit des nächsten
+     Levels (`Spielstand.starte_zeitfenster`, `ui.ablauf.level_beginnen`).
+  2. **Nachgelesen wird alles, was niemand ganz gesehen hat** – auch ein
+     Funkspruch, der am Timer abgebrochen wurde oder dessen Rest nie
+     aufgelöst wurde (`Spielstand.funksprueche_zum_nachlesen`). Vorher kam
+     nur zurück, was nie gestellt worden war.
+  3. **Ist die Geschichte des Levels erzählt, füllen Übungen die Restzeit.**
+     Die Vorrang-Regel reserviert nur, solange noch ein Funkspruch aussteht
 - **Durchgeklickt:** Ein Skript spielt das Spiel durch und fotografiert jeden
   Screen – 38 Bilder vom Titelbild bis zum Abschluss, in der Reihenfolge
   Handbuch → zwei Übungen → Funksprüche je Level, Übergangsszene nach Level 2,

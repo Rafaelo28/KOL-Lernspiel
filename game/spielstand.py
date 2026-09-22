@@ -80,7 +80,11 @@ from game import levelablauf as _levelablauf
 from game.aufgabe import QUELLE_UEBUNG
 from game.bearbeitung import Bearbeitung
 from game.generator import Aufgabengenerator, aufgabe_aus_funkspruch
-from game.zeitfenster import fuer_level as _zeitfenster_fuer_level
+from game.zeitfenster import (
+    DAUER_JE_LEVEL_SEKUNDEN,
+    als_text as _restzeit_text,
+    fuer_level as _zeitfenster_fuer_level,
+)
 from game.zusatzaufgaben import (
     HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL,
     ist_faellig as _zusatzaufgabe_ist_faellig,
@@ -198,13 +202,26 @@ class Spielstand:
         Das Fenster zeigt das bewusst nicht an (Entscheidung nach 6.1: ein
         mitzählender Countdown erzeugt Zeitdruck-Stress). Das Feld bleibt für
         Tests und eine mögliche spätere Lehrkraft-Ansicht erhalten.
+
+        Wird zwischen zwei Leveln noch gelesen, steht hier die volle Dauer des
+        neuen Fensters: Es ist ja noch nichts davon verbraucht.
         """
-        return self._zeitfenster.restzeit_text if self._zeitfenster else ""
+        if self._zeitfenster is not None:
+            return self._zeitfenster.restzeit_text
+        return _restzeit_text(self.verbleibende_sekunden) if self._level is not None else ""
 
     @property
     def verbleibende_sekunden(self):
-        """Wie viel Zeit im Level noch bleibt – 0 ausserhalb eines Levels."""
-        return self._zeitfenster.verbleibende_sekunden if self._zeitfenster else 0.0
+        """Wie viel Zeit im Level noch bleibt – 0 ausserhalb eines Levels.
+
+        Solange die Uhr des Levels noch wartet (Lesepause), ist das seine
+        ganze Dauer.
+        """
+        if self._zeitfenster is not None:
+            return self._zeitfenster.verbleibende_sekunden
+        if self._level is None:
+            return 0.0
+        return float(DAUER_JE_LEVEL_SEKUNDEN[self._level])
 
     @property
     def zeit_ist_um(self):
@@ -286,20 +303,46 @@ class Spielstand:
             raise ValueError("Es läuft noch kein Level – zuerst starte_level().")
         if self._bearbeitung is not None:
             self.aufgabe_abschliessen()
+        # Über die Eigenschaften, nicht über das Zeitfenster: Ein Level, in
+        # dem nie gearbeitet wurde, hat gar keins – dann sind es null
+        # Sekunden, und geendet hat es vorzeitig.
         self._levelzeiten[self._level] = (
-            self._zeitfenster.verstrichene_sekunden,
-            LEVELENDE_ZEITABLAUF if self._zeitfenster.ist_abgelaufen else LEVELENDE_VORZEITIG,
+            self.level_sekunden(self._level),
+            LEVELENDE_ZEITABLAUF if self.zeit_ist_um else LEVELENDE_VORZEITIG,
         )
         naechstes = self._level + 1
         self._level = naechstes if naechstes in LEVEL else None
         if self._level is not None:
             self._gestartete_level.add(self._level)
-        self._zeitfenster = (
-            _zeitfenster_fuer_level(self._level, self._zeitgeber)
-            if self._level is not None
-            else None
-        )
+        # Die Uhr des neuen Levels läuft noch nicht: Zwischen zwei Leveln
+        # wird gelesen – verpasste Funksprüche, der Übergangstext –, und
+        # Lesen ist keine Arbeitszeit. Gestartet wird sie mit der
+        # Handbuchseite (:meth:`starte_zeitfenster`).
+        self._zeitfenster = None
         return self._level
+
+    def starte_zeitfenster(self):
+        """Startet die Uhr des laufenden Levels – ab hier wird gearbeitet.
+
+        Zwischen zwei Leveln liegt Lesestoff: die Funksprüche, für die die
+        Zeit nicht mehr reichte, und der Übergang zu Level 3. Diese Zeit
+        gehört zu keinem Zeitfenster. Die Fenster selbst bleiben fix
+        (Projektregel 1) – sie sind Arbeitszeit, nicht Lesezeit, und beginnen
+        deshalb erst mit der Handbuchseite des neuen Levels.
+
+        Ein zweiter Aufruf ändert nichts; wer eine Aufgabe stellt, startet sie
+        notfalls selbst (:meth:`naechste_uebung`, :meth:`stelle_funkspruch`).
+        Rückgabe ist das Zeitfenster.
+        """
+        self._verlange_level()
+        if self._zeitfenster is None:
+            self._zeitfenster = _zeitfenster_fuer_level(self._level, self._zeitgeber)
+        return self._zeitfenster
+
+    @property
+    def zeitfenster_laeuft(self):
+        """Läuft die Uhr des Levels schon – oder wird noch gelesen?"""
+        return self._zeitfenster is not None
 
     def level_sekunden(self, level):
         """Wie lange ein Level lief – bei dem laufenden Level: bisher.
@@ -311,7 +354,8 @@ class Spielstand:
         if level in self._levelzeiten:
             return self._levelzeiten[level][0]
         if level == self._level:
-            return self._zeitfenster.verstrichene_sekunden
+            # Vor dem Start der Uhr ist noch keine Zeit vergangen.
+            return self._zeitfenster.verstrichene_sekunden if self._zeitfenster else 0.0
         return None
 
     def levelende(self, level):
@@ -440,6 +484,9 @@ class Spielstand:
         """
         self._verlange_level()
         self._verlange_freie_bahn()
+        # Wer arbeitet, startet die Uhr des Levels – falls die Oberfläche es
+        # nicht schon mit der Handbuchseite getan hat.
+        self.starte_zeitfenster()
         self._verlange_restzeit()
         if zusatzaufgabe and _obergrenze_erreicht(self.zusatzaufgaben_im_level()):
             raise ValueError(
@@ -468,6 +515,29 @@ class Spielstand:
         return tuple(funkspruch for funkspruch in _story.FUNKSPRUECHE_NACH_LEVEL.get(level, ())
                      if funkspruch.kennung not in self._gestellte_funksprueche)
 
+    def funksprueche_zum_nachlesen(self, level):
+        """Die Funksprüche eines Levels, von denen jemand nicht alles gesehen hat.
+
+        Drei Fälle kommen zusammen, und alle drei haben dieselbe Folge – ein
+        Stück Geschichte fehlt:
+
+        * Der Funkspruch kam nie dran (die Zeit reichte nicht bis zu ihm).
+        * Er kam dran und wurde am Zeitablauf abgebrochen.
+        * Er wurde gelöst, aber der Rest der langen Nachricht steckt noch
+          hinter dem Knopf – gedrückt hat ihn niemand mehr.
+
+        Die Oberfläche zeigt sie nach dem Levelwechsel zum Mitlesen (siehe
+        :func:`ui.ablauf.nach_levelwechsel`): mit Lösung, ohne Eingabe, ohne
+        Uhr. Die Geschichte soll nicht an der Uhr scheitern.
+        """
+        bearbeitungen = {b.aufgabe.kennung: b for b in self._erledigt}
+        offen = []
+        for funkspruch in _story.FUNKSPRUECHE_NACH_LEVEL.get(level, ()):
+            bearbeitung = bearbeitungen.get(funkspruch.kennung)
+            if bearbeitung is None or not bearbeitung.ist_abgeschlossen:
+                offen.append(funkspruch)
+        return tuple(offen)
+
     def stelle_funkspruch(self, funkspruch):
         """Stellt einen echten Funkspruch als Aufgabe.
 
@@ -480,6 +550,7 @@ class Spielstand:
         """
         self._verlange_level()
         self._verlange_freie_bahn()
+        self.starte_zeitfenster()
         self._verlange_restzeit()
         if funkspruch.level != self._level:
             raise ValueError(

@@ -33,6 +33,26 @@ exakt dieselben Zeiten. Zusatzaufgaben verlängern ein Zeitfenster **nie**.
 Läuft die Zeit ab, wird sofort zum nächsten Level gewechselt – egal, wie viele
 Aufgaben noch offen sind.
 
+**Gemeint ist Arbeitszeit, nicht Lesezeit.** Zwischen zwei Leveln steht, was
+die Uhr abgeschnitten hat: die Funksprüche, die niemand ganz gesehen hat, und
+der Übergangstext. Die Uhr des neuen Levels startet erst mit seiner
+Handbuchseite (`Spielstand.starte_zeitfenster`, aufgerufen in
+`ui.ablauf.level_beginnen`). Jedes Level behält damit exakt seine Minuten zum
+Rechnen; die Lesezeit liegt dazwischen und nimmt sie niemandem weg – am
+wenigsten dem, der ohnehin knapp dran ist.
+
+**Kein Funkspruch geht verloren.** Was niemand ganz gesehen hat – nie
+gestellt, am Timer abgebrochen oder mit unaufgelöstem Rest –, steht nach dem
+Levelwechsel zum Mitlesen da: mit Lösung, ohne Eingabe, ohne Uhr, ohne Zeile
+im Log (`Spielstand.funksprueche_zum_nachlesen`). Die Geschichte darf nicht an
+der Uhr scheitern.
+
+**Solange das Fenster läuft, gibt es Arbeit.** Sind alle Funksprüche eines
+Levels erzählt, gibt es nichts mehr, dem eine Übung den Vortritt lassen
+müsste – dann füllen weitere Übungen die Restzeit (bis zur Obergrenze der
+Zusatzaufgaben). Sonst sässe ausgerechnet das langsame Kind die letzten
+Minuten ab, während die Kontrollgruppe weiterarbeitet.
+
 ### 2. 3-Versuche-Regel gilt für **alle** Aufgaben
 
 Nach drei erfolglosen Versuchen **ohne Fortschritt** wird die Lösung

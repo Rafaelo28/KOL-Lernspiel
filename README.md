@@ -247,7 +247,17 @@ vollständig in [CLAUDE.md](CLAUDE.md):
 
 - **Die Zeitfenster sind fix.** Zusatzaufgaben verlängern ein Level nie. Läuft
   die Zeit ab, geht es weiter – sonst ist der Vergleich mit der
-  Frontalunterrichts-Gruppe nicht mehr sauber.
+  Frontalunterrichts-Gruppe nicht mehr sauber. Gemeint ist Arbeitszeit: Was
+  zwischen zwei Leveln nur gelesen wird – die verpassten Funksprüche, der
+  Übergangstext –, läuft in keinem Zeitfenster; die Uhr des neuen Levels
+  beginnt erst mit seiner Handbuchseite.
+- **Kein Funkspruch geht verloren.** Was niemand ganz gesehen hat – nie
+  drangewesen, am Timer abgebrochen oder mit unaufgelöstem Rest –, steht nach
+  dem Levelwechsel zum Mitlesen da: mit Lösung, ohne Eingabe, ohne Uhr. Die
+  Geschichte darf nicht an der Uhr scheitern.
+- **Solange das Fenster läuft, gibt es Arbeit.** Sind die Funksprüche eines
+  Levels erzählt, füllen weitere Übungen die Restzeit. Sonst sässe
+  ausgerechnet das langsame Kind die letzten Minuten ab.
 - **Nach drei Fehlversuchen ohne Fortschritt wird die Lösung gezeigt** – auch
   bei den beiden Funksprüchen, die die Geschichte tragen. Ohne diese Regel
   bliebe das Spiel genau dort hängen. Eine Eingabe mit weniger Fehlern als

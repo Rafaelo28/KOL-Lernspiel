@@ -336,10 +336,12 @@ def test_auch_wer_langsam_war_bekommt_eine_solange_die_zeit_reicht():
 
 def test_wer_langsam_rechnet_braucht_mehr_restzeit():
     """Der Tempofaktor verschiebt die Grenze – für Langsame früher."""
-    knapp = zusatz.erwartete_dauer(zusatz.laengste_uebung()) * 2 + zusatz.MINDESTRESTZEIT_SEKUNDEN
-    assert zusatz.zeit_reicht_noch(knapp, tempo=2.0)
-    assert not zusatz.zeit_reicht_noch(knapp - 1, tempo=2.0)
-    assert zusatz.zeit_reicht_noch(knapp - 1, tempo=1.0), "Wer schneller rechnet, hat länger Luft."
+    offen = story.FUNKSPRUECHE_NACH_LEVEL[1]
+    noetig = zusatz.erwartete_dauer(zusatz.laengste_uebung()) + zusatz.erwartete_dauer_funksprueche(offen)
+    knapp = 2 * noetig + zusatz.MINDESTRESTZEIT_SEKUNDEN
+    assert zusatz.zeit_reicht_noch(knapp, offen, tempo=2.0)
+    assert not zusatz.zeit_reicht_noch(knapp - 1, offen, tempo=2.0)
+    assert zusatz.zeit_reicht_noch(knapp - 1, offen, tempo=1.0), "Wer schneller rechnet, hat länger Luft."
 
 
 def test_die_obergrenze_je_level_greift():
@@ -361,9 +363,27 @@ def test_die_laengste_uebung_stimmt_mit_dem_pool_ueberein():
 
 
 def test_die_restzeit_reicht_genau_ab_der_schwelle():
-    noetig = zusatz.erwartete_dauer(zusatz.laengste_uebung()) + zusatz.MINDESTRESTZEIT_SEKUNDEN
-    assert zusatz.zeit_reicht_noch(noetig)
-    assert not zusatz.zeit_reicht_noch(noetig - 1)
+    """Solange ein Funkspruch aussteht, wird seine Zeit mitreserviert."""
+    offen = story.FUNKSPRUECHE_NACH_LEVEL[2]
+    noetig = (zusatz.erwartete_dauer(zusatz.laengste_uebung())
+              + zusatz.erwartete_dauer_funksprueche(offen)
+              + zusatz.MINDESTRESTZEIT_SEKUNDEN)
+    assert zusatz.zeit_reicht_noch(noetig, offen)
+    assert not zusatz.zeit_reicht_noch(noetig - 1, offen)
+
+
+def test_ohne_offene_funksprueche_zaehlt_nur_die_mindestrestzeit():
+    """Dann gibt es nichts mehr zu reservieren – geübt wird bis zum Schluss.
+
+    Sonst sässe ausgerechnet das langsame Kind die letzten Minuten seines
+    Zeitfensters ab: Die Schätzung für eine ganze Übung fällt bei dreifacher
+    Rechenzeit über vier Minuten lang aus.
+    """
+    assert zusatz.zeit_reicht_noch(zusatz.MINDESTRESTZEIT_SEKUNDEN)
+    assert not zusatz.zeit_reicht_noch(zusatz.MINDESTRESTZEIT_SEKUNDEN - 1)
+    assert zusatz.zeit_reicht_noch(zusatz.MINDESTRESTZEIT_SEKUNDEN, tempo=3.0), (
+        "ohne Funkspruch spielt das Tempo keine Rolle mehr"
+    )
 
 
 def test_die_restzeit_richtet_sich_nach_dem_laengsten_text_nicht_nach_dem_letzten():
@@ -374,17 +394,19 @@ def test_die_restzeit_richtet_sich_nach_dem_laengsten_text_nicht_nach_dem_letzte
     und der würde unfertig abgebrochen.
     """
     uhr = Uhr()
+    offen = story.FUNKSPRUECHE_NACH_LEVEL[2]
     kurz = Aufgabe("probe", 2, "substitution", VERSCHLUESSELN, None, "HUND", "IXFR")
     lauf = Bearbeitung(kurz, uhr)
     uhr.weiter(1)
     lauf.versuchen("IXFR")
-    knapp = zusatz.erwartete_dauer(4) + zusatz.MINDESTRESTZEIT_SEKUNDEN + 1
+    knapp = (zusatz.erwartete_dauer(4) + zusatz.erwartete_dauer_funksprueche(offen)
+             + zusatz.MINDESTRESTZEIT_SEKUNDEN + 1)
     assert zusatz.laengste_uebung() > 4
-    assert not zusatz.ist_faellig(lauf, knapp)
+    assert not zusatz.ist_faellig(lauf, knapp, offene_funksprueche=offen)
 
 
 def test_die_obergrenze_ist_gesetzt_und_klein():
-    """Der Übungspool hat zehn Texte – danach wiederholen sie sich."""
+    """Jedes Level hat nur seinen Abschnitt des Pools – danach wiederholen sich die Texte."""
     assert 1 <= zusatz.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL <= 5
 
 
@@ -515,14 +537,30 @@ def test_eine_eingabe_nach_dem_ende_stempelt_die_zeit_nicht_neu():
 # auseinander.
 
 @pytest.mark.parametrize("funkspruch", story.FUNKSPRUECHE, ids=lambda f: f.kennung)
-def test_ein_funkspruch_loest_keine_zusatzaufgabe_aus(funkspruch):
+def test_ein_funkspruch_loest_keine_zusatzaufgabe_aus_solange_einer_aussteht(funkspruch):
     from game.generator import aufgabe_aus_funkspruch
 
     uhr = Uhr()
     lauf = Bearbeitung(aufgabe_aus_funkspruch(funkspruch, "VM"), uhr)
     uhr.weiter(1)
     lauf.versuchen(lauf.aufgabe.loesung)
-    assert not zusatz.ist_faellig(lauf, 10_000)
+    assert not zusatz.ist_faellig(lauf, 10_000, offene_funksprueche=(funkspruch,))
+
+
+@pytest.mark.parametrize("funkspruch", story.FUNKSPRUECHE, ids=lambda f: f.kennung)
+def test_nach_dem_letzten_funkspruch_wird_weiter_geuebt(funkspruch):
+    """Ist die Geschichte des Levels erzählt, darf die Restzeit nicht verfallen.
+
+    Dann reisst eine Übung nichts mehr auseinander – es kommt ja nichts
+    mehr, dem sie den Vortritt lassen müsste.
+    """
+    from game.generator import aufgabe_aus_funkspruch
+
+    uhr = Uhr()
+    lauf = Bearbeitung(aufgabe_aus_funkspruch(funkspruch, "VM"), uhr)
+    uhr.weiter(1)
+    lauf.versuchen(lauf.aufgabe.loesung)
+    assert zusatz.ist_faellig(lauf, 10_000)
 
 
 def test_wer_die_ganze_nachricht_rechnet_wird_an_ihr_gemessen():

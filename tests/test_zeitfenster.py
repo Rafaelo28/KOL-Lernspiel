@@ -349,13 +349,22 @@ def test_ein_durchlauf_endet_auch_wenn_ueberall_die_zeit_ablaeuft():
     assert all(b.loesung_angezeigt for b in stand.erledigte_aufgaben)
 
 
-def test_die_gesamtdauer_eines_solchen_durchlaufs_ist_genau_eine_stunde():
-    """Kein Level kann sich Zeit vom nächsten borgen."""
+def test_die_arbeitszeit_eines_solchen_durchlaufs_ist_genau_eine_stunde():
+    """Kein Level kann sich Zeit vom nächsten borgen – und Lesezeit zählt für keines.
+
+    Zwischen zwei Leveln wird gelesen: die Funksprüche, für die es nicht mehr
+    reichte, und der Übergangstext. Diese Zeit gehört zu keinem Zeitfenster,
+    die Summe der drei Fenster bleibt also genau eine Stunde.
+    """
     uhr = Uhr()
     stand = _stand(uhr)
     stand.starte_level(1)
-    beginn = uhr.jetzt
     for level in LEVEL:
+        assert stand.aktuelles_level == level
         uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[level])
         stand.pruefe_zeitfenster()
-    assert uhr.jetzt - beginn == 60 * 60
+        uhr.weiter(90)                          # dazwischen wird gelesen
+        if stand.aktuelles_level is not None:
+            stand.starte_zeitfenster()
+    assert stand.ist_durchgespielt
+    assert sum(stand.level_sekunden(level) for level in LEVEL) == 60 * 60

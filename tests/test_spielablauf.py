@@ -17,7 +17,7 @@ tk = pytest.importorskip("tkinter")
 
 from content import charaktere, story  # noqa: E402
 from game import levelablauf, zusatzaufgaben  # noqa: E402
-from game.aufgabe import QUELLE_FUNKSPRUCH  # noqa: E402
+from game.aufgabe import QUELLE_FUNKSPRUCH, QUELLE_UEBUNG  # noqa: E402
 from game.spielstand import LEVELENDE_VORZEITIG  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
 from ui import abschluss, ablauf, erzaehlszene, funk, handbuch, uebung  # noqa: E402
@@ -283,6 +283,25 @@ def test_verpasste_funksprueche_kann_man_hinterher_mitlesen(fenster, bei_der_ueb
     assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
 
 
+def test_waehrend_des_mitlesens_laeuft_die_uhr_des_neuen_levels_nicht(fenster, bei_der_uebung, uhr):
+    """Lesen ist keine Arbeitszeit – sonst zahlt das langsame Kind zweimal.
+
+    Wer die Funksprüche des alten Levels verpasst hat, liest sie nach dem
+    Wechsel. Liefe dabei schon die Uhr von Level 2, ginge ihm ausgerechnet
+    dafür die Rechenzeit verloren, die er ohnehin knapp hat.
+    """
+    _level_ablaufen_lassen(fenster, uhr, 1)
+    stand = fenster.durchlauf.spielstand
+    assert stand.aktuelles_level == 2 and not stand.zeitfenster_laeuft
+    uhr.weiter(300)                                   # in Ruhe gelesen
+    while isinstance(fenster.aktueller_screen, funk.Funk):
+        fenster.aktueller_screen.weiter()
+    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
+    assert stand.zeitfenster_laeuft, "Mit der Handbuchseite beginnt Level 2."
+    assert stand.verbleibende_sekunden == DAUER_JE_LEVEL_SEKUNDEN[2], "und zwar ganz von vorn"
+    assert stand.level_sekunden(1) == DAUER_JE_LEVEL_SEKUNDEN[1], "Level 1 bleibt bei seinen Minuten."
+
+
 def test_beim_mitlesen_gibt_es_nichts_einzutippen(fenster, bei_der_uebung, uhr):
     _level_ablaufen_lassen(fenster, uhr, 1)
     screen = fenster.aktueller_screen
@@ -293,15 +312,23 @@ def test_beim_mitlesen_gibt_es_nichts_einzutippen(fenster, bei_der_uebung, uhr):
     assert funk.AUFTRAG_NACHGELESEN[screen.funkspruch.richtung] in _eine_zeile(screen.glastexte("auftrag"))
 
 
-def test_auch_nach_zeitablauf_kommt_der_uebergang_wenn_der_funkspruch_dran_war(fenster, bei_der_uebung, uhr):
-    """Gesehen hat man ihn – dann gehört der Satz dazu, der davon spricht.
+def test_ein_abgebrochener_funkspruch_wird_danach_zum_mitlesen_gezeigt(fenster, bei_der_uebung, uhr):
+    """Wer mitten im Funkspruch vom Timer abgeschnitten wird, erfährt trotzdem, was drinstand.
 
-    Gewechselt wird trotzdem sofort (Projektregel 1); gelesen wird danach, in
-    der Zeit von Level 3.
+    Gewechselt wird sofort (Projektregel 1) – die angefangene Aufgabe steht
+    als abgebrochen im Log. Danach liegt dieselbe Nachricht noch einmal da,
+    diesmal mit Lösung und ohne Uhr.
     """
     _spielen_bis(fenster, uhr, lambda s: isinstance(s, funk.Funk)
                  and s.funkspruch is story.FUNKSPRUCH_VERFOLGER)
     _level_ablaufen_lassen(fenster, uhr, 2)
+    screen = fenster.aktueller_screen
+    assert isinstance(screen, funk.Funk) and screen.nur_lesen
+    assert screen.funkspruch is story.FUNKSPRUCH_VERFOLGER
+    abgebrochen = [b for b in fenster.durchlauf.spielstand.erledigte_aufgaben
+                   if b.aufgabe.kennung == story.FUNKSPRUCH_VERFOLGER.kennung]
+    assert [b.abgebrochen for b in abgebrochen] == [True], "genau eine Zeile, und die als abgebrochen"
+    screen.weiter()
     screen = fenster.aktueller_screen
     assert isinstance(screen, erzaehlszene.Erzaehlszene)
     assert screen.text == story.UEBERGANG_ZU_LEVEL_3.absaetze[0]
@@ -409,6 +436,11 @@ def test_ein_troedel_durchlauf_kommt_trotzdem_bei_allen_funkspruechen_an(fenster
     _durchspielen(fenster, uhr, vor_der_uebung=troedeln)
     stand = fenster.durchlauf.spielstand
     assert _gestellte_funksprueche(fenster) == [f.kennung for f in story.FUNKSPRUECHE]
-    assert stand.uebungen_im_level(1) == 1, "Für die zweite Übung war die Zeit zu knapp …"
-    assert stand.zusatzaufgaben_im_level(1) == 0, "… und für eine Zusatzaufgabe erst recht."
     assert all(not b.abgebrochen for b in stand.erledigte_aufgaben)
+
+    # Die Funksprüche bekommen den Vortritt: Als die Zeit knapp wurde, kam
+    # keine Übung mehr dazwischen.
+    reihenfolge = [b.aufgabe.quelle for b in stand.erledigte_aufgaben_im_level(1)]
+    assert reihenfolge[:3] == [QUELLE_UEBUNG, QUELLE_FUNKSPRUCH, QUELLE_FUNKSPRUCH]
+    # Danach steht nichts mehr an – die Restzeit füllt wieder eine Übung.
+    assert reihenfolge[3:] and set(reihenfolge[3:]) == {QUELLE_UEBUNG}

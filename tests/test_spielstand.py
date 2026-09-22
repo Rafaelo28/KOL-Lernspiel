@@ -705,6 +705,55 @@ def test_die_offenen_funksprueche_sind_die_des_levels_die_noch_nicht_dran_waren(
     assert stand.offene_funksprueche == (story.FUNKSPRUCH_STANDORT,)
 
 
+def test_zum_nachlesen_steht_jeder_funkspruch_den_niemand_ganz_gesehen_hat():
+    """Die Geschichte soll nicht an der Uhr scheitern – drei Fälle, dieselbe Folge."""
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    stand.starte_level(1)
+    assert stand.funksprueche_zum_nachlesen(1) == (
+        story.FUNKSPRUCH_ERSTER_RUF, story.FUNKSPRUCH_BOB_ERSTE_ANTWORT,
+    ), "Nie drangewesen: beide."
+
+    stand.stelle_funkspruch(story.FUNKSPRUCH_ERSTER_RUF)
+    _loese(stand)
+    assert stand.funksprueche_zum_nachlesen(1) == (story.FUNKSPRUCH_BOB_ERSTE_ANTWORT,), (
+        "Gelöst und ohne Rest – der ist erzählt."
+    )
+
+    aufgabe = stand.stelle_funkspruch(story.FUNKSPRUCH_BOB_ERSTE_ANTWORT)
+    assert aufgabe.hat_teilaufgabe
+    stand.versuchen(aufgabe.loesung)
+    stand.aufgabe_abschliessen()
+    assert stand.funksprueche_zum_nachlesen(1) == (story.FUNKSPRUCH_BOB_ERSTE_ANTWORT,), (
+        "Der Rest der Nachricht steckt noch hinter dem Knopf."
+    )
+
+
+def test_ein_am_zeitablauf_abgebrochener_funkspruch_steht_zum_nachlesen():
+    """Angefangen heisst nicht gesehen: Wer abgeschnitten wird, kennt die Nachricht nicht."""
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    stand.starte_level(2)
+    stand.stelle_funkspruch(story.FUNKSPRUCH_VERFOLGER)
+    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[2])
+    stand.pruefe_zeitfenster()
+    (bearbeitung,) = [b for b in stand.erledigte_aufgaben
+                      if b.aufgabe.kennung == story.FUNKSPRUCH_VERFOLGER.kennung]
+    assert bearbeitung.abgebrochen
+    assert stand.funksprueche_zum_nachlesen(2) == (story.FUNKSPRUCH_VERFOLGER,)
+
+
+def test_ein_ganz_erledigter_funkspruch_steht_nicht_mehr_zum_nachlesen():
+    """Sonst bekäme man dieselbe Nachricht zweimal vorgelegt."""
+    stand = _stand()
+    stand.starte_level(2)
+    aufgabe = stand.stelle_funkspruch(story.FUNKSPRUCH_VERFOLGER)
+    stand.versuchen(aufgabe.loesung)
+    stand.weiterrechnen()
+    stand.aufgabe_abschliessen()
+    assert stand.funksprueche_zum_nachlesen(2) == ()
+
+
 def test_ein_abgewiesener_funkspruch_gilt_nicht_als_gestellt():
     """Wer ihn im falschen Level stellen wollte, bekommt ihn später trotzdem."""
     stand = _stand()
@@ -749,11 +798,55 @@ def test_ein_vorzeitig_beendetes_level_behaelt_seine_zeit():
     stand.starte_level(1)
     uhr.weiter(400)
     stand.naechstes_level()
+    stand.starte_zeitfenster()
     uhr.weiter(700)
     assert stand.level_sekunden(1) == 400
     assert stand.levelende(1) == LEVELENDE_VORZEITIG
     assert stand.level_sekunden(2) == 700
     assert stand.levelende(2) == LEVELENDE_LAEUFT
+
+
+def test_die_lesezeit_zwischen_zwei_leveln_zaehlt_fuer_keines():
+    """Was zwischen zwei Leveln gelesen wird, ist keine Arbeitszeit.
+
+    Verpasste Funksprüche und der Übergangstext stehen nach dem Wechsel da.
+    Liefe dabei schon die Uhr des neuen Levels, nähme ausgerechnet dem
+    langsamen Kind das Lesen die Zeit zum Rechnen.
+    """
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    stand.starte_level(1)
+    uhr.weiter(400)
+    stand.naechstes_level()
+    assert not stand.zeitfenster_laeuft
+    uhr.weiter(120)                                  # gelesen, nicht gerechnet
+    assert stand.level_sekunden(2) == 0
+    assert stand.verbleibende_sekunden == DAUER_JE_LEVEL_SEKUNDEN[2]
+    stand.starte_zeitfenster()
+    uhr.weiter(60)
+    assert stand.level_sekunden(2) == 60
+    assert stand.level_sekunden(1) == 400
+
+
+def test_ein_zweiter_start_des_zeitfensters_aendert_nichts():
+    """Sonst begänne das Level von vorn, wenn die Oberfläche zweimal fragt."""
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    stand.starte_level(1)
+    uhr.weiter(100)
+    stand.starte_zeitfenster()
+    assert stand.level_sekunden(1) == 100
+
+
+def test_wer_eine_aufgabe_stellt_startet_die_uhr_selbst(monkeypatch):
+    """Ein Sicherheitsnetz: Gerechnet wird nie ausserhalb eines Zeitfensters."""
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    stand.starte_level(1)
+    stand.naechstes_level()
+    assert not stand.zeitfenster_laeuft
+    stand.naechste_uebung()
+    assert stand.zeitfenster_laeuft
 
 
 def test_ein_nie_gestartetes_level_hat_keine_zeit():
@@ -770,8 +863,10 @@ def test_alle_drei_levelzeiten_nach_einem_durchlauf():
     stand.starte_level(1)
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[1])
     stand.pruefe_zeitfenster()
+    stand.starte_zeitfenster()          # Level 2 beginnt nach dem Lesen
     uhr.weiter(300)
     stand.naechstes_level()
+    stand.starte_zeitfenster()
     uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[3] + 2)
     stand.pruefe_zeitfenster()
     assert stand.ist_durchgespielt
@@ -829,20 +924,49 @@ def test_waehrend_eine_aufgabe_laeuft_ist_nichts_faellig():
     assert not stand.zusatzaufgabe_faellig
 
 
-@pytest.mark.parametrize(
-    "funkspruch",
-    [f for f in story.FUNKSPRUECHE],
-    ids=lambda f: f.kennung,
-)
-def test_nach_einem_funkspruch_ist_keine_zusatzaufgabe_faellig(funkspruch):
-    """Zusatzaufgaben gehören in die Übungsphase, nicht zwischen Ruf und Antwort."""
-    uhr = Uhr()
-    stand = _stand_mit_uhr(uhr)
+def _zum_funkspruch(stand, funkspruch, uhr):
+    """Spielt die Funksprüche des Levels der Reihe nach durch, bis dieser gelöst ist."""
     stand.starte_level(LEVEL[0])
     while stand.aktuelles_level != funkspruch.level:
         stand.naechstes_level()
-    stand.stelle_funkspruch(funkspruch)
-    uhr.weiter(1)
-    _loese(stand)
+    stand.starte_zeitfenster()
+    for naechster in story.FUNKSPRUECHE_NACH_LEVEL[funkspruch.level]:
+        stand.stelle_funkspruch(naechster)
+        uhr.weiter(1)
+        _loese(stand)
+        if naechster is funkspruch:
+            return
+
+
+@pytest.mark.parametrize(
+    "funkspruch",
+    [f for f in story.FUNKSPRUECHE if f is not story.FUNKSPRUECHE_NACH_LEVEL[f.level][-1]],
+    ids=lambda f: f.kennung,
+)
+def test_zwischen_zwei_funkspruechen_ist_keine_zusatzaufgabe_faellig(funkspruch):
+    """Zusatzaufgaben gehören in die Übungsphase, nicht zwischen Ruf und Antwort."""
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    _zum_funkspruch(stand, funkspruch, uhr)
     assert stand.erledigte_aufgaben[-1].geloest
+    assert stand.offene_funksprueche, "hier steht noch einer aus"
     assert not stand.zusatzaufgabe_faellig
+
+
+@pytest.mark.parametrize(
+    "funkspruch",
+    [story.FUNKSPRUECHE_NACH_LEVEL[level][-1] for level in LEVEL],
+    ids=lambda f: f.kennung,
+)
+def test_nach_dem_letzten_funkspruch_eines_levels_wird_weiter_geuebt(funkspruch):
+    """Ist die Geschichte des Levels erzählt, füllt eine Übung die Restzeit.
+
+    Sonst endete das Level, sobald der letzte Funkspruch gelöst ist – und wer
+    schnell war, sässe die restliche Zeit ab, während die Kontrollgruppe
+    weiterarbeitet.
+    """
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    _zum_funkspruch(stand, funkspruch, uhr)
+    assert not stand.offene_funksprueche
+    assert stand.zusatzaufgabe_faellig

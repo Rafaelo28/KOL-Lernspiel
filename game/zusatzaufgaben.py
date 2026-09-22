@@ -190,22 +190,39 @@ def laengste_uebung():
 def zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche=(), tempo=1.0):
     """Bleibt im Level genug Zeit, damit noch eine Übung Sinn ergibt?
 
-    Gerechnet wird mit dem **längsten** Text im Pool, nicht mit der eben
-    gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest.
+    Zwei Fälle, und sie fragen etwas Verschiedenes:
 
-    ``offene_funksprueche`` sind die Funksprüche, die im Level noch anstehen;
-    ihre Zeit wird mitreserviert (Vorrang-Regel, Arbeitsplan Phase 7).
-    ``tempo`` ist der Faktor aus :func:`tempofaktor`: Wer langsamer rechnet,
-    braucht für dieselbe Aufgabe länger, und die Grenze rückt entsprechend
-    früher. Der Sicherheitspuffer bleibt davon unberührt.
+    **Es stehen noch Funksprüche an.** Dann geht es darum, ob eine Übung
+    dazwischenpasst, *ohne* ihnen die Zeit zu nehmen (Vorrang-Regel,
+    Arbeitsplan Phase 7). Reserviert wird die geschätzte Dauer der Übung –
+    gerechnet mit dem **längsten** Text im Pool, denn welcher als Nächstes
+    kommt, steht nicht fest – plus die der offenen Funksprüche. ``tempo`` ist
+    der Faktor aus :func:`tempofaktor`: Wer langsamer rechnet, für den rückt
+    die Grenze früher. Der Sicherheitspuffer bleibt davon unberührt.
 
-    >>> zeit_reicht_noch(900)
+    **Es steht nichts mehr an.** Dann gibt es nichts zu reservieren, und die
+    Frage ist nur noch, ob sich das Anfangen lohnt. Das tut es, solange die
+    Mindestrestzeit bleibt: Lieber eine angefangene Übung im Log – die
+    Auswertung filtert sie ohnehin heraus – als ein Kind, das die letzten
+    Minuten seines Zeitfensters absitzt, während die Kontrollgruppe
+    weiterarbeitet.
+
+    >>> from content import story
+    >>> offen = story.FUNKSPRUECHE_NACH_LEVEL[1]
+    >>> zeit_reicht_noch(900, offen)
     True
-    >>> zeit_reicht_noch(100)
+    >>> zeit_reicht_noch(300, offen)
     False
-    >>> zeit_reicht_noch(280), zeit_reicht_noch(280, tempo=3.0)
-    (True, False)
+    >>> zeit_reicht_noch(280, offen, tempo=3.0)
+    False
+
+    Ohne offene Funksprüche zählt nur noch die Mindestrestzeit:
+
+    >>> zeit_reicht_noch(300), zeit_reicht_noch(100), zeit_reicht_noch(30)
+    (True, True, False)
     """
+    if not offene_funksprueche:
+        return verbleibende_sekunden >= MINDESTRESTZEIT_SEKUNDEN
     noetig = erwartete_dauer(laengste_uebung()) + erwartete_dauer_funksprueche(offene_funksprueche)
     return verbleibende_sekunden >= tempo * noetig + MINDESTRESTZEIT_SEKUNDEN
 
@@ -219,11 +236,18 @@ def ist_faellig(bearbeitung, verbleibende_sekunden, bisherige_zusatzaufgaben=0, 
                 tempo=1.0):
     """Soll nach dieser Aufgabe eine Zusatzaufgabe gestellt werden?
 
-    Alle drei Bedingungen müssen stimmen: Es war eine Übung, es bleibt genug
-    Zeit – auch für die noch offenen Funksprüche des Levels –, und die
-    Obergrenze des Levels ist noch nicht erreicht.
+    Drei Bedingungen:
+
+    * Die Obergrenze des Levels ist noch nicht erreicht – darüber hinaus sind
+      auch die eigenen Texte des Levels aufgebraucht (``content/uebungen.py``).
+    * Es bleibt genug Zeit (:func:`zeit_reicht_noch`).
+    * Die eben erledigte Aufgabe war eine **Übung** – aber nur, solange noch
+      Funksprüche anstehen: Nach einem Funkspruch soll die Geschichte
+      weitergehen, nicht das Üben. Ist keiner mehr offen, gibt es nichts
+      mehr, dem die Übung den Vortritt lassen müsste; dann kommt sie auch
+      nach einem Funkspruch, damit die Restzeit nicht ungenutzt verstreicht.
     """
-    if bearbeitung.aufgabe.quelle != QUELLE_UEBUNG:
+    if offene_funksprueche and bearbeitung.aufgabe.quelle != QUELLE_UEBUNG:
         return False
     if obergrenze_erreicht(bisherige_zusatzaufgaben):
         return False

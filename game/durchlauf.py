@@ -105,6 +105,14 @@ class Durchlauf:
         self.spielstand.starte_level(level)
         self.sichern()
 
+    def starte_zeitfenster(self):
+        """Startet die Uhr des laufenden Levels – die Oberfläche tut das mit der Handbuchseite.
+
+        Was davor lag (verpasste Funksprüche zum Mitlesen, der Übergangstext),
+        war Lesezeit und gehört zu keinem Zeitfenster.
+        """
+        return self.spielstand.starte_zeitfenster()
+
     def takt(self):
         """Prüft das Zeitfenster. Die Oberfläche ruft das mindestens einmal pro
         Sekunde auf.

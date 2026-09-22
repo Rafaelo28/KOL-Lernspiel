@@ -25,6 +25,14 @@ Nach einem Levelwechsel wird sofort umgeschaltet, egal was gerade offen ist
 (Projektregel 1). Eine offene Aufgabe hat der Spielstand da schon als
 abgebrochen abgelegt und der Durchlauf gespeichert.
 
+Zwischen zwei Leveln wird gelesen
+─────────────────────────────────
+Erst kommt, was die Uhr abgeschnitten hat: jeder Funkspruch des alten Levels,
+den niemand ganz gesehen hat, zum Mitlesen (:func:`funkspruch_nachlesen`).
+Dann der Übergangstext, dann die Handbuchseite des neuen Levels – und **erst
+dort** startet dessen Uhr (:func:`level_beginnen`). Lesen kostet also keine
+Rechenzeit; die drei Zeitfenster bleiben reine Arbeitszeit.
+
 Wie "danach" weitergereicht wird
 ────────────────────────────────
 Kein Screen weiss, was nach ihm kommt. Stattdessen bekommt jeder eine
@@ -115,8 +123,26 @@ def level_1_beginnen(fenster):
     handbuch_aufschlagen(fenster, fenster.durchlauf.spielstand.aktuelles_level)
 
 
+def level_beginnen(fenster, level, hinweis=""):
+    """Die Handbuchseite des neuen Levels – und ab hier läuft seine Uhr.
+
+    Alles, was davor lag, war Lesezeit: die Funksprüche, für die es nicht
+    mehr gereicht hat, und der Übergang zu Level 3. Die zählt zu keinem
+    Zeitfenster (:meth:`game.spielstand.Spielstand.starte_zeitfenster`) –
+    sonst nähme ausgerechnet dem langsamen Kind das Lesen die Arbeitszeit des
+    nächsten Levels weg.
+    """
+    fenster.durchlauf.starte_zeitfenster()
+    handbuch_aufschlagen(fenster, level, hinweis)
+
+
 def handbuch_aufschlagen(fenster, level, hinweis=""):
-    """Zu Beginn eines Levels: der Einstieg aus der Geschichte und die Handbuchseite."""
+    """Zu Beginn eines Levels: der Einstieg aus der Geschichte und die Handbuchseite.
+
+    Die Uhr des Levels läuft hier schon – gestartet hat sie
+    :func:`level_beginnen` (beim ersten Level :func:`level_1_beginnen`).
+    Beim Nachschlagen mitten in einer Aufgabe ändert sich an ihr nichts.
+    """
     fenster.zeige(
         handbuch.Handbuch,
         level=level,
@@ -187,7 +213,7 @@ def nach_levelwechsel(fenster, wechsel):
     "zeitablauf" gekippt, obwohl alle Aufgaben erledigt waren.
     """
     danach = _nach_dem_wechsel(fenster, wechsel)
-    verpasst = fenster.durchlauf.spielstand.nicht_gestellte_funksprueche(wechsel.altes_level)
+    verpasst = fenster.durchlauf.spielstand.funksprueche_zum_nachlesen(wechsel.altes_level)
     for funkspruch in reversed(verpasst):
         danach = partial(funkspruch_nachlesen, funkspruch=funkspruch, danach=danach)
     danach(fenster)
@@ -203,7 +229,7 @@ def _nach_dem_wechsel(fenster, wechsel):
         if wechsel.durch_zeitablauf
         else ""
     )
-    weiter = partial(handbuch_aufschlagen, level=wechsel.neues_level, hinweis=hinweis)
+    weiter = partial(level_beginnen, level=wechsel.neues_level, hinweis=hinweis)
     uebergang = ERZAEHLUNG_NACH_LEVEL.get(wechsel.altes_level)
     if uebergang is None:
         return weiter
