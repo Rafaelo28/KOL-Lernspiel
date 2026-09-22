@@ -958,6 +958,35 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 ### 8.2 Pilotdurchlauf mit 2–3 Personen
 - Ziel: Schwellenwert für Zusatzaufgaben kalibrieren (Aufgabe 5.4)
 - Zweites Ziel: Verständlichkeit der Handbuchtexte prüfen
+- **Drittes Ziel – offene Entscheidung: bleiben die Zeitfenster bei
+  15/20/25 Min?** Im Gespräch war, jedes Level um fünf Minuten zu kürzen
+  (10/15/20), damit die Doppelstunde nicht so knapp wird. Entschieden wird
+  das nach dem Pilotdurchlauf; Kandidat ist **12/15/20** – Level 1 ist
+  inhaltlich das kürzeste, verliert bei einer gleichmässigen Kürzung aber
+  am meisten Luft.
+
+  Zum Abschätzen (Schätzformel des Spiels: 20 s je Aufgabe plus 4 s je
+  Buchstabe, dazu die Handbuchseite):
+
+  | Level | normal | doppelt so lange | dreifach |
+  |-------|--------|------------------|----------|
+  | 1 – Caesar       | 7,3 Min | 12,5 | 17,8 |
+  | 2 – Substitution | 6,8 Min | 11,0 | 15,3 |
+  | 3 – Vigenère     | 8,9 Min | 14,7 | 20,6 |
+
+  Im Pilotdurchlauf dafür ablesen:
+  - `level_sekunden` und `levelende` je Level – wie viele endeten am Timer
+    (`zeitablauf`), wie viele vorzeitig und mit wie viel Rest?
+  - Wie viele Zeilen mit `abgebrochen = ja` entstehen am Levelende (die
+    Übungen, die die Restzeit füllen)?
+  - **Mit der Stoppuhr:** die Lesezeit zwischen den Leveln. Sie steht in
+    keiner Logspalte, kommt aber zur Gesamtdauer dazu (Regel 1)
+  - Faustregel: Schöpft kaum jemand die Fenster aus, kürzen; enden viele am
+    Timer, so lassen
+  - **Wird gekürzt, muss der Frontalunterricht identisch gekürzt werden**
+    (Anhang A4) – sonst vergleicht der Versuch nicht mehr nur die Methode.
+    Im Code hängt die Zahl an einer Stelle: `DAUER_JE_LEVEL_MINUTEN` in
+    `game/zeitfenster.py`
 
 ### 8.3 Verteilung auf Schulrechner testen
 - Läuft Python dort? Ist Tkinter vorhanden?
