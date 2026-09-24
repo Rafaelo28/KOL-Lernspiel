@@ -441,7 +441,20 @@ class Spielstand:
             verbleibende_sekunden=self.verbleibende_sekunden,
             zusatzaufgabe_faellig=self.zusatzaufgabe_faellig,
             tempo=self.tempofaktor,
+            funkverkehr_begonnen=self.funkverkehr_begonnen,
         )
+
+    @property
+    def funkverkehr_begonnen(self):
+        """Wurde im laufenden Level schon ein Funkspruch gestellt?
+
+        Ab da gehört die Geschichte zusammen: Zwischen den eigenen Ruf und
+        Bobs Antwort schiebt sich keine Übung mehr (:mod:`game.levelablauf`).
+        """
+        if self._level is None:
+            return False
+        alle = _story.FUNKSPRUECHE_NACH_LEVEL.get(self._level, ())
+        return any(f.kennung in self._gestellte_funksprueche for f in alle)
 
     def pruefe_zeitfenster(self):
         """Schaltet weiter, wenn die Zeit des Levels um ist.

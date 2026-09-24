@@ -78,7 +78,7 @@ class Schritt(NamedTuple):
 
 
 def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_sekunden,
-                      zusatzaufgabe_faellig=False, tempo=1.0):
+                      zusatzaufgabe_faellig=False, tempo=1.0, funkverkehr_begonnen=False):
     """Was im laufenden Level auf die eben abgeschlossene Aufgabe folgt.
 
     ``erledigte_uebungen`` zählt nur die Basis-Übungen des Levels, nicht die
@@ -86,6 +86,7 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
     Spielreihenfolge. ``tempo`` ist der Faktor aus
     :func:`game.zusatzaufgaben.tempofaktor` – mit ihm rechnet die Vorrang-Regel
     nicht im Mittel, sondern im Tempo dieses Kindes.
+    ``funkverkehr_begonnen`` sagt, ob in diesem Level schon gefunkt wurde.
 
     Zuerst die Übungen, dann die Funksprüche – ausser die Zeit wird knapp:
 
@@ -98,7 +99,23 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
     'erster_ruf'
     >>> naechster_schritt(2, (), 900).art
     'levelende'
+
+    Hat der Funkverkehr einmal begonnen, kommt keine Übung mehr dazwischen –
+    auch dann nicht, wenn wieder Zeit dafür wäre:
+
+    >>> offen = story.FUNKSPRUECHE_NACH_LEVEL[1][1:]
+    >>> naechster_schritt(1, offen, 700).art
+    'uebung'
+    >>> naechster_schritt(1, offen, 700, funkverkehr_begonnen=True).funkspruch.kennung
+    'bob_erste_antwort'
     """
+    if funkverkehr_begonnen and offene_funksprueche:
+        # Zwischen dem eigenen Ruf und Bobs Antwort hat eine Handbuch-Übung
+        # nichts zu suchen: Sie risse die Geschichte auseinander, und die Zeit,
+        # die sie kostet, fehlt der Antwort. Das kann passieren, wenn die
+        # Vorrang-Regel eine Pflichtübung übersprungen hat und der erste
+        # Funkspruch dann schnell ging.
+        return Schritt(SCHRITT_FUNKSPRUCH, offene_funksprueche[0])
     zeit_fuer_uebung = _zusatzaufgaben.zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche, tempo)
     if zeit_fuer_uebung and erledigte_uebungen < BASIS_UEBUNGEN_JE_LEVEL:
         return Schritt(SCHRITT_UEBUNG)

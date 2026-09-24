@@ -42,8 +42,14 @@ Kontrollgruppe weiterarbeitete; gemessen worden wäre dann nicht die Methode,
 sondern wie schnell dem Spiel die Aufgaben ausgehen.
 
 Jetzt sind es vierundfünfzig, also **achtzehn je Level**: zwei Pflichtübungen
-und bis zu sechzehn Zusatzaufgaben, alle verschieden. Das trägt auch ein Kind,
-das zügig rechnet, bis zum Ende seines Zeitfensters.
+und bis zu sechzehn Zusatzaufgaben, alle verschieden. Im geschätzten Tempo
+trägt das bis ans Ende des Zeitfensters (ein bis fünf Prozent bleiben
+ungenutzt), bei langsamerem erst recht. Wer deutlich schneller rechnet als
+geschätzt, hat seinen Abschnitt trotzdem vor der Zeit durch – bei doppelter
+Geschwindigkeit bleiben in Level 3 rund zwölf Minuten. Ob das vorkommt, sagt
+der Pilotdurchlauf (Arbeitsplan 8.2): Dort wird die Schätzgerade selbst
+nachgemessen, und danach entscheidet sich, ob der Pool noch einmal wächst
+oder die Zeitfenster kürzer werden.
 
 Weil derselbe Satz so in mehreren Leveln vorkommen kann, verteilt der
 Generator den Pool auf die Level (siehe :mod:`game.generator`): Wer einen Satz

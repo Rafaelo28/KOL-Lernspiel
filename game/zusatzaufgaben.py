@@ -111,7 +111,8 @@ ERWARTETE_SEKUNDEN_JE_BUCHSTABE = 4.0
 #: leer lief: Sechs Übungen und die Funksprüche sind im geschätzten Tempo nach
 #: gut einem Drittel des Fensters erledigt, und das Level endete "vorzeitig",
 #: während die Kontrollgruppe weiterarbeitete (siehe Modulkopf). Achtzehn
-#: Texte je Level reichen, um auch bei zügigem Tempo bis zum Schluss zu üben.
+#: Texte je Level reichen im geschätzten Tempo bis zum Schluss; wer deutlich
+#: schneller rechnet, hat sie vorher durch (siehe content/uebungen.py).
 HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL = 16
 
 #: So viel Zeit muss im Level mindestens übrig sein, zusätzlich zu der Zeit,
@@ -158,9 +159,19 @@ def tempofaktor(bearbeitungen):
     """Wie viel langsamer oder schneller jemand rechnet, als oben geschätzt.
 
     Eins heisst "wie geschätzt", zwei "doppelt so lange". Gezählt werden nur
-    Aufgaben, an denen wirklich gerechnet wurde: abgebrochene nicht (dort ist
-    die Zeit die bis zum Levelwechsel) und solche ohne gerechnete Buchstaben
-    auch nicht. Ohne solche Aufgaben ist der Faktor eins.
+    Aufgaben, an denen wirklich gerechnet wurde. Drei Sorten fallen deshalb
+    heraus:
+
+    * **abgebrochene** – dort ist die Zeit die bis zum Levelwechsel,
+    * solche **ohne gerechnete Buchstaben**,
+    * solche, deren **Lösung eingeblendet** wurde. Wer dreimal schnell
+      danebentippt, hat die Aufgabe in zwölf Sekunden hinter sich, ohne einen
+      Buchstaben gerechnet zu haben – gezählt ergäbe das den kleinsten
+      möglichen Faktor, also "doppelt so schnell wie geschätzt". Die
+      Vorrang-Regel reservierte daraufhin nur die halbe Zeit für die
+      Funksprüche, und zwar bei dem Kind, das sie am nötigsten braucht.
+
+    Ohne solche Aufgaben ist der Faktor eins.
 
     Warum das nötig ist: Die Gerade oben ist ein Mittelwert für alle. Die
     Vorrang-Regel (:mod:`game.levelablauf`) soll aber gerade die Langsamen
@@ -174,7 +185,9 @@ def tempofaktor(bearbeitungen):
     """
     ist = soll = 0.0
     for bearbeitung in bearbeitungen:
-        if bearbeitung.abgebrochen or not bearbeitung.gerechnete_buchstaben:
+        if (bearbeitung.abgebrochen
+                or bearbeitung.loesung_angezeigt
+                or not bearbeitung.gerechnete_buchstaben):
             continue
         ist += bearbeitung.benoetigte_sekunden
         soll += erwartete_dauer(bearbeitung.gerechnete_buchstaben)

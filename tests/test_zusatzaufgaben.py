@@ -354,6 +354,23 @@ def test_die_obergrenze_je_level_greift():
     assert not zusatz.ist_faellig(lauf, 600, grenze + 5)
 
 
+def test_eine_aufgelöste_aufgabe_zaehlt_nicht_fuers_tempo():
+    """Wer aufgibt, hat nicht gerechnet – und ist erst recht nicht schnell.
+
+    Drei schnelle Fehleingaben lösen die Aufgabe auf (3-Versuche-Regel). Als
+    Rechenzeit gezählt ergäbe das den kleinsten Faktor, also "doppelt so
+    schnell wie geschätzt" – und die Vorrang-Regel reservierte nur noch die
+    halbe Zeit für die Funksprüche, ausgerechnet bei diesem Kind.
+    """
+    uhr = Uhr()
+    lauf = Bearbeitung(_uebung(), uhr)
+    for eingabe in ("AAAA", "BBBB", "CCCC"):
+        uhr.weiter(4)
+        lauf.versuchen(eingabe)
+    assert lauf.loesung_angezeigt and not lauf.abgebrochen
+    assert zusatz.tempofaktor([lauf]) == 1.0, "zählt gar nicht mit"
+
+
 def test_die_laengste_uebung_stimmt_mit_dem_pool_ueberein():
     from content import uebungen
     from crypto.normalize import ohne_leerzeichen

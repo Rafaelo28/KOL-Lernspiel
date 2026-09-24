@@ -179,6 +179,37 @@ def test_der_spielstand_fuehrt_durch_das_ganze_level():
     assert gesehen[-2] == SCHRITT_ZUSATZAUFGABE, "… und zum Schluss füllen Übungen die Restzeit."
 
 
+def test_zwischen_zwei_funkspruechen_kommt_keine_uebung_mehr():
+    """Der eigene Ruf und Bobs Antwort gehören zusammen.
+
+    Hat die Vorrang-Regel eine Pflichtübung übersprungen und ging der erste
+    Funkspruch dann schnell, war wieder Zeit "übrig" – und das Spiel schob
+    die Übung zwischen Ruf und Antwort. Das riss nicht nur die Geschichte
+    auseinander, es kostete auch die Zeit, die der Antwort fehlte.
+    """
+    offen = story.FUNKSPRUECHE_NACH_LEVEL[1][1:]
+    ohne_funk = naechster_schritt(1, offen, 700)
+    mit_funk = naechster_schritt(1, offen, 700, funkverkehr_begonnen=True)
+    assert ohne_funk.art == SCHRITT_UEBUNG, "vor dem ersten Funkspruch wie bisher"
+    assert mit_funk.art == SCHRITT_FUNKSPRUCH
+    assert mit_funk.funkspruch is story.FUNKSPRUCH_BOB_ERSTE_ANTWORT
+
+
+def test_nach_allen_funkspruechen_wird_wieder_geuebt():
+    """Die Sperre gilt nur, solange noch ein Funkspruch aussteht."""
+    schritt = naechster_schritt(2, (), 900, zusatzaufgabe_faellig=True, funkverkehr_begonnen=True)
+    assert schritt.art == SCHRITT_ZUSATZAUFGABE
+
+
+def test_der_spielstand_meldet_den_begonnenen_funkverkehr():
+    """Sonst wüsste der Levelablauf nichts davon."""
+    uhr = Uhr()
+    stand = _stand(uhr)
+    assert not stand.funkverkehr_begonnen
+    stand.stelle_funkspruch(story.FUNKSPRUCH_ERSTER_RUF)
+    assert stand.funkverkehr_begonnen
+
+
 def test_uebungen_im_level_zaehlt_die_zusatzaufgaben_nicht_mit():
     """Sonst käme nach einer Extraaufgabe keine zweite Basis-Übung mehr."""
     uhr = Uhr()
