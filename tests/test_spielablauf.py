@@ -112,7 +112,7 @@ def _eine_zeile(texte):
     return " ".join(" ".join(texte).split())
 
 
-def _spielen_bis(fenster, uhr, bedingung, hoechstens=40):
+def _spielen_bis(fenster, uhr, bedingung, hoechstens=300):
     """Löst Aufgabe um Aufgabe, bis ein Screen die Bedingung erfüllt."""
     for _ in range(hoechstens):
         screen = fenster.aktueller_screen
@@ -155,12 +155,14 @@ def test_nach_den_uebungen_kommt_das_funkgeraet(fenster, bei_der_uebung, uhr):
 
 
 def test_nach_dem_letzten_funkspruch_beginnt_das_naechste_level(fenster, bei_der_uebung, uhr):
+    """Die Funksprüche kommen in ihrer Reihenfolge – danach füllen Übungen die Restzeit."""
     while not isinstance(fenster.aktueller_screen, handbuch.Handbuch):
         _loesen(fenster, NORMALTEMPO, uhr)
     assert fenster.aktueller_screen.seite.level == 2
     assert fenster.durchlauf.spielstand.aktuelles_level == 2
-    kennungen = [b.aufgabe.kennung for b in fenster.durchlauf.spielstand.erledigte_aufgaben]
-    assert kennungen[-2:] == ["erster_ruf", "bob_erste_antwort"]
+    assert _gestellte_funksprueche(fenster) == ["erster_ruf", "bob_erste_antwort"]
+    danach = [b.aufgabe.quelle for b in fenster.durchlauf.spielstand.erledigte_aufgaben_im_level(1)]
+    assert danach[-1] == QUELLE_UEBUNG, "nach dem letzten Funkspruch wird weitergeübt"
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -358,16 +360,22 @@ def test_vor_dem_standort_kommt_die_reflexionsfrage(fenster, bei_der_uebung, uhr
 
 
 def test_nach_dem_letzten_funkspruch_kommt_der_abschluss(fenster, bei_der_uebung, uhr):
-    screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, abschluss.Abschluss), hoechstens=60)
-    assert fenster.durchlauf.spielstand.ist_durchgespielt
-    assert screen.hinweis == "", "Kein Level endete am Timer."
-    kennungen = [b.aufgabe.kennung for b in fenster.durchlauf.spielstand.erledigte_aufgaben]
-    assert kennungen[-2:] == ["standort", "bob_zweite_antwort"]
+    """Auch Level 3 läuft nach Bobs zweiter Antwort weiter – bis die Zeit um ist."""
+    _spielen_bis(fenster, uhr, lambda s: isinstance(s, abschluss.Abschluss), hoechstens=300)
+    stand = fenster.durchlauf.spielstand
+    assert stand.ist_durchgespielt
+    assert _gestellte_funksprueche(fenster) == [f.kennung for f in story.FUNKSPRUECHE]
 
 
 # ───────────────────────────────────────────────────────────────────────────
 # 6. Der ganze Durchlauf (7.4)
 # ───────────────────────────────────────────────────────────────────────────
+
+def uebungen_texte(stand, level):
+    """Die Aufgabentexte der Übungen eines Levels – für die Frage, ob sich einer wiederholt."""
+    return {b.aufgabe.anzeigetext for b in stand.erledigte_aufgaben_im_level(level)
+            if b.aufgabe.quelle == QUELLE_UEBUNG}
+
 
 def _gestellte_funksprueche(fenster):
     """Die Kennungen aller Funksprüche, die im Durchlauf wirklich gestellt wurden."""
@@ -375,7 +383,7 @@ def _gestellte_funksprueche(fenster):
             if b.aufgabe.quelle == QUELLE_FUNKSPRUCH]
 
 
-def _durchspielen(fenster, uhr, vor_der_uebung=None, hoechstens=80):
+def _durchspielen(fenster, uhr, vor_der_uebung=None, hoechstens=300):
     """Spielt bis zum Abschluss. ``vor_der_uebung`` darf vorher noch etwas tun."""
     for _ in range(hoechstens):
         screen = fenster.aktueller_screen
@@ -410,13 +418,34 @@ def _herumrechnen(fenster, uhr, versuche=3, sekunden=30.0):
 
 
 def test_ein_ganzer_durchlauf_kommt_bei_allen_funkspruechen_an(fenster, bei_der_uebung, uhr):
-    """Vom Start bis zur Rettung, jede Aufgabe gelöst – nirgends bleibt man hängen."""
+    """Vom Start bis zur Rettung, jede Aufgabe gelöst – nirgends bleibt man hängen.
+
+    Wer im geschätzten Tempo arbeitet, füllt sein Zeitfenster: Jedes Level
+    endet am Timer, und die Übung, die dabei gerade lief, steht als
+    abgebrochen im Log. Genau ein solcher Abbruch je Level ist richtig – mehr
+    wäre ein Fehler, keiner hiesse, dass jemand untätig gewartet hat.
+    """
     _durchspielen(fenster, uhr)
     stand = fenster.durchlauf.spielstand
     assert stand.ist_durchgespielt
     assert _gestellte_funksprueche(fenster) == [f.kennung for f in story.FUNKSPRUECHE]
-    assert all(not b.abgebrochen for b in stand.erledigte_aufgaben)
-    assert [stand.levelende(level) for level in (1, 2, 3)] == ["vorzeitig"] * 3
+    for level in (1, 2, 3):
+        erledigt = stand.erledigte_aufgaben_im_level(level)
+        abgebrochen = [b for b in erledigt if b.abgebrochen]
+        uebungen = [b for b in erledigt if b.aufgabe.quelle == QUELLE_UEBUNG]
+        if stand.levelende(level) == "zeitablauf":
+            # Höchstens eine: die Übung, die beim Ablauf gerade lief. Lief
+            # gerade keine (die Zeit ging zwischen zwei Aufgaben zu Ende),
+            # ist es keine.
+            assert len(abgebrochen) <= 1, f"Level {level}"
+            assert all(b.aufgabe.quelle == QUELLE_UEBUNG for b in abgebrochen), f"Level {level}"
+        else:
+            # Vorzeitig endet ein Level nur noch, wenn ihm die eigenen Texte
+            # ausgehen – nicht, weil es niemandem mehr etwas zu tun gäbe.
+            assert not abgebrochen, f"Level {level}"
+            assert len(uebungen) == len(uebungen_texte(stand, level)), f"Level {level}"
+            assert len(uebungen) == (levelablauf.BASIS_UEBUNGEN_JE_LEVEL
+                                     + zusatzaufgaben.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL)
 
 
 def test_ein_troedel_durchlauf_kommt_trotzdem_bei_allen_funkspruechen_an(fenster, bei_der_uebung, uhr):

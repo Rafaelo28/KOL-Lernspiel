@@ -614,13 +614,20 @@ class Funk(Screen):
     # ── Nachschlagen und Lineal ────────────────────────────────────────────
 
     def _nachschlagen(self):
-        """Ins Handbuch – und zurück zu demselben Funkspruch, mit dem, was schon dasteht."""
+        """Ins Handbuch – und zurück zu demselben Funkspruch, mit dem, was schon dasteht.
+
+        Der Hinweis über dem Gerät reist mit: Sonst verschwände beim
+        abgefangenen Funkspruch ausgerechnet der Satz zur Häufigkeitsanalyse,
+        und der gehört zu dieser Aufgabe (Arbeitsplan 7.2) – nachgeschlagen
+        wird dort am ehesten.
+        """
         danach, entwurf, funkspruch = self._danach, self.eingabe, self.funkspruch
+        hinweis = self._hinweis
         handbuch.nachschlagen(
             self.fenster,
             funkspruch.level,
             zurueck=lambda fenster: fenster.zeige(Funk, funkspruch=funkspruch, danach=danach, fortsetzen=True,
-                                                  entwurf=entwurf),
+                                                  entwurf=entwurf, hinweis=hinweis),
         )
 
     def _lineal_benutzt(self):

@@ -149,11 +149,16 @@ def test_je_mehr_funksprueche_offen_sind_desto_frueher_greift_der_vorrang():
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_der_spielstand_fuehrt_durch_das_ganze_level():
-    """Zwei Übungen, dann Zusatzaufgaben, solange Zeit ist, dann die Funksprüche."""
+    """Zwei Übungen, dann Zusatzaufgaben, dann die Funksprüche – und danach weiter geübt.
+
+    Das Level endet erst, wenn die Zeit um ist oder ihm die eigenen Texte
+    ausgehen; die Funksprüche kommen dazwischen, sobald die Restzeit für sie
+    knapp wird.
+    """
     uhr = Uhr()
     stand = _stand(uhr)
     gesehen = []
-    for _ in range(20):
+    for _ in range(60):
         schritt = stand.naechster_schritt
         gesehen.append(schritt.art if schritt.funkspruch is None else schritt.funkspruch.kennung)
         if schritt.art == SCHRITT_LEVELENDE:
@@ -167,9 +172,11 @@ def test_der_spielstand_fuehrt_durch_das_ganze_level():
     zusatz = [art for art in gesehen if art == SCHRITT_ZUSATZAUFGABE]
     assert uebungen == [SCHRITT_UEBUNG] * BASIS_UEBUNGEN_JE_LEVEL, "Erst die Pflichtübungen …"
     assert zusatz, "… dann Zusatzaufgaben, solange die Zeit reicht …"
-    assert gesehen[-3:] == ["erster_ruf", "bob_erste_antwort", SCHRITT_LEVELENDE], (
-        "… und zum Schluss die Funksprüche, bevor das Level endet."
-    )
+    assert [a for a in gesehen if a in ("erster_ruf", "bob_erste_antwort")] == [
+        "erster_ruf", "bob_erste_antwort",
+    ], "… dazwischen die Funksprüche in ihrer Reihenfolge …"
+    assert gesehen[-1] == SCHRITT_LEVELENDE
+    assert gesehen[-2] == SCHRITT_ZUSATZAUFGABE, "… und zum Schluss füllen Übungen die Restzeit."
 
 
 def test_uebungen_im_level_zaehlt_die_zusatzaufgaben_nicht_mit():

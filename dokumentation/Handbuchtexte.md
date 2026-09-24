@@ -174,18 +174,19 @@ Bei der einfachen Substitution steht jeder Buchstabe der Nachricht immer für da
 
 ## Übungssätze für alle drei Seiten
 
-Alle drei Seiten üben mit denselben achtzehn Sätzen. Sie sind ähnlich lang (10 bis
+Alle drei Seiten üben mit denselben vierundfünfzig Sätzen. Sie sind ähnlich lang (10 bis
 14 Buchstaben): Eine Übung zu Seite 3 soll nicht schon wegen eines längeren
 Textes länger dauern als eine zu Seite 1 – schwerer wird es durch das
 Verfahren, nicht durch die Länge. *(Nachträglich entschieden. Vorher hatte jede
 Seite eine eigene Liste: Wörter mit 4–5 Buchstaben für Caesar, Sätze mit 7–18
 für die Substitution und 12–18 für Vigenère. Übernommen sind die Sätze, die
-schon 10 bis 14 Buchstaben lang waren. Später kamen acht Sätze dazu, damit
-jedes Level sechs eigene hat: Seit die Zusatzaufgaben nach der Restzeit kommen,
-übt man in einem Level bis zu sechsmal, und kein Satz soll sich dabei
-wiederholen.)*
+schon 10 bis 14 Buchstaben lang waren. Der Pool ist danach zweimal gewachsen –
+erst auf achtzehn, dann auf vierundfünfzig Sätze –, weil einem Level sonst die
+Texte ausgingen, bevor sein Zeitfenster um war: Seit die Zusatzaufgaben nach
+der Restzeit kommen, übt man so lange, wie die Zeit trägt, und kein Satz soll
+sich dabei wiederholen. Jedes Level hat jetzt achtzehn eigene.)*
 
-### Übungssätze (18 Stück – einer wird zufällig ausgewählt)
+### Übungssätze (54 Stück – einer wird zufällig ausgewählt)
 
  1. ICH BIN HIER
  2. KOMM SCHNELL
@@ -205,5 +206,41 @@ wiederholen.)*
 16. NIMM DIE KARTE
 17. SPUREN IM SAND
 18. HALT DICH BEREIT
+19. LAGER IST SICHER
+20. WIR SIND ZU ZWEIT
+21. HIMMEL IST KLAR
+22. MOTOR IST HIN
+23. SUCHE DEN WEG
+24. BRING DAS SEIL
+25. MOND STEHT HOCH
+26. KEIN SIGNAL HIER
+27. WIND WIRD STARK
+28. NACHT IST LANG
+29. WASSER IST KNAPP
+30. FOLGE DEN SPUREN
+31. FUNK BLEIBT AN
+32. WIR HABEN GLUECK
+33. STEINE AM WEG
+34. DAS ZELT STEHT
+35. KARTE IST ALT
+36. ZWEI TAGE ZEIT
+37. HITZE IST HART
+38. BRAUCHEN HILFE
+39. DER WEG IST WEIT
+40. BOB MELDET SICH
+41. NIEMAND FOLGT
+42. TREFFEN AM WRACK
+43. LICHT IM NORDEN
+44. WIR GEHEN LOS
+45. DAS FUNKGERAET
+46. SCHATTEN AM FELS
+47. DIESE NACHT NOCH
+48. RUHIG UND LEISE
+49. ALLES GUT HIER
+50. DER TANK IST LEER
+51. KOMM ZUM LAGER
+52. WIR WARTEN HIER
+53. SONNE GEHT AUF
+54. PASS GUT AUF DICH
 
 Ein technischer Hinweis für die Umsetzung: Bei allen drei Seiten sollte pro Übungsaufgabe zusätzlich zufällig entschieden werden, ob das gewählte Wort/der Satz **ver-** oder **entschlüsselt** werden soll (bei Verschlüsseln zeigt ihr den Klartext, bei Entschlüsseln müsst ihr das Wort vorher selbst mit demselben Schlüssel verschlüsseln und als Aufgabe anzeigen). Auch bei Level 3 sollte der zufällig gewählte Schlüssel (Schlüsselwort) mit variieren, nicht immer "ROT" – sonst wird die Aufgabe nach ein paar Durchläufen vorhersehbar. Zwei, drei kurze Schlüsselwörter (z. B. ROT, WEG, TAG) als weitere Zufallsauswahl würden das lösen.

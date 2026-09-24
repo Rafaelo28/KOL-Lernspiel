@@ -238,8 +238,14 @@ def _nach_dem_wechsel(fenster, wechsel):
 
 
 def funkspruch_nachlesen(fenster, funkspruch, danach):
-    """Ein Funkspruch, für den die Zeit nicht mehr reichte – nur zum Mitlesen."""
-    fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=danach, nur_lesen=True)
+    """Ein Funkspruch, für den die Zeit nicht mehr reichte – nur zum Mitlesen.
+
+    Mit demselben Hinweis wie beim Bearbeiten: Wer den abgefangenen
+    Funkspruch nur noch nachliest, soll den Satz zur Häufigkeitsanalyse
+    trotzdem lesen – gerade dann liegt der lange Geheimtext ja vor ihm.
+    """
+    fenster.zeige(funk.Funk, funkspruch=funkspruch, danach=danach, nur_lesen=True,
+                  hinweis=HINWEIS_ZUM_FUNKSPRUCH.get(funkspruch.kennung, ""))
 
 
 def abschluss_zeigen(fenster, durch_zeitablauf=False):

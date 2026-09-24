@@ -43,7 +43,7 @@ HANDBUCH_TABELLE = {
     "Y": "N", "Z": "M",
 }
 
-#: Die achtzehn Übungssätze des Handbuchs (ein Pool für alle Level), jeweils von
+#: Die 54 Übungssätze des Handbuchs (ein Pool für alle Level), jeweils von
 #: Hand verschlüsselt. Beispielrechnung für Satz 1: I→O, C→E, H→I | B→W, I→O,
 #: N→F | H→I, I→O, E→T, R→K.
 UEBUNGSSAETZE = [
@@ -65,6 +65,42 @@ UEBUNGSSAETZE = [
     ("NIMM DIE KARTE", "FODD ROT AQKYT"),
     ("SPUREN IM SAND", "LHXKTF OD LQFR"),
     ("HALT DICH BEREIT", "IQSY ROEI WTKTOY"),
+    ("LAGER IST SICHER", "SQUTK OLY LOEITK"),
+    ("WIR SIND ZU ZWEIT", "VOK LOFR MX MVTOY"),
+    ("HIMMEL IST KLAR", "IODDTS OLY ASQK"),
+    ("MOTOR IST HIN", "DGYGK OLY IOF"),
+    ("SUCHE DEN WEG", "LXEIT RTF VTU"),
+    ("BRING DAS SEIL", "WKOFU RQL LTOS"),
+    ("MOND STEHT HOCH", "DGFR LYTIY IGEI"),
+    ("KEIN SIGNAL HIER", "ATOF LOUFQS IOTK"),
+    ("WIND WIRD STARK", "VOFR VOKR LYQKA"),
+    ("NACHT IST LANG", "FQEIY OLY SQFU"),
+    ("WASSER IST KNAPP", "VQLLTK OLY AFQHH"),
+    ("FOLGE DEN SPUREN", "ZGSUT RTF LHXKTF"),
+    ("FUNK BLEIBT AN", "ZXFA WSTOWY QF"),
+    ("WIR HABEN GLUECK", "VOK IQWTF USXTEA"),
+    ("STEINE AM WEG", "LYTOFT QD VTU"),
+    ("DAS ZELT STEHT", "RQL MTSY LYTIY"),
+    ("KARTE IST ALT", "AQKYT OLY QSY"),
+    ("ZWEI TAGE ZEIT", "MVTO YQUT MTOY"),
+    ("HITZE IST HART", "IOYMT OLY IQKY"),
+    ("BRAUCHEN HILFE", "WKQXEITF IOSZT"),
+    ("DER WEG IST WEIT", "RTK VTU OLY VTOY"),
+    ("BOB MELDET SICH", "WGW DTSRTY LOEI"),
+    ("NIEMAND FOLGT", "FOTDQFR ZGSUY"),
+    ("TREFFEN AM WRACK", "YKTZZTF QD VKQEA"),
+    ("LICHT IM NORDEN", "SOEIY OD FGKRTF"),
+    ("WIR GEHEN LOS", "VOK UTITF SGL"),
+    ("DAS FUNKGERAET", "RQL ZXFAUTKQTY"),
+    ("SCHATTEN AM FELS", "LEIQYYTF QD ZTSL"),
+    ("DIESE NACHT NOCH", "ROTLT FQEIY FGEI"),
+    ("RUHIG UND LEISE", "KXIOU XFR STOLT"),
+    ("ALLES GUT HIER", "QSSTL UXY IOTK"),
+    ("DER TANK IST LEER", "RTK YQFA OLY STTK"),
+    ("KOMM ZUM LAGER", "AGDD MXD SQUTK"),
+    ("WIR WARTEN HIER", "VOK VQKYTF IOTK"),
+    ("SONNE GEHT AUF", "LGFFT UTIY QXZ"),
+    ("PASS GUT AUF DICH", "HQLL UXY QXZ ROEI"),
 ]
 
 #: Weiteres Prüfmaterial für den Rundlauf: kurze Einzelwörter und längere
@@ -268,7 +304,7 @@ def test_tabelle_none_ist_die_tastatur_tabelle():
 
 
 # ───────────────────────────────────────────────────────────────────────────
-# 4. Die achtzehn Übungssätze, von Hand durchgerechnet
+# 4. Die 54 Übungssätze, von Hand durchgerechnet
 # ───────────────────────────────────────────────────────────────────────────
 
 

@@ -774,9 +774,13 @@ def test_ein_zweiter_durchlauf_im_selben_fenster_ist_verboten(fenster):
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, tmp_path):
-    """Ein Durchlauf, bei dem jede Aufgabe gelöst wird – vom Titel bis zur Rettung."""
+    """Ein Durchlauf, bei dem jede Aufgabe gelöst wird – vom Titel bis zur Rettung.
+
+    Die Schrittgrenze ist grosszügig: Seit ein Level seine Restzeit mit
+    Übungen füllt, sind es je Level bis zu achtzehn davon.
+    """
     _bis_zur_uebung(fenster)
-    for _ in range(60):
+    for _ in range(300):
         screen = fenster.aktueller_screen
         if isinstance(screen, abschluss.Abschluss):
             break
@@ -786,7 +790,6 @@ def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, 
             uhr.weiter(60)
             _loesen(fenster)
     assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
-    assert fenster.aktueller_screen.hinweis == ""                # kein Level endete am Timer
     assert fenster.durchlauf.spielstand.ist_durchgespielt
     assert fenster.kopfzeile == ("Die Rettung", "")
 
@@ -799,15 +802,21 @@ def test_der_ganze_weg_laesst_sich_bis_zum_abschluss_durchklicken(fenster, uhr, 
                                  (2, ["verfolger"]),
                                  (3, ["standort", "bob_zweite_antwort"])):
         im_level = [z for z in zeilen if z["level"] == str(nummer)]
-        assert [z["kennung"] for z in im_level][-len(funksprueche):] == funksprueche, (
-            f"Level {nummer}: erst die Übungen, dann die Funksprüche."
+        # Erst die Pflichtübungen, dann die Funksprüche in ihrer Reihenfolge –
+        # und danach füllen weitere Übungen die Restzeit des Levels.
+        assert [z["kennung"] for z in im_level if z["quelle"] == "funkspruch"] == funksprueche, (
+            f"Level {nummer}: die Funksprüche in der Reihenfolge der Geschichte."
         )
         uebungen = [z for z in im_level if z["quelle"] == "uebung"]
         assert len(uebungen) >= 2, f"Level {nummer}: mindestens die zwei Pflichtübungen."
         assert len({z["kennung"] for z in uebungen}) == len(uebungen), "Keine Übung doppelt."
-    assert {z["levelende"] for z in zeilen} == {"vorzeitig"}
-    assert {z["geloest"] for z in zeilen} == {"ja"}
-    assert {z["abgebrochen"] for z in zeilen} == {"nein"}
+    # Ein Level endet entweder am Timer (dann steht die Übung, die dabei lief,
+    # als abgebrochen im Log) oder vorzeitig, wenn ihm die eigenen Texte
+    # ausgehen. Untätig gewartet hat in beiden Fällen niemand.
+    assert {z["levelende"] for z in zeilen} <= {"vorzeitig", "zeitablauf"}
+    for zeile in zeilen:
+        assert zeile["geloest"] == "ja" or zeile["abgebrochen"] == "ja"
+    assert len([z for z in zeilen if z["abgebrochen"] == "ja"]) <= 3, "höchstens eine je Level"
     assert [p.name for p in tmp_path.iterdir()] == [fenster.durchlauf.protokoll.dateiname]
 
     _klick(fenster, "Warten")                                  # die Augen fallen zu …

@@ -1,7 +1,7 @@
 """Die Übungstexte aus dem Handbuch (Arbeitsplan 2.2).
 
 Quelle ist ``dokumentation/Handbuchtexte.md``. Es gibt **einen** Pool mit
-achtzehn Sätzen für alle drei Level. Aus ihm zieht der Aufgaben-Generator (Phase 3) –
+vierundfünfzig Sätzen für alle drei Level. Aus ihm zieht der Aufgaben-Generator (Phase 3) –
 dadurch bekommen nicht alle dieselbe Aufgabe, und es lässt sich nicht abschauen.
 
 Diese Datei ist die **einzige** Stelle im Code, an der die Übungstexte stehen.
@@ -31,11 +31,19 @@ sind ähnlich lang – 10 bis 14 Buchstaben. Die ersten zehn sind genau die Sät
 der früheren Listen, die in diesem Bereich lagen. Jeder hat Wortgrenzen, damit
 die Regeln 3 und 7 der Textkonvention im Spiel sichtbar werden.
 
-Später kamen acht dazu. Seit die Zusatzaufgaben nach der Restzeit kommen und
-nicht mehr nach dem Tempo (:mod:`game.zusatzaufgaben`), übt man in einem Level
-bis zu sechsmal. Mit zehn Texten bekäme jedes Level nur drei bis vier eigene –
-ab der vierten Übung hätte sich etwas wiederholt. Mit achtzehn sind es genau
-sechs je Level: zwei Pflichtübungen und vier Zusatzaufgaben, alle verschieden.
+Der Pool ist zweimal gewachsen, und beide Male aus demselben Grund: Es gingen
+die Texte aus, bevor die Zeit um war. Seit die Zusatzaufgaben nach der
+Restzeit kommen und nicht mehr nach dem Tempo (:mod:`game.zusatzaufgaben`),
+übt man in einem Level so lange, wie sein Zeitfenster trägt. Mit zehn Texten
+bekam ein Level nur drei bis vier eigene, mit achtzehn genau sechs – und sechs
+Übungen plus die Funksprüche sind im geschätzten Tempo nach gut einem Drittel
+des Fensters erledigt. Danach endete das Level "vorzeitig", während die
+Kontrollgruppe weiterarbeitete; gemessen worden wäre dann nicht die Methode,
+sondern wie schnell dem Spiel die Aufgaben ausgehen.
+
+Jetzt sind es vierundfünfzig, also **achtzehn je Level**: zwei Pflichtübungen
+und bis zu sechzehn Zusatzaufgaben, alle verschieden. Das trägt auch ein Kind,
+das zügig rechnet, bis zum Ende seines Zeitfensters.
 
 Weil derselbe Satz so in mehreren Leveln vorkommen kann, verteilt der
 Generator den Pool auf die Level (siehe :mod:`game.generator`): Wer einen Satz
@@ -66,6 +74,42 @@ UEBUNGSTEXTE = (
     "NIMM DIE KARTE",
     "SPUREN IM SAND",
     "HALT DICH BEREIT",
+    "LAGER IST SICHER",
+    "WIR SIND ZU ZWEIT",
+    "HIMMEL IST KLAR",
+    "MOTOR IST HIN",
+    "SUCHE DEN WEG",
+    "BRING DAS SEIL",
+    "MOND STEHT HOCH",
+    "KEIN SIGNAL HIER",
+    "WIND WIRD STARK",
+    "NACHT IST LANG",
+    "WASSER IST KNAPP",
+    "FOLGE DEN SPUREN",
+    "FUNK BLEIBT AN",
+    "WIR HABEN GLUECK",
+    "STEINE AM WEG",
+    "DAS ZELT STEHT",
+    "KARTE IST ALT",
+    "ZWEI TAGE ZEIT",
+    "HITZE IST HART",
+    "BRAUCHEN HILFE",
+    "DER WEG IST WEIT",
+    "BOB MELDET SICH",
+    "NIEMAND FOLGT",
+    "TREFFEN AM WRACK",
+    "LICHT IM NORDEN",
+    "WIR GEHEN LOS",
+    "DAS FUNKGERAET",
+    "SCHATTEN AM FELS",
+    "DIESE NACHT NOCH",
+    "RUHIG UND LEISE",
+    "ALLES GUT HIER",
+    "DER TANK IST LEER",
+    "KOMM ZUM LAGER",
+    "WIR WARTEN HIER",
+    "SONNE GEHT AUF",
+    "PASS GUT AUF DICH",
 )
 
 

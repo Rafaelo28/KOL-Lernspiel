@@ -88,7 +88,7 @@ python3 -m venv .venv
 Mitgeprüft werden auch die Doctests in `crypto/`, in denen die
 durchgerechneten Beispiele des Handbuchs stehen (`HUND` + Schlüssel 3 →
 `KXQG` und so weiter). Ein weiterer Test liest `dokumentation/Handbuchtexte.md`
-ein und vergleicht die 18 Übungssätze mit denen im Code – wer eine
+ein und vergleicht die 54 Übungssätze mit denen im Code – wer eine
 Handbuchseite ändert, sieht am roten Test sofort, wo Text und Code
 auseinanderlaufen.
 

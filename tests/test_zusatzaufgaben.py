@@ -405,9 +405,18 @@ def test_die_restzeit_richtet_sich_nach_dem_laengsten_text_nicht_nach_dem_letzte
     assert not zusatz.ist_faellig(lauf, knapp, offene_funksprueche=offen)
 
 
-def test_die_obergrenze_ist_gesetzt_und_klein():
-    """Jedes Level hat nur seinen Abschnitt des Pools – danach wiederholen sich die Texte."""
-    assert 1 <= zusatz.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL <= 5
+def test_die_obergrenze_passt_zum_abschnitt_des_pools():
+    """Jedes Level hat nur seinen Abschnitt des Pools – danach wiederholen sich die Texte.
+
+    Die Grenze darf also nicht grösser sein als "Abschnitt minus zwei
+    Pflichtübungen", und kleiner sollte sie auch nicht sein: Sonst läuft das
+    Level leer, bevor sein Zeitfenster um ist.
+    """
+    from content import uebungen
+    from game.levelablauf import BASIS_UEBUNGEN_JE_LEVEL
+
+    je_level = len(uebungen.UEBUNGSTEXTE) // 3
+    assert zusatz.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL == je_level - BASIS_UEBUNGEN_JE_LEVEL
 
 
 def test_die_tempogrenzen_umschliessen_die_eins():

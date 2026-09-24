@@ -47,13 +47,13 @@ def _uebungslisten_aus_dem_handbuch():
 # 1. Aufbau des Pools
 # ───────────────────────────────────────────────────────────────────────────
 
-def test_der_pool_hat_achtzehn_texte():
+def test_der_pool_hat_vierundfuenfzig_texte():
     """Das Handbuch verspricht "18 Stück – einer wird zufällig ausgewählt".
 
-    Sechs je Level: zwei Pflichtübungen und vier Zusatzaufgaben, alle
+    Achtzehn je Level: zwei Pflichtübungen und bis zu sechzehn Zusatzaufgaben, alle
     verschieden (siehe game/zusatzaufgaben.py).
     """
-    assert len(POOL) == 18, f"Der Pool hat {len(POOL)} statt 18 Texte."
+    assert len(POOL) == 54, f"Der Pool hat {len(POOL)} statt 54 Texte."
 
 
 def test_kein_text_kommt_doppelt_vor():
@@ -162,11 +162,11 @@ def test_jeder_text_laeuft_durch_alle_drei_verfahren_und_zurueck(text):
 # 4. Der Abgleich mit der Quelle
 # ───────────────────────────────────────────────────────────────────────────
 
-def test_das_handbuch_enthaelt_genau_eine_uebungsliste_mit_achtzehn_eintraegen():
+def test_das_handbuch_enthaelt_genau_eine_uebungsliste_mit_vierundfuenfzig_eintraegen():
     """Eine für alle drei Seiten – und nicht leer, sonst würde der folgende Vergleich trivial grün."""
     listen = _uebungslisten_aus_dem_handbuch()
     assert len(listen) == 1, f"Erwartet eine Übungsliste, gefunden {len(listen)}."
-    assert len(listen[0]) == 18, f"Die Übungsliste hat {len(listen[0])} statt 18 Einträge."
+    assert len(listen[0]) == 54, f"Die Übungsliste hat {len(listen[0])} statt 54 Einträge."
 
 
 def test_der_pool_stimmt_woertlich_mit_dem_handbuch_ueberein():

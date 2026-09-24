@@ -282,17 +282,23 @@ def test_ohne_laufendes_level_passiert_beim_pruefen_nichts():
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_zusatzaufgaben_verlaengern_das_fenster_nicht():
+    """Jede Zusatzaufgabe geht von der Zeit ab, keine kommt obendrauf.
+
+    Gerechnet wird mit so vielen, wie sicher ins Fenster passen – die
+    Obergrenze je Level reicht inzwischen weiter als das Zeitfenster.
+    """
     from game.zusatzaufgaben import HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL as GRENZE
 
     uhr = Uhr()
     stand = _stand(uhr)
     stand.starte_level(1)
-    for _ in range(GRENZE):
+    anzahl = min(GRENZE, int(DAUER_JE_LEVEL_SEKUNDEN[1] // 60) - 1)
+    for _ in range(anzahl):
         aufgabe = stand.naechste_uebung(zusatzaufgabe=True)
         stand.versuchen(aufgabe.loesung)
         stand.aufgabe_abschliessen()
         uhr.weiter(60)
-    assert stand.verbleibende_sekunden == DAUER_JE_LEVEL_SEKUNDEN[1] - GRENZE * 60
+    assert stand.verbleibende_sekunden == DAUER_JE_LEVEL_SEKUNDEN[1] - anzahl * 60
 
 
 def test_der_weiterrechnen_knopf_haelt_die_uhr_nicht_an():

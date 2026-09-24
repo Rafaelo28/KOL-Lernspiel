@@ -101,8 +101,8 @@ Beleg für die Prozessdokumentation.*
   Level mit denselben Sätzen (`UEBUNGSTEXTE`), alle 10 bis 14 Buchstaben
   lang – übernommen aus den früheren Listen. `Handbuchtexte.md` führt sie als
   eine Liste für alle drei Seiten. **Nachtrag aus Phase 7:** Der Pool ist auf
-  achtzehn Sätze gewachsen, damit jedes Level genug eigene Texte für seine
-  zwei Pflichtübungen und alle Zusatzaufgaben hat (siehe 5.4)
+  vierundfünfzig Sätze gewachsen, damit jedes Level genug eigene Texte für
+  seine zwei Pflichtübungen und alle Zusatzaufgaben hat (siehe 5.4)
 
 ### 2.3 `content/story.py`
 - Intro-Text (Absturz), Bobs zwei Funksprüche, der abgefangene Feind-Funkspruch,
@@ -136,7 +136,7 @@ Schlüssel, erwartete Lösung, Level.
   verschlüsselt hat, in Level 2 womöglich zum Entschlüsseln wieder – und
   liesse sich aus dem Gedächtnis eintippen. Deshalb wird der Pool einmal je
   Durchlauf aus dem Seed gemischt und in drei gleich grosse Abschnitte
-  geteilt (bei achtzehn Sätzen je sechs); jedes Level beginnt an seinem
+  geteilt (bei vierundfünfzig Sätzen je achtzehn); jedes Level beginnt an seinem
   Abschnitt und geht der Reihe nach weiter. Alle Übungen eines Levels kommen
   in keinem anderen vor, zweimal hintereinander kommt kein Satz. Rekonstruieren lässt sich eine
   Übung weiterhin aus Seed und Kennung (`uebung_nachbauen`)
@@ -279,7 +279,7 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   eine versehentlich zu grosszügige Schwelle liefe sonst bis zum Zeitablauf
   durch, ohne dass die Person je zum Funkspruch käme. Die Grenze und die
   Abschnittsgrösse gehören zusammen: Zwei Pflichtübungen plus vier
-  Zusatzaufgaben sind sechs Texte je Level, also achtzehn im Pool
+  Zusatzaufgaben sind achtzehn Texte je Level, also vierundfünfzig im Pool
   (`tests/test_generator.py` prüft das)
 - Eine Zusatzaufgabe kurz vor Schluss wird nicht gestellt (Projektregel 1: sie
   würde nur unfertig abgebrochen)
@@ -1044,7 +1044,7 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 - [ ] Level-2-Zuordnungstrick (Tastatur) gegen den echten Testbogen (Anhang A2)
       gegenchecken – kollidiert er mit einer Testantwort?
 - [ ] **Übungssätze der Kontrollgruppe:** Das Spiel übt in allen drei Leveln
-      mit denselben achtzehn Sätzen (10–14 Buchstaben, `Handbuchtexte.md`). Die
+      mit denselben vierundfünfzig Sätzen (10–14 Buchstaben, `Handbuchtexte.md`). Die
       Papieraufgaben der Frontalunterrichts-Gruppe sollten aus derselben Liste
       kommen – sonst unterscheiden sich die Gruppen auch in der Textlänge.
 - [ ] **Übungsumfang gegen Anhang A4 abgleichen:** Die Spielgruppe rechnet pro

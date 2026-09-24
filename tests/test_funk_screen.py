@@ -82,7 +82,9 @@ def _zum_funkgeraet(fenster, level=1):
     Seit Phase 7 überspringt kein Knopf mehr ein Level: Der Weg dorthin führt
     über die Aufgaben, also werden sie hier gelöst – Übungen wie Funksprüche.
     Die Uhr steht dabei still, deshalb gilt jede Übung als schnell gelöst und
-    es kommen die Zusatzaufgaben des Levels dazu.
+    es kommen alle Zusatzaufgaben des Levels dazu: achtzehn Übungen, bis der
+    Abschnitt des Pools aufgebraucht ist. Die Schrittgrenze unten ist dafür
+    grosszügig gewählt – sie soll nur eine Endlosschleife abfangen.
     """
     fenster.aktueller_screen._feld.insert(0, "1-12")
     fenster.aktueller_screen.starten()
@@ -90,7 +92,7 @@ def _zum_funkgeraet(fenster, level=1):
     fenster.aktueller_screen.bestaetigen()
     for _ in story.INTRO.absaetze:
         fenster.aktueller_screen.weiter()
-    for _ in range(40):
+    for _ in range(200):
         screen = fenster.aktueller_screen
         if isinstance(screen, funk.Funk):
             if screen.funkspruch.level == level:
@@ -431,6 +433,38 @@ def test_nachschlagen_und_zurueck_zum_selben_funkspruch(fenster, uhr):
     assert zurueck.eingetippt                                  # kein zweites Hereinkommen
     assert zurueck.eingabe == "JA WI"
     assert fenster.durchlauf.spielstand.aktuelle_aufgabe is aufgabe
+
+
+def test_der_hinweis_ueberlebt_das_nachschlagen(fenster):
+    """Beim abgefangenen Funkspruch steht der Satz zur Häufigkeitsanalyse über dem Gerät.
+
+    Genau dort wird am ehesten nachgeschlagen (die Geheimtabelle steht im
+    Handbuch) – und genau dort verschwand der Satz beim Zurückkommen, weil
+    der neue Screen ohne ihn gebaut wurde.
+    """
+    hinweis = " ".join(story.HINWEIS_HAEUFIGKEITSANALYSE.absaetze)
+    screen = _funkspruch(fenster, 2, "verfolger")
+    screen.anzeige_vervollstaendigen()
+    assert screen.erzaehlung == hinweis
+    screen._nachschlagen()
+    fenster.aktueller_screen.weiter()
+    zurueck = fenster.aktueller_screen
+    zurueck.anzeige_vervollstaendigen()
+    assert zurueck.hinweis == hinweis
+    assert zurueck.erzaehlung == hinweis
+
+
+def test_auch_beim_mitlesen_steht_der_hinweis_da(fenster):
+    """Wer den abgefangenen Funkspruch nur nachliest, hat denselben langen Geheimtext vor sich.
+
+    Der Satz gehört zu diesem Bild (Arbeitsplan 7.2) – wer aus der Zeit
+    lief, bekam ihn vorher nie zu sehen.
+    """
+    fenster.starte_durchlauf(FIGUR, pseudonym="1-12")
+    ablauf.funkspruch_nachlesen(fenster, story.FUNKSPRUCH_VERFOLGER, danach=lambda _fenster: None)
+    screen = fenster.aktueller_screen
+    assert screen.nur_lesen
+    assert screen.erzaehlung == " ".join(story.HINWEIS_HAEUFIGKEITSANALYSE.absaetze)
 
 
 def test_nach_dem_rest_zeigt_das_zurueckkehren_wieder_die_ganze_nachricht(fenster):

@@ -85,7 +85,7 @@ def _zur_uebung(fenster, level=1):
     fenster.aktueller_screen.bestaetigen()
     for _ in story.INTRO.absaetze:
         fenster.aktueller_screen.weiter()
-    for _ in range(40):
+    for _ in range(300):
         screen = fenster.aktueller_screen
         if isinstance(screen, uebung.Uebung) and screen.aufgabe.level == level:
             return screen
