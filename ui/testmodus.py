@@ -404,6 +404,12 @@ class Testleiste(tk.Frame):
         if durchlauf is None or durchlauf.spielstand.aktuelles_level is None:
             self.melden("Es läuft kein Level.")
             return
+        if not durchlauf.spielstand.zeitfenster_laeuft:
+            # Zwischen zwei Leveln wird gelesen; die Uhr des neuen Levels
+            # beginnt erst mit seiner Handbuchseite. Vorstellen brächte hier
+            # nichts – die Meldung sagt das, statt Erfolg zu behaupten.
+            self.melden("Hier läuft noch keine Uhr – erst die Handbuchseite öffnen.")
+            return
         level = durchlauf.spielstand.aktuelles_level
         self.uhr.vorstellen(durchlauf.spielstand.verbleibende_sekunden + 1)
         durchlauf.takt()

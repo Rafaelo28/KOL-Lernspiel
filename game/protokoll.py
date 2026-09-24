@@ -35,6 +35,13 @@ Zeilen, bei denen Vorsicht geboten ist
 * ``lineal_klicks`` zählt, wie oft jemand beim Lösen das Lineal im
   Vigenère-Quadrat bewegt hat (nur Level 3, sonst 0). Eine Zeit mit Lineal
   ist nicht ohne Weiteres mit einer ohne vergleichbar.
+* ``versuche_ohne_fortschritt`` ist die **Summe** über die ganze Aufgabe:
+  wie viele der falschen Eingaben nichts gewonnen haben. Nicht die Strähne
+  am Ende – die entscheidet zwar über die Lösungsanzeige, stünde im Log aber
+  nur dafür, wie es zuletzt lief. Die erste falsche Eingabe zählt immer mit:
+  Sie kann nichts verbessern, weil es noch nichts zu verbessern gibt.
+  "Acht Eingaben, eine ohne Fortschritt" ist damit etwas ganz anderes als
+  "drei Eingaben, alle drei ohne Fortschritt" (CLAUDE.md, Regel 2).
 * Für alles, was mit Tempo zu tun hat, ``gerechnete_buchstaben`` nehmen,
   nicht ``laenge_in_buchstaben``. Die beiden unterscheiden sich nur, wenn
   jemand bei einem Funkspruch mit Teilaufgabe von sich aus die ganze

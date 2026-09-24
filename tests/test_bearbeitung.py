@@ -579,11 +579,11 @@ def test_ein_besserer_versuch_zaehlt_nicht_gegen_das_kontingent():
     aufgabe = _uebung()
     lauf = Bearbeitung(aufgabe)
     lauf.versuchen("AAAA")             # 4 Fehler gegen KXQG
-    assert lauf.versuche_ohne_fortschritt == 1
+    assert lauf.straehne_ohne_fortschritt == 1
     ergebnis = lauf.versuchen("KAAA")  # 4 -> 3 Fehler
     assert ergebnis.fortschritt
     assert ergebnis.hinweis_fortschritt == HINWEIS_FORTSCHRITT
-    assert lauf.versuche_ohne_fortschritt == 0
+    assert lauf.straehne_ohne_fortschritt == 0
     assert lauf.verbleibende_versuche == HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT
 
 
@@ -592,7 +592,7 @@ def test_der_erste_versuch_ist_noch_kein_fortschritt():
     lauf = Bearbeitung(_uebung())
     ergebnis = lauf.versuchen("AAAA")
     assert not ergebnis.fortschritt
-    assert lauf.versuche_ohne_fortschritt == 1
+    assert lauf.straehne_ohne_fortschritt == 1
     assert lauf.beste_fehlerzahl == 4
 
 
@@ -602,7 +602,7 @@ def test_gleich_gut_ist_kein_fortschritt():
     lauf.versuchen("AAAA")
     ergebnis = lauf.versuchen("BBBB")
     assert not ergebnis.fortschritt
-    assert lauf.versuche_ohne_fortschritt == 2
+    assert lauf.straehne_ohne_fortschritt == 2
 
 
 def test_schlechter_werden_ist_kein_fortschritt():
@@ -610,7 +610,7 @@ def test_schlechter_werden_ist_kein_fortschritt():
     lauf.versuchen("KXQA")             # 1 Fehler
     ergebnis = lauf.versuchen("AAAA")  # 4 Fehler
     assert not ergebnis.fortschritt
-    assert lauf.versuche_ohne_fortschritt == 2
+    assert lauf.straehne_ohne_fortschritt == 2
     assert lauf.beste_fehlerzahl == 1
 
 
@@ -633,16 +633,16 @@ def test_drei_versuche_ohne_fortschritt_loesen_weiterhin_auf():
     for nummer in range(HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT):
         ergebnis = lauf.versuchen("AAAA")
     assert ergebnis.loesung_angezeigt
-    assert lauf.versuche_ohne_fortschritt == HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT
+    assert lauf.straehne_ohne_fortschritt == HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT
 
 
 def test_nach_fortschritt_beginnt_die_straehne_von_vorn():
     lauf = Bearbeitung(_uebung())
     lauf.versuchen("AAAA")   # 4 Fehler
     lauf.versuchen("AAAA")   # nichts gewonnen
-    assert lauf.versuche_ohne_fortschritt == 2
+    assert lauf.straehne_ohne_fortschritt == 2
     lauf.versuchen("KAAA")   # 3 Fehler -> Fortschritt
-    assert lauf.versuche_ohne_fortschritt == 0
+    assert lauf.straehne_ohne_fortschritt == 0
     lauf.versuchen("KAAA")
     lauf.versuchen("KAAA")
     assert not lauf.loesung_angezeigt
@@ -672,12 +672,30 @@ def test_das_log_bekommt_beide_zahlen():
     """"Acht Versuche, keiner ohne Fortschritt" ist etwas anderes als
     "drei Versuche, alle ohne Fortschritt" – beides gehört ins Log."""
     lauf = Bearbeitung(_uebung())
-    lauf.versuchen("AAAA")
+    lauf.versuchen("AAAA")             # die erste Eingabe verbessert nichts
     lauf.versuchen("KAAA")
     lauf.versuchen("KXAA")
     assert lauf.versuche == 3
-    assert lauf.versuche_ohne_fortschritt == 0
+    assert lauf.versuche_ohne_fortschritt == 1
+    assert lauf.straehne_ohne_fortschritt == 0
     assert not lauf.loesung_angezeigt
+
+
+def test_im_log_steht_die_summe_ohne_fortschritt_nicht_die_straehne():
+    """Sonst sagt das Log nur, wie es am Ende stand – nicht, wie oft jemand feststeckte.
+
+    CLAUDE.md, Regel 2 verlangt beide Zahlen: alle falschen Eingaben und
+    davon die ohne Fortschritt. Die Strähne setzt jeder Fortschritt zurück;
+    wer viermal eingibt und dreimal nichts gewinnt, stünde mit ihr im Log als
+    "einmal ohne Fortschritt".
+    """
+    lauf = Bearbeitung(_uebung())
+    for eingabe in ("AAAA", "BBBB", "KAAA", "KBBB"):
+        lauf.versuchen(eingabe)
+    assert lauf.versuche == 4
+    assert lauf.versuche_ohne_fortschritt == 3, "erste, zweite und vierte Eingabe brachten nichts"
+    assert lauf.straehne_ohne_fortschritt == 1, "nach dem Fortschritt nur noch eine"
+    assert not lauf.loesung_angezeigt, "die Strähne hat die Drei nie erreicht"
 
 
 def test_die_fehlerzahl_steht_im_ergebnis():
@@ -701,7 +719,7 @@ def test_eine_leere_eingabe_veraendert_den_fortschritt_nicht():
     for _ in range(5):
         lauf.versuchen("")
     assert lauf.beste_fehlerzahl == beste
-    assert lauf.versuche_ohne_fortschritt == 1
+    assert lauf.straehne_ohne_fortschritt == 1
 
 
 # ───────────────────────────────────────────────────────────────────────────

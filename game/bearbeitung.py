@@ -75,8 +75,10 @@ Wie beim Level-Zeitfenster kommt die Uhr von aussen und ist ``time.monotonic``
 Was für das Log herausfällt (Arbeitsplan 5.5)
 ─────────────────────────────────────────────
 :attr:`Bearbeitung.versuche` (alle falschen Eingaben),
-:attr:`Bearbeitung.versuche_ohne_fortschritt` (davon die, die gegen das
-Kontingent zählten), :attr:`Bearbeitung.loesung_angezeigt`,
+:attr:`Bearbeitung.versuche_ohne_fortschritt` (davon die, die nichts
+gebracht haben – die Summe über die ganze Aufgabe, nicht die Strähne am
+Ende; die steht in :attr:`Bearbeitung.straehne_ohne_fortschritt` und
+entscheidet über die Lösungsanzeige), :attr:`Bearbeitung.loesung_angezeigt`,
 :attr:`Bearbeitung.abgebrochen` (das Level endete mitten in der Aufgabe),
 :attr:`Bearbeitung.gerechnete_buchstaben` und
 :attr:`game.aufgabe.Aufgabe.laenge_in_buchstaben`.
@@ -185,8 +187,14 @@ class Bearbeitung:
     >>> lauf = Bearbeitung(b)
     >>> for eingabe in ("AAAA AAAA AAAAA", "MTOY AAAA AAAAA", "MTOY VOKR AAAAA"):
     ...     _ = lauf.versuchen(eingabe)
-    >>> lauf.versuche, lauf.versuche_ohne_fortschritt, lauf.loesung_angezeigt
-    (3, 0, False)
+    >>> lauf.straehne_ohne_fortschritt, lauf.loesung_angezeigt
+    (0, False)
+
+    Fürs Log zählt die Summe, nicht die Strähne. Die erste Eingabe ist darin
+    enthalten – sie verbessert nichts, weil es noch nichts zu verbessern gibt:
+
+    >>> lauf.versuche, lauf.versuche_ohne_fortschritt
+    (3, 1)
     """
 
     def __init__(self, aufgabe, zeitgeber=None):
@@ -206,6 +214,7 @@ class Bearbeitung:
         self._vollstaendig_geloest = False
         self._rest_freigegeben = False
         self._ohne_fortschritt = 0
+        self._ohne_fortschritt_gesamt = 0
         self._beste_fehlerzahl = None
         self._abgebrochen = False
         self._lineal_klicks = 0
@@ -219,10 +228,29 @@ class Bearbeitung:
 
     @property
     def versuche_ohne_fortschritt(self):
-        """Wie viele Versuche hintereinander nichts gebracht haben.
+        """Wie viele der falschen Eingaben **insgesamt** nichts gebracht haben – die Zahl fürs Log.
 
-        Diese Zahl entscheidet über die Lösungsanzeige, nicht
-        :attr:`versuche`. Jeder Fortschritt setzt sie auf null zurück.
+        CLAUDE.md, Regel 2 verlangt für das Log beide Zahlen: alle falschen
+        Eingaben (:attr:`versuche`) und davon die ohne Fortschritt. "Acht
+        Eingaben, keine ohne Fortschritt" ist etwas ganz anderes als "drei
+        Eingaben, alle ohne Fortschritt" – und das steht hier.
+
+        Die erste falsche Eingabe zählt mit: Sie verbessert nichts, weil es
+        noch nichts zu verbessern gibt, und für die 3-Versuche-Regel zählt
+        sie ebenso.
+
+        Nicht zu verwechseln mit :attr:`straehne_ohne_fortschritt`: Über die
+        Lösungsanzeige entscheidet die Strähne, nicht diese Summe.
+        """
+        return self._ohne_fortschritt_gesamt
+
+    @property
+    def straehne_ohne_fortschritt(self):
+        """Wie viele Versuche **hintereinander** nichts gebracht haben.
+
+        Diese Zahl entscheidet über die Lösungsanzeige (3-Versuche-Regel).
+        Jeder Fortschritt setzt sie auf null zurück; die Summe im Log bleibt
+        davon unberührt.
         """
         return self._ohne_fortschritt
 
@@ -435,9 +463,11 @@ class Bearbeitung:
             if self._beste_fehlerzahl is None or fehler < self._beste_fehlerzahl:
                 self._beste_fehlerzahl = fehler
             if fortschritt:
+                # Die Strähne beginnt von vorn; die Summe fürs Log bleibt.
                 self._ohne_fortschritt = 0
             else:
                 self._ohne_fortschritt += 1
+                self._ohne_fortschritt_gesamt += 1
                 if self._ohne_fortschritt >= HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT:
                     self._loesung_angezeigt = True
 

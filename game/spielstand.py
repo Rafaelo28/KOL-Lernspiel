@@ -529,12 +529,21 @@ class Spielstand:
         Die Oberfläche zeigt sie nach dem Levelwechsel zum Mitlesen (siehe
         :func:`ui.ablauf.nach_levelwechsel`): mit Lösung, ohne Eingabe, ohne
         Uhr. Die Geschichte soll nicht an der Uhr scheitern.
+
+        Der Abbruch wird eigens gefragt und nicht bloss über
+        :attr:`~game.bearbeitung.Bearbeitung.ist_abgeschlossen` erschlossen:
+        Eine Nachricht **ohne** Teilaufgabe gilt als abgeschlossen, sobald sie
+        beendet ist – und beendet ist sie auch, wenn der Timer sie abgebrochen
+        hat. Genau die zwei Funksprüche ohne Teilaufgabe (der erste Ruf und
+        Bobs zweite Antwort, das Ende der Geschichte) wären damit lautlos
+        verschwunden, obwohl niemand ihre Lösung je gesehen hat: Beim
+        Zeitablauf wird sofort umgeschaltet.
         """
         bearbeitungen = {b.aufgabe.kennung: b for b in self._erledigt}
         offen = []
         for funkspruch in _story.FUNKSPRUECHE_NACH_LEVEL.get(level, ()):
             bearbeitung = bearbeitungen.get(funkspruch.kennung)
-            if bearbeitung is None or not bearbeitung.ist_abgeschlossen:
+            if bearbeitung is None or bearbeitung.abgebrochen or not bearbeitung.ist_abgeschlossen:
                 offen.append(funkspruch)
         return tuple(offen)
 

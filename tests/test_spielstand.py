@@ -729,18 +729,25 @@ def test_zum_nachlesen_steht_jeder_funkspruch_den_niemand_ganz_gesehen_hat():
     )
 
 
-def test_ein_am_zeitablauf_abgebrochener_funkspruch_steht_zum_nachlesen():
-    """Angefangen heisst nicht gesehen: Wer abgeschnitten wird, kennt die Nachricht nicht."""
+@pytest.mark.parametrize("funkspruch", story.FUNKSPRUECHE, ids=lambda f: f.kennung)
+def test_ein_am_zeitablauf_abgebrochener_funkspruch_steht_zum_nachlesen(funkspruch):
+    """Angefangen heisst nicht gesehen: Wer abgeschnitten wird, kennt die Nachricht nicht.
+
+    Über **alle** Funksprüche, nicht nur über einen: Die beiden ohne
+    Teilaufgabe (der erste Ruf und Bobs zweite Antwort) galten sonst als
+    abgeschlossen, sobald der Timer sie beendet hatte – und verschwanden
+    lautlos aus der Geschichte.
+    """
     uhr = Uhr()
     stand = _stand_mit_uhr(uhr)
-    stand.starte_level(2)
-    stand.stelle_funkspruch(story.FUNKSPRUCH_VERFOLGER)
-    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[2])
+    stand.starte_level(funkspruch.level)
+    stand.stelle_funkspruch(funkspruch)
+    uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[funkspruch.level])
     stand.pruefe_zeitfenster()
     (bearbeitung,) = [b for b in stand.erledigte_aufgaben
-                      if b.aufgabe.kennung == story.FUNKSPRUCH_VERFOLGER.kennung]
+                      if b.aufgabe.kennung == funkspruch.kennung]
     assert bearbeitung.abgebrochen
-    assert stand.funksprueche_zum_nachlesen(2) == (story.FUNKSPRUCH_VERFOLGER,)
+    assert funkspruch in stand.funksprueche_zum_nachlesen(funkspruch.level)
 
 
 def test_ein_ganz_erledigter_funkspruch_steht_nicht_mehr_zum_nachlesen():

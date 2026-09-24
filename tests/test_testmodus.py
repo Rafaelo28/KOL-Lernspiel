@@ -248,6 +248,22 @@ def test_zeit_ablaufen_lassen_ueberspringt_am_ende_die_nacht(leiste, wurzel):
     assert screen.knopf_bereit
 
 
+def test_in_der_lesepause_sagt_die_leiste_dass_keine_uhr_laeuft(leiste):
+    """Vorher meldete der Knopf "Zeit abgelaufen" und tat nichts.
+
+    Zwischen zwei Leveln läuft keine Uhr – sie beginnt erst mit der
+    Handbuchseite. Wer sich auf die Erfolgsmeldung verlässt, prüft danach
+    einen Zustand, den es gar nicht gibt.
+    """
+    _ins_level(leiste, 1)
+    leiste.level_beenden()
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.aktuelles_level == 2 and not stand.zeitfenster_laeuft
+    leiste.zeit_ablaufen_lassen()
+    assert "keine Uhr" in leiste._hinweis.cget("text")
+    assert stand.aktuelles_level == 2, "und es wurde auch nichts weitergeschaltet"
+
+
 def test_ohne_laufendes_level_meldet_die_leiste_das(leiste):
     leiste.level_beenden()
     assert "kein Level" in leiste._hinweis.cget("text")
