@@ -896,9 +896,15 @@ Hinweis auf die Häufigkeitsanalyse → Story-Übergang ohne Bob
 - **Der Übergang zu Level 3** bekommt eine eigene Erzählszene am Ende von
   Level 2 (`ui/erzaehlszene.py` vor dem Nachtlager): Er ist der Wendepunkt der
   Geschichte, und über dem Handbuch von Level 3 hätte er zusammen mit dem
-  Einstieg nicht mehr ins Fenster gepasst. Er kommt nur, wenn der abgefangene
-  Funkspruch wirklich dran war – er spricht von ihm. Läuft die Zeit von
-  Level 2 ab, wird sofort gewechselt (Projektregel 1), und er entfällt
+  Einstieg nicht mehr ins Fenster gepasst. Er spricht vom abgefangenen
+  Funkspruch – und den hat bis dahin jeder gesehen: entweder selbst
+  entschlüsselt oder unmittelbar davor zum Mitlesen bekommen
+  (`ablauf.nach_levelwechsel`). Er kommt deshalb nach **jedem** Wechsel von
+  Level 2, auch nach einem Zeitablauf, und läuft in keinem Zeitfenster
+  (Regel 1, "Gemeint ist Arbeitszeit, nicht Lesezeit").
+  *(Ursprünglich entfiel er beim Zeitablauf, weil der Funkspruch dann nicht
+  dran gewesen war. Seit kein Funkspruch mehr verlorengeht, gibt es diesen
+  Fall nicht mehr.)*
 
 ### 7.3 Level 3 (Vigenère)
 Handbuch inkl. Quadrat → Übungen → Reflexionsfrage → Standort senden →

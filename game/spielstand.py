@@ -363,8 +363,18 @@ class Spielstand:
         :data:`LEVELENDE_VORZEITIG` oder – solange es läuft –
         :data:`LEVELENDE_LAEUFT`. ``None``, wenn es nie begann.
 
-        Für die Auswertung entscheidend: Wer vorzeitig fertig war, hatte mehr
-        Zeit, als er brauchte; wer am Timer endete, hätte mehr gebraucht.
+        **Für die Auswertung wichtig – die beiden Werte allein sagen wenig:**
+        ``zeitablauf`` heisst, dass die Uhr mitten in einer Aufgabe ablief.
+        ``vorzeitig`` heisst nur, dass sie das nicht tat. Seit Übungen die
+        Restzeit füllen, endet ein Level auch dann "vorzeitig", wenn bloss
+        weniger als die Mindestrestzeit übrig war und deshalb keine Aufgabe
+        mehr begonnen wurde – im geschätzten Tempo ist das der Normalfall,
+        mit 97 bis 100 Prozent verbrauchter Zeit.
+
+        Wie viel wirklich übrig blieb, steht deshalb nicht hier, sondern in
+        :meth:`level_sekunden`. Die beiden Spalten gehören in der Auswertung
+        zusammen: "vorzeitig nach 1476 von 1500 Sekunden" ist etwas ganz
+        anderes als "vorzeitig nach 742" (Arbeitsplan 8.1).
         """
         if level in self._levelzeiten:
             return self._levelzeiten[level][1]

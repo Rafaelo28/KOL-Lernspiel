@@ -354,7 +354,15 @@ class Testleiste(tk.Frame):
             self.melden("Dieser Funkspruch steht nur zum Mitlesen da.")
             return
         if screen.ist_beendet:
+            # Wartet der Knopf für den Rest, tut "Prüfen" nichts – dann erst
+            # den Rest auflösen. Das trifft jede Teilaufgabe, die von Hand
+            # entschieden wurde; ohne diesen Zweig wirkte der Knopf tot.
+            if getattr(screen, "restknopf_sichtbar", False):
+                screen.rest_freigeben()
+                self.melden("Rest aufgelöst.")
+                return
             screen.pruefen()          # der Knopf heisst jetzt "Weiter"
+            self.melden("Weiter.")
             return
         if isinstance(screen, funk.Funk):
             # Sonst tippt sich die Nachricht noch Zeichen für Zeichen ein.

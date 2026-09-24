@@ -193,6 +193,26 @@ def test_loesung_eintragen_drueckt_auch_den_knopf_fuer_den_rest(leiste):
     assert leiste.fenster.durchlauf.spielstand.aktuelle_bearbeitung.rest_freigegeben
 
 
+def test_loesung_eintragen_loest_auch_einen_von_hand_entschiedenen_rest_auf(leiste):
+    """Wer die Teilaufgabe selbst gerechnet hat, hängt sonst am wartenden Knopf fest.
+
+    "Prüfen" tut nichts, solange der Rest-Knopf dasteht – der Knopf der
+    Leiste wirkte damit tot, und gemeldet wurde auch nichts.
+    """
+    _ins_level(leiste, 1)
+    ablauf.funkgeraet_zeigen(leiste.fenster, story.FUNKSPRUCH_BOB_ERSTE_ANTWORT)
+    screen = leiste.fenster.aktueller_screen
+    screen.anzeige_vervollstaendigen()
+    screen._feld.delete(0, "end")
+    screen._feld.insert(0, screen.aufgabe.loesung)
+    screen.pruefen()                                  # von Hand gelöst
+    assert screen.restknopf_sichtbar
+    leiste.loesung_eintragen()
+    assert not screen.restknopf_sichtbar, "der Rest ist aufgelöst"
+    assert leiste.fenster.durchlauf.spielstand.aktuelle_bearbeitung.rest_freigegeben
+    assert "Rest" in leiste._hinweis.cget("text")
+
+
 def test_ohne_aufgabe_passiert_nichts_ausser_einer_meldung(leiste):
     """Auf dem Startbildschirm gibt es nichts zu lösen."""
     leiste.loesung_eintragen()
