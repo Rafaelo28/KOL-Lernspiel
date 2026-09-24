@@ -266,6 +266,61 @@ def test_ein_sprung_ins_level_schlaegt_dessen_handbuch_auf(leiste):
         assert leiste.fenster.durchlauf.spielstand.aktuelles_level == level
 
 
+def test_nach_einem_sprung_laeuft_die_uhr_des_levels(leiste):
+    """Sonst wäre im Sprungziel alles wirkungslos, was an der Zeit hängt.
+
+    Seit die Uhr erst mit der Handbuchseite startet, muss auch der Sprung
+    diesen Weg nehmen (``ui.ablauf.level_beginnen``) – sonst liefe im
+    Sprungziel kein Zeitfenster: "Zeit ablaufen lassen" täte nichts, die
+    Restzeit stünde ewig auf der vollen Dauer, und die Vorrang-Regel rechnete
+    mit Zeit, die niemand verbraucht.
+    """
+    for level in (1, 2, 3):
+        _ins_level(leiste, level)
+        stand = leiste.fenster.durchlauf.spielstand
+        assert stand.zeitfenster_laeuft, f"Level {level}"
+
+
+def test_zeit_ablaufen_lassen_wirkt_auch_nach_einem_sprung(leiste):
+    """Der Knopf muss halten, was die Anleitung verspricht – in jedem Level."""
+    _ins_level(leiste, 2)
+    leiste.zeit_ablaufen_lassen()
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.levelende(2) == LEVELENDE_ZEITABLAUF
+    assert stand.aktuelles_level == 3
+
+
+def test_ein_sprung_schliesst_eine_laufende_aufgabe_ab(leiste):
+    """Bliebe sie offen, liesse sich danach keine neue stellen – der Screen bliebe leer.
+
+    Der Spielstand lässt keine zweite Aufgabe zu, solange eine läuft
+    (``_verlange_freie_bahn``). Ein Sprung muss deshalb aufräumen, genau wie
+    es ein Levelwechsel tut.
+    """
+    screen = _zur_uebung(leiste)
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.aktuelle_aufgabe is not None
+    leiste.springen(_sprung("Intro: der Absturz"))
+    assert stand.aktuelle_aufgabe is None
+    assert stand.erledigte_aufgaben[-1].aufgabe.kennung == screen.aufgabe.kennung
+    assert stand.erledigte_aufgaben[-1].abgebrochen
+
+    szene = leiste.fenster.aktueller_screen
+    for _ in story.INTRO.absaetze:
+        szene.weiter()
+    weiter = leiste.fenster.aktueller_screen
+    assert isinstance(weiter, (uebung.Uebung, funk.Funk))
+    assert weiter.aufgabe is not None, "der Rückweg stellt wieder eine Aufgabe"
+
+
+def test_nach_dem_spielende_sagt_ein_levelsprung_dass_schluss_ist(leiste):
+    """Vorher wirkte der Menüeintrag wie ein toter Knopf: Abschluss ohne ein Wort."""
+    leiste.springen(_sprung("Abschluss: Nachtlager und Rettung"))
+    leiste.springen(_sprung("Level 1 – Caesar"))
+    assert "vorbei" in leiste._hinweis.cget("text")
+    assert isinstance(leiste.fenster.aktueller_screen, abschluss.Abschluss)
+
+
 def test_ein_sprung_beginnt_notfalls_selbst_einen_durchlauf(leiste):
     """Sonst müsste man für jede Stichprobe erst ID und Figur durchklicken."""
     assert leiste.fenster.durchlauf is None

@@ -35,8 +35,9 @@ ausserdem: **F11** Vollbild, **Esc** zurück.)
 
 ## Das Sprungmenü
 
-**Geschichte ansehen** – ändert nichts am Spielstand. Funksprüche stehen
-dort zum Mitlesen da: mit Lösung, ohne Eingabe, ohne Uhr, ohne Logzeile.
+**Geschichte ansehen** – Level und Uhr bleiben, wo sie sind. Funksprüche
+stehen dort zum Mitlesen da: mit Lösung, ohne Eingabe, ohne Uhr, ohne
+Logzeile.
 
 * Intro: der Absturz
 * Level 1: der erste Ruf · Bobs erste Antwort
@@ -53,7 +54,11 @@ von dort normal weiterspielen kannst.
 Läuft noch kein Durchlauf, beginnt ein Sprung selbst einen (Figur Vic
 Moreno, ID `9-99`) – ID und Figur musst du also nicht jedes Mal
 durchklicken. **Rückwärts** geht es nicht: Von Level 2 nach Level 1 kommt
-man nur, indem man das Spiel neu startet.
+man nur, indem man das Spiel neu startet; nach dem Abschluss ebenso.
+
+Läuft gerade eine Aufgabe, wird sie vor dem Sprung abgeschlossen und steht
+danach als abgebrochen im Testlog. Das muss so sein: Bliebe sie offen,
+liesse sich beim Zurückkommen keine neue Aufgabe stellen.
 
 ---
 

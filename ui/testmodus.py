@@ -121,16 +121,25 @@ class Uhr:
 
 
 def _durchlauf_sicherstellen(fenster):
-    """Sorgt dafür, dass ein Durchlauf mit laufendem Level da ist.
+    """Sorgt dafür, dass ein Durchlauf mit laufendem Level da ist – und die Bahn frei ist.
 
-    Im Spiel entsteht er aus ID und Figurwahl. Für eine Stichprobe wäre das
-    jedes Mal derselbe Weg über zwei Screens – deshalb übernimmt der
+    Im Spiel entsteht der Durchlauf aus ID und Figurwahl. Für eine Stichprobe
+    wäre das jedes Mal derselbe Weg über zwei Screens – deshalb übernimmt der
     Testmodus das hier mit fester Figur und fester ID.
+
+    Läuft gerade eine Aufgabe, wird sie **abgeschlossen**, bevor irgendwohin
+    gesprungen wird – genau das tut auch ``naechstes_level()``. Bliebe sie
+    offen, stünde sie beim Zurückkommen noch im Spielstand: Die nächste
+    Aufgabe liesse sich nicht stellen (``_verlange_freie_bahn``), und der
+    Screen bliebe leer zurück. Im Log steht sie danach als abgebrochen –
+    Testläufe schreiben ohnehin in ihren eigenen Ordner.
     """
     if fenster.durchlauf is None:
         fenster.starte_durchlauf(TEST_FIGUR, pseudonym=PSEUDONYM_PRAEFIX + TEST_ID)
     durchlauf = fenster.durchlauf
     stand = durchlauf.spielstand
+    if stand.aktuelle_aufgabe is not None:
+        durchlauf.aufgabe_abschliessen()
     if stand.aktuelles_level is None and not stand.ist_durchgespielt:
         durchlauf.starte_level()
     return durchlauf
@@ -150,7 +159,11 @@ def _zurueck(fenster):
 
 
 def _szene(erzaehltext, titel, **optionen):
-    """Baut den Sprung zu einer Erzählszene – sie ändert am Spielstand nichts."""
+    """Baut den Sprung zu einer Erzählszene – am Level und an der Uhr ändert sie nichts.
+
+    Eine Aufgabe, die gerade läuft, wird davor abgeschlossen
+    (:func:`_durchlauf_sicherstellen`).
+    """
 
     def springen(fenster):
         _durchlauf_sicherstellen(fenster)
@@ -190,18 +203,23 @@ def _bis_level(fenster, ziel):
     Anders als der Knopf "Level beenden" läuft dabei nichts von der
     Geschichte ab: Hier zählt das Ziel, nicht der Weg dorthin. Zurück geht es
     nicht – ein Spielstand kennt nur vorwärts; dafür das Spiel neu starten.
+
+    Aufgeschlagen wird über :func:`ui.ablauf.level_beginnen`, nicht direkt
+    über die Handbuchseite: Damit startet die Uhr des Levels, so wie im Spiel.
+    Sonst liefe im Sprungziel kein Zeitfenster, und alles, was daran hängt –
+    "Zeit ablaufen lassen", die Restzeit in der Leiste, die Vorrang-Regel –,
+    wäre im Testmodus wirkungslos.
     """
     durchlauf = _durchlauf_sicherstellen(fenster)
     stand = durchlauf.spielstand
+    if stand.ist_durchgespielt:
+        return "Das Spiel ist vorbei – für einen neuen Durchlauf das Spiel neu starten."
     if stand.aktuelles_level is not None and stand.aktuelles_level > ziel:
         return f"Zurück zu Level {ziel} geht nicht – dafür das Spiel neu starten."
     while stand.aktuelles_level is not None and stand.aktuelles_level < ziel:
         stand.naechstes_level()
     durchlauf.sichern()
-    if stand.aktuelles_level is None:
-        ablauf.abschluss_zeigen(fenster)
-    else:
-        ablauf.handbuch_aufschlagen(fenster, stand.aktuelles_level)
+    ablauf.level_beginnen(fenster, stand.aktuelles_level)
     return ""
 
 
@@ -224,7 +242,7 @@ def _abschluss(fenster):
 #: ``None`` ist eine Zwischenüberschrift, eine Aufschrift von ``None`` ein
 #: Trennstrich.
 SPRUNGZIELE = (
-    ("Geschichte ansehen (ändert nichts)", None),
+    ("Geschichte ansehen (Level und Uhr bleiben)", None),
     ("Intro: der Absturz", _szene(story.INTRO, ablauf.TITEL_INTRO,
                                   szene=erzaehlszene.SZENE_WRACK,
                                   letzter_knopf=ablauf.KNOPF_HANDBUCH)),
