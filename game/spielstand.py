@@ -36,8 +36,20 @@ bearbeitet" und "Zeit war um" unterscheiden.
 
 Das Zeitfenster (Aufgabe 5.2)
 ─────────────────────────────
-Mit jedem :meth:`starte_level` beginnt ein :class:`game.zeitfenster.Zeitfenster`
-über 15, 20 oder 25 Minuten. Es hält nie an – auch nicht während einer
+Jedes Level hat ein :class:`game.zeitfenster.Zeitfenster` über 15, 20 oder 25
+Minuten. Das von Level 1 beginnt mit :meth:`starte_level`; die von Level 2 und
+3 beginnen erst mit :meth:`starte_zeitfenster`, das die Oberfläche auf der
+Handbuchseite des neuen Levels aufruft (:func:`ui.ablauf.level_beginnen`).
+
+**Zwischen zwei Leveln läuft gar kein Fenster.** :meth:`naechstes_level`
+schaltet das Level weiter und lässt die Uhr stehen; dort wird gelesen, was
+die Zeit abgeschnitten hat (verpasste Funksprüche, der Übergangstext). Lesen
+ist keine Arbeitszeit, und die Fenster bleiben trotzdem exakt 15/20/25
+Minuten – siehe CLAUDE.md, Regel 1, "Gemeint ist Arbeitszeit, nicht
+Lesezeit". Wer eine Aufgabe stellt, startet die Uhr notfalls selbst; gerechnet
+wird also nie ausserhalb eines Zeitfensters.
+
+Innerhalb eines Levels hält das Fenster nie an – auch nicht während einer
 Zusatzaufgabe und nicht während des Weiterrechnen-Knopfes.
 
 Ablaufen allein bewirkt nichts: Die Oberfläche muss regelmässig

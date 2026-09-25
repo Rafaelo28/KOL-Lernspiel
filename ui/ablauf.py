@@ -207,10 +207,16 @@ def nach_levelwechsel(fenster, wechsel):
     zum Mitlesen: mit Lösung, ohne Eingabe, ohne Uhr. Das kostet Lesezeit
     statt Rechenzeit und verlängert kein Zeitfenster.
 
-    **Dann der Übergang.** Er steht nach dem Wechsel und damit im Zeitfenster
-    des neuen Levels. Vor dem Wechsel gezeigt, liefe er noch in der Zeit des
-    alten: Wer ihn langsam liest, hätte sein Level von "vorzeitig" auf
-    "zeitablauf" gekippt, obwohl alle Aufgaben erledigt waren.
+    **Dann der Übergang.** Er steht nach dem Wechsel und läuft damit in
+    **keinem** Zeitfenster: Die Zeit des alten Levels ist beim Wechsel
+    festgeschrieben, die des neuen beginnt erst mit seiner Handbuchseite
+    (:func:`level_beginnen`). Wer langsam liest, verliert dadurch keine
+    Rechenzeit – weder hier noch bei den Funksprüchen davor.
+
+    Vor dem Wechsel gezeigt wäre er dagegen Zeit des alten Levels gewesen:
+    Wer ihn langsam liest, hätte sein Level von "vorzeitig" auf "zeitablauf"
+    gekippt, obwohl alle Aufgaben erledigt waren. Deshalb steht er hier und
+    nicht in :func:`weiter_im_level`.
     """
     danach = _nach_dem_wechsel(fenster, wechsel)
     verpasst = fenster.durchlauf.spielstand.funksprueche_zum_nachlesen(wechsel.altes_level)
