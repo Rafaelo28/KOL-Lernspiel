@@ -328,11 +328,19 @@ class Hauptfenster:
             return
         self._titelanzeige.config(text=self._screen.titel if self._screen else "")
         stand = self.durchlauf.spielstand if self.durchlauf else None
-        if stand is None or stand.aktuelles_level is None:
+        # Kennt der Screen sein Level, gilt seins: Nach einem Levelwechsel
+        # stehen die verpassten Funksprüche des **alten** Levels noch zum
+        # Mitlesen da, während der Spielstand schon im neuen ist. Sonst
+        # stünde über einer Caesar-Nachricht "Level 2 · monoalphabetische
+        # Substitution", und daneben auf dem Glas "Caesar · Schlüssel 3".
+        level = self._screen.level if self._screen is not None else None
+        if level is None and stand is not None:
+            level = stand.aktuelles_level
+        if level is None:
             leveltext = ""
         else:
-            bezeichnung = _verfahren.BEZEICHNUNG[stand.aktuelles_verfahren]
-            leveltext = f"Level {stand.aktuelles_level} · {bezeichnung}"
+            bezeichnung = _verfahren.BEZEICHNUNG[_verfahren.VERFAHREN_NACH_LEVEL[level]]
+            leveltext = f"Level {level} · {bezeichnung}"
         self._levelanzeige.config(text=leveltext)
 
     @property

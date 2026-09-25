@@ -304,6 +304,27 @@ def test_waehrend_des_mitlesens_laeuft_die_uhr_des_neuen_levels_nicht(fenster, b
     assert stand.level_sekunden(1) == DAUER_JE_LEVEL_SEKUNDEN[1], "Level 1 bleibt bei seinen Minuten."
 
 
+def test_beim_mitlesen_nennt_die_kopfzeile_das_level_der_nachricht(fenster, bei_der_uebung, uhr):
+    """Sonst widerspricht sich der Balken selbst.
+
+    Nach dem Wechsel steht der Spielstand schon im neuen Level, die
+    nachzulesende Nachricht aber im alten. Rechts stand deshalb "Level 2 ·
+    monoalphabetische Substitution", während links "Funkgerät – Level 1" und
+    auf dem Glas "Caesar · Schlüssel 3" zu lesen war.
+    """
+    _level_ablaufen_lassen(fenster, uhr, 1)
+    screen = fenster.aktueller_screen
+    assert isinstance(screen, funk.Funk) and screen.nur_lesen
+    titel, levelzeile = fenster.kopfzeile
+    assert titel == "Funkgerät – Level 1"
+    assert levelzeile.startswith("Level 1 ·")
+    assert screen.glastexte("verfahren") == ["Caesar · Schlüssel 3"]
+
+    while isinstance(fenster.aktueller_screen, funk.Funk):
+        fenster.aktueller_screen.weiter()
+    assert fenster.kopfzeile[1].startswith("Level 2 ·"), "mit der Handbuchseite wechselt sie"
+
+
 def test_beim_mitlesen_gibt_es_nichts_einzutippen(fenster, bei_der_uebung, uhr):
     _level_ablaufen_lassen(fenster, uhr, 1)
     screen = fenster.aktueller_screen

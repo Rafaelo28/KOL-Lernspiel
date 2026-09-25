@@ -120,7 +120,7 @@ hereinrutscht und dass die Logik weder `print()` noch `input()` aufruft.
 | Modul | Inhalt |
 |-------|--------|
 | `handbuch.py` | Die drei Handbuchseiten, zerlegt in Absätze, Aufzählungen, Tabellen und Bobs Randnotizen; dazu die Schritte der Beispiele, das Werkzeug gegenüber und die Merkkarten zum Lösen |
-| `uebungen.py` | Die 10 Übungssätze (ein Pool für alle drei Level), die Vigenère-Schlüsselwörter, die Caesar-Schlüssel |
+| `uebungen.py` | Die 54 Übungssätze (ein Pool für alle drei Level, je 18 eigene), die Vigenère-Schlüsselwörter, die Caesar-Schlüssel |
 | `story.py` | Erzähltexte und die fünf Funksprüche samt Teilaufgaben |
 | `charaktere.py` | Die fünf wählbaren Figuren und Bob |
 | `verfahren.py` | Die drei Verfahrenskennungen, gemeinsam für Handbuch und Story |

@@ -38,6 +38,14 @@ class Screen(tk.Frame):
     #: werden, etwa "Handbuch – Level 2".
     titel = ""
 
+    #: Zu welchem Level der **Inhalt** gehört – rechts in der Kopfzeile steht
+    #: dann dieses Level und sein Verfahren. ``None`` heisst: das Level, das
+    #: gerade läuft. Nötig für die Funksprüche, die nach einem Levelwechsel
+    #: zum Mitlesen dastehen: Der Spielstand ist da schon im nächsten Level,
+    #: die Nachricht aber noch im alten, und die Kopfzeile widerspräche sonst
+    #: dem, was auf dem Glas steht.
+    level = None
+
     #: Soll der Screen den ganzen Platz im Fenster einnehmen – etwa ein
     #: Handbuch mit langem Text, das nach unten wachsen darf? Sonst steht er
     #: in seiner eigenen Grösse in der Mitte des Fensters.

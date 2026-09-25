@@ -278,9 +278,9 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   hat nur seinen Abschnitt des Pools, danach wiederholen sich die Texte – und
   eine versehentlich zu grosszügige Schwelle liefe sonst bis zum Zeitablauf
   durch, ohne dass die Person je zum Funkspruch käme. Die Grenze und die
-  Abschnittsgrösse gehören zusammen: Zwei Pflichtübungen plus vier
+  Abschnittsgrösse gehören zusammen: Zwei Pflichtübungen plus sechzehn
   Zusatzaufgaben sind achtzehn Texte je Level, also vierundfünfzig im Pool
-  (`tests/test_generator.py` prüft das)
+  (`tests/test_generator.py` und `tests/test_zusatzaufgaben.py` prüfen das)
 - Eine Zusatzaufgabe kurz vor Schluss wird nicht gestellt (Projektregel 1: sie
   würde nur unfertig abgebrochen)
 - **Im Pilotdurchlauf nachmessen:** die Spalten `sekunden` und
@@ -834,7 +834,8 @@ für die Lösungsanzeige, unabhängig davon, wie viele Sekunden das dauert.
 **Umgesetzt** in `game/levelablauf.py`: `naechster_schritt` sagt, was auf die
 eben abgeschlossene Aufgabe folgt – Übung, Zusatzaufgabe, Funkspruch oder
 Levelende. Der Spielstand füttert die Funktion mit seinen Zahlen
-(`Spielstand.naechster_schritt`, `uebungen_im_level`, `wurde_gestellt`), die
+(`Spielstand.naechster_schritt`, `uebungen_im_level`, `offene_funksprueche`,
+`funkverkehr_begonnen`), die
 Oberfläche fragt in `ablauf.weiter_im_level` nur noch nach. Die Schätzung
 steckt in `zusatzaufgaben.zeit_reicht_noch`, das jetzt auch die offenen
 Funksprüche reserviert (`erwartete_dauer_funksprueche`,

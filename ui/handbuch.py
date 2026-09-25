@@ -147,6 +147,7 @@ class Handbuch(Screen):
         super().__init__(fenster)
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(ABSTAND_KNAPP))
         self.titel = f"Handbuch – Level {level}"
+        self.level = level
         self.seite = buch.SEITE_NACH_LEVEL[level]
         self._danach = danach
         self._doppelseite = 0

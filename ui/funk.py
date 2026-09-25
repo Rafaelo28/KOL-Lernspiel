@@ -157,6 +157,9 @@ class Funk(Screen):
         self.configure(bg=stil.FARBE_NACHT, pady=self.px(handbuch.ABSTAND_KNAPP))
         self.funkspruch = funkspruch
         self.titel = f"Funkgerät – Level {funkspruch.level}"
+        #: Der Funkspruch gehört zu seinem Level – auch wenn er nach einem
+        #: Levelwechsel nur noch zum Mitlesen dasteht (siehe ui/screen.py).
+        self.level = funkspruch.level
         self._danach = danach
         self._fortsetzen = fortsetzen
         self._entwurf = entwurf

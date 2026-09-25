@@ -960,6 +960,34 @@ def test_zwischen_zwei_funkspruechen_ist_keine_zusatzaufgabe_faellig(funkspruch)
     assert not stand.zusatzaufgabe_faellig
 
 
+def test_das_tempo_wird_am_laufenden_level_gemessen():
+    """Die Verfahren sind unterschiedlich aufwendig – ein Vigenère-Feld
+    nachzuschlagen dauert länger als im Alphabet abzuzählen.
+
+    Sobald im neuen Level gerechnet wurde, zählt nur noch dieses Level. Sonst
+    schleppte ein langsamer Anfang in Level 1 die Schätzung für Level 3 mit
+    sich herum – und die Vorrang-Regel reservierte dort zu viel oder zu wenig.
+    """
+    from game.zusatzaufgaben import erwartete_dauer
+
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    stand.starte_level(1)
+    aufgabe = stand.naechste_uebung()
+    uhr.weiter(3 * erwartete_dauer(aufgabe.laenge_in_buchstaben))     # langsam
+    stand.versuchen(aufgabe.loesung)
+    stand.aufgabe_abschliessen()
+    assert stand.tempofaktor == 3.0
+
+    stand.naechstes_level()
+    stand.starte_zeitfenster()
+    aufgabe = stand.naechste_uebung()
+    uhr.weiter(erwartete_dauer(aufgabe.laenge_in_buchstaben))          # wie geschätzt
+    stand.versuchen(aufgabe.loesung)
+    stand.aufgabe_abschliessen()
+    assert stand.tempofaktor == 1.0, "das laufende Level zählt, nicht das davor"
+
+
 def test_eine_aufgeloeste_aufgabe_setzt_das_tempo_nicht_zurueck():
     """Sonst gilt ausgerechnet nach dem Aufgeben wieder das Mittelmass.
 
