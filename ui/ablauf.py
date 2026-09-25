@@ -207,6 +207,14 @@ def nach_levelwechsel(fenster, wechsel):
     zum Mitlesen: mit Lösung, ohne Eingabe, ohne Uhr. Das kostet Lesezeit
     statt Rechenzeit und verlängert kein Zeitfenster.
 
+    **Mitsamt dem, was zu ihnen hinführt.** Führt ein Erzähltext zu einem
+    dieser Funksprüche (:data:`ERZAEHLUNG_VOR_FUNKSPRUCH`, die
+    Reflexionsfrage vor dem eigenen Standort), kommt er hier davor – sonst
+    verlöre ausgerechnet das langsame Kind den Gedanken, um den es in
+    Level 3 geht: warum eine Häufigkeitsanalyse bei Vigenère nicht mehr
+    weiterhilft. Nur, wenn der Funkspruch nie gestellt wurde: Wurde er
+    angefangen und vom Timer abgeschnitten, stand der Text ja schon da.
+
     **Dann der Übergang.** Er steht nach dem Wechsel und läuft damit in
     **keinem** Zeitfenster: Die Zeit des alten Levels ist beim Wechsel
     festgeschrieben, die des neuen beginnt erst mit seiner Handbuchseite
@@ -218,10 +226,15 @@ def nach_levelwechsel(fenster, wechsel):
     gekippt, obwohl alle Aufgaben erledigt waren. Deshalb steht er hier und
     nicht in :func:`weiter_im_level`.
     """
+    stand = fenster.durchlauf.spielstand
     danach = _nach_dem_wechsel(fenster, wechsel)
-    verpasst = fenster.durchlauf.spielstand.funksprueche_zum_nachlesen(wechsel.altes_level)
-    for funkspruch in reversed(verpasst):
+    nie_gestellt = {f.kennung for f in stand.nicht_gestellte_funksprueche(wechsel.altes_level)}
+    for funkspruch in reversed(stand.funksprueche_zum_nachlesen(wechsel.altes_level)):
         danach = partial(funkspruch_nachlesen, funkspruch=funkspruch, danach=danach)
+        vorher = ERZAEHLUNG_VOR_FUNKSPRUCH.get(funkspruch.kennung)
+        if vorher is not None and funkspruch.kennung in nie_gestellt:
+            erzaehltext, titel = vorher
+            danach = partial(erzaehlszene_zeigen, erzaehltext=erzaehltext, titel=titel, danach=danach)
     danach(fenster)
 
 

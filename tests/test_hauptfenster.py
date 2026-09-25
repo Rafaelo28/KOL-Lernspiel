@@ -181,14 +181,23 @@ def _nachlese_durchklicken(fenster):
 
 
 def _alle_level_ablaufen_lassen(fenster, uhr):
-    """Lässt die Zeitfenster aller Level ablaufen – der schnellste Weg zum Abschluss."""
+    """Lässt die Zeitfenster aller Level ablaufen – der schnellste Weg zum Abschluss.
+
+    Zwischen zwei Leveln steht, was die Uhr abgeschnitten hat: die
+    Funksprüche zum Mitlesen, der Erzähltext, der zu einem von ihnen
+    hinführt, und der Übergang zu Level 3. Sie kommen gemischt, deshalb wird
+    geklickt, bis nichts davon mehr dasteht.
+    """
     for level in sorted(DAUER_JE_LEVEL_SEKUNDEN):
         uhr.weiter(DAUER_JE_LEVEL_SEKUNDEN[level])
         fenster._takt()
-        _nachlese_durchklicken(fenster)
-        if isinstance(fenster.aktueller_screen, ablauf.erzaehlszene.Erzaehlszene):
-            while isinstance(fenster.aktueller_screen, ablauf.erzaehlszene.Erzaehlszene):
-                fenster.aktueller_screen.weiter()
+        while True:
+            screen = fenster.aktueller_screen
+            zum_lesen = (isinstance(screen, ablauf.erzaehlszene.Erzaehlszene)
+                         or (isinstance(screen, funk.Funk) and screen.nur_lesen))
+            if not zum_lesen:
+                break
+            screen.weiter()
 
 
 def _zeilen(fenster):

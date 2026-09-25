@@ -380,6 +380,45 @@ def test_vor_dem_standort_kommt_die_reflexionsfrage(fenster, bei_der_uebung, uhr
     assert funkgeraet.funkspruch is story.FUNKSPRUCH_STANDORT
 
 
+def test_auch_die_reflexionsfrage_kommt_beim_nachlesen_mit(fenster, bei_der_uebung, uhr):
+    """Sonst verliert ausgerechnet das langsame Kind den Gedanken hinter Level 3.
+
+    Der Erzähltext führt zum eigenen Standort: Warum hilft eine
+    Häufigkeitsanalyse bei Vigenère nicht mehr weiter? Kam der Funkspruch
+    nie dran, stand die Frage nie da – die Funksprüche wurden nachgereicht,
+    der Text davor nicht.
+    """
+    frage = story.REFLEXIONSFRAGE_LEVEL_3.absaetze[0]
+    _spielen_bis(fenster, uhr, lambda s: isinstance(s, handbuch.Handbuch) and s.seite.level == 3)
+    _level_ablaufen_lassen(fenster, uhr, 3)
+
+    szene = fenster.aktueller_screen
+    assert isinstance(szene, erzaehlszene.Erzaehlszene) and szene.text == frage
+    for _ in story.REFLEXIONSFRAGE_LEVEL_3.absaetze:
+        szene.weiter()
+    gelesen = []
+    while isinstance(fenster.aktueller_screen, funk.Funk):
+        screen = fenster.aktueller_screen
+        assert screen.nur_lesen
+        gelesen.append(screen.funkspruch)
+        screen.weiter()
+    assert gelesen == list(story.FUNKSPRUECHE_NACH_LEVEL[3])
+    assert isinstance(fenster.aktueller_screen, abschluss.Abschluss)
+
+
+def test_ein_schon_gesehener_erzaehltext_kommt_nicht_zweimal(fenster, bei_der_uebung, uhr):
+    """Wer den Standort angefangen hat, kennt die Frage – dann nur die Nachricht nachreichen."""
+    frage = story.REFLEXIONSFRAGE_LEVEL_3.absaetze[0]
+    szene = _spielen_bis(fenster, uhr,
+                         lambda s: isinstance(s, erzaehlszene.Erzaehlszene) and s.text == frage)
+    for _ in story.REFLEXIONSFRAGE_LEVEL_3.absaetze:
+        szene.weiter()
+    assert isinstance(fenster.aktueller_screen, funk.Funk)          # der Standort läuft
+    _level_ablaufen_lassen(fenster, uhr, 3)
+    assert isinstance(fenster.aktueller_screen, funk.Funk), "gleich der Funkspruch, ohne die Frage"
+    assert fenster.aktueller_screen.nur_lesen
+
+
 def test_nach_dem_letzten_funkspruch_kommt_der_abschluss(fenster, bei_der_uebung, uhr):
     """Auch Level 3 läuft nach Bobs zweiter Antwort weiter – bis die Zeit um ist."""
     _spielen_bis(fenster, uhr, lambda s: isinstance(s, abschluss.Abschluss), hoechstens=300)

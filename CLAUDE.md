@@ -47,6 +47,12 @@ Levelwechsel zum Mitlesen da: mit Lösung, ohne Eingabe, ohne Uhr, ohne Zeile
 im Log (`Spielstand.funksprueche_zum_nachlesen`). Die Geschichte darf nicht an
 der Uhr scheitern.
 
+Dasselbe gilt für den Erzähltext, der zu einem Funkspruch hinführt
+(`ablauf.ERZAEHLUNG_VOR_FUNKSPRUCH`): Kam der Funkspruch nie dran, kommt der
+Text beim Nachlesen davor. Sonst verlöre ausgerechnet das langsame Kind die
+Reflexionsfrage vor dem eigenen Standort – und damit den Gedanken, um den es
+in Level 3 geht.
+
 **Solange das Fenster läuft, gibt es Arbeit.** Sind alle Funksprüche eines
 Levels erzählt, gibt es nichts mehr, dem eine Übung den Vortritt lassen
 müsste – dann füllen weitere Übungen die Restzeit (bis zur Obergrenze der
