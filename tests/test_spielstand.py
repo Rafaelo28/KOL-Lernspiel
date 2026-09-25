@@ -960,6 +960,41 @@ def test_zwischen_zwei_funkspruechen_ist_keine_zusatzaufgabe_faellig(funkspruch)
     assert not stand.zusatzaufgabe_faellig
 
 
+def test_eine_aufgeloeste_aufgabe_setzt_das_tempo_nicht_zurueck():
+    """Sonst gilt ausgerechnet nach dem Aufgeben wieder das Mittelmass.
+
+    Der Faktor wird am laufenden Level gemessen, solange dort schon etwas
+    gerechnet wurde – sonst an den Leveln davor. Gefragt werden muss also
+    nach *gerechneten* Aufgaben: Eine aufgelöste misst nichts, verhinderte
+    aber den Rückfall, und der Faktor sprang von 3,0 auf 1,0. Die
+    Vorrang-Regel reservierte dem langsamen Kind danach ein Drittel der Zeit,
+    die es braucht.
+    """
+    from game.zusatzaufgaben import erwartete_dauer
+
+    uhr = Uhr()
+    stand = _stand_mit_uhr(uhr)
+    stand.starte_level(1)
+    for _ in range(2):
+        aufgabe = stand.naechste_uebung()
+        uhr.weiter(3 * erwartete_dauer(aufgabe.laenge_in_buchstaben))
+        stand.versuchen(aufgabe.loesung)
+        stand.aufgabe_abschliessen()
+    assert stand.tempofaktor == 3.0
+
+    stand.naechstes_level()
+    stand.starte_zeitfenster()
+    assert stand.tempofaktor == 3.0, "am Anfang des Levels zählen die davor"
+
+    stand.naechste_uebung()
+    for falsch in ("AAAA AAAA", "BBBB BBBB", "CCCC CCCC"):
+        uhr.weiter(4)
+        stand.versuchen(falsch)
+    stand.aufgabe_abschliessen()
+    assert stand.erledigte_aufgaben[-1].loesung_angezeigt
+    assert stand.tempofaktor == 3.0, "eine aufgelöste Aufgabe misst nichts"
+
+
 @pytest.mark.parametrize(
     "funkspruch",
     [story.FUNKSPRUECHE_NACH_LEVEL[level][-1] for level in LEVEL],

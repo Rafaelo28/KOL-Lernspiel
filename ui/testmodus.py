@@ -148,14 +148,24 @@ def _durchlauf_sicherstellen(fenster):
 def _zurueck(fenster):
     """Wohin es nach einer angesehenen Szene weitergeht: zurück in den Ablauf des Levels.
 
-    Ist das Spiel schon durch, führt der Weg zum Abschluss – irgendwohin muss
-    der Knopf ja führen.
+    Drei Fälle:
+
+    * Das Level läuft samt Uhr – dann weiter wie im Spiel
+      (:func:`ui.ablauf.weiter_im_level`).
+    * Das Level ist gewechselt, seine Uhr wartet aber noch (Lesepause). Dann
+      führt der Weg über seine Handbuchseite, so wie im Spiel auch – sonst
+      stünde plötzlich eine Übung da, deren Verfahren man nie gelesen hat,
+      und die Uhr liefe an, obwohl das Menü "Level und Uhr bleiben" verspricht.
+    * Das Spiel ist durch – dann der Abschluss; irgendwohin muss der Knopf ja
+      führen.
     """
     stand = fenster.durchlauf.spielstand if fenster.durchlauf is not None else None
-    if stand is not None and stand.aktuelles_level is not None:
+    if stand is None or stand.aktuelles_level is None:
+        ablauf.abschluss_zeigen(fenster)
+    elif stand.zeitfenster_laeuft:
         ablauf.weiter_im_level(fenster)
     else:
-        ablauf.abschluss_zeigen(fenster)
+        ablauf.level_beginnen(fenster, stand.aktuelles_level)
 
 
 def _szene(erzaehltext, titel, **optionen):

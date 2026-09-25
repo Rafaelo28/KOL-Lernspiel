@@ -155,6 +155,23 @@ def erwartete_dauer_funksprueche(funksprueche):
     return sum(erwartete_dauer(funkspruch.buchstaben_von_hand) for funkspruch in funksprueche)
 
 
+def gerechnete(bearbeitungen):
+    """Die Bearbeitungen, an denen wirklich gerechnet wurde – nur die messen ein Tempo.
+
+    Das Sieb steht an dieser einen Stelle, weil zwei Fragen davon abhängen:
+    woraus sich der Faktor rechnet (:func:`tempofaktor`) und ob es im
+    laufenden Level überhaupt schon etwas zu messen gibt
+    (:attr:`game.spielstand.Spielstand.tempofaktor`). Liefe beides
+    auseinander, bekäme ein Level mit lauter aufgelösten Aufgaben den Faktor
+    eins – also "wie geschätzt" für jemanden, der gerade aufgegeben hat.
+
+    >>> gerechnete(())
+    []
+    """
+    return [b for b in bearbeitungen
+            if not (b.abgebrochen or b.loesung_angezeigt or not b.gerechnete_buchstaben)]
+
+
 def tempofaktor(bearbeitungen):
     """Wie viel langsamer oder schneller jemand rechnet, als oben geschätzt.
 
@@ -184,11 +201,7 @@ def tempofaktor(bearbeitungen):
     1.0
     """
     ist = soll = 0.0
-    for bearbeitung in bearbeitungen:
-        if (bearbeitung.abgebrochen
-                or bearbeitung.loesung_angezeigt
-                or not bearbeitung.gerechnete_buchstaben):
-            continue
+    for bearbeitung in gerechnete(bearbeitungen):
         ist += bearbeitung.benoetigte_sekunden
         soll += erwartete_dauer(bearbeitung.gerechnete_buchstaben)
     if not soll:

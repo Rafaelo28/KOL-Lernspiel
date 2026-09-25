@@ -349,6 +349,27 @@ def test_ein_sprung_schliesst_eine_laufende_aufgabe_ab(leiste):
     assert weiter.aufgabe is not None, "der Rückweg stellt wieder eine Aufgabe"
 
 
+def test_der_rueckweg_aus_der_lesepause_fuehrt_ueber_die_handbuchseite(leiste):
+    """Sonst steht plötzlich eine Übung da, deren Verfahren man nie gelesen hat.
+
+    Zwischen zwei Leveln läuft das neue Level schon, seine Uhr aber noch
+    nicht. Der Rückweg aus einer angesehenen Szene ging bisher direkt in den
+    Ablauf – und startete damit die Uhr, ohne die Handbuchseite zu zeigen.
+    """
+    _ins_level(leiste, 1)
+    leiste.zeit_ablaufen_lassen()
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.aktuelles_level == 2 and not stand.zeitfenster_laeuft
+
+    leiste.springen(_sprung("Intro: der Absturz"))
+    szene = leiste.fenster.aktueller_screen
+    for _ in story.INTRO.absaetze:
+        szene.weiter()
+    screen = leiste.fenster.aktueller_screen
+    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 2
+    assert stand.zeitfenster_laeuft, "und erst hier beginnt die Zeit von Level 2"
+
+
 def test_nach_dem_spielende_sagt_ein_levelsprung_dass_schluss_ist(leiste):
     """Vorher wirkte der Menüeintrag wie ein toter Knopf: Abschluss ohne ein Wort."""
     leiste.springen(_sprung("Abschluss: Nachtlager und Rettung"))

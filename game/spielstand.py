@@ -87,6 +87,7 @@ from game.zeitfenster import (
 )
 from game.zusatzaufgaben import (
     HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL,
+    gerechnete as _gerechnete,
     ist_faellig as _zusatzaufgabe_ist_faellig,
     obergrenze_erreicht as _obergrenze_erreicht,
     tempofaktor as _tempofaktor,
@@ -428,14 +429,22 @@ class Spielstand:
     def tempofaktor(self):
         """Wie schnell diese Person rechnet, gemessen an ihren eigenen Aufgaben.
 
-        Gemessen wird am laufenden Level, solange dort schon etwas erledigt
-        ist – die Verfahren sind unterschiedlich aufwendig, ein Vigenère-Feld
-        nachzuschlagen dauert länger als im Alphabet abzuzählen. Zu Beginn
-        eines Levels zählen die Aufgaben der Level davor; ganz am Anfang ist
-        der Faktor eins (:func:`game.zusatzaufgaben.tempofaktor`).
+        Gemessen wird am laufenden Level, solange dort schon etwas *gerechnet*
+        wurde – die Verfahren sind unterschiedlich aufwendig, ein
+        Vigenère-Feld nachzuschlagen dauert länger als im Alphabet
+        abzuzählen. Sonst zählen die Aufgaben der Level davor; ganz am Anfang
+        ist der Faktor eins (:func:`game.zusatzaufgaben.tempofaktor`).
+
+        Gefragt wird nach *gerechneten* Aufgaben, nicht nach erledigten
+        (:func:`game.zusatzaufgaben.gerechnete`). Sonst genügte eine einzige
+        aufgelöste Aufgabe im neuen Level, um den Rückfall zu verhindern –
+        und weil eine aufgelöste Aufgabe nichts misst, stünde der Faktor
+        wieder auf eins. Ausgerechnet das langsame Kind, das eben aufgegeben
+        hat, würde dann wieder im Mittelmass gerechnet, und die Vorrang-Regel
+        reservierte ihm ein Drittel der Zeit, die es braucht.
         """
-        im_level = [b for b in self._erledigt if b.aufgabe.level == self._level]
-        return _tempofaktor(im_level or self._erledigt)
+        im_level = _gerechnete(b for b in self._erledigt if b.aufgabe.level == self._level)
+        return _tempofaktor(im_level or _gerechnete(self._erledigt))
 
     @property
     def naechster_schritt(self):
