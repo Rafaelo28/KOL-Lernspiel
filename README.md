@@ -332,14 +332,6 @@ dürfen nicht im Repository landen.
 | 7     | Level zusammensetzen                         | fertig  |
 | 8     | Test und Verteilung auf Schulrechner         | offen   |
 
-`main.py` öffnet das Spiel, durch das sich schon klicken lässt – vom
-Titelbild über die Figurwahl und den Story-Intro mit der animierten
-Absturz-Szene, Bobs Handbuch, den Übungen darin und den Funksprüchen am
-Funkgerät durch alle drei Level bis zur Rettung im Morgengrauen. Jedes Level
-läuft von selbst durch: Handbuchseite, Übungen, dann die Funksprüche – und
-wenn die Zeit knapp wird, kommen die Funksprüche früher (siehe
-`game/levelablauf.py`).
-
 Die vollständige Aufgabenzerlegung steht in
 [dokumentation/Arbeitsplan_Der_Diamantenraub.md](dokumentation/Arbeitsplan_Der_Diamantenraub.md).
 
