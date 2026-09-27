@@ -64,9 +64,13 @@ def _sprung(beschriftung):
     return ziele[beschriftung]
 
 
+#: Wie die Level im Sprungmenü heissen.
+VERFAHREN = {1: "Caesar", 2: "Substitution", 3: "Vigenère"}
+
+
 def _ins_level(leiste, level):
     """Springt in ein Level und gibt den Handbuch-Screen zurück."""
-    leiste.springen(_sprung(f"Level {level} – {['Caesar', 'Substitution', 'Vigenère'][level - 1]}"))
+    leiste.springen(_sprung(f"Level {level} – {VERFAHREN[level]}: Handbuch"))
     return leiste.fenster.aktueller_screen
 
 
@@ -219,12 +223,21 @@ def test_ohne_aufgabe_passiert_nichts_ausser_einer_meldung(leiste):
     assert "keine Aufgabe" in leiste._hinweis.cget("text")
 
 
-def test_ein_funkspruch_zum_mitlesen_wird_nicht_geloest(leiste):
-    """Dort gibt es kein Eingabefeld – ein Griff hinein wäre ein Absturz."""
+def test_ein_funkspruch_zum_mitlesen_wird_nicht_geloest_sondern_weitergeklickt(leiste):
+    """Dort gibt es kein Eingabefeld – ein Griff hinein wäre ein Absturz.
+
+    Zum Mitlesen stehen Funksprüche nach einem Zeitablauf da, nicht nach einem
+    Sprung: Ein Sprung stellt sie als Aufgabe. Eintragen heisst hier
+    weiterklicken; sonst käme man mit diesem Knopf an ihnen nicht vorbei.
+    """
     _ins_level(leiste, 2)
-    leiste.springen(_sprung("Level 2: der abgefangene Funkspruch"))
+    leiste.zeit_ablaufen_lassen()
+    screen = leiste.fenster.aktueller_screen
+    assert isinstance(screen, funk.Funk) and screen.nur_lesen
     leiste.loesung_eintragen()
     assert "Mitlesen" in leiste._hinweis.cget("text")
+    assert leiste.fenster.aktueller_screen is not screen, "und weiter ist es auch"
+    assert not leiste.fenster.durchlauf.spielstand.erledigte_aufgaben, "ohne Zeile im Log"
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -336,17 +349,15 @@ def test_ein_sprung_schliesst_eine_laufende_aufgabe_ab(leiste):
     screen = _zur_uebung(leiste)
     stand = leiste.fenster.durchlauf.spielstand
     assert stand.aktuelle_aufgabe is not None
-    leiste.springen(_sprung("Intro: der Absturz"))
+    leiste.springen(_sprung("Level 2 – Substitution: Handbuch"))
     assert stand.aktuelle_aufgabe is None
     assert stand.erledigte_aufgaben[-1].aufgabe.kennung == screen.aufgabe.kennung
     assert stand.erledigte_aufgaben[-1].abgebrochen
 
-    szene = leiste.fenster.aktueller_screen
-    for _ in story.INTRO.absaetze:
-        szene.weiter()
+    leiste.fenster.aktueller_screen.weiter()
     weiter = leiste.fenster.aktueller_screen
     assert isinstance(weiter, (uebung.Uebung, funk.Funk))
-    assert weiter.aufgabe is not None, "der Rückweg stellt wieder eine Aufgabe"
+    assert weiter.aufgabe is not None, "und danach lässt sich wieder arbeiten"
 
 
 def test_der_rueckweg_aus_der_lesepause_fuehrt_ueber_die_handbuchseite(leiste):
@@ -356,26 +367,38 @@ def test_der_rueckweg_aus_der_lesepause_fuehrt_ueber_die_handbuchseite(leiste):
     nicht. Der Rückweg aus einer angesehenen Szene ging bisher direkt in den
     Ablauf – und startete damit die Uhr, ohne die Handbuchseite zu zeigen.
     """
-    _ins_level(leiste, 1)
+    _ins_level(leiste, 2)
     leiste.zeit_ablaufen_lassen()
     stand = leiste.fenster.durchlauf.spielstand
-    assert stand.aktuelles_level == 2 and not stand.zeitfenster_laeuft
+    assert stand.aktuelles_level == 3 and not stand.zeitfenster_laeuft
 
-    leiste.springen(_sprung("Intro: der Absturz"))
+    leiste.springen(_sprung("Level 3: die Reflexionsfrage"))
     szene = leiste.fenster.aktueller_screen
-    for _ in story.INTRO.absaetze:
+    for _ in story.REFLEXIONSFRAGE_LEVEL_3.absaetze:
         szene.weiter()
     screen = leiste.fenster.aktueller_screen
-    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 2
-    assert stand.zeitfenster_laeuft, "und erst hier beginnt die Zeit von Level 2"
+    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 3
+    assert stand.zeitfenster_laeuft, "und erst hier beginnt die Zeit von Level 3"
 
 
-def test_nach_dem_spielende_sagt_ein_levelsprung_dass_schluss_ist(leiste):
-    """Vorher wirkte der Menüeintrag wie ein toter Knopf: Abschluss ohne ein Wort."""
+def test_nach_dem_spielende_geht_ein_sprung_in_einen_neuen_durchlauf(leiste):
+    """Vorher klebte man am Abschluss fest: Jeder weitere Sprung tat nichts.
+
+    Wer einmal ans Ende gesprungen ist, hat kein Level mehr, in dem sich
+    etwas stellen liesse – von da an blieb der Abschluss stehen, und im Log
+    stand keine einzige Aufgabe. Jetzt beginnt ein frischer Durchlauf.
+    """
     leiste.springen(_sprung("Abschluss: Nachtlager und Rettung"))
-    leiste.springen(_sprung("Level 1 – Caesar"))
-    assert "vorbei" in leiste._hinweis.cget("text")
-    assert isinstance(leiste.fenster.aktueller_screen, abschluss.Abschluss)
+    alter_durchlauf = leiste.fenster.durchlauf
+    screen = _ins_level(leiste, 1)
+    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 1
+    assert leiste.fenster.durchlauf is not alter_durchlauf
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.aktuelles_level == 1 and stand.zeitfenster_laeuft
+    assert leiste.fenster.durchlauf.protokoll.dateiname in leiste._hinweis.cget("text")
+
+    screen.weiter()                               # und hier lässt sich arbeiten
+    assert leiste.fenster.aktueller_screen.aufgabe is not None
 
 
 def test_ein_sprung_beginnt_notfalls_selbst_einen_durchlauf(leiste):
@@ -385,12 +408,30 @@ def test_ein_sprung_beginnt_notfalls_selbst_einen_durchlauf(leiste):
     assert leiste.fenster.durchlauf is not None
 
 
-def test_rueckwaerts_springt_der_testmodus_nicht(leiste):
-    """Ein Spielstand kennt nur vorwärts – das muss die Leiste sagen, statt es zu versuchen."""
+def test_rueckwaerts_springen_beginnt_einen_neuen_durchlauf(leiste):
+    """Ein Spielstand kennt nur vorwärts – zurück geht es über einen neuen Durchlauf.
+
+    Vorher meldete die Leiste "Zurück geht nicht" und blieb stehen. Wer im
+    Testmodus Level 1 noch einmal ansehen will, soll das können.
+    """
     _ins_level(leiste, 2)
-    leiste.springen(_sprung("Level 1 – Caesar"))
-    assert leiste.fenster.durchlauf.spielstand.aktuelles_level == 2
-    assert "Zurück" in leiste._hinweis.cget("text")
+    erster = leiste.fenster.durchlauf
+    _ins_level(leiste, 1)
+    zweiter = leiste.fenster.durchlauf
+    assert zweiter is not erster
+    assert zweiter.spielstand.aktuelles_level == 1
+    assert zweiter.protokoll.dateiname != erster.protokoll.dateiname
+    assert zweiter.protokoll.dateiname in leiste._hinweis.cget("text")
+
+
+def test_ein_sprung_nach_vorn_behaelt_den_durchlauf(leiste):
+    """Vorwärts braucht es keinen neuen – sonst zerfielen die Messdaten in Schnipsel."""
+    _ins_level(leiste, 1)
+    durchlauf = leiste.fenster.durchlauf
+    _ins_level(leiste, 3)
+    assert leiste.fenster.durchlauf is durchlauf
+    assert durchlauf.spielstand.aktuelles_level == 3
+    assert leiste._hinweis.cget("text") == ""
 
 
 @pytest.mark.parametrize("beschriftung, erwartet", [
@@ -400,7 +441,8 @@ def test_rueckwaerts_springt_der_testmodus_nicht(leiste):
     ("Level 1: der erste Ruf", funk.Funk),
     ("Level 1: Bobs erste Antwort", funk.Funk),
     ("Level 2: der abgefangene Funkspruch", funk.Funk),
-    ("Level 3: der eigene Standort", funk.Funk),
+    # Vor den eigenen Standort gehört die Reflexionsfrage – wie im Spiel.
+    ("Level 3: der eigene Standort", erzaehlszene.Erzaehlszene),
     ("Level 3: Bobs zweite Antwort", funk.Funk),
     ("Abschluss: Nachtlager und Rettung", abschluss.Abschluss),
 ])
@@ -418,31 +460,108 @@ def test_der_sprung_ans_ende_beendet_auch_das_spiel(leiste):
     assert leiste.standtext() == "Spiel vorbei"
 
 
-def test_angesehene_funksprueche_stehen_nur_zum_mitlesen_da(leiste):
-    """Sie sollen nichts verlangen und nichts ins Log schreiben."""
+def test_ein_angesprungener_funkspruch_ist_eine_echte_aufgabe(leiste):
+    """Genau dafür ist der Sprung da: die Stelle selbst rechnen.
+
+    Vorher stand die Nachricht nur zum Mitlesen da, mit Lösung. Damit liess
+    sich weder die Eingabe prüfen noch eine Bearbeitungszeit ansehen.
+    """
     leiste.springen(_sprung("Level 1: Bobs erste Antwort"))
     screen = leiste.fenster.aktueller_screen
-    assert screen.nur_lesen
-    assert not leiste.fenster.durchlauf.spielstand.erledigte_aufgaben
+    assert isinstance(screen, funk.Funk) and not screen.nur_lesen
+    assert screen.aufgabe is not None, "gestellt ist sie"
+    assert screen.eingabe == "", "eingetragen ist nichts"
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.aktuelle_aufgabe.kennung == story.FUNKSPRUCH_BOB_ERSTE_ANTWORT.kennung
+    assert stand.zeitfenster_laeuft, "und die Uhr läuft wie im Spiel"
 
 
-def test_eine_angesehene_szene_aendert_den_spielstand_nicht(leiste):
+def test_ein_zweiter_sprung_zum_selben_funkspruch_beginnt_neu(leiste):
+    """Jeder Funkspruch kommt nur einmal – sonst zwei Zeilen mit derselben Kennung im Log."""
+    leiste.springen(_sprung("Level 1: Bobs erste Antwort"))
+    erster = leiste.fenster.durchlauf
+    leiste.loesung_eintragen()
+    leiste.springen(_sprung("Level 1: Bobs erste Antwort"))
+    assert leiste.fenster.durchlauf is not erster
+    screen = leiste.fenster.aktueller_screen
+    assert isinstance(screen, funk.Funk) and screen.aufgabe is not None
+
+
+def test_nach_einem_angesprungenen_funkspruch_geht_das_level_weiter(leiste):
+    """Der Sprung setzt das Spiel an diese Stelle – es soll von dort weiterlaufen."""
+    leiste.springen(_sprung("Level 3: der eigene Standort"))
+    szene = leiste.fenster.aktueller_screen      # die Reflexionsfrage führt hin
+    for _ in story.REFLEXIONSFRAGE_LEVEL_3.absaetze:
+        szene.weiter()
+    leiste.loesung_eintragen()                   # Standort gesendet
+    leiste.loesung_eintragen()                   # weiter
+    screen = leiste.fenster.aktueller_screen
+    assert isinstance(screen, funk.Funk)
+    assert screen.funkspruch.kennung == story.FUNKSPRUCH_BOB_ZWEITE_ANTWORT.kennung
+
+
+def test_eine_szene_im_laufenden_level_aendert_den_spielstand_nicht(leiste):
     """Sonst verschöbe eine Stichprobe genau das, was sie prüfen soll."""
-    _ins_level(leiste, 2)
+    _ins_level(leiste, 3)
     stand = leiste.fenster.durchlauf.spielstand
     vorher = (stand.aktuelles_level, len(stand.erledigte_aufgaben))
-    leiste.springen(_sprung("Übergang zu Level 3"))
+    leiste.springen(_sprung("Level 3: die Reflexionsfrage"))
     assert (stand.aktuelles_level, len(stand.erledigte_aufgaben)) == vorher
+
+
+def test_der_uebergangstext_fuehrt_ins_dritte_level(leiste):
+    """Er liegt zwischen den Leveln – danach beginnt Level 3 mit seiner Handbuchseite."""
+    _ins_level(leiste, 2)
+    leiste.springen(_sprung("Übergang zu Level 3"))
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.aktuelles_level == 3 and not stand.zeitfenster_laeuft, "Lesezeit"
+    szene = leiste.fenster.aktueller_screen
+    for _ in story.UEBERGANG_ZU_LEVEL_3.absaetze:
+        szene.weiter()
+    screen = leiste.fenster.aktueller_screen
+    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 3
+    assert stand.zeitfenster_laeuft, "und erst hier beginnt die Zeit von Level 3"
 
 
 def test_nach_einer_angesehenen_szene_geht_es_im_level_weiter(leiste):
     """Der Knopf unter der Szene darf nicht ins Leere führen."""
-    _ins_level(leiste, 1)
+    _ins_level(leiste, 3)
+    leiste.springen(_sprung("Level 3: die Reflexionsfrage"))
+    szene = leiste.fenster.aktueller_screen
+    for _ in story.REFLEXIONSFRAGE_LEVEL_3.absaetze:
+        szene.weiter()
+    assert isinstance(leiste.fenster.aktueller_screen, (uebung.Uebung, funk.Funk))
+
+
+def test_der_sprung_ins_intro_beginnt_das_spiel_von_vorn(leiste):
+    """Vor Level 1 liegt nichts – dorthin kommt man nur mit einem neuen Durchlauf."""
+    _ins_level(leiste, 2)
     leiste.springen(_sprung("Intro: der Absturz"))
+    stand = leiste.fenster.durchlauf.spielstand
+    assert stand.aktuelles_level is None, "die Uhr von Level 1 wartet noch"
     szene = leiste.fenster.aktueller_screen
     for _ in story.INTRO.absaetze:
         szene.weiter()
-    assert isinstance(leiste.fenster.aktueller_screen, (uebung.Uebung, funk.Funk))
+    screen = leiste.fenster.aktueller_screen
+    assert isinstance(screen, handbuch.Handbuch) and screen.seite.level == 1
+    assert leiste.fenster.durchlauf.spielstand.zeitfenster_laeuft
+
+
+def test_ein_klick_klappt_das_sprungmenue_auf(leiste):
+    """Vorher war es ein ``Menubutton``: Er postete beim Drücken und nahm das Menü
+    beim Loslassen wieder weg – man musste die Maustaste gedrückt halten.
+
+    Geprüft wird, was sich ohne echte Maus prüfen lässt: dass der Knopf einen
+    Befehl hat, der das Menü postet, und dass es danach steht.
+    """
+    knopf = leiste._sprungknopf_widget
+    assert knopf.cget("command"), "ein Knopf mit Befehl, kein Menubutton"
+    assert not isinstance(knopf, tk.Menubutton)
+    leiste.sprungmenue_zeigen()
+    try:
+        assert leiste.sprungmenue.winfo_ismapped() or leiste.sprungmenue.winfo_exists()
+    finally:
+        leiste.sprungmenue.unpost()
 
 
 def test_das_sprungmenue_zeigt_alle_ziele(leiste):
@@ -472,10 +591,53 @@ def test_die_testdaten_landen_nicht_bei_den_echten(leiste, tmp_path):
     assert len(dateien) == 1
 
 
+def test_die_geloesten_aufgaben_stehen_in_der_datei_des_laufenden_durchlaufs(leiste):
+    """Die Beschwerde war: "im Log steht keine Aufgabe" – nach einem Sprung ans Ende.
+
+    Zwei Dinge müssen stimmen. Erstens: Was gelöst wurde, steht in der Datei.
+    Zweitens: Beginnt ein Sprung einen neuen Durchlauf, ist das eine **andere**
+    Datei – deshalb nennt die Leiste ihren Namen.
+    """
+    leiste.springen(_sprung("Abschluss: Nachtlager und Rettung"))
+    screen = _ins_level(leiste, 1)
+    durchlauf = leiste.fenster.durchlauf
+    assert durchlauf.protokoll.dateiname in leiste._hinweis.cget("text"), "der neue Dateiname"
+    screen.weiter()
+    for _ in range(2):
+        leiste.loesung_eintragen()               # lösen
+        leiste.loesung_eintragen()               # weiter
+    durchlauf.sichern()
+    zeilen = durchlauf.protokoll.pfad.read_text(encoding="utf-8").splitlines()
+    assert len(zeilen) >= 3, "Kopfzeile und zwei Aufgaben"
+    assert len(durchlauf.spielstand.erledigte_aufgaben) == 2
+
+
 def test_das_pseudonym_eines_testlaufs_ist_als_solches_zu_erkennen(leiste):
     """Auch eine Datei im falschen Ordner soll sich noch zuordnen lassen."""
     _ins_level(leiste, 1)
     assert leiste.fenster.durchlauf.spielstand.pseudonym.startswith(testmodus.PSEUDONYM_PRAEFIX)
+
+
+def test_ein_neuer_durchlauf_behaelt_die_id_und_bekommt_eine_laufnummer(leiste):
+    """Sonst stünde nach einem Rücksprung eine fremde ID in der Tabelle.
+
+    Und ohne Laufnummer hiesse die zweite Datei wie die erste, solange beide
+    in derselben Sekunde entstehen – der Dateiname kennt keine Bruchteile.
+    """
+    start = leiste.fenster.aktueller_screen
+    start._feld.insert(0, "1-12")
+    start.starten()
+    figurwahl = leiste.fenster.aktueller_screen
+    figurwahl.waehle(figurwahl.karten[0].figur)
+    figurwahl.bestaetigen()
+    _ins_level(leiste, 3)
+    erster = leiste.fenster.durchlauf
+    _ins_level(leiste, 1)                        # zurück: neuer Durchlauf
+    zweiter = leiste.fenster.durchlauf
+    assert zweiter is not erster
+    assert zweiter.spielstand.pseudonym.startswith(testmodus.PSEUDONYM_PRAEFIX + "1-12")
+    assert testmodus.PSEUDONYM_LAUF in zweiter.spielstand.pseudonym
+    assert zweiter.protokoll.dateiname != erster.protokoll.dateiname
 
 
 def test_auch_die_selbst_eingegebene_id_bekommt_das_praefix(leiste, wurzel):

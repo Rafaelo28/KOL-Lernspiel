@@ -17,6 +17,11 @@ Was anders ist
 * Die Uhr des Spiels ist eine :class:`Uhr`, die sich vorstellen lässt. Das
   Spiel merkt davon nichts – ein Zeitfenster endet auf Knopfdruck genau so,
   wie es nach 15 Minuten enden würde, mitsamt allem, was daran hängt.
+* Jeder Eintrag im Sprungmenü setzt das Spiel an eine Stelle der Geschichte
+  und lässt es von dort weiterlaufen – Funksprüche sind dort echte Aufgaben.
+  Nach hinten geht es auch: Ein Spielstand kennt nur vorwärts, deshalb
+  beginnt so ein Sprung einen **neuen Durchlauf** mit eigener Logdatei
+  (:func:`_neuer_durchlauf`). Im Spiel gibt es das nicht.
 * Die Messdaten landen in ``logs/testmodus/``, nicht bei den echten, und das
   Pseudonym bekommt ``TEST-`` davor. Eine Testdatei ist damit auch dann noch
   als solche zu erkennen, wenn sie einmal im falschen Ordner liegt.
@@ -42,6 +47,7 @@ from pathlib import Path
 from tkinter import font as tkfont
 
 from content import charaktere, story
+from game.spielstand import LEVEL
 from ui import ablauf, abschluss, erzaehlszene, funk, startbildschirm, stil, uebung
 from ui.hauptfenster import Hauptfenster
 
@@ -51,6 +57,9 @@ PROTOKOLL_UNTERORDNER = "testmodus"
 
 #: Steht vor dem Pseudonym jedes Testlaufs.
 PSEUDONYM_PRAEFIX = "TEST-"
+
+#: Trennt das Pseudonym von der Nummer des Durchlaufs: ``TEST-9-99-lauf2``.
+PSEUDONYM_LAUF = "-lauf"
 
 #: Womit ein Sprung anfängt, wenn noch kein Durchlauf läuft. Die ID hat die
 #: Form der echten (:mod:`game.spieler_id`), gehört aber keiner Klasse.
@@ -120,29 +129,126 @@ class Uhr:
 # ── Sprünge in die Geschichte ──────────────────────────────────────────────
 
 
-def _durchlauf_sicherstellen(fenster):
-    """Sorgt dafür, dass ein Durchlauf mit laufendem Level da ist – und die Bahn frei ist.
+#: Der wievielte Durchlauf dieses Testlaufs gerade läuft. Jeder Sprung nach
+#: hinten beginnt einen neuen (:func:`_neuer_durchlauf`), und die Nummer hängt
+#: sich ab dem zweiten ans Pseudonym: Der Dateiname des Protokolls kennt nur
+#: Sekunden – zwei Durchläufe in derselben Sekunde schrieben sonst in dieselbe
+#: Datei, und die Aufgaben des ersten wären weg.
+_durchlaufnummer = 0
 
-    Im Spiel entsteht der Durchlauf aus ID und Figurwahl. Für eine Stichprobe
-    wäre das jedes Mal derselbe Weg über zwei Screens – deshalb übernimmt der
-    Testmodus das hier mit fester Figur und fester ID.
+
+def _pseudonym(alter_durchlauf, nummer):
+    """Das Pseudonym des nächsten Durchlaufs – mit der Nummer des Laufs dahinter.
+
+    Die ID des vorigen Durchlaufs bleibt stehen: Wer sie im Startbildschirm
+    eingetippt hat, findet sie auch in der zweiten Tabelle wieder, dann als
+    ``TEST-1-12-lauf2``. Ohne den Zusatz ``-lauf`` wäre ``TEST-1-12-2`` nicht
+    von einer ID zu unterscheiden – ein Strich steht schon zwischen Klasse und
+    Nummer.
+    """
+    basis = PSEUDONYM_PRAEFIX + TEST_ID
+    if alter_durchlauf is not None:
+        basis = alter_durchlauf.spielstand.pseudonym.split(PSEUDONYM_LAUF)[0]
+    return basis if nummer <= 1 else f"{basis}{PSEUDONYM_LAUF}{nummer}"
+
+
+def _neuer_durchlauf(fenster, mit_level=True):
+    """Beginnt einen frischen Durchlauf – das darf nur der Testmodus.
+
+    Im Spiel gilt: ein Fenster, ein Durchlauf (sonst mischten sich zwei
+    Personen in den Messdaten). Beim Springen braucht es beides, und ein
+    Spielstand kennt nur vorwärts: Wer von Level 3 zurück nach Level 1 will
+    oder nach dem Abschluss noch etwas ansehen, bekommt deshalb einen neuen
+    Durchlauf. Seine Messdaten landen ohnehin in ``logs/testmodus/``.
+
+    Der alte wird davor ordentlich beendet – eine laufende Aufgabe kommt als
+    abgebrochen ins Log, und geschrieben ist es auch. Ein Durchlauf, in dem
+    noch gar nichts passiert ist, wird stattdessen weiterbenutzt; sonst
+    entstünde bei jedem Sprung an den Anfang eine Nummer mehr.
+
+    ``mit_level=False`` lässt Level 1 noch ungestartet – für den Sprung ins
+    Intro, nach dem die Uhr wie im Spiel erst mit der Handbuchseite beginnt.
+    """
+    global _durchlaufnummer
+    alt = fenster.durchlauf
+    if alt is not None and (alt.hat_begonnen or alt.spielstand.aktuelles_level is not None):
+        alt.beenden()
+        fenster.durchlauf = None
+    if fenster.durchlauf is None:
+        # Kam der erste Durchlauf über den Startbildschirm, hat ihn niemand
+        # gezählt – er war der erste. Sonst bekäme der zweite dieselbe Nummer
+        # und damit denselben Dateinamen (der kennt nur Sekunden).
+        if alt is not None and _durchlaufnummer == 0:
+            _durchlaufnummer = 1
+        _durchlaufnummer += 1
+        fenster.starte_durchlauf(TEST_FIGUR, pseudonym=_pseudonym(alt, _durchlaufnummer))
+    durchlauf = fenster.durchlauf
+    if mit_level and durchlauf.spielstand.aktuelles_level is None:
+        durchlauf.starte_level()
+    return durchlauf
+
+
+def _stand_fuer(fenster, level, neu_noetig=None):
+    """Bringt den Durchlauf dorthin, wo in ``level`` gespielt werden kann.
+
+    Rückgabe ist ``(durchlauf, neu)`` – ``neu`` sagt, ob dafür ein frischer
+    Durchlauf nötig war. Fünf Fälle führen dazu:
+
+    * Es läuft noch keiner (der Sprung kam vom Startbildschirm).
+    * Das Spiel ist vorbei – nach dem Abschluss gibt es kein Level mehr, in
+      dem sich etwas stellen liesse.
+    * Das Ziel liegt hinter dem laufenden Level. Zurück kann ein Spielstand
+      nicht, und ein zweites Mal beginnen darf ein Level nicht (aus fünfzehn
+      Minuten würden dreissig).
+    * Die Zeit des laufenden Levels ist schon um. Dann liesse sich darin
+      nichts mehr stellen (``_verlange_restzeit``) – der Levelwechsel steht
+      nur noch nicht im Bild.
+    * ``neu_noetig`` sagt es: Für einen Funkspruch etwa, der in diesem
+      Durchlauf schon gestellt wurde – ein zweites Mal gibt es ihn nicht.
 
     Läuft gerade eine Aufgabe, wird sie **abgeschlossen**, bevor irgendwohin
     gesprungen wird – genau das tut auch ``naechstes_level()``. Bliebe sie
-    offen, stünde sie beim Zurückkommen noch im Spielstand: Die nächste
-    Aufgabe liesse sich nicht stellen (``_verlange_freie_bahn``), und der
-    Screen bliebe leer zurück. Im Log steht sie danach als abgebrochen –
-    Testläufe schreiben ohnehin in ihren eigenen Ordner.
+    offen, liesse sich die nächste nicht stellen (``_verlange_freie_bahn``),
+    und der Screen bliebe leer zurück.
+
+    Vorwärts geht es über den **Spielstand**, nicht über den Durchlauf: Sonst
+    liefe bei jedem übersprungenen Level der Levelwechsel des Spiels mit
+    Funksprüchen zum Mitlesen und Übergangstext ab – hier zählt das Ziel,
+    nicht der Weg dorthin.
     """
-    if fenster.durchlauf is None:
-        fenster.starte_durchlauf(TEST_FIGUR, pseudonym=PSEUDONYM_PRAEFIX + TEST_ID)
-    durchlauf = fenster.durchlauf
-    stand = durchlauf.spielstand
-    if stand.aktuelle_aufgabe is not None:
+    vorher = fenster.durchlauf
+    durchlauf = vorher
+    stand = durchlauf.spielstand if durchlauf is not None else None
+    if stand is not None and stand.aktuelle_aufgabe is not None:
         durchlauf.aufgabe_abschliessen()
-    if stand.aktuelles_level is None and not stand.ist_durchgespielt:
-        durchlauf.starte_level()
-    return durchlauf
+    if (stand is None
+            or stand.aktuelles_level is None
+            or stand.aktuelles_level > level
+            or stand.zeit_ist_um
+            or (neu_noetig is not None and neu_noetig(stand))):
+        durchlauf = _neuer_durchlauf(fenster)
+        stand = durchlauf.spielstand
+    # Gemeldet wird nur ein wirklich neuer Durchlauf: Ein Spielstand, in dem
+    # noch nichts passiert ist, wird weiterbenutzt (etwa gleich nach der
+    # Figurwahl) – dann bleibt die Logdatei dieselbe, und ein Hinweis auf eine
+    # neue Datei wäre falsch.
+    neu = durchlauf is not vorher
+    while stand.aktuelles_level < level:
+        stand.naechstes_level()
+    durchlauf.sichern()
+    return durchlauf, neu
+
+
+def _meldung(durchlauf, neu):
+    """Was nach einem Sprung in der Leiste steht.
+
+    Bei einem frischen Durchlauf der Dateiname: Von hier an stehen die
+    Aufgaben in einer **anderen** Tabelle, und wer danach im alten Log sucht,
+    findet nichts.
+    """
+    if not neu:
+        return ""
+    return f"Neuer Durchlauf – Messdaten jetzt in {durchlauf.protokoll.dateiname}"
 
 
 def _zurueck(fenster):
@@ -152,10 +258,10 @@ def _zurueck(fenster):
 
     * Das Level läuft samt Uhr – dann weiter wie im Spiel
       (:func:`ui.ablauf.weiter_im_level`).
-    * Das Level ist gewechselt, seine Uhr wartet aber noch (Lesepause). Dann
-      führt der Weg über seine Handbuchseite, so wie im Spiel auch – sonst
-      stünde plötzlich eine Übung da, deren Verfahren man nie gelesen hat,
-      und die Uhr liefe an, obwohl das Menü "Level und Uhr bleiben" verspricht.
+    * Die Uhr des Levels wartet noch (Lesepause nach einem Levelwechsel).
+      Dann führt der Weg über seine Handbuchseite, so wie im Spiel auch –
+      sonst stünde plötzlich eine Übung da, deren Verfahren man nie gelesen
+      hat.
     * Das Spiel ist durch – dann der Abschluss; irgendwohin muss der Knopf ja
       führen.
     """
@@ -168,106 +274,134 @@ def _zurueck(fenster):
         ablauf.level_beginnen(fenster, stand.aktuelles_level)
 
 
-def _szene(erzaehltext, titel, **optionen):
-    """Baut den Sprung zu einer Erzählszene – am Level und an der Uhr ändert sie nichts.
+def _intro(fenster):
+    """Springt an den Anfang: der Absturz, danach Level 1 wie im Spiel.
 
-    Eine Aufgabe, die gerade läuft, wird davor abgeschlossen
-    (:func:`_durchlauf_sicherstellen`).
+    Das ist immer ein frischer Durchlauf – vor Level 1 gibt es nichts, wohin
+    man sonst zurückkönnte. Die Uhr beginnt erst mit der Handbuchseite
+    (:func:`ui.ablauf.level_1_beginnen`), das Intro ist Lesezeit.
+    """
+    vorher = fenster.durchlauf
+    durchlauf = _neuer_durchlauf(fenster, mit_level=False)
+    ablauf.erzaehlszene_zeigen(fenster, story.INTRO, ablauf.TITEL_INTRO,
+                               danach=ablauf.level_1_beginnen,
+                               szene=erzaehlszene.SZENE_WRACK,
+                               letzter_knopf=ablauf.KNOPF_HANDBUCH)
+    return _meldung(durchlauf, durchlauf is not vorher)
+
+
+def _szene(erzaehltext, titel, level, **optionen):
+    """Baut den Sprung zu einer Erzählszene; danach geht es im Level weiter.
+
+    ``level`` ist das Level, in dem die Szene im Spiel steht. Der Übergang zu
+    Level 3 gehört schon zu Level 3: Er liegt zwischen den Leveln, und danach
+    beginnt die Uhr von Level 3 mit der Handbuchseite – genau wie im Spiel
+    (:func:`_zurueck`).
     """
 
     def springen(fenster):
-        _durchlauf_sicherstellen(fenster)
+        durchlauf, neu = _stand_fuer(fenster, level)
         ablauf.erzaehlszene_zeigen(fenster, erzaehltext, titel, danach=_zurueck, **optionen)
+        return _meldung(durchlauf, neu)
 
     return springen
 
 
 def _funkspruch(funkspruch):
-    """Baut den Sprung zu einem Funkspruch – zum Mitlesen, mit Lösung und ohne Uhr.
+    """Baut den Sprung zu einem Funkspruch – als **echte Aufgabe**, zum Selberrechnen.
 
-    Das ist derselbe Screen, den das Spiel zeigt, wenn die Zeit für einen
-    Funkspruch nicht mehr gereicht hat (``nur_lesen``). Er verlangt nichts
-    und schreibt nichts ins Log – zum Nachsehen, wie die Nachricht aussieht,
-    ist er genau richtig.
+    Gestellt wird er über den normalen Weg des Spiels
+    (:func:`ui.ablauf.funkspruch_zeigen`): mit dem Erzähltext davor, wo einer
+    hingehört, mit laufender Uhr, mit der 3-Versuche-Regel und mit einer Zeile
+    im Log. Eingetragen ist nichts – dafür gibt es den Knopf "Lösung
+    eintragen", wenn man nur weiterklicken will.
+
+    War der Funkspruch in diesem Durchlauf schon dran, beginnt ein neuer:
+    Jeder Funkspruch kommt nur einmal (sonst drei frische Versuche und zwei
+    Zeilen mit derselben Kennung im Log).
+
+    Danach läuft das Level normal weiter – die Funksprüche, die vor dem
+    Sprungziel liegen, kommen also noch.
     """
 
+    def schon_gestellt(stand):
+        """Wurde dieser Funkspruch in diesem Durchlauf schon gestellt?"""
+        return funkspruch not in stand.nicht_gestellte_funksprueche(funkspruch.level)
+
     def springen(fenster):
-        _durchlauf_sicherstellen(fenster)
-        ablauf.funkspruch_nachlesen(fenster, funkspruch, danach=_zurueck)
+        durchlauf, neu = _stand_fuer(fenster, funkspruch.level, neu_noetig=schon_gestellt)
+        ablauf.funkspruch_zeigen(fenster, funkspruch)
+        return _meldung(durchlauf, neu)
 
     return springen
 
 
 def _level(ziel):
-    """Baut den Sprung an den Anfang eines Levels."""
-
-    def springen(fenster):
-        return _bis_level(fenster, ziel)
-
-    return springen
-
-
-def _bis_level(fenster, ziel):
-    """Schaltet den Spielstand bis zu diesem Level weiter und schlägt sein Handbuch auf.
-
-    Anders als der Knopf "Level beenden" läuft dabei nichts von der
-    Geschichte ab: Hier zählt das Ziel, nicht der Weg dorthin. Zurück geht es
-    nicht – ein Spielstand kennt nur vorwärts; dafür das Spiel neu starten.
+    """Baut den Sprung an den Anfang eines Levels: seine Handbuchseite.
 
     Aufgeschlagen wird über :func:`ui.ablauf.level_beginnen`, nicht direkt
     über die Handbuchseite: Damit startet die Uhr des Levels, so wie im Spiel.
     Sonst liefe im Sprungziel kein Zeitfenster, und alles, was daran hängt –
     "Zeit ablaufen lassen", die Restzeit in der Leiste, die Vorrang-Regel –,
-    wäre im Testmodus wirkungslos.
+    wäre wirkungslos.
     """
-    durchlauf = _durchlauf_sicherstellen(fenster)
-    stand = durchlauf.spielstand
-    if stand.ist_durchgespielt:
-        return "Das Spiel ist vorbei – für einen neuen Durchlauf das Spiel neu starten."
-    if stand.aktuelles_level is not None and stand.aktuelles_level > ziel:
-        return f"Zurück zu Level {ziel} geht nicht – dafür das Spiel neu starten."
-    while stand.aktuelles_level is not None and stand.aktuelles_level < ziel:
-        stand.naechstes_level()
-    durchlauf.sichern()
-    ablauf.level_beginnen(fenster, stand.aktuelles_level)
-    return ""
+
+    def springen(fenster):
+        durchlauf, neu = _stand_fuer(fenster, ziel)
+        ablauf.level_beginnen(fenster, ziel)
+        return _meldung(durchlauf, neu)
+
+    return springen
 
 
 def _abschluss(fenster):
     """Springt ans Ende: das Nachtlager mit dem Knopf "Warten".
 
-    Der Spielstand wird dabei bis hinter Level 3 geschaltet. Sonst stünde in
-    der Kopfzeile noch ein Level, das zu diesem Bild längst vorbei sein
-    müsste – und das Bildschirmfoto zeigte etwas, das es im Spiel nie gibt.
+    Der Spielstand wird bis hinter Level 3 geschaltet. Sonst stünde in der
+    Kopfzeile noch ein Level, das zu diesem Bild längst vorbei sein müsste –
+    und das Bildschirmfoto zeigte etwas, das es im Spiel nie gibt.
+
+    Steht das Ende schon, wird nur noch einmal hingeschaut: Ein zweiter
+    Durchlauf bloss fürs Wiederansehen wäre eine Logdatei für nichts.
     """
-    durchlauf = _durchlauf_sicherstellen(fenster)
+    durchlauf = fenster.durchlauf
+    if durchlauf is not None and durchlauf.spielstand.ist_durchgespielt:
+        ablauf.abschluss_zeigen(fenster)
+        return ""
+    durchlauf, neu = _stand_fuer(fenster, LEVEL[-1])
     stand = durchlauf.spielstand
     while stand.aktuelles_level is not None:
         stand.naechstes_level()
     durchlauf.sichern()
     ablauf.abschluss_zeigen(fenster)
+    return _meldung(durchlauf, neu)
 
 
-#: Was im Menü "Springe zu" steht: je (Aufschrift, Sprung). Ein Sprung von
-#: ``None`` ist eine Zwischenüberschrift, eine Aufschrift von ``None`` ein
-#: Trennstrich.
+#: Was im Menü "Springe zu" steht: je (Aufschrift, Sprung), in der Reihenfolge
+#: der Geschichte. Eine Aufschrift von ``None`` ist ein Trennstrich.
+#:
+#: Jeder Eintrag setzt das Spiel an diese Stelle und lässt es **von dort
+#: weiterlaufen**: Funksprüche sind Aufgaben zum Selberrechnen, das Level
+#: läuft danach normal weiter. Nach hinten geht es auch – dann beginnt ein
+#: neuer Durchlauf (:func:`_neuer_durchlauf`), der Leiste steht der neue
+#: Dateiname.
 SPRUNGZIELE = (
-    ("Geschichte ansehen (Level und Uhr bleiben)", None),
-    ("Intro: der Absturz", _szene(story.INTRO, ablauf.TITEL_INTRO,
-                                  szene=erzaehlszene.SZENE_WRACK,
-                                  letzter_knopf=ablauf.KNOPF_HANDBUCH)),
+    ("Intro: der Absturz", _intro),
+    (None, None),
+    ("Level 1 – Caesar: Handbuch", _level(1)),
     ("Level 1: der erste Ruf", _funkspruch(story.FUNKSPRUCH_ERSTER_RUF)),
     ("Level 1: Bobs erste Antwort", _funkspruch(story.FUNKSPRUCH_BOB_ERSTE_ANTWORT)),
+    (None, None),
+    ("Level 2 – Substitution: Handbuch", _level(2)),
     ("Level 2: der abgefangene Funkspruch", _funkspruch(story.FUNKSPRUCH_VERFOLGER)),
-    ("Übergang zu Level 3", _szene(story.UEBERGANG_ZU_LEVEL_3, ablauf.TITEL_UEBERGANG)),
-    ("Level 3: die Reflexionsfrage", _szene(story.REFLEXIONSFRAGE_LEVEL_3, ablauf.TITEL_REFLEXION)),
+    ("Übergang zu Level 3", _szene(story.UEBERGANG_ZU_LEVEL_3, ablauf.TITEL_UEBERGANG, level=3)),
+    (None, None),
+    ("Level 3 – Vigenère: Handbuch", _level(3)),
+    ("Level 3: die Reflexionsfrage", _szene(story.REFLEXIONSFRAGE_LEVEL_3, ablauf.TITEL_REFLEXION,
+                                           level=3)),
     ("Level 3: der eigene Standort", _funkspruch(story.FUNKSPRUCH_STANDORT)),
     ("Level 3: Bobs zweite Antwort", _funkspruch(story.FUNKSPRUCH_BOB_ZWEITE_ANTWORT)),
     (None, None),
-    ("Ins Level springen (schaltet weiter)", None),
-    ("Level 1 – Caesar", _level(1)),
-    ("Level 2 – Substitution", _level(2)),
-    ("Level 3 – Vigenère", _level(3)),
     ("Abschluss: Nachtlager und Rettung", _abschluss),
 )
 
@@ -327,24 +461,39 @@ class Testleiste(tk.Frame):
         return knopf
 
     def _sprungknopf(self):
-        """Der Knopf "Springe zu" und sein Menü aus :data:`SPRUNGZIELE`."""
-        knopf = tk.Menubutton(self, text=KNOPF_SPRUNG, font=self._schrift, bg=FARBE_KNOPF,
-                              fg=FARBE_SCHRIFT, activebackground=FARBE_RAND,
-                              activeforeground=FARBE_SCHRIFT, highlightbackground=FARBE_LEISTE,
-                              relief="flat", padx=self.fenster.px(6), pady=0)
-        self.sprungmenue = tk.Menu(knopf, tearoff=0, font=self._schrift, bg=FARBE_LEISTE,
-                                   fg=FARBE_SCHRIFT, activebackground=FARBE_RAND,
+        """Der Knopf "Springe zu" und sein Menü aus :data:`SPRUNGZIELE`.
+
+        Ein gewöhnlicher Knopf, kein ``Menubutton``: Der postet sein Menü
+        beim **Drücken** und nimmt es beim Loslassen wieder weg – man müsste
+        die Maustaste gedrückt halten, um etwas auszuwählen. Hier klappt das
+        Menü auf Klick auf und bleibt offen (:meth:`sprungmenue_zeigen`).
+        """
+        self._sprungknopf_widget = self._knopf(KNOPF_SPRUNG, self.sprungmenue_zeigen)
+        self.sprungmenue = tk.Menu(self._sprungknopf_widget, tearoff=0, font=self._schrift,
+                                   bg=FARBE_LEISTE, fg=FARBE_SCHRIFT, activebackground=FARBE_RAND,
                                    activeforeground=FARBE_SCHRIFT)
         for text, sprung in SPRUNGZIELE:
             if text is None:
                 self.sprungmenue.add_separator()
-            elif sprung is None:
-                self.sprungmenue.add_command(label=text, state="disabled")
             else:
                 self.sprungmenue.add_command(label=text, command=partial(self.springen, sprung))
-        knopf.configure(menu=self.sprungmenue)
-        knopf.pack(side="left", padx=self.fenster.px(2))
-        return knopf
+        return self._sprungknopf_widget
+
+    def sprungmenue_zeigen(self):
+        """Klappt das Sprungmenü unter dem Knopf auf – ein Klick genügt.
+
+        ``tk_popup`` stellt das Menü an eine Bildschirmposition und hält es
+        offen, bis etwas gewählt oder daneben geklickt ist. Der
+        ``grab_release()`` danach gehört dazu: Ohne ihn behielte das Menü die
+        Maus auch dann, wenn es schon wieder weg ist, und die Knöpfe der
+        Leiste reagierten nicht mehr.
+        """
+        knopf = self._sprungknopf_widget
+        try:
+            self.sprungmenue.tk_popup(knopf.winfo_rootx(),
+                                      knopf.winfo_rooty() + knopf.winfo_height())
+        finally:
+            self.sprungmenue.grab_release()
 
     # ── Was die Knöpfe tun ─────────────────────────────────────────────────
 
@@ -361,7 +510,13 @@ class Testleiste(tk.Frame):
             self.melden("Hier gibt es keine Aufgabe.")
             return
         if isinstance(screen, funk.Funk) and screen.nur_lesen:
-            self.melden("Dieser Funkspruch steht nur zum Mitlesen da.")
+            # Hier gibt es nichts einzutragen: Die Nachricht steht mit Lösung
+            # da, ein Eingabefeld hat sie nicht. Eintragen heisst dann
+            # weiterklicken – sonst blieben nach einem Zeitablauf mehrere
+            # solche Screens hintereinander liegen, und der Knopf, mit dem man
+            # sich durch die Geschichte klickt, käme an ihnen nicht vorbei.
+            screen.weiter()
+            self.melden("Nur zum Mitlesen – weiter.")
             return
         if screen.ist_beendet:
             # Wartet der Knopf für den Rest, tut "Prüfen" nichts – dann erst

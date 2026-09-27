@@ -61,8 +61,11 @@ Unter dem Spiel erscheint dann eine rote Leiste: **Lösung eintragen** füllt
 die richtige Antwort ein und prüft sie, **Level beenden** schaltet weiter wie
 nach erledigter Arbeit, **Zeit ablaufen lassen** lässt das Zeitfenster
 sofort enden (und überspringt am Ende die Nacht bis zur Rettung), und
-**Springe zu** führt direkt zu einzelnen Stellen der Geschichte – vom Intro
-bis zur Rettung. Mit `✕` verschwindet die Leiste, mit `F9` kommt sie zurück.
+**Springe zu** setzt das Spiel an eine Stelle der Geschichte – vom Intro bis
+zur Rettung – und lässt es von dort weiterlaufen; Funksprüche sind dort echte
+Aufgaben zum Selberrechnen. Auch nach hinten: Dafür beginnt ein neuer
+Durchlauf mit eigener Logdatei, deren Namen die Leiste nennt. Mit `✕`
+verschwindet die Leiste, mit `F9` kommt sie zurück.
 
 Am Spiel ändert der Schalter nichts: dieselben Screens, dieselben Regeln,
 dieselben Zeitfenster – sie lassen sich nur überspringen. Die Messdaten der
