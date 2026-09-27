@@ -88,7 +88,7 @@ Wichtige technische Punkte daraus, die beim Bau zu beachten sind:
   eine in Level 1, und die Messdaten könnten Verfahren und Textlänge nicht
   mehr trennen. Die Zahl 18 je Level ergibt sich aus dem Zeitfenster: Sie
   reicht, um im geschätzten Tempo bis zum Schluss zu üben.
-- *Nachträglich entschieden:* Statt eigener Listen je Level üben alle drei Level mit **denselben zehn Sätzen** (10–14 Buchstaben, siehe `Handbuchtexte.md`) – damit die Übungen der Level ähnlich lang und die Bearbeitungszeiten vergleichbar sind.
+- *Nachträglich entschieden:* Statt eigener Listen je Level üben alle drei Level aus **einem gemeinsamen Pool** (10–14 Buchstaben, siehe `Handbuchtexte.md`) – damit die Übungen der Level ähnlich lang und die Bearbeitungszeiten vergleichbar sind. Damals waren das zehn Sätze; umgesetzt sind die 54 aus dem Nachtrag darüber, je Level 18 davon.
 - **Für jede Übungsaufgabe in allen drei Leveln** muss einmal ver- und entschlüsselt werden
 - **Vollständiges Vigenère-Quadrat (26×26):** kann automatisch generiert werden, keine manuelle Eingabe nötig. Formel: In Zeile $k$ (Schlüsselbuchstabe) und Spalte $m$ (Nachrichtenbuchstabe) steht der Buchstabe mit Index $(k+m) \\bmod 26$, wobei $A=0$.
 

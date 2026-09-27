@@ -1006,9 +1006,10 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
   Im Build muss der Ordner neben der .exe liegen (`sys.executable`)
 - **Die Animationen mit einpacken:** `content/animationen/` enthält PNG- und
   JSON-Dateien, keine Python-Module. PyInstaller nimmt sie nur mit, wenn sie
-  als Daten angegeben sind (`--add-data`) – den ganzen Ordner, samt der
-  Unterordner `1.5x/` für die grossen Bildschirme. `grafik/` gehört nicht in
-  den Build – das ist Werkzeug für den Entwicklungsrechner
+  als Daten angegeben sind (`--add-data`) – den ganzen Ordner, samt dem
+  Unterordner `1.5x/`, den jede Szene für die grossen Bildschirme hat
+  (`content/animationen/<szene>/1.5x/`). `grafik/` gehört nicht in den Build –
+  das ist Werkzeug für den Entwicklungsrechner
 - **Auf dem Schulrechner nachsehen, ob der grosse Maßstab greift:** Das Spiel
   soll maximiert öffnen und den Bildschirm füllen. Steht Windows auf 125 %
   Skalierung, meldet es Tkinter nur 1536 × 864 und vergrössert das Fenster

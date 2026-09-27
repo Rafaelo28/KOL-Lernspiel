@@ -179,8 +179,10 @@ Die Aufteilung steht als `selbst_zu_loesen` in `content/story.py`.
 - **Animationen werden vorgerendert.** Szenen entstehen als SVG in `grafik/`,
   Firefox rechnet sie mit `grafik/rendern.py` in Bilder um (nur auf dem
   Entwicklungsrechner), das Spiel blättert die fertigen PNGs aus
-  `content/animationen/` nur durch – in zwei Größen, die große im Unterordner
-  `1.5x/`. Regeln dafür in `dokumentation/Animationen.md` – vor allem: jede
+  `content/animationen/<szene>/` nur durch – in zwei Größen: die kleine direkt
+  dort, die große im Unterordner `1.5x/` **derselben Szene**
+  (`content/animationen/wrack/1.5x/`), nicht in einem gemeinsamen Ordner für
+  alle. Regeln dafür in `dokumentation/Animationen.md` – vor allem: jede
   Animationsdauer teilt die Schleife, und bewegt wird nur im angegebenen
   Ausschnitt.
 - **Die Oberfläche hat einen Maßstab.** Auf 1080p-Schulmonitoren zeichnet das

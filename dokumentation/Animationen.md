@@ -12,7 +12,8 @@ kommt eine Animation über drei Stationen ins Spiel:
 3. **Abspielen** mit `ui/animation.py`: Das Spiel blättert die Bilder im
    Takt durch. Das kann Tkinter von Haus aus.
 
-Heraus kommen drei Dateien in `content/animationen/<name>/`:
+Heraus kommen drei Dateien in `content/animationen/<name>/` – bei einem
+Standbild nur zwei, weil sich dort kein Ausschnitt bewegt (siehe Abschnitt 5):
 
 | Datei | Inhalt |
 |-------|--------|
@@ -24,12 +25,14 @@ Gespeichert wird also nicht die ganze Szene für jedes Bild, sondern nur der
 Ausschnitt, in dem sich etwas bewegt. Beim Wrack sind das 377 × 330 Pixel
 statt 960 × 540 – rund 20 MB Arbeitsspeicher statt 80.
 
-**Zwei Größen.** Dieselben drei Dateien entstehen noch einmal 1,5-mal so groß
-im Unterordner `1.5x/` (beim Wrack 1440 × 810 statt 960 × 540). Auf einem
-1080p-Schulmonitor zeichnet das Spiel alles 1,5-mal so groß und lädt diesen
-Satz; auf kleineren Bildschirmen den kleinen (siehe `ui/stil.py`, „Der
-Maßstab“). Vergrößern ließe sich das kleine Bild im Spiel nicht sauber –
-Tkinter kann nur Pixel verdoppeln, das sähe grob aus. Deshalb rechnet Firefox
+**Zwei Größen.** Dieselben Dateien entstehen noch einmal 1,5-mal so groß im
+Unterordner `1.5x/` **der Szene** – also `content/animationen/wrack/1.5x/`;
+einen gemeinsamen Ordner `content/animationen/1.5x/` für alle gibt es nicht
+(beim Wrack 1440 × 810 statt 960 × 540). Auf einem 1080p-Schulmonitor zeichnet
+das Spiel alles 1,5-mal so groß und lädt diesen Satz; auf kleineren
+Bildschirmen den kleinen (siehe `ui/stil.py`, „Der Maßstab“). Vergrößern ließe
+sich das kleine Bild im Spiel nicht sauber – Tkinter kann nur Pixel
+verdoppeln, das sähe grob aus. Deshalb rechnet Firefox
 beide Größen direkt aus der SVG.
 
 ## Was es schon gibt

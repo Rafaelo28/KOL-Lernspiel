@@ -187,20 +187,22 @@ python3 grafik/rendern.py grafik/wrack.svg
 
 Firefox rechnet dabei die Animation in Bilder um (nur auf dem Entwicklungsrechner),
 das Spiel blättert die fertigen Bilder aus `content/animationen/` nur noch durch – ohne
-Zusatzpaket. Jede Animation gibt es in zwei Größen: 960 × 540 für kleine Bildschirme
-und 1440 × 810 (Unterordner `1.5x/`) für die 1080p-Schulmonitore. Das Buch des Handbuchs
-und das Umblättern darin sind selbst gezeichnete SVGs: `python3 grafik/buch_zeichnen.py`
-schreibt beide, danach werden sie wie jede Animation vorgerendert. Genauso entstehen das
-Funkgerät (`grafik/funkgeraet_zeichnen.py`) und die Bilder des Abschlusses
-(`grafik/abschluss_zeichnen.py`). Wie man eine neue
-Animation anlegt und welche Regeln sie einhalten muss,
-steht in [dokumentation/Animationen.md](dokumentation/Animationen.md).
+Zusatzpaket. Jede Animation gibt es in zwei Größen: 960 × 540 für kleine Bildschirme und
+1440 × 810 für die 1080p-Schulmonitore. Die große Fassung liegt je Szene in einem eigenen
+Unterordner `1.5x/` – also `content/animationen/wrack/1.5x/`, nicht in einem gemeinsamen
+Ordner für alle. Das Buch des Handbuchs und das Umblättern darin sind selbst gezeichnete
+SVGs: `python3 grafik/buch_zeichnen.py` schreibt beide, danach werden sie wie jede
+Animation vorgerendert. Genauso entstehen das Funkgerät (`grafik/funkgeraet_zeichnen.py`)
+und die Bilder des Abschlusses (`grafik/abschluss_zeichnen.py`). Wie man eine neue
+Animation anlegt und welche Regeln sie einhalten muss, steht in
+[dokumentation/Animationen.md](dokumentation/Animationen.md).
 
 | Animation | Wo | Was sich bewegt |
 |-----------|----|-----------------|
 | `titel` | Startbildschirm | Lichtreflexe und Funkeln auf dem Diamanten, Glanz über dem Schriftzug |
 | `figur_<kennung>` (5×) | Figurwahl | das Rollen-Symbol unter der Maus und das der gewählten Karte: Zahlenschloss, Lupe, Chip, Landkarte, Füller |
 | `wrack` | Story-Intro | Feuer, Rauch und Funken am Wrack |
+| `umblaettern` | Handbuch | ein Blatt, das sich umschlägt – läuft einmal ab, nicht in einer Schleife |
 | `nachtlager` | Abschluss | das Lagerfeuer an der Oase mit Flammen, Funken und Glut unter dem Sternenhimmel |
 | `morgen` | Abschluss | dieselbe Oase im Morgengrauen: Rauch über der erloschenen Glut |
 | `hubschrauber` | Abschluss | Haupt- und Heckrotor und das grüne Licht – das Spiel lässt ihn einfliegen und landen |
