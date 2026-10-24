@@ -542,6 +542,22 @@ def test_der_stempel_steht_unten_auf_der_titelseite():
     assert max(z.y + ZEILE for z in _zeilen(satz.seiten[0])) <= stempel.y   # kein Text darunter
 
 
+def test_ein_langes_verzeichnis_schiebt_den_stempel_nicht_von_der_seite():
+    """Lieber über der letzten Zeile als unter dem Blattrand.
+
+    Passt der Stempel nicht mehr unter das Inhaltsverzeichnis, rutscht er
+    darüber: Seine Farbe ist löchrig und durchsichtig (grafik/stempel.svg),
+    die Zeile darunter bleibt lesbar. Unter dem Blattrand läge er dagegen
+    neben dem Buch – genau das war auf der Titelseite von Level 3 zu sehen,
+    nachdem eine neuere Tk-Version mit grösseren Schriftmassen rechnete.
+    """
+    lang = _seite(*(buch.Abschnitt(f"Nummer {n}", (_absatz(1),)) for n in range(12)))
+    satz = _setzen(lang, breite=300, hoehe=400, stempel=(120, 50))
+    (stempel,) = [s for s in satz.seiten[0].stuecke if isinstance(s, Stempel)]
+    assert stempel.y + stempel.hoehe == 400
+    assert max(z.y + ZEILE for z in _zeilen(satz.seiten[0])) > stempel.y   # darüber, nicht darunter
+
+
 @pytest.mark.parametrize("seite", buch.SEITEN, ids=lambda s: f"Level {s.level}")
 def test_keine_zeile_des_echten_handbuchs_ist_zu_breit(seite):
     """Mit der ausgedachten Schrift: Jede Zeile passt – ausser einem Wort, das allein zu lang ist."""

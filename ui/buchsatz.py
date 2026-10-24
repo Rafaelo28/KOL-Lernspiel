@@ -680,7 +680,11 @@ def _titelseite(satz_inhalt, schriften, breite, hoehe, px, stempel):
         y += zeile
     if stempel is not None:
         stempel_breite, stempel_hoehe = stempel
-        stuecke.append(Stempel((breite - stempel_breite) // 2, max(y + px(8), hoehe - stempel_hoehe),
+        # Der Stempel sitzt am Fuss der Seite – auch dann, wenn das Verzeichnis so
+        # lang ist, dass er dafür über dessen letzte Zeile rutscht. Die Stempelfarbe
+        # ist löchrig und durchsichtig (grafik/stempel.svg), der Text darunter bleibt
+        # lesbar; unter dem Seitenrand läge der Stempel dagegen neben dem Buch.
+        stuecke.append(Stempel((breite - stempel_breite) // 2, hoehe - stempel_hoehe,
                                stempel_breite, stempel_hoehe))
     return Buchseite(tuple(stuecke))
 
