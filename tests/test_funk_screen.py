@@ -27,6 +27,7 @@ from game import levelablauf  # noqa: E402
 from game.bearbeitung import HINWEIS_FORTSCHRITT  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
 from ui import ablauf, animation, funk, handbuch, stil, uebung  # noqa: E402
+from ui.lineal import HINWEIS as LINEAL_HINWEIS  # noqa: E402
 
 PROJEKT = Path(__file__).resolve().parent.parent
 FIGUR = charaktere.VIC_MORENO
@@ -417,6 +418,49 @@ def test_in_level_3_liegt_das_quadrat_mit_lineal_daneben_und_die_klicks_zaehlen(
     ausloesen(screen.buch, "<Button-1>", x=x, y=y)                 # links auf das R
     assert lineal.zeile == 17 and lineal.spalte is None
     assert fenster.durchlauf.spielstand.aktuelle_bearbeitung.lineal_klicks == 1
+
+
+def test_am_funkgeraet_sagt_die_leiste_dass_es_das_lineal_gibt(fenster):
+    """Vorher lag das Lineal da, ohne dass es jemand sagte – und am Gerät liegt
+    die längste Vigenère-Arbeit.
+
+    Auf dem Gerät selbst ist kein Platz für den Satz: Das Quadrat füllt die
+    linke Seite, rechts steht das Funkgerät. Also in die Knopfleiste.
+    """
+    screen = _zum_funkgeraet(fenster, 3)
+    assert screen._linealhinweis.cget("text") == LINEAL_HINWEIS
+
+
+def test_ohne_quadrat_steht_in_der_leiste_kein_tipp(fenster):
+    """In Level 1 und 2 gibt es kein Lineal – dann auch keinen Hinweis darauf."""
+    screen = _zum_funkgeraet(fenster, 1)
+    assert screen.lineal is None
+    assert screen._linealhinweis.cget("text") == ""
+
+
+def test_ein_funkspruch_als_erste_aufgabe_des_levels_zeigt_das_lineal_vor(fenster):
+    """Wird die Zeit knapp, kommt der Funkspruch vor den Übungen – dann stellt sich das Lineal hier vor.
+
+    Der Spielstand wird dafür von Hand bis Level 3 geschaltet: So sieht es
+    aus, wenn in Level 3 noch keine Aufgabe erledigt ist.
+    """
+    fenster.aktueller_screen._feld.insert(0, "1-12")
+    fenster.aktueller_screen.starten()
+    fenster.aktueller_screen.waehle(FIGUR)
+    fenster.aktueller_screen.bestaetigen()
+    for _ in story.INTRO.absaetze:
+        fenster.aktueller_screen.weiter()
+    stand = fenster.durchlauf.spielstand
+    while stand.aktuelles_level < 3:
+        stand.naechstes_level()
+    assert not stand.erledigte_aufgaben_im_level(3)
+
+    ablauf.funkgeraet_zeigen(fenster, story.FUNKSPRUCH_STANDORT)
+    screen = fenster.aktueller_screen
+    assert isinstance(screen, funk.Funk) and screen.lineal is not None
+    assert (screen.lineal.zeile, screen.lineal.spalte) != (None, None)
+    assert screen.buch.find_withtag("linealkreuzung")
+    assert stand.aktuelle_bearbeitung.lineal_klicks == 0, "vorgezeigt ist nicht selbst geklickt"
 
 
 def test_nachschlagen_und_zurueck_zum_selben_funkspruch(fenster, uhr):

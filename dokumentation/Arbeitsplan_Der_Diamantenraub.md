@@ -737,8 +737,21 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
   Zeile, ein Klick oben auf den Buchstaben der Nachricht an die Spalte; wo sie
   sich kreuzen, liegt der Marker dunkler. Ein Klick ins Quadrat legt beide an
   dieses Feld (beim Entschlüsseln: vom gefundenen Buchstaben hinauf zum
-  Spaltenkopf), ein zweiter Klick auf denselben Kopf nimmt es wieder ab. Ein
-  Satz unten auf der Übungsseite sagt, dass es das Lineal gibt
+  Spaltenkopf), ein zweiter Klick auf denselben Kopf nimmt es wieder ab
+  - **Nachgebessert nach der ersten Pilotperson:** Sie hatte nicht bemerkt,
+    dass sich das Lineal anlegen lässt. Der Satz darüber stand klein am
+    unteren Rand der Übungsseite, unter dem Schreibfeld und unter aller
+    Rückmeldung – und am Funkgerät stand er gar nicht. Jetzt steht er
+    (`lineal.HINWEIS`, an einer Stelle für beide Screens) zwischen
+    Aufgabentext und Schreibfeld, in Rotstift und Handschrift, und am
+    Funkgerät in der Knopfleiste – auf dem Gerät selbst ist kein Platz, das
+    Quadrat füllt die linke Seite. Dazu legt sich das Lineal bei der
+    **ersten** Aufgabe eines Levels von selbst an (`Lineal.vorzeigen`): Man
+    sieht die Bänder und den dunkleren Kreuzungspunkt, ohne etwas gelesen zu
+    haben. Das vorgezeigte Feld liegt dreizehn Zeilen und Spalten neben dem
+    ersten Schritt der Aufgabe (`lineal.vorzeigefeld`) – zeigen ja, den
+    ersten Nachschlageschritt verschenken nein. Vorgezeigt zählt nicht als
+    Klick im Log
   - **Es markiert nur und liest nicht ab:** Kein Buchstabe wird ausgegeben
     (ein Test prüft, dass das Lineal keinen einzigen Text anlegt). Das Ablesen
     im Quadrat ist genau, was Level 3 misst; die Kontrollgruppe darf auf

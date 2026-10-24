@@ -283,6 +283,14 @@ class Funk(Screen):
         self._knopf.bind("<Return>", lambda _ereignis: self._knopf.invoke())
         self._restknopf = tk.Button(leiste, command=self.rest_freigeben, padx=self.px(stil.ABSTAND), **knopfart)
         self._restknopf.bind("<Return>", lambda _ereignis: self._restknopf.invoke())
+        # Der Tipp auf das Lineal. Auf dem Gerät ist kein Platz dafür – das
+        # Quadrat füllt die linke Seite, rechts steht das Funkgerät –, und die
+        # Leiste ist die einzige Fläche, die nichts überdeckt. Beschriftet wird
+        # sie erst in beim_anzeigen: Ob es ein Lineal gibt, steht erst fest,
+        # wenn die Seite liegt.
+        self._linealhinweis = tk.Label(leiste, text="", font=stil.SCHRIFT_KURSIV, bg=stil.FARBE_NACHT,
+                                       fg=stil.FARBE_MELDUNG)
+        self._linealhinweis.pack(side="left", padx=self.px(stil.ABSTAND))
 
     def _glas(self):
         """Die Fläche auf dem Glas, auf der geschrieben wird: (x0, y0, x1, y1) auf der Leinwand."""
@@ -323,6 +331,7 @@ class Funk(Screen):
         self.aufgabe = aufgabe
         seite = self.buch.werkzeug_zeichnen(aufgabe.level)
         self.lineal = lineal.anlegen(self.buch, "links", seite.stuecke, bei_benutzung=self._lineal_benutzt)
+        self._lineal_vorstellen(stand)
         self._anzeige_zeichnen()
         self._feld.insert(0, self._entwurf)
         self._feld.focus_set()
@@ -332,6 +341,20 @@ class Funk(Screen):
         else:
             self.anzeige_vervollstaendigen()
         self._stand_zeigen(stand.aktuelle_bearbeitung)
+
+    def _lineal_vorstellen(self, stand):
+        """Sagt, dass es das Lineal gibt – und zeigt es bei der ersten Aufgabe des Levels.
+
+        Ohne das stand am Funkgerät gar kein Hinweis: Das Lineal lag da, aber
+        niemand sagte es. Die erste Testperson des Pilotdurchlaufs hat es
+        deshalb nicht benutzt – und in Level 3 liegt die längste
+        Vigenère-Arbeit am Gerät, nicht in den Übungen.
+        """
+        if self.lineal is None:
+            return
+        self._linealhinweis.configure(text=lineal.HINWEIS)
+        if not stand.erledigte_aufgaben_im_level(self.funkspruch.level):
+            self.lineal.vorzeigen(lineal.vorzeigefeld(lineal.erster_schritt(self.aufgabe)))
 
     def _nachlesen_zeigen(self):
         """Die ganze Nachricht zum Mitlesen – ohne Eingabe, ohne Uhr, ohne Log."""

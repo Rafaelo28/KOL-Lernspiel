@@ -40,9 +40,15 @@ Das Lineal in Level 3
 Neben einer Vigenère-Übung liegt das Quadrat mit 676 Feldern. Damit beim
 Nachschlagen niemand um eine Zeile verrutscht, lässt sich ein Lineal anlegen
 (:mod:`ui.lineal`): ein Klick auf den Schlüsselbuchstaben links, einer auf den
-Buchstaben der Nachricht oben. Abgelesen wird weiter selbst. Ein Satz unten auf
-der Übungsseite sagt, dass es das Lineal gibt; wie oft es bewegt wurde, zählt
-die Spiellogik fürs Log mit.
+Buchstaben der Nachricht oben. Abgelesen wird weiter selbst; wie oft es bewegt
+wurde, zählt die Spiellogik fürs Log mit.
+
+Dass es das Lineal gibt, sagt der Tipp über dem Schreibfeld – in Rotstift und
+Handschrift, schief wie hingekritzelt. Bei der ersten Aufgabe des Levels legt
+sich das Lineal zusätzlich von selbst an, auf einem Feld weit weg von dem, mit
+dem die Aufgabe anfängt (:func:`ui.lineal.vorzeigefeld`). Beides kam nach dem
+Pilotdurchlauf dazu: Am unteren Seitenrand, wo der Satz vorher stand, hat ihn
+die erste Testperson nicht gesehen.
 
 Nachschlagen mitten in der Aufgabe
 ──────────────────────────────────
@@ -63,6 +69,7 @@ gerufen, und :mod:`ui.ablauf` zeigt, was drankommt.
 kommt aus demselben Pool –, aber im Log stehen beide getrennt.
 """
 
+import math
 import tkinter as tk
 
 from content import verfahren
@@ -92,9 +99,6 @@ BESCHRIFTUNG_ANTWORT = "Deine Antwort:"
 LOB = "Richtig! Genau so stimmt es."
 LOESUNGSZEILE = "Die Lösung: {loesung}"
 LOESUNGSHINWEIS = "Schau sie dir in Ruhe an – dann geht es weiter."
-#: Unten auf der Übungsseite, wenn links das Quadrat liegt.
-LINEAL_HINWEIS = ("Tipp: Klick im Quadrat links auf den Schlüsselbuchstaben und oben auf den Buchstaben "
-                  "der Nachricht – dann liegt ein Lineal an.")
 VERSUCHE_UEBRIG = "Noch {anzahl} Versuche."
 LETZTER_VERSUCH = "Noch ein Versuch – danach zeige ich dir die Lösung."
 
@@ -230,6 +234,18 @@ class Uebung(Screen):
         seite = self.buch.werkzeug_zeichnen(self.durchlauf.spielstand.aktuelles_level)
         if self.lineal is None:
             self.lineal = lineal.anlegen(self.buch, "links", seite.stuecke, bei_benutzung=self._lineal_benutzt)
+            if self.lineal is not None and self._erste_aufgabe_im_level():
+                self.lineal.vorzeigen(lineal.vorzeigefeld(lineal.erster_schritt(self.aufgabe)))
+
+    def _erste_aufgabe_im_level(self):
+        """Ist das die erste Aufgabe dieses Levels?
+
+        Dann zeigt sich das Lineal von selbst. Später nicht mehr: Wer schon
+        eine Aufgabe hinter sich hat, weiss davon – und ein Lineal, das bei
+        jeder Übung von vorn an fremder Stelle liegt, wäre nur im Weg.
+        """
+        stand = self.durchlauf.spielstand
+        return not stand.erledigte_aufgaben_im_level(stand.aktuelles_level)
 
     def _lineal_benutzt(self):
         """Zählt fürs Log, dass das Lineal bewegt wurde."""
@@ -273,6 +289,9 @@ class Uebung(Screen):
             y += s.kapitel.metrics("linespace")
         y += px(ABSTAND_TEXT)
 
+        if self.lineal is not None:
+            y += self._lineal_tipp_setzen(stuecke, y, breite)
+
         stuecke.append(buchsatz.Zeile(0, y, BESCHRIFTUNG_ANTWORT, "klein", stil.FARBE_TINTE, "beschriftung"))
         y += s.klein.metrics("linespace") + px(ABSTAND_FELD)
         feldhoehe = round(s.notiz.metrics("linespace") * FELDHOEHE)
@@ -280,16 +299,26 @@ class Uebung(Screen):
         y += feldhoehe + px(ABSTAND_RUECKMELDUNG)
         self._rueckmeldung_oben = y
 
-        if self.lineal is not None:
-            # Ganz unten auf der Seite, unter aller Rückmeldung.
-            zeilen = buchsatz.umbrechen(LINEAL_HINWEIS, s.klein, breite)
-            unten = self.buch.flaeche("rechts")[3] - y0
-            for nr, zeile in enumerate(zeilen):
-                stuecke.append(buchsatz.Zeile(0, unten - (len(zeilen) - nr) * s.klein.metrics("linespace"), zeile,
-                                              "klein", stil.FARBE_TINTE, "linealhinweis"))
-
         self.buch.seite_zeichnen("rechts", stuecke)
         self._schreibfeld_zeichnen()
+
+    def _lineal_tipp_setzen(self, stuecke, y, breite):
+        """Schreibt den Tipp auf das Lineal zwischen Aufgabentext und Schreibfeld.
+
+        Rotstift, Handschrift und derselbe kleine Winkel wie bei Bobs
+        Randnotizen im Handbuch (:data:`ui.buchsatz.NOTIZWINKEL`) – so liest
+        es sich wie mit der Hand dazugeschrieben und nicht wie gedruckter Text,
+        den man überblättert. Rückgabe ist die Höhe, die er braucht.
+
+        Schief gestellt steigt das rechte Ende nach oben; deshalb beginnt der
+        Text um genau diese Höhe tiefer, sonst ragte er in den Aufgabentext.
+        """
+        s, px = self.buch.schriften, self.px
+        zeilen = buchsatz.umbrechen(lineal.HINWEIS, s.notiz, breite)
+        schraeg = math.ceil(breite * math.sin(math.radians(buchsatz.NOTIZWINKEL)))
+        stuecke.append(buchsatz.Zeile(0, y + schraeg, "\n".join(zeilen), "notiz", stil.FARBE_ROTSTIFT,
+                                      "linealhinweis", winkel=buchsatz.NOTIZWINKEL))
+        return schraeg + len(zeilen) * s.notiz.metrics("linespace") + px(ABSTAND_TEXT)
 
     def _schreibfeld_zeichnen(self):
         """Das Feld, in das geschrieben wird – ein Kasten auf dem Papier."""

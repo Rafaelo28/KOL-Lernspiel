@@ -24,14 +24,37 @@ benutzt wurde, steht im Log (``lineal_klicks``).
 Das Lineal gibt es nur, wo das Quadrat liegt – in Level 3, von der ersten
 Übung an. Das Quadrat selbst zeichnet :mod:`ui.buchleinwand`; das Lineal legt
 sich nur darüber.
+
+Dass es das Lineal gibt, muss auffallen
+───────────────────────────────────────
+Die erste Testperson des Pilotdurchlaufs hat es nicht bemerkt. Deshalb zweierlei:
+
+* :data:`HINWEIS` steht auf beiden Bildschirmen mit Quadrat – auf der
+  Übungsseite als rote Notiz über dem Schreibfeld, am Funkgerät in der
+  Knopfleiste. Vorher stand der Satz nur klein am unteren Seitenrand, unter
+  dem Schreibfeld und unter aller Rückmeldung.
+* Bei der **ersten** Aufgabe eines Levels legt sich das Lineal von selbst an
+  (:meth:`Lineal.vorzeigen`): Man sieht die beiden Bänder und den dunkleren
+  Kreuzungspunkt, ohne etwas gelesen zu haben. Der erste eigene Klick legt es
+  um. Gezählt wird das Vorzeigen nicht – ``lineal_klicks`` im Log soll sagen,
+  wie oft jemand **selbst** geklickt hat.
 """
 
 import math
 
+from crypto.normalize import ALPHABET
 from ui import buchsatz, stil
 
 #: Tag aller Stücke des Lineals auf der Leinwand.
 TAG = "lineal"
+
+#: Der Satz, der sagt, dass es das Lineal gibt. Er steht hier und nicht in den
+#: Screens: :mod:`ui.uebung` und :mod:`ui.funk` zeigen denselben.
+HINWEIS = "Tipp: Klick im Quadrat links auf Zeile und Spalte – dann liegt dein Lineal an!"
+
+#: So weit liegt das vorgezeigte Lineal vom ersten Schritt der Aufgabe weg:
+#: dreizehn Felder, also genau gegenüber im Alphabet.
+ABSTAND_VORZEIGEN = 13
 
 
 class Lineal:
@@ -93,6 +116,17 @@ class Lineal:
             self._bei_benutzung()
         return True
 
+    def vorzeigen(self, feld):
+        """Legt das Lineal von selbst an ``feld`` – damit zu sehen ist, dass es das gibt.
+
+        Gedacht für die erste Aufgabe eines Levels (siehe Modulkopf). Anders
+        als :meth:`klicken` ruft das **nicht** ``bei_benutzung()``: Im Log
+        soll stehen, wie oft jemand selbst geklickt hat, nicht, wie oft das
+        Spiel etwas vorgemacht hat.
+        """
+        self.zeile, self.spalte = feld
+        self.zeichnen()
+
     # ── Zeichnen ───────────────────────────────────────────────────────────
 
     def zeichnen(self):
@@ -134,3 +168,44 @@ def anlegen(leinwand, seite, stuecke, bei_benutzung=None):
     leinwand.bind("<Motion>", lambda ereignis: leinwand.configure(
         cursor="hand2" if lineal.ziel(ereignis.x, ereignis.y) else ""))
     return lineal
+
+
+def erster_schritt(aufgabe):
+    """Zeile und Spalte, mit denen eine Vigenère-Aufgabe im Quadrat anfängt.
+
+    Die Zeile ist der erste Buchstabe des Schlüsselworts, die Spalte der erste
+    Buchstabe der angezeigten Nachricht. ``None``, wenn sich das nicht sagen
+    lässt – ohne Aufgabe (ein Funkspruch zum Mitlesen) oder in einem Level,
+    dessen Schlüssel kein Wort ist.
+    """
+    if aufgabe is None:
+        return None
+    schluessel = str(aufgabe.schluessel or "").strip()
+    text = (aufgabe.anzeigetext or "").replace(" ", "")
+    if not schluessel or not text:
+        return None
+    if schluessel[0] not in ALPHABET or text[0] not in ALPHABET:
+        return None
+    return (ALPHABET.index(schluessel[0]), ALPHABET.index(text[0]))
+
+
+def vorzeigefeld(erster_schritt_der_aufgabe=None):
+    """Wo das Lineal liegt, wenn es sich selbst vorstellt.
+
+    Ohne Aufgabe links oben (A/A). Sonst dreizehn Zeilen und dreizehn Spalten
+    weiter, also genau gegenüber im Alphabet: Das Lineal soll zeigen, *dass*
+    es sich anlegen lässt, und nicht den ersten Nachschlageschritt
+    verschenken. Eine schon markierte Zeile wäre die halbe Arbeit – und
+    gerechnet werden soll von Hand (siehe Modulkopf).
+
+    >>> vorzeigefeld()
+    (0, 0)
+    >>> vorzeigefeld((0, 0))
+    (13, 13)
+    >>> vorzeigefeld((17, 7))
+    (4, 20)
+    """
+    if erster_schritt_der_aufgabe is None:
+        return (0, 0)
+    zeile, spalte = erster_schritt_der_aufgabe
+    return ((zeile + ABSTAND_VORZEIGEN) % len(ALPHABET), (spalte + ABSTAND_VORZEIGEN) % len(ALPHABET))

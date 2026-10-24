@@ -25,6 +25,7 @@ from game.bearbeitung import HINWEIS_FORTSCHRITT  # noqa: E402
 from game.rueckmeldung import rueckmeldung  # noqa: E402
 from game.zeitfenster import DAUER_JE_LEVEL_SEKUNDEN  # noqa: E402
 from ui import ablauf, funk, handbuch, stil, uebung  # noqa: E402
+from ui.lineal import HINWEIS as LINEAL_HINWEIS  # noqa: E402
 
 LEVEL = (1, 2, 3)
 
@@ -229,7 +230,7 @@ def _quadratmitte(screen, zeile, spalte):
 def test_bei_vigenere_liegt_ein_lineal_am_quadrat(fenster, ausloesen):
     screen = _zur_uebung(fenster, 3)
     assert screen.lineal is not None and screen.lineal.seite == "links"
-    assert _eine_zeile([uebung.LINEAL_HINWEIS]) in _eine_zeile(screen.texte("rechts"))
+    assert _eine_zeile([LINEAL_HINWEIS]) in _eine_zeile(screen.texte("rechts"))
     bearbeitung = fenster.durchlauf.spielstand.aktuelle_bearbeitung
     for zeile, spalte in ((17, -1), (-1, 7)):
         x, y = _quadratmitte(screen, zeile, spalte)
@@ -249,24 +250,72 @@ def test_vor_level_3_gibt_es_kein_lineal(fenster, level):
     screen = _zur_uebung(fenster, level)
     assert screen.lineal is None
     assert not screen.buch.bind("<Button-1>")
-    assert uebung.LINEAL_HINWEIS.split()[0] not in " ".join(screen.texte("rechts"))
+    assert LINEAL_HINWEIS.split()[0] not in " ".join(screen.texte("rechts"))
 
 
 @pytest.mark.parametrize("massstab", [1, 1.5])
-def test_der_hinweis_aufs_lineal_steht_unter_der_laengsten_rueckmeldung(fenster):
+def test_der_hinweis_aufs_lineal_steht_zwischen_aufgabe_und_schreibfeld(fenster):
+    """Vorher stand er am unteren Seitenrand – dort hat ihn die erste Testperson übersehen.
+
+    Jetzt liegt er im Blickweg: unter dem Aufgabentext, über dem Feld, in das
+    die Antwort kommt. Die Rückmeldung bleibt unter dem Feld und deckt ihn
+    auch nach drei Fehlversuchen nicht zu.
+    """
     screen = _zur_uebung(fenster, 3)
+    stuecke = screen.buch.find_withtag("linealhinweis")
+    assert stuecke
+    oben = min(screen.buch.bbox(e)[1] for e in stuecke)
+    unten = max(screen.buch.bbox(e)[3] for e in stuecke)
+    text_unten = max(screen.buch.bbox(e)[3] for e in screen.buch.find_withtag("aufgabentext"))
+    feld_oben = screen._ursprung[1] + screen._feldkasten[1]
+    assert text_unten <= oben, "unter dem Aufgabentext"
+    assert unten <= feld_oben, "und über dem Schreibfeld"
+
     falsch = _mit_fehler(screen.aufgabe.loesung, 99)
     for _ in range(3):
         _tippen(screen, falsch)
         screen.pruefen()
     assert screen.ist_beendet
-    unten = max(screen.buch.bbox(e)[3] for e in screen.buch.find_withtag("rueckmeldung"))
-    oben = min(screen.buch.bbox(e)[1] for e in screen.buch.find_withtag("linealhinweis"))
-    assert unten <= oben
-    # Ganz unten auf der Seite – dort stört er beim Rechnen nicht.
-    ende = max(screen.buch.bbox(e)[3] for e in screen.buch.find_withtag("linealhinweis"))
-    seitenende = screen.buch.flaeche("rechts")[3]
-    assert seitenende - screen.buch.schriften.klein.metrics("linespace") <= ende <= seitenende + 2
+    rueckmeldung_oben = min(screen.buch.bbox(e)[1] for e in screen.buch.find_withtag("rueckmeldung"))
+    assert unten <= rueckmeldung_oben, "die Rückmeldung steht darunter, nicht darüber"
+    assert screen.buch.find_withtag("linealhinweis"), "und der Hinweis steht noch da"
+
+
+def test_der_hinweis_aufs_lineal_ist_mit_rotstift_dazugeschrieben(fenster):
+    """Gedruckte Kleinschrift am Rand liest niemand – Handschrift in Rot fällt auf."""
+    screen = _zur_uebung(fenster, 3)
+    (stueck,) = screen.buch.find_withtag("linealhinweis")
+    assert screen.buch.itemcget(stueck, "fill") == stil.FARBE_ROTSTIFT
+    assert screen.buch.itemcget(stueck, "font") == str(screen.buch.schriften.notiz)
+    assert float(screen.buch.itemcget(stueck, "angle")) > 0, "schief wie hingekritzelt"
+
+
+def test_bei_der_ersten_uebung_zeigt_sich_das_lineal_von_selbst(fenster):
+    """Zeigen statt schreiben: Man sieht die Bänder und den Kreuzungspunkt sofort."""
+    screen = _zur_uebung(fenster, 3)
+    assert (screen.lineal.zeile, screen.lineal.spalte) != (None, None)
+    assert screen.buch.find_withtag("linealkreuzung")
+    bearbeitung = fenster.durchlauf.spielstand.aktuelle_bearbeitung
+    assert bearbeitung.lineal_klicks == 0, "vorgezeigt ist nicht selbst geklickt"
+
+
+def test_das_vorgezeigte_lineal_liegt_nicht_auf_dem_ersten_schritt(fenster):
+    """Sonst wäre die erste Zeile im Quadrat schon markiert – die halbe Arbeit."""
+    screen = _zur_uebung(fenster, 3)
+    schluessel, text = screen.aufgabe.schluessel, screen.aufgabe.anzeigetext
+    erster = (ALPHABET.index(schluessel[0]), ALPHABET.index(text.replace(" ", "")[0]))
+    assert screen.lineal.zeile != erster[0] and screen.lineal.spalte != erster[1]
+
+
+def test_bei_der_zweiten_uebung_zeigt_sich_das_lineal_nicht_mehr(fenster):
+    """Wer eine Aufgabe hinter sich hat, weiss davon – und ein fremd liegendes Lineal wäre im Weg."""
+    screen = _zur_uebung(fenster, 3)
+    _tippen(screen, screen.aufgabe.loesung)
+    screen.pruefen()
+    screen.weiter()
+    zweite = fenster.aktueller_screen
+    assert isinstance(zweite, uebung.Uebung) and zweite.aufgabe is not None
+    assert (zweite.lineal.zeile, zweite.lineal.spalte) == (None, None)
 
 
 def test_geschrieben_wird_in_handschrift(fenster):
