@@ -135,7 +135,8 @@ def test_bei_knapper_zeit_faellt_auch_die_zusatzaufgabe_aus():
 def test_reicht_die_zeit_knapp_doch_kommt_die_uebung():
     """Die Grenze gilt einschliesslich – sonst fiele eine Übung aus, für die es reicht."""
     gerade_genug = (_knappe_zeit(LEVEL_1)
-                    + zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung()))
+                    + zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung(),
+                                                     LEVEL_1[0].verfahren))
     assert naechster_schritt(0, LEVEL_1, gerade_genug).art == SCHRITT_UEBUNG
     assert naechster_schritt(0, LEVEL_1, gerade_genug - 1).art == SCHRITT_FUNKSPRUCH
 
@@ -146,7 +147,8 @@ def test_ohne_funkspruch_und_ohne_zeit_endet_das_level():
 
 
 def test_je_mehr_funksprueche_offen_sind_desto_frueher_greift_der_vorrang():
-    zeit = _knappe_zeit(LEVEL_1) + zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung())
+    zeit = _knappe_zeit(LEVEL_1) + zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung(),
+                                                                 LEVEL_1[0].verfahren)
     assert naechster_schritt(0, LEVEL_1, zeit).art == SCHRITT_UEBUNG
     assert naechster_schritt(0, LEVEL_1[:1], zeit).art == SCHRITT_UEBUNG, "Weniger offen, mehr Luft."
     mehr = LEVEL_1 + story.FUNKSPRUECHE_NACH_LEVEL[3]
@@ -253,7 +255,7 @@ def test_wer_sehr_langsam_ist_bekommt_keine_zusatzaufgabe():
     stand = _stand(uhr)
     for _ in range(BASIS_UEBUNGEN_JE_LEVEL):
         stand.naechste_uebung()
-        _loese(stand, sekunden=250, uhr=uhr)
+        _loese(stand, sekunden=400, uhr=uhr)
     assert stand.tempofaktor > 2
     assert not stand.zusatzaufgabe_faellig
     assert stand.naechster_schritt.art == SCHRITT_FUNKSPRUCH

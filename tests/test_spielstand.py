@@ -974,7 +974,7 @@ def test_das_tempo_wird_am_laufenden_level_gemessen():
     stand = _stand_mit_uhr(uhr)
     stand.starte_level(1)
     aufgabe = stand.naechste_uebung()
-    uhr.weiter(3 * erwartete_dauer(aufgabe.laenge_in_buchstaben))     # langsam
+    uhr.weiter(3 * erwartete_dauer(aufgabe.laenge_in_buchstaben, aufgabe.verfahren))   # langsam
     stand.versuchen(aufgabe.loesung)
     stand.aufgabe_abschliessen()
     assert stand.tempofaktor == 3.0
@@ -982,7 +982,7 @@ def test_das_tempo_wird_am_laufenden_level_gemessen():
     stand.naechstes_level()
     stand.starte_zeitfenster()
     aufgabe = stand.naechste_uebung()
-    uhr.weiter(erwartete_dauer(aufgabe.laenge_in_buchstaben))          # wie geschätzt
+    uhr.weiter(erwartete_dauer(aufgabe.laenge_in_buchstaben, aufgabe.verfahren))       # wie geschätzt
     stand.versuchen(aufgabe.loesung)
     stand.aufgabe_abschliessen()
     assert stand.tempofaktor == 1.0, "das laufende Level zählt, nicht das davor"
@@ -1005,7 +1005,7 @@ def test_eine_aufgeloeste_aufgabe_setzt_das_tempo_nicht_zurueck():
     stand.starte_level(1)
     for _ in range(2):
         aufgabe = stand.naechste_uebung()
-        uhr.weiter(3 * erwartete_dauer(aufgabe.laenge_in_buchstaben))
+        uhr.weiter(3 * erwartete_dauer(aufgabe.laenge_in_buchstaben, aufgabe.verfahren))
         stand.versuchen(aufgabe.loesung)
         stand.aufgabe_abschliessen()
     assert stand.tempofaktor == 3.0

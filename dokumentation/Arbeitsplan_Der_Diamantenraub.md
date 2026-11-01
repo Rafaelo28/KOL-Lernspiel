@@ -283,10 +283,16 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   (`tests/test_generator.py` und `tests/test_zusatzaufgaben.py` prüfen das)
 - Eine Zusatzaufgabe kurz vor Schluss wird nicht gestellt (Projektregel 1: sie
   würde nur unfertig abgebrochen)
-- **Im Pilotdurchlauf nachmessen:** die Spalten `sekunden` und
-  `gerechnete_buchstaben` aus dem Log gegeneinander auftragen und die Gerade
-  daran anpassen – Zeilen mit `abgebrochen = ja` vorher herausfiltern, dort
-  ist die Zeit keine Rechenzeit
+- **Im Pilotdurchlauf nachgemessen (erledigt):** 85 Übungen von fünf
+  Personen, ohne die Zeilen mit `abgebrochen = ja`. Ergebnis: Die Gerade
+  (20 s + 4 s je Buchstabe) trifft die **Substitution** auf die Sekunde
+  (Median 67 s je Übung gegen 68 s geschätzt), liegt bei Caesar um Faktor
+  zwei und bei Vigenère um Faktor 4,4 daneben. Deshalb gibt es jetzt
+  `VERFAHRENSFAKTOR` in `game/zusatzaufgaben.py` (1,0 / 2,0 / 4,5).
+  Die Gerade selbst liess sich nicht nachbessern: Alle Übungstexte sind
+  10–14 Buchstaben lang, auf dieser Strecke ist die Grundzeit nicht von der
+  Zeit je Buchstabe zu trennen. Dafür bräuchte es Aufgaben sehr
+  verschiedener Länge
 - **Zusatzaufgaben kommen nach den Funksprüchen.** Die Zusammenfassung legte
   den Ablauf ursprünglich andersherum fest ("Übungsaufgaben (+ ggf.
   Zusatzaufgaben) → echte Sendeaufgabe → Bobs Antwort"); seit dem

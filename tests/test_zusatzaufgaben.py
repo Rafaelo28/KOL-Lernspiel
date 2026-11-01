@@ -251,9 +251,14 @@ def test_die_erwartete_dauer_waechst_mit_der_laenge():
     assert len(set(dauern)) == len(dauern)
 
 
+#: Die Proben hier sind Caesar-Aufgaben – wer ihre erwartete Dauer ausrechnet,
+#: muss denselben Verfahrensfaktor benutzen wie der Tempofaktor.
+PROBENVERFAHREN = "caesar"
+
+
 def _geloeste_bearbeitung(uhr, sekunden, text="HUND", loesung="KXQG"):
     """Eine gelöste Übung, die ``sekunden`` gedauert hat."""
-    aufgabe = Aufgabe("probe", 1, "caesar", VERSCHLUESSELN, 3, text, loesung)
+    aufgabe = Aufgabe("probe", 1, PROBENVERFAHREN, VERSCHLUESSELN, 3, text, loesung)
     uhr.jetzt = 0
     lauf = Bearbeitung(aufgabe, uhr)
     uhr.weiter(sekunden)
@@ -270,7 +275,8 @@ def test_wer_doppelt_so_lange_braucht_hat_den_faktor_zwei():
     uhr = Uhr()
     for text, loesung in [("HUND", "KXQG"), ("ZEIT WIRD KNAPP", "CHLW ZLUG NQDSS")]:
         laenge = len(text.replace(" ", ""))
-        lauf = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(laenge) * 2, text, loesung)
+        lauf = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(laenge, PROBENVERFAHREN) * 2,
+                                     text, loesung)
         assert zusatz.tempofaktor([lauf]) == pytest.approx(2.0), text
 
 
@@ -295,8 +301,9 @@ def test_abgebrochene_aufgaben_zaehlen_beim_tempo_nicht_mit():
 def test_lange_aufgaben_wiegen_beim_tempo_schwerer():
     """Gerechnet wird Summe durch Summe – sonst zöge eine kurze Aufgabe alles mit."""
     uhr = Uhr()
-    kurz = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(4) * 3, "HUND", "KXQG")
-    lang = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(13), "ZEIT WIRD KNAPP", "CHLW ZLUG NQDSS")
+    kurz = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(4, PROBENVERFAHREN) * 3, "HUND", "KXQG")
+    lang = _geloeste_bearbeitung(uhr, zusatz.erwartete_dauer(13, PROBENVERFAHREN),
+                                 "ZEIT WIRD KNAPP", "CHLW ZLUG NQDSS")
     faktor = zusatz.tempofaktor([kurz, lang])
     assert 1.0 < faktor < 2.0, faktor
 
@@ -337,7 +344,8 @@ def test_auch_wer_langsam_war_bekommt_eine_solange_die_zeit_reicht():
 def test_wer_langsam_rechnet_braucht_mehr_restzeit():
     """Der Tempofaktor verschiebt die Grenze – für Langsame früher."""
     offen = story.FUNKSPRUECHE_NACH_LEVEL[1]
-    noetig = zusatz.erwartete_dauer(zusatz.laengste_uebung()) + zusatz.erwartete_dauer_funksprueche(offen)
+    noetig = (zusatz.erwartete_dauer(zusatz.laengste_uebung(), offen[0].verfahren)
+              + zusatz.erwartete_dauer_funksprueche(offen))
     knapp = 2 * noetig + zusatz.MINDESTRESTZEIT_SEKUNDEN
     assert zusatz.zeit_reicht_noch(knapp, offen, tempo=2.0)
     assert not zusatz.zeit_reicht_noch(knapp - 1, offen, tempo=2.0)
@@ -592,17 +600,17 @@ def test_nach_dem_letzten_funkspruch_wird_weiter_geuebt(funkspruch):
 def test_wer_die_ganze_nachricht_rechnet_wird_an_ihr_gemessen():
     """Gemessen an der ganzen Nachricht, nicht am Anfang.
 
-    100 Sekunden für 15 Buchstaben sind langsam, für 78 sehr schnell – der
-    Tempofaktor muss das auseinanderhalten.
+    200 Sekunden für den Anfang sind langsam, für die ganze Nachricht sehr
+    schnell – der Tempofaktor muss das auseinanderhalten.
     """
     uhr = Uhr()
     ganz = _bob(uhr)
-    uhr.weiter(100)
+    uhr.weiter(200)
     ganz.versuchen(ganz.aufgabe.vollstaendige_loesung)
 
     uhr = Uhr()
     anfang = _bob(uhr)
-    uhr.weiter(100)
+    uhr.weiter(200)
     anfang.versuchen(anfang.aufgabe.loesung)
 
     assert zusatz.tempofaktor([ganz]) < 1 < zusatz.tempofaktor([anfang])

@@ -44,13 +44,36 @@ Gerechnet wird darum mit einer Geraden::
 Gebraucht wird sie zweimal: um zu sehen, ob die Restzeit noch reicht, und um
 das eigene Tempo daran zu messen (:func:`tempofaktor`).
 
-Die Zahlen sind Schätzungen
-───────────────────────────
-Beide stehen an genau dieser Stelle und gehören im Pilotdurchlauf
-(Arbeitsplan 8.2) nachgemessen: zwei, drei Personen spielen lassen, im Log die
-Spalten ``sekunden`` und ``gerechnete_buchstaben`` gegeneinander auftragen und
-die Gerade daran anpassen – ohne die Zeilen mit ``abgebrochen = ja``, dort ist
-die Zeit keine Rechenzeit. Erst danach sind die Werte belastbar.
+Die Zahlen sind Schätzungen – und je Verfahren verschieden
+──────────────────────────────────────────────────────────
+Die Gerade beschreibt die **Substitution**. Was die anderen beiden Verfahren
+mehr kosten, steht in :data:`VERFAHRENSFAKTOR`.
+
+Dass es diesen Faktor braucht, hat der Pilotdurchlauf gezeigt (Arbeitsplan
+8.2). Fünf Personen, Median je Übung:
+
+    Substitution   67 s      Caesar  130 s      Vigenère  298 s
+
+Die Gerade sagte für eine zwölfbuchstabige Übung 68 Sekunden voraus – für die
+Substitution auf die Sekunde richtig, für Caesar um den Faktor zwei und für
+Vigenère um den Faktor 4,4 daneben. Kein Wunder: Bei der Substitution schlägt
+man in einer Tabelle nach, bei Caesar zählt man im Alphabet ab, bei Vigenère
+sucht man ein Feld in einem Quadrat aus 676.
+
+Die Gerade **selbst** lässt sich aus diesen Daten nicht nachbessern: Alle
+Übungstexte sind zehn bis vierzehn Buchstaben lang, und auf dieser kurzen
+Strecke ist die Grundzeit nicht von der Zeit je Buchstabe zu trennen (eine
+Regression über die Pilotdaten liefert für Caesar sogar eine negative
+Steigung). Dafür bräuchte es Aufgaben sehr verschiedener Länge. Die Faktoren
+dagegen stehen auf 85 Übungen und sind deutlich.
+
+Warum das nicht bloss Kosmetik ist: Von dieser Schätzung hängt die
+Vorrang-Regel ab, die in jedem Level Zeit für die Funksprüche zurücklegt
+(:mod:`game.levelablauf`). In Level 3 reservierte sie dadurch rund ein
+Viertel dessen, was nötig war – drei von fünf Pilotpersonen bekamen Bobs
+zweite Antwort am Ende aufgelöst statt gerechnet. Der Tempofaktor konnte das
+nicht auffangen: Er ist bei 3,0 gedeckelt, und zu Beginn von Level 3 ist er
+ohnehin an den Leveln davor gemessen.
 
 Warum es eine Obergrenze gibt
 ─────────────────────────────
@@ -93,15 +116,26 @@ auseinander.
 """
 
 from content import uebungen as _uebungen
+from content import verfahren as _verfahren
 from crypto.normalize import ohne_leerzeichen as _ohne_leerzeichen
 from game.aufgabe import QUELLE_UEBUNG
 
 #: Feste Zeit je Aufgabe, unabhängig von ihrer Länge: lesen, Schlüssel
-#: nachschlagen, Eingabefeld anklicken, tippen, prüfen. Schätzwert.
+#: nachschlagen, Eingabefeld anklicken, tippen, prüfen. Gilt für die
+#: Substitution; im Pilotdurchlauf bestätigt (siehe Modulkopf).
 ERWARTETE_GRUNDZEIT_SEKUNDEN = 20.0
 
-#: Zeit je Buchstabe, der von Hand gerechnet werden muss. Schätzwert.
+#: Zeit je Buchstabe, der von Hand gerechnet werden muss – bei der
+#: Substitution.
 ERWARTETE_SEKUNDEN_JE_BUCHSTABE = 4.0
+
+#: Was ein Verfahren gegenüber der Substitution kostet. Aus den Medianen des
+#: Pilotdurchlaufs gerundet: 67 s / 130 s / 298 s je Übung (siehe Modulkopf).
+VERFAHRENSFAKTOR = {
+    _verfahren.SUBSTITUTION: 1.0,
+    _verfahren.CAESAR: 2.0,
+    _verfahren.VIGENERE: 4.5,
+}
 
 #: So viele Zusatzaufgaben gibt es je Level höchstens. Zusammen mit den zwei
 #: Pflichtübungen sind das achtzehn – genau so viele Texte, wie der Pool je
@@ -127,15 +161,22 @@ MINDESTRESTZEIT_SEKUNDEN = 60.0
 TEMPO_GRENZEN = (0.5, 3.0)
 
 
-def erwartete_dauer(laenge_in_buchstaben):
-    """Wie lange eine Aufgabe dieser Länge voraussichtlich dauert.
+def erwartete_dauer(laenge_in_buchstaben, verfahren=None):
+    """Wie lange eine Aufgabe dieser Länge in diesem Verfahren voraussichtlich dauert.
+
+    Ohne ``verfahren`` ist es die Gerade selbst, also die Substitution ohne
+    Aufschlag. Ein unbekanntes Verfahren ist ein Fehler und kein stiller
+    Faktor eins – ein Tippfehler im Kennwort soll auffallen.
 
     >>> erwartete_dauer(4)
     36.0
     >>> erwartete_dauer(25)
     120.0
+    >>> erwartete_dauer(25, "caesar"), erwartete_dauer(25, "vigenere")
+    (240.0, 540.0)
     """
-    return (
+    faktor = VERFAHRENSFAKTOR[verfahren] if verfahren is not None else 1.0
+    return faktor * (
         ERWARTETE_GRUNDZEIT_SEKUNDEN
         + laenge_in_buchstaben * ERWARTETE_SEKUNDEN_JE_BUCHSTABE
     )
@@ -149,11 +190,12 @@ def erwartete_dauer_funksprueche(funksprueche):
 
     >>> from content import story
     >>> erwartete_dauer_funksprueche(story.FUNKSPRUECHE_NACH_LEVEL[1])
-    180.0
+    360.0
     >>> erwartete_dauer_funksprueche(())
     0
     """
-    return sum(erwartete_dauer(funkspruch.buchstaben_von_hand) for funkspruch in funksprueche)
+    return sum(erwartete_dauer(funkspruch.buchstaben_von_hand, funkspruch.verfahren)
+               for funkspruch in funksprueche)
 
 
 def gerechnete(bearbeitungen):
@@ -204,7 +246,7 @@ def tempofaktor(bearbeitungen):
     ist = soll = 0.0
     for bearbeitung in gerechnete(bearbeitungen):
         ist += bearbeitung.benoetigte_sekunden
-        soll += erwartete_dauer(bearbeitung.gerechnete_buchstaben)
+        soll += erwartete_dauer(bearbeitung.gerechnete_buchstaben, bearbeitung.aufgabe.verfahren)
     if not soll:
         return 1.0
     unten, oben = TEMPO_GRENZEN
@@ -256,7 +298,10 @@ def zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche=(), tempo=1.0):
     """
     if not offene_funksprueche:
         return verbleibende_sekunden >= MINDESTRESTZEIT_SEKUNDEN
-    noetig = erwartete_dauer(laengste_uebung()) + erwartete_dauer_funksprueche(offene_funksprueche)
+    # Die offenen Funksprüche gehören alle zum laufenden Level – ihr Verfahren
+    # ist auch das der Übung, die hier reserviert wird.
+    noetig = (erwartete_dauer(laengste_uebung(), offene_funksprueche[0].verfahren)
+              + erwartete_dauer_funksprueche(offene_funksprueche))
     return verbleibende_sekunden >= tempo * noetig + MINDESTRESTZEIT_SEKUNDEN
 
 
