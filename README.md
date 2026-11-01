@@ -18,7 +18,7 @@ ist](#warum-das-spiel-so-gebaut-ist).
 | Level | Verfahren                     | Zeitfenster | Ablauf                                                          |
 |-------|-------------------------------|-------------|-----------------------------------------------------------------|
 | 1     | Caesar                        | 15 Min      | Handbuch → Übungen → Funkspruch senden → Bobs Antwort entschlüsseln |
-| 2     | Monoalphabetische Substitution| 20 Min      | Handbuch → Übungen → abgefangenen Feind-Funkspruch entschlüsseln |
+| 2     | Monoalphabetische Substitution| 10 Min      | Handbuch → Übungen → abgefangenen Feind-Funkspruch entschlüsseln |
 | 3     | Vigenère (mit Quadrat)        | 25 Min      | Handbuch → Übungen → Standort senden → Bobs zweite Antwort       |
 
 Dazu je 10 Minuten Vor- und Nachtest sowie 5 Minuten Puffer.
@@ -143,7 +143,7 @@ sofort, wo Text und Code auseinanderlaufen.
 | `rueckmeldung.py` | Baut die konkrete Fehlermeldung statt eines blossen „falsch" |
 | `bearbeitung.py` | Versuchszähler, Lösungsanzeige, Weiterrechnen-Knopf |
 | `spielstand.py` | Der zentrale Zustand eines Durchlaufs: Figur, Level, laufende Aufgabe |
-| `zeitfenster.py` | Die 15/20/25-Minuten-Fenster der drei Level |
+| `zeitfenster.py` | Die 15/10/25-Minuten-Fenster der drei Level (Level 2 ist das kürzeste – siehe Modulkopf) |
 | `zusatzaufgaben.py` | Entscheidet, wann noch eine Extraaufgabe in die Restzeit passt – im Tempo des Kindes gerechnet |
 | `levelablauf.py` | Was im Level als Nächstes drankommt: Übung, Zusatzaufgabe, Funkspruch – oder Levelende |
 | `protokoll.py` | Schreibt das CSV eines Durchlaufs |

@@ -17,7 +17,7 @@ Funktion, die im Klassenzimmer nie greift.
 Dazu kommt: Der Pflichtteil eines Levels füllt nach diesen Schätzungen nur
 ein Fünftel bis ein Drittel seines Zeitfensters. Ohne Zusatzaufgaben wäre der
 Rest Leerlauf – und die Spielgruppe hätte deutlich weniger Lernzeit als die
-Kontrollgruppe, die ihre 15/20/25 Minuten voll nutzt. Das wäre ein
+Kontrollgruppe, die ihre 15/10/25 Minuten voll nutzt. Das wäre ein
 Unterschied zwischen den Gruppen, der nichts mit der Methode zu tun hat.
 
 Deshalb entscheidet jetzt die Zeit, nicht das Tempo: Solange die Restzeit

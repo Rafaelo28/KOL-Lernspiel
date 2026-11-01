@@ -54,12 +54,12 @@ def _stand(uhr, seed=4711):
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_die_zeitfenster_sind_genau_die_aus_dem_versuchsaufbau():
-    """15 / 20 / 25 Minuten, wie bei der Kontrollgruppe (Anhang A4).
+    """15 / 10 / 25 Minuten, wie bei der Kontrollgruppe (Anhang A4).
 
     Diese Zahlen sind keine Einstellung. Wer sie ändert, ändert den Vergleich
     zwischen den beiden Gruppen – und dieser Test soll dabei auffallen.
     """
-    assert DAUER_JE_LEVEL_MINUTEN == {1: 15, 2: 20, 3: 25}
+    assert DAUER_JE_LEVEL_MINUTEN == {1: 15, 2: 10, 3: 25}
 
 
 def test_sekunden_und_minuten_passen_zusammen():
@@ -71,16 +71,25 @@ def test_es_gibt_fuer_jedes_level_ein_zeitfenster():
     assert set(DAUER_JE_LEVEL_MINUTEN) == set(LEVEL)
 
 
-def test_die_gesamtzeit_der_drei_level_ist_eine_stunde():
-    """Der Zeitplan der Arbeit rechnet mit 60 Minuten für die drei Level."""
-    assert sum(DAUER_JE_LEVEL_MINUTEN.values()) == 60
+def test_die_gesamtzeit_der_drei_level_ist_fuenfzig_minuten():
+    """Seit der Kürzung von Level 2: 15 + 10 + 25 statt 15 + 20 + 25.
+
+    Die zehn gesparten Minuten gehören dem Vor- und Nachtest – und der
+    Kontrollgruppe, die dieselbe Kürzung bekommt.
+    """
+    assert sum(DAUER_JE_LEVEL_MINUTEN.values()) == 50
 
 
-def test_die_fenster_werden_von_level_zu_level_laenger():
-    """Die Verfahren werden aufwendiger, die Texte länger."""
-    dauern = [DAUER_JE_LEVEL_MINUTEN[level] for level in sorted(LEVEL)]
-    assert dauern == sorted(dauern)
-    assert len(set(dauern)) == len(dauern)
+def test_level_2_ist_das_kuerzeste_und_level_3_das_laengste():
+    """Nicht nach Reihenfolge, sondern nach Aufwand – gemessen im Pilotdurchlauf.
+
+    Die Substitution ist reines Nachschlagen und damit das schnellste
+    Verfahren (Median 67 s je Übung gegen 130 bei Caesar und 298 bei
+    Vigenère). Vorher wuchsen die Fenster einfach von Level zu Level.
+    """
+    dauern = DAUER_JE_LEVEL_MINUTEN
+    assert dauern[2] < dauern[1] < dauern[3]
+    assert len(set(dauern.values())) == len(dauern)
 
 
 @pytest.mark.parametrize("unsinn", [0, 4, -1, "1", None])
@@ -355,12 +364,12 @@ def test_ein_durchlauf_endet_auch_wenn_ueberall_die_zeit_ablaeuft():
     assert all(b.loesung_angezeigt for b in stand.erledigte_aufgaben)
 
 
-def test_die_arbeitszeit_eines_solchen_durchlaufs_ist_genau_eine_stunde():
+def test_die_arbeitszeit_eines_solchen_durchlaufs_ist_genau_die_summe_der_fenster():
     """Kein Level kann sich Zeit vom nächsten borgen – und Lesezeit zählt für keines.
 
     Zwischen zwei Leveln wird gelesen: die Funksprüche, für die es nicht mehr
     reichte, und der Übergangstext. Diese Zeit gehört zu keinem Zeitfenster,
-    die Summe der drei Fenster bleibt also genau eine Stunde.
+    die Summe der drei Fenster bleibt also genau 15 + 10 + 25 Minuten.
     """
     uhr = Uhr()
     stand = _stand(uhr)
@@ -373,4 +382,4 @@ def test_die_arbeitszeit_eines_solchen_durchlaufs_ist_genau_eine_stunde():
         if stand.aktuelles_level is not None:
             stand.starte_zeitfenster()
     assert stand.ist_durchgespielt
-    assert sum(stand.level_sekunden(level) for level in LEVEL) == 60 * 60
+    assert sum(stand.level_sekunden(level) for level in LEVEL) == sum(DAUER_JE_LEVEL_SEKUNDEN.values())

@@ -28,10 +28,17 @@ Messdaten unbrauchbar oder blockiert das Spiel.
 
 ### 1. Die Zeitfenster sind fix
 
-15 Min (Level 1) / 20 Min (Level 2) / 25 Min (Level 3). Die Kontrollgruppe hat
+15 Min (Level 1) / 10 Min (Level 2) / 25 Min (Level 3). Die Kontrollgruppe hat
 exakt dieselben Zeiten. Zusatzaufgaben verlängern ein Zeitfenster **nie**.
 Läuft die Zeit ab, wird sofort zum nächsten Level gewechselt – egal, wie viele
 Aufgaben noch offen sind.
+
+Level 2 hatte bis zum Pilotdurchlauf 20 Minuten. Gemessen wurde dort, dass
+die Substitution das **schnellste** Verfahren ist – reines Nachschlagen, im
+Median 67 Sekunden je Übung gegen 130 bei Caesar und 298 bei Vigenère. Der
+Pflichtteil war nach 3,9 bis 7,7 Minuten erledigt, den Rest füllten bis zu
+sechzehn gleichartige Übungen. Begründung und Zahlen stehen im Modulkopf von
+`game/zeitfenster.py`. Die drei Level sind damit zusammen 50 Minuten lang.
 
 **Gemeint ist Arbeitszeit, nicht Lesezeit.** Zwischen zwei Leveln steht, was
 die Uhr abgeschnitten hat: die Funksprüche, die niemand ganz gesehen hat, und

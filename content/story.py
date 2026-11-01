@@ -36,7 +36,7 @@ Teilaufgabe und Weiterrechnen
 ─────────────────────────────
 Die Wortlaute stammen unverändert aus dem Konzept und sind entsprechend lang:
 Bobs erste Antwort hat 78 Buchstaben, der abgefangene Funkspruch 76. Die alle
-von Hand zu entschlüsseln, wäre in den festen Zeitfenstern (15/20/25 Minuten,
+von Hand zu entschlüsseln, wäre in den festen Zeitfenstern (15/10/25 Minuten,
 zusätzlich zu Handbuch und Übungen) nicht zu schaffen und vor allem
 demotivierend – nach einem Dutzend Buchstaben ist das Verfahren verstanden,
 der Rest ist Abschreibarbeit.

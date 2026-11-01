@@ -33,7 +33,8 @@ Die Regeln
    oder einer Webseite regelmaessig geschuetzte Leerzeichen mitkommen - sie
    nach Regel 6 zu loeschen wuerde zwei Woerter unsichtbar verkleben.
    Begründung: Ohne Wortgrenzen wird das Abzählen langer Sätze von Hand für
-   die Zielgruppe (Schulklasse, 20 Minuten pro Level) zu fehleranfällig.
+   die Zielgruppe (Schulklasse, zehn bis fünfundzwanzig Minuten pro Level) zu
+   fehleranfällig.
    Sicherheitstechnisch ist das ein Nachteil – für ein Lernspiel ist die
    Nachvollziehbarkeit wichtiger.
 

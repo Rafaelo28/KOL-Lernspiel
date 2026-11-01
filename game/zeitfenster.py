@@ -1,9 +1,30 @@
 """Die Zeitfenster der Level (Arbeitsplan 5.2).
 
-15, 20 und 25 Minuten – dieselben Zeiten wie bei der Frontalunterrichts-Gruppe
+15, 10 und 25 Minuten – dieselben Zeiten wie bei der Frontalunterrichts-Gruppe
 (Anhang A4). Sie sind der Kern des Versuchsaufbaus: Wären die Fenster nicht
 gleich lang, liesse sich am Ende nicht sagen, ob eine Gruppe mehr gelernt hat
 oder nur mehr Zeit hatte.
+
+Warum Level 2 das kürzeste ist
+──────────────────────────────
+Geplant waren 15/20/25 – von Level zu Level mehr, weil die Verfahren
+aufwendiger werden. Für Level 2 stimmt das nicht, und der Pilotdurchlauf hat
+es gezeigt: Die Substitution ist das **schnellste** Verfahren, weil man nur
+in einer Tabelle nachschlägt, statt zu rechnen. Je Übung brauchten die fünf
+Testpersonen im Median 67 Sekunden – bei Caesar 130, bei Vigenère 298. Der
+Pflichtteil des Levels (zwei Übungen und der abgefangene Funkspruch) war nach
+3,9 bis 7,7 Minuten erledigt; die restlichen zwölf bis sechzehn Minuten
+füllten Zusatzaufgaben, bis zu sechzehn Substitutionsübungen hintereinander.
+Zwei Testpersonen nannten genau das "viel zu lang" beziehungsweise
+langweilig.
+
+Zehn Minuten decken den Pflichtteil der langsamsten Pilotperson (7,7 Minuten)
+und den Aufschlag dafür, dass der Funkspruch jetzt ohne das lange Warmlaufen
+kommt (:mod:`game.levelablauf`). Wer trotzdem nicht fertig wird, verliert die
+Geschichte nicht: Der Funkspruch steht nach dem Levelwechsel zum Mitlesen da
+(Projektregel 1). Die drei Level zusammen sind damit 50 statt 60 Minuten
+lang; die Kontrollgruppe bekommt dieselbe Kürzung, sonst wäre der Vergleich
+hin.
 
 Warum die Uhr von aussen kommt
 ──────────────────────────────
@@ -32,8 +53,9 @@ import time
 
 #: Die Zeitfenster in Minuten. Diese Zahlen sind **keine Einstellung**,
 #: sondern Teil des Versuchsaufbaus (Projektregel 1). Wer sie ändert, ändert
-#: den Vergleich mit der Kontrollgruppe.
-DAUER_JE_LEVEL_MINUTEN = {1: 15, 2: 20, 3: 25}
+#: den Vergleich mit der Kontrollgruppe – und muss deren Stundenplan
+#: mitändern. Level 2 ist seit dem Pilotdurchlauf das kürzeste (siehe oben).
+DAUER_JE_LEVEL_MINUTEN = {1: 15, 2: 10, 3: 25}
 
 #: Dieselben Zeiten in Sekunden – damit rechnet der Code.
 DAUER_JE_LEVEL_SEKUNDEN = {

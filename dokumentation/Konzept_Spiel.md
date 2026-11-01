@@ -116,7 +116,10 @@ nächste Methode im Handbuch."
 
 ---
 
-## Level 2 – Monoalphabetische Substitution (ca. 20 Min)
+## Level 2 – Monoalphabetische Substitution (10 Min)
+
+> *(Im Konzept standen hier 20 Minuten. Nach dem Pilotdurchlauf auf 10
+> gekürzt – Begründung im Modulkopf von `game/zeitfenster.py`.)*
 
 **Einstieg:** Kein Funkkontakt nötig – du weißt aus Bobs Nachricht bereits,
 dass du weiterblättern musst. Seite: "Monoalphabetische Substitution."

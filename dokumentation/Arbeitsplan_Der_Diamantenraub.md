@@ -28,7 +28,7 @@ Git-Historie als Prozessnachweis (60 % der Bewertung) aussagekräftig.
 
 ### 0.2 CLAUDE.md mit den Projektregeln schreiben
 Inhalt (Kurzfassung der unverhandelbaren Regeln):
-- Zeitfenster 15/20/25 Min pro Level sind fix, Zusatzaufgaben verlängern sie nie
+- Zeitfenster 15/10/25 Min pro Level sind fix, Zusatzaufgaben verlängern sie nie
 - 3-Versuche-Regel gilt für **alle** Aufgaben, auch für Bobs zwei Funksprüche
 - Kein Klartext-Funkverkehr, auch nicht durch Bob
 - Level 2 ist **monoalphabetische Substitution**, nicht Transposition
@@ -230,7 +230,7 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   CLAUDE.md verlangt die Zeitmessung pro Level *und* pro Aufgabe
 
 ### 5.2 Level-Timer — `game/zeitfenster.py`
-- 15 / 20 / 25 Minuten pro Level
+- 15 / 10 / 25 Minuten pro Level (Level 2 seit dem Pilotdurchlauf gekürzt, siehe 8.2)
 - Bei Ablauf: automatisch weiter zum nächsten Level, unabhängig davon, was
   gerade offen ist
 - `spielstand.restzeit_text` liefert die Restzeit als "MM:SS" – **wird aber
@@ -972,7 +972,7 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 ## Phase 8 – Test und Verteilung
 
 ### 8.1 Zeitmessung im Selbsttest
-- Selbst durchspielen und stoppen: Sind 15/20/25 Min realistisch? Dafür das
+- Selbst durchspielen und stoppen: Sind 15/10/25 Min realistisch? Dafür das
   Spiel **ohne** Schalter starten – gemessen wird der echte Ablauf
 - Für Stichproben an einzelnen Stellen der Geschichte gibt es den Testmodus
   (`python3 main.py --testmodus`, siehe `ui/testmodus.py`): Aufgaben lösen
@@ -983,23 +983,33 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 ### 8.2 Pilotdurchlauf mit 2–3 Personen
 - Ziel: Schwellenwert für Zusatzaufgaben kalibrieren (Aufgabe 5.4)
 - Zweites Ziel: Verständlichkeit der Handbuchtexte prüfen
-- **Drittes Ziel – offene Entscheidung: bleiben die Zeitfenster bei
-  15/20/25 Min?** Im Gespräch war, jedes Level um fünf Minuten zu kürzen
-  (10/15/20), damit die Doppelstunde nicht so knapp wird. Entschieden wird
-  das nach dem Pilotdurchlauf; Kandidat ist **12/15/20** – Level 1 ist
-  inhaltlich das kürzeste, verliert bei einer gleichmässigen Kürzung aber
-  am meisten Luft.
+- **Drittes Ziel – entschieden: die Zeitfenster sind jetzt 15/10/25 Min.**
+  Offen war, ob es bei 15/20/25 bleibt; im Gespräch war eine gleichmässige
+  Kürzung auf 10/15/20 oder 12/15/20. Die fünf Pilotläufe haben gezeigt, dass
+  eine gleichmässige Kürzung falsch gewesen wäre: Gekürzt gehört **nur
+  Level 2**, dafür deutlich.
 
-  Zum Abschätzen (Schätzformel des Spiels: 20 s je Aufgabe plus 4 s je
-  Buchstabe, dazu die Handbuchseite):
+  Gemessen (nur Pflichtübungen und Funksprüche, ohne Zusatzaufgaben):
 
-  | Level | normal | doppelt so lange | dreifach |
-  |-------|--------|------------------|----------|
-  | 1 – Caesar       | 7,3 Min | 12,5 | 17,8 |
-  | 2 – Substitution | 6,8 Min | 11,0 | 15,3 |
-  | 3 – Vigenère     | 8,9 Min | 14,7 | 20,6 |
+  | Level | Fenster | Median | langsamste Person | Rest |
+  |-------|---------|--------|-------------------|------|
+  | 1 – Caesar       | 15 Min | 8,4 Min | 13,0 Min | wenig |
+  | 2 – Substitution | 20 Min | 6,1 Min | **7,7 Min** | 12–16 Min Füllmaterial |
+  | 3 – Vigenère     | 25 Min | 20,5 Min | 24,2 Min | nichts |
 
-  Im Pilotdurchlauf dafür ablesen:
+  Level 1 hat also kaum Luft (eine Person brauchte 13 der 15 Minuten),
+  Level 3 gar keine – dort liefen drei von fünf Durchläufen in den
+  Zeitablauf, und Bobs zweite Antwort musste dreimal aufgelöst werden. Nur
+  Level 2 lief leer: Die Substitution ist reines Nachschlagen und damit das
+  schnellste Verfahren (Median 67 s je Übung gegen 130 bei Caesar und 298 bei
+  Vigenère). Zehn Minuten decken die langsamste Pilotperson mit Puffer für
+  den Funkspruch, der jetzt ohne langes Warmlaufen kommt.
+
+  Die drei Level dauern damit zusammen 50 statt 60 Minuten; die zehn
+  gesparten Minuten entlasten die Doppelstunde. **Der Frontalunterricht wird
+  identisch gekürzt** (Anhang A4).
+
+  Weiter im Blick behalten:
   - `level_sekunden` und `levelende` je Level – wie viele endeten am Timer
     (`zeitablauf`), wie viele vorzeitig und mit wie viel Rest?
   - Wie viele Zeilen mit `abgebrochen = ja` entstehen am Levelende (die
@@ -1008,7 +1018,7 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
     keiner Logspalte, kommt aber zur Gesamtdauer dazu (Regel 1)
   - Faustregel: Schöpft kaum jemand die Fenster aus, kürzen; enden viele am
     Timer, so lassen
-  - **Wird gekürzt, muss der Frontalunterricht identisch gekürzt werden**
+  - **Jede weitere Änderung muss der Frontalunterricht mitmachen**
     (Anhang A4) – sonst vergleicht der Versuch nicht mehr nur die Methode.
     Im Code hängt die Zahl an einer Stelle: `DAUER_JE_LEVEL_MINUTEN` in
     `game/zeitfenster.py`

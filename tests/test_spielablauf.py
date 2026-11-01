@@ -256,9 +256,15 @@ def test_die_anderen_funksprueche_haben_keinen_hinweis(fenster, bei_der_uebung, 
     assert screen.erzaehlung == story.FUNKSPRUCH_ERSTER_RUF.einleitung
 
 
-def test_nach_dem_abgefangenen_funkspruch_kommt_der_uebergang_zu_level_3(fenster, bei_der_uebung, uhr):
-    """Er ist der Wendepunkt der Geschichte und bekommt deshalb eine eigene Szene."""
-    screen = _spielen_bis(fenster, uhr, lambda s: isinstance(s, erzaehlszene.Erzaehlszene))
+def test_nach_dem_abgefangenen_funkspruch_kommt_der_uebergang_zu_level_3(fenster, bei_der_uebung):
+    """Er ist der Wendepunkt der Geschichte und bekommt deshalb eine eigene Szene.
+
+    Gespielt wird hier mit **stehender Uhr**: Das Level soll ``vorzeitig``
+    enden, damit die Prüfung unten etwas aussagt. Seit Level 2 nur noch zehn
+    Minuten hat, liefe es sonst in den Zeitablauf, und "nicht vom Lesen
+    gekippt" liesse sich nicht mehr von "am Timer geendet" unterscheiden.
+    """
+    screen = _spielen_bis(fenster, None, lambda s: isinstance(s, erzaehlszene.Erzaehlszene))
     assert screen.text == story.UEBERGANG_ZU_LEVEL_3.absaetze[0]
     stand = fenster.durchlauf.spielstand
     assert stand.aktuelles_level == 3, "Gelesen wird schon in der Zeit von Level 3 …"

@@ -44,7 +44,7 @@ Handbuchseite des neuen Levels aufruft (:func:`ui.ablauf.level_beginnen`).
 **Zwischen zwei Leveln läuft gar kein Fenster.** :meth:`naechstes_level`
 schaltet das Level weiter und lässt die Uhr stehen; dort wird gelesen, was
 die Zeit abgeschnitten hat (verpasste Funksprüche, der Übergangstext). Lesen
-ist keine Arbeitszeit, und die Fenster bleiben trotzdem exakt 15/20/25
+ist keine Arbeitszeit, und die Fenster bleiben trotzdem exakt 15/10/25
 Minuten – siehe CLAUDE.md, Regel 1, "Gemeint ist Arbeitszeit, nicht
 Lesezeit". Wer eine Aufgabe stellt, startet die Uhr notfalls selbst; gerechnet
 wird also nie ausserhalb eines Zeitfensters.
