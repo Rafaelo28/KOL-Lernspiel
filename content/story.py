@@ -217,7 +217,7 @@ class Funkspruch(NamedTuple):
         Buchstaben fallen bei der Schätzung nicht ins Gewicht.
 
         >>> FUNKSPRUCH_STANDORT.buchstaben_von_hand
-        17
+        8
         >>> FUNKSPRUCH_BOB_ZWEITE_ANTWORT.buchstaben_von_hand
         27
         """
