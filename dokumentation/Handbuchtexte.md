@@ -120,6 +120,12 @@ Bei Caesar hast du **immer** um dieselbe Zahl verschoben. Das Problem: Sobald je
 
 Das Schlüsselwort wird so oft wiederholt, bis es genauso lang ist wie deine Nachricht.
 
+Du schreibst es also immer wieder hintereinander, bis unter jedem Buchstaben einer steht – egal, wie oft:
+
+| Nachricht | T | R | E | F | F | P | U | N | K | T |
+|-----------|---|---|---|---|---|---|---|---|---|---|
+| Schlüssel | R | O | T | R | O | T | R | O | T | R |
+
 ### Das Vigenère-Quadrat
 
 Damit du nicht rechnen musst, gibt es eine fertige Tabelle: das **Vigenère-Quadrat**. Es sieht aus wie ein riesiges Kreuzworträtsel:

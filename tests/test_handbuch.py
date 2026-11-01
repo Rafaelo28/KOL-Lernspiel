@@ -73,6 +73,15 @@ def _tabellenzeile(seite, beschriftung):
     )
 
 
+def _beispieltabelle(seite, nachricht):
+    """Die Tabelle, deren Zeile "Nachricht" genau dieses Wort buchstabiert – als {Beschriftung: Zellen}."""
+    for tabelle in _tabellen(seite):
+        zeilen = {zeile[0]: tuple(zeile[1:]) for zeile in tabelle.zeilen}
+        if zeilen.get("Nachricht") == tuple(nachricht):
+            return zeilen
+    raise AssertionError(f"Seite {seite.level} hat keine Beispieltabelle zu {nachricht!r}.")
+
+
 def _alle_texte(seite):
     """Jeden Text der Seite als flache Liste – für Suchen im Fließtext."""
     texte = [seite.titel]
@@ -392,13 +401,17 @@ def test_seite_2_das_beispiel_hund_stimmt():
     assert _ergebnis(seite, "HUND") == substitution.verschluesseln("HUND")
 
 
-def test_seite_3_der_ausgerichtete_schluessel_stimmt():
-    """Die Zeile "Schlüssel" ist genau das, was schluessel_ausrichten() liefert."""
+@pytest.mark.parametrize("nachricht", ["TREFFPUNKT", "HUND"])
+def test_seite_3_der_ausgerichtete_schluessel_stimmt(nachricht):
+    """Die Zeile "Schlüssel" ist genau das, was schluessel_ausrichten() liefert.
+
+    Zwei Beispiele stehen auf der Seite: das lange, an dem zu sehen ist, dass
+    das Schlüsselwort immer weiterläuft, und "HUND" aus dem Rechenweg. Beide
+    werden gegen ``crypto/`` geprüft.
+    """
     seite = handbuch.SEITE_NACH_LEVEL[3]
-    assert _tabellenzeile(seite, "Nachricht") == tuple("HUND")
-    assert "".join(_tabellenzeile(seite, "Schlüssel")) == vigenere.schluessel_ausrichten(
-        "HUND", "ROT"
-    )
+    zeilen = _beispieltabelle(seite, nachricht)
+    assert "".join(zeilen["Schlüssel"]) == vigenere.schluessel_ausrichten(nachricht, "ROT")
 
 
 def test_seite_3_jeder_verschluesselungsschritt_stimmt_mit_dem_quadrat_ueberein():

@@ -424,6 +424,21 @@ SEITE_VIGENERE = Handbuchseite(
                     "ROT ROT ROT … bis es so lang ist wie die Nachricht!",
                     bezug="Das Schlüsselwort wird so oft wiederholt, bis es genauso lang ist wie deine Nachricht.",
                 ),
+                Absatz(
+                    "Du schreibst es also immer wieder hintereinander, bis "
+                    "unter jedem Buchstaben einer steht – egal, wie oft:"
+                ),
+                # Das lange Beispiel steht hier und nicht erst beim Rechnen:
+                # Bei "HUND" mit "ROT" wird aus dem Schlüssel nur "ROTR", und
+                # daran ist nicht zu sehen, dass das Wort immer weiterläuft.
+                # Eine Pilotperson hat genau das nicht erkannt. "TREFFPUNKT"
+                # zeigt ROT dreimal ganz und einmal angefangen.
+                Tabelle(
+                    zeilen=(
+                        ("Nachricht", *"TREFFPUNKT"),
+                        ("Schlüssel", *"ROTROTROTR"),
+                    ),
+                ),
             ),
         ),
         Abschnitt(
