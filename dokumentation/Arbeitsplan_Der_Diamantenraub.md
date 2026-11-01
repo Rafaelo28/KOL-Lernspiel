@@ -763,6 +763,18 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     ersten Schritt der Aufgabe (`lineal.vorzeigefeld`) – zeigen ja, den
     ersten Nachschlageschritt verschenken nein. Vorgezeigt zählt nicht als
     Klick im Log
+  - **Nach allen fünf Pilotläufen noch einmal nachgebessert:** Am Funkgerät
+    zeigt sich das Lineal nicht nur bei der ersten Aufgabe des Levels,
+    sondern **immer dann, wenn im Level noch kein einziger Klick darauf
+    gefallen ist**. Grund: Die Klicks verteilen sich in den Logs sehr
+    ungleich (0, 2, 38, 110, 129) – und wer das Lineal benutzte, rechnete
+    Level 3 zu Ende, während die anderen Bobs zweite Antwort aufgelöst
+    bekamen. Die meiste Vigenère-Arbeit liegt am Gerät, also bekommt es dort
+    eine zweite Gelegenheit. Wer es einmal benutzt hat, sieht es nie wieder
+    von selbst. Ein Pop-up, das zum Benutzen auffordert, wurde verworfen: Es
+    kostet Zeit im festen Fenster, und in der Zielgruppe (drei Jugendliche)
+    haben es alle drei von selbst gefunden – nicht benutzt haben es die
+    beiden erwachsenen Testpersonen
   - **Es markiert nur und liest nicht ab:** Kein Buchstabe wird ausgegeben
     (ein Test prüft, dass das Lineal keinen einzigen Text anlegt). Das Ablesen
     im Quadrat ist genau, was Level 3 misst; die Kontrollgruppe darf auf

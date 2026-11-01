@@ -113,6 +113,21 @@ def _uebung_loesen(screen):
     screen.weiter()
 
 
+def _weiterspielen_bis(fenster, bedingung, hoechstens=200):
+    """Löst Aufgabe um Aufgabe weiter, bis ein Screen die Bedingung erfüllt."""
+    for _ in range(hoechstens):
+        screen = fenster.aktueller_screen
+        if bedingung(screen):
+            return screen
+        if isinstance(screen, funk.Funk):
+            _loesen(screen)
+        elif isinstance(screen, uebung.Uebung):
+            _uebung_loesen(screen)
+        else:
+            screen.weiter()
+    raise AssertionError("Der gesuchte Screen kam nie.")
+
+
 def _funkspruch(fenster, level, kennung):
     """Geht zu den Funksprüchen des Levels und löst sie, bis der mit dieser Kennung dran ist."""
     screen = _zum_funkgeraet(fenster, level)
@@ -170,16 +185,21 @@ def _warten(wurzel, bedingung, sekunden=5):
 # ── Der Weg zum Funkgerät ──────────────────────────────────────────────────
 
 def test_die_funksprueche_eines_levels_kommen_der_reihe_nach_danach_das_naechste_level(fenster):
+    """Nach dem letzten Funkspruch füllen Übungen die Restzeit – dann kommt Level 2.
+
+    Die Uhr steht in diesem Test still; das Level endet also nicht am Timer,
+    sondern erst, wenn die Obergrenze der Zusatzaufgaben erreicht ist.
+    """
     screen = _zum_funkgeraet(fenster, 1)
     assert screen.funkspruch is story.FUNKSPRUCH_ERSTER_RUF
     assert screen.titel == "Funkgerät – Level 1"
     _loesen(screen)
     assert fenster.aktueller_screen.funkspruch is story.FUNKSPRUCH_BOB_ERSTE_ANTWORT
     _loesen(fenster.aktueller_screen)
-    assert isinstance(fenster.aktueller_screen, handbuch.Handbuch)
-    assert fenster.aktueller_screen.seite.level == 2
     kennungen = [b.aufgabe.kennung for b in fenster.durchlauf.spielstand.erledigte_aufgaben]
     assert kennungen[-2:] == ["erster_ruf", "bob_erste_antwort"]
+    weiter = _weiterspielen_bis(fenster, lambda s: isinstance(s, handbuch.Handbuch))
+    assert weiter.seite.level == 2
 
 
 def test_vor_dem_funkspruch_sind_die_uebungen_des_levels_erledigt(fenster):
@@ -451,8 +471,9 @@ def test_in_level_3_liegt_das_quadrat_mit_lineal_daneben_und_die_klicks_zaehlen(
     x0, y0, _, _ = screen.buch.flaeche("links")
     feld = lineal.quadrat.feld
     x, y = round(x0 + lineal.quadrat.x + 0.5 * feld), round(y0 + lineal.quadrat.y + 18.5 * feld)
+    spalte_vorher = lineal.spalte      # das vorgezeigte Lineal liegt schon irgendwo
     ausloesen(screen.buch, "<Button-1>", x=x, y=y)                 # links auf das R
-    assert lineal.zeile == 17 and lineal.spalte is None
+    assert lineal.zeile == 17 and lineal.spalte == spalte_vorher, "nur die Zeile wandert"
     assert fenster.durchlauf.spielstand.aktuelle_bearbeitung.lineal_klicks == 1
 
 
@@ -497,6 +518,42 @@ def test_ein_funkspruch_als_erste_aufgabe_des_levels_zeigt_das_lineal_vor(fenste
     assert (screen.lineal.zeile, screen.lineal.spalte) != (None, None)
     assert screen.buch.find_withtag("linealkreuzung")
     assert stand.aktuelle_bearbeitung.lineal_klicks == 0, "vorgezeigt ist nicht selbst geklickt"
+
+
+@pytest.mark.parametrize("geklickt, zeigt_sich", [(False, True), (True, False)])
+def test_am_funkgeraet_zeigt_sich_das_lineal_wieder_wenn_niemand_es_benutzt_hat(
+        fenster, geklickt, zeigt_sich):
+    """Wer es in den Übungen übersehen hat, bekommt es dort noch einmal vorgeführt.
+
+    In den fünf Pilotläufen fiel die meiste Vigenère-Arbeit am Gerät an (der
+    eigene Standort und Bobs zweite Antwort), und wer das Lineal benutzte,
+    rechnete sie zu Ende. Deshalb genügt es nicht, es einmal bei der ersten
+    Übung des Levels zu zeigen: Am Funkgerät zeigt es sich erneut, solange im
+    Level noch kein einziger Klick darauf gefallen ist. Wer es benutzt hat,
+    sieht es nie wieder von selbst.
+    """
+    fenster.aktueller_screen._feld.insert(0, "1-12")
+    fenster.aktueller_screen.starten()
+    fenster.aktueller_screen.waehle(FIGUR)
+    fenster.aktueller_screen.bestaetigen()
+    for _ in story.INTRO.absaetze:
+        fenster.aktueller_screen.weiter()
+    stand = fenster.durchlauf.spielstand
+    while stand.aktuelles_level < 3:
+        stand.naechstes_level()
+    stand.starte_zeitfenster()
+
+    aufgabe = stand.naechste_uebung()
+    if geklickt:
+        stand.aktuelle_bearbeitung.lineal_benutzt()
+    stand.versuchen(aufgabe.loesung)
+    stand.aufgabe_abschliessen()
+
+    ablauf.funkgeraet_zeigen(fenster, story.FUNKSPRUCH_STANDORT)
+    screen = fenster.aktueller_screen
+    assert screen.lineal is not None
+    liegt_an = (screen.lineal.zeile, screen.lineal.spalte) != (None, None)
+    assert liegt_an is zeigt_sich
 
 
 def test_nachschlagen_und_zurueck_zum_selben_funkspruch(fenster, uhr):

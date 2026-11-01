@@ -361,17 +361,26 @@ class Funk(Screen):
         self._stand_zeigen(stand.aktuelle_bearbeitung)
 
     def _lineal_vorstellen(self, stand):
-        """Sagt, dass es das Lineal gibt – und zeigt es bei der ersten Aufgabe des Levels.
+        """Sagt, dass es das Lineal gibt – und zeigt es, solange niemand es benutzt hat.
 
         Ohne das stand am Funkgerät gar kein Hinweis: Das Lineal lag da, aber
         niemand sagte es. Die erste Testperson des Pilotdurchlaufs hat es
         deshalb nicht benutzt – und in Level 3 liegt die längste
         Vigenère-Arbeit am Gerät, nicht in den Übungen.
+
+        Gezeigt wird es hier nach einer anderen Regel als auf der Übungsseite
+        (dort bei der ersten Aufgabe des Levels, :mod:`ui.uebung`): am
+        Funkgerät, **wann immer** im Level noch kein einziger Klick aufs
+        Lineal gefallen ist. Wer es in den Übungen übersehen hat, bekommt es
+        also genau dort noch einmal vorgeführt, wo die meiste Arbeit damit
+        liegt. Wer es benutzt, sieht es nie wieder von selbst – er weiss ja,
+        dass es da ist.
         """
         if self.lineal is None:
             return
         self._linealhinweis.configure(text=lineal.HINWEIS)
-        if not stand.erledigte_aufgaben_im_level(self.funkspruch.level):
+        erledigt = stand.erledigte_aufgaben_im_level(self.funkspruch.level)
+        if not any(bearbeitung.lineal_klicks for bearbeitung in erledigt):
             self.lineal.vorzeigen(lineal.vorzeigefeld(lineal.erster_schritt(self.aufgabe)))
 
     def _nachlesen_zeigen(self):
