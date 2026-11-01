@@ -34,8 +34,8 @@ auf aufwendiger Grafik.
 > **Nach dem Pilotdurchlauf geändert:** Die Zeitfenster sind jetzt
 > **12 / 10 / 25 Min**. Ein Level ist die Handbuchseite, zwei Übungen – eine
 > je Richtung – und die Funksprüche; nur wer damit früh fertig ist, bekommt
-> Zusatzaufgaben. Gemessen an fünf Testpersonen brauchen die mittleren dafür
-> 10,3 / 6,3 / 24,6 Minuten. Level 2 ist das kürzeste, weil die Substitution
+> Zusatzaufgaben. Von fünf Testpersonen brauchte die mittlere dafür
+> 10,3 / 8,5 / 23,3 Minuten. Level 2 ist das kürzeste, weil die Substitution
 > reines Nachschlagen ist. Die Kontrollgruppe bekommt dieselbe Kürzung; die
 > drei Level dauern zusammen 47 statt 60 Minuten, der Zeitrahmen insgesamt
 > 62 statt 75. Zahlen im Modulkopf von `game/zeitfenster.py`.

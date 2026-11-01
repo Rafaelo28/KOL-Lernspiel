@@ -16,18 +16,23 @@ Richtung – und den Funksprüchen. Nur was darüber hinaus Zeit hat, bekommt
 Zusatzaufgaben. Gemessen wurde genau das, bei fünf Personen (Lesezeit der
 Handbuchseite eingerechnet, denn die Uhr läuft ab ihr):
 
-===========  ================  =================  ===============
-Level        schnellste        mittlere           langsamste
-===========  ================  =================  ===============
-1 Caesar          6,4 Min          10,3 Min            11,7 Min
-2 Substitution    4,9 Min           6,3 Min             8,5 Min
-3 Vigenère       22,0 Min          24,6 Min        mehr als 25
-===========  ================  =================  ===============
+===========  ============  ==========  ============  =========
+Level        schnellste    Median      langsamste    messbar
+===========  ============  ==========  ============  =========
+1 Caesar        6,4 Min     10,3 Min      11,7 Min    3 von 5
+2 Substitution  4,9 Min      8,5 Min      11,3 Min    5 von 5
+3 Vigenère     22,0 Min     23,3 Min      24,6 Min    2 von 5
+===========  ============  ==========  ============  =========
 
-Daraus die Fenster: **12 / 10 / 25**. Sie decken die mittleren Personen mit
-wenig Rest – genug für die ganz Schnellen, um ein bis drei Zusatzaufgaben zu
-bekommen, zu wenig, um jemanden mit vierzehn gleichartigen Übungen zu
-langweilen. Das war die Rückmeldung aus dem Pilotdurchlauf: Zwei
+"Messbar" heisst: So viele haben das Level zu Ende gebracht. Wer darüber
+hinaus brauchte, steht in keiner Spalte – bei ihm lässt sich nur sagen, dass
+es nicht reichte.
+
+Daraus die Fenster: **12 / 10 / 25**. Sie decken den Median mit etwas Rest –
+genug für die Schnellen, um ein bis drei Zusatzaufgaben zu bekommen, zu
+wenig, um jemanden mit vierzehn gleichartigen Übungen zu langweilen. In
+Level 2 bleibt die langsamste der fünf (11,3 Min) am Ende ihres Funkspruchs
+hängen; er steht dann zum Mitlesen da. Das war die Rückmeldung aus dem Pilotdurchlauf: Zwei
 Testpersonen nannten Level 2 "viel zu lang" beziehungsweise das Abarbeiten
 langweilig, und in den Logs standen bis zu sechzehn Substitutionsübungen
 hintereinander.

@@ -1022,11 +1022,14 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
   die Fenster. Gemessen wurde dieser Kern bei fünf Personen, die Lesezeit der
   Handbuchseite eingerechnet (die Uhr läuft ab ihr):
 
-  | Level | schnellste | mittlere | langsamste | Fenster |
-  |-------|-----------|----------|------------|---------|
-  | 1 – Caesar       | 6,4 Min | 10,3 Min | 11,7 Min | **12 Min** |
-  | 2 – Substitution | 4,9 Min |  6,3 Min |  8,5 Min | **10 Min** |
-  | 3 – Vigenère     | 22,0 Min | 24,6 Min | über 25 | **25 Min** |
+  | Level | schnellste | Median | langsamste | messbar | Fenster |
+  |-------|-----------|--------|------------|---------|---------|
+  | 1 – Caesar       |  6,4 Min | 10,3 Min | 11,7 Min | 3 von 5 | **12 Min** |
+  | 2 – Substitution |  4,9 Min |  8,5 Min | 11,3 Min | 5 von 5 | **10 Min** |
+  | 3 – Vigenère     | 22,0 Min | 23,3 Min | 24,6 Min | 2 von 5 | **25 Min** |
+
+  "Messbar" heisst: So viele haben das Level zu Ende gebracht; wer länger
+  brauchte, taucht in keiner Spalte auf.
 
   Damit bekommt die mittlere Person null bis zwei Zusatzaufgaben, die
   schnellste zwei bis drei – vorher waren es bis zu vierzehn. Die
