@@ -162,15 +162,35 @@ def test_die_uebung_steht_auf_der_rechten_buchseite(fenster, level):
     assert screen.aufgabe.loesung not in rechts        # die Lösung steht nirgends
 
 
-@pytest.mark.parametrize("level, angabe", [(1, "mit dem Schlüssel"), (2, "mit deiner Geheimtabelle"),
-                                           (3, "mit dem Schlüsselwort")])
+@pytest.mark.parametrize("level, angabe", [(1, "Schlüssel"), (2, "deine Geheimtabelle"),
+                                           (3, "Schlüsselwort")])
 def test_der_auftrag_nennt_richtung_und_schluessel(fenster, level, angabe):
     screen = _zur_uebung(fenster, level)
     auftrag = screen.auftrag(screen.aufgabe)
-    assert auftrag.startswith(("Verschlüssele", "Entschlüssele"))
+    assert auftrag.startswith(("VERSCHLÜSSELN", "ENTSCHLÜSSELN"))
     assert angabe in auftrag
     if level != 2:                                     # die Substitution hat keinen Schlüssel
         assert str(screen.aufgabe.schluessel) in auftrag
+
+
+@pytest.mark.parametrize("massstab", [1, 1.5])
+@pytest.mark.parametrize("level", LEVEL)
+def test_das_richtungswort_steht_in_rotstift_neben_der_schluesselangabe(fenster, level):
+    """"Verschlüssele" und "Entschlüssele" sehen im Augenwinkel gleich aus.
+
+    Eine Pilotperson hat deshalb einen Geheimtext ein zweites Mal
+    verschlüsselt. Großbuchstaben und Rotstift sind zwei Unterscheidungen
+    statt einer – und beides bleibt auf der Zeile, auf der vorher der ganze
+    Satz stand.
+    """
+    screen = _zur_uebung(fenster, level)
+    wort, rest = sorted(screen.buch.find_withtag("auftrag&&rechts"))
+    assert screen.buch.itemcget(wort, "text") == uebung.RICHTUNGSWORT[screen.aufgabe.richtung]
+    assert screen.buch.itemcget(wort, "fill") == stil.FARBE_ROTSTIFT
+    assert screen.buch.itemcget(rest, "fill") == stil.FARBE_TINTE
+    links, oben, rechts_kante, unten = screen.buch.bbox(wort)
+    assert screen.buch.bbox(rest)[0] >= rechts_kante, "die Angabe steht daneben"
+    assert screen.buch.bbox(rest)[1] == oben, "und auf derselben Zeile"
 
 
 def test_die_uebungen_eines_levels_werden_gezaehlt(fenster):

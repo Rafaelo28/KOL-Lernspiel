@@ -212,6 +212,42 @@ def test_beim_empfangen_steht_der_ganze_geheimtext_da_und_der_anfang_leuchtet(fe
     assert screen.lampe_leuchtet("empfang") and not screen.lampe_leuchtet("senden")
 
 
+def test_die_nachricht_steht_fett_auf_dem_glas(fenster):
+    """Fett macht den Haken des J dicker – und kostet in dieser Schrift nichts.
+
+    Eine Pilotperson konnte in der Anzeige I und J kaum auseinanderhalten.
+    Grösser geht die Schrift nicht (siehe :data:`ui.funk.ANZEIGEGROESSE`),
+    fett schon: In einer Schrift mit festen Zeichenbreiten ist die fette
+    Fassung genauso breit und genauso hoch wie die normale – kein Pixel, keine
+    Zeile Unterschied. Darauf beruht die Massnahme, deshalb steht es im Test.
+    """
+    screen = _zum_funkgeraet(fenster, 1)
+    screen.anzeige_vervollstaendigen()
+    probe = "JIVIBMI IJ GHKDSFIOHDSK"
+    assert screen._fett.measure(probe) == screen.schrift.measure(probe)
+    assert screen._fett.metrics("linespace") == screen.schrift.metrics("linespace")
+    schriften = {screen.buch.itemcget(element, "font")
+                 for element in screen.buch.find_withtag("nachricht")}
+    assert schriften <= {str(screen._fett), str(screen._unterstrichen)}
+    assert screen._feld.cget("font") == str(screen._fett)
+
+
+def test_der_auftrag_auf_dem_glas_nennt_die_richtung_in_grossbuchstaben(fenster):
+    """"Verschlüssele" und "Entschlüssele" sehen im Augenwinkel gleich aus.
+
+    Eine Pilotperson hat deshalb einen Geheimtext ein zweites Mal
+    verschlüsselt. Auf dem Glas steht das Richtungswort darum gross und hell
+    – so hell wie die Kopfzeile darüber.
+    """
+    screen = _zum_funkgeraet(fenster, 1)
+    (zeile,) = screen.glastexte("auftrag")
+    richtig = {story.SENDEN: "VERSCHLÜSSELN", story.EMPFANGEN: "ENTSCHLÜSSELN"}
+    assert zeile.startswith(richtig[screen.funkspruch.richtung])
+    for element in screen.buch.find_withtag("auftrag"):
+        assert screen.buch.itemcget(element, "fill") == stil.FARBE_LEUCHTSCHRIFT_HELL
+        assert screen.buch.itemcget(element, "font") == str(screen._fett)
+
+
 def test_eine_empfangene_nachricht_kommt_zeichen_fuer_zeichen_herein(fenster, wurzel):
     screen = _funkspruch(fenster, 1, "bob_erste_antwort")
     assert not screen.eingetippt

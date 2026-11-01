@@ -88,11 +88,20 @@ KNOPF_NACHSCHLAGEN = "Im Handbuch nachschlagen"
 UEBERSCHRIFT = "Übung {nummer}"
 
 #: Der Auftrag über dem Aufgabentext: Richtung und Schlüssel.
-RICHTUNGSWORT = {VERSCHLUESSELN: "Verschlüssele", ENTSCHLUESSELN: "Entschlüssele"}
+#:
+#: Das Richtungswort steht in Großbuchstaben, weil "Verschlüssele" und
+#: "Entschlüssele" sich nur in der Vorsilbe unterscheiden – zwölf gleiche
+#: Buchstaben am Ende, drei am Anfang. Im Pilotdurchlauf hat deshalb jemand
+#: einen Geheimtext ein zweites Mal verschlüsselt. Gesetzt wird es ausserdem
+#: in Rotstift (:meth:`Uebung._auftrag_setzen`): zwei Unterscheidungen statt
+#: einer, falls jemand die Farben schlecht auseinanderhält.
+RICHTUNGSWORT = {VERSCHLUESSELN: "VERSCHLÜSSELN", ENTSCHLUESSELN: "ENTSCHLÜSSELN"}
+#: Kurz gehalten, damit sie neben dem grossen Richtungswort auf dieselbe
+#: Zeile passt, auf der vorher der ganze Satz stand – in beiden Maßstäben.
 SCHLUESSELANGABE = {
-    verfahren.CAESAR: "mit dem Schlüssel {schluessel}",
-    verfahren.SUBSTITUTION: "mit deiner Geheimtabelle",
-    verfahren.VIGENERE: "mit dem Schlüsselwort {schluessel}",
+    verfahren.CAESAR: "– Schlüssel {schluessel}",
+    verfahren.SUBSTITUTION: "– deine Geheimtabelle",
+    verfahren.VIGENERE: "– Schlüsselwort {schluessel}",
 }
 
 BESCHRIFTUNG_ANTWORT = "Deine Antwort:"
@@ -276,9 +285,7 @@ class Uebung(Screen):
         stuecke.append(buchsatz.Zeile(0, y, UEBERSCHRIFT.format(nummer=self._nummer(aufgabe)),
                                       "abschnitt", stil.FARBE_ROTSTIFT, "uebungstitel"))
         y += s.abschnitt.metrics("linespace") + px(ABSTAND_AUFTRAG)
-        for zeile in buchsatz.umbrechen(self.auftrag(aufgabe), s.betont, breite):
-            stuecke.append(buchsatz.Zeile(0, y, zeile, "betont", stil.FARBE_TINTE, "auftrag"))
-            y += s.betont.metrics("linespace")
+        y = self._auftrag_setzen(stuecke, y, breite, aufgabe)
         y += px(ABSTAND_TEXT)
 
         # Der Aufgabentext gross: An ihm wird Buchstabe für Buchstabe gerechnet.
@@ -301,6 +308,32 @@ class Uebung(Screen):
 
         self.buch.seite_zeichnen("rechts", stuecke)
         self._schreibfeld_zeichnen()
+
+    def _auftrag_setzen(self, stuecke, y, breite, aufgabe):
+        """Setzt den Auftrag: das Richtungswort in Rotstift, die Schlüsselangabe daneben.
+
+        Beides bleibt auf einer Zeile, solange die Angabe neben das Wort passt
+        – so rutscht auf der Seite nichts nach unten. Nur wenn sie das nicht
+        tut, steht sie darunter. Warum das Wort auffallen muss, steht bei
+        :data:`RICHTUNGSWORT`.
+        """
+        s = self.buch.schriften
+        zeilenhoehe = s.betont.metrics("linespace")
+        wort = RICHTUNGSWORT[aufgabe.richtung]
+        angabe = SCHLUESSELANGABE[aufgabe.verfahren].format(schluessel=aufgabe.schluessel) + ":"
+        stuecke.append(buchsatz.Zeile(0, y, wort, "betont", stil.FARBE_ROTSTIFT, "auftrag"))
+        neben = s.betont.measure(wort + " ")
+        zeilen = buchsatz.umbrechen(angabe, s.betont, max(breite - neben, 1))
+        if len(zeilen) > 1 or s.betont.measure(zeilen[0]) > breite - neben:
+            # Passt sie nicht ganz daneben, steht sie ganz darunter: ein halb
+            # umbrochener Auftrag neben dem Wort sähe aus wie ein Satzfehler.
+            y += zeilenhoehe
+            neben, zeilen = 0, buchsatz.umbrechen(angabe, s.betont, breite)
+        for nummer, text in enumerate(zeilen):
+            stuecke.append(buchsatz.Zeile(neben if nummer == 0 else 0, y, text, "betont",
+                                          stil.FARBE_TINTE, "auftrag"))
+            y += zeilenhoehe
+        return y
 
     def _lineal_tipp_setzen(self, stuecke, y, breite):
         """Schreibt den Tipp auf das Lineal zwischen Aufgabentext und Schreibfeld.

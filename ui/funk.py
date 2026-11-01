@@ -84,11 +84,17 @@ VERFAHRENSANGABE = {
     verfahren.VIGENERE: "Vigenère · Schlüsselwort {schluessel}",
 }
 #: Der Auftrag – je nach Richtung und danach, ob nur der Anfang zu rechnen ist.
+#:
+#: Das Richtungswort steht in Großbuchstaben und wird fett aufs Glas gesetzt
+#: (siehe :meth:`Funk._anzeige_zeichnen`): "Verschlüssele" und "Entschlüssele"
+#: unterscheiden sich nur in der Vorsilbe, und im Pilotdurchlauf hat jemand
+#: einen Geheimtext ein zweites Mal verschlüsselt. Dieselbe Entscheidung wie
+#: bei :data:`ui.uebung.RICHTUNGSWORT`.
 AUFTRAG = {
-    (story.EMPFANGEN, True): "Entschlüssele den hellen Anfang:",
-    (story.EMPFANGEN, False): "Entschlüssele den Funkspruch:",
-    (story.SENDEN, True): "Verschlüssele den hellen Anfang:",
-    (story.SENDEN, False): "Verschlüssele den Funkspruch:",
+    (story.EMPFANGEN, True): "ENTSCHLÜSSELN – nur den hellen Anfang:",
+    (story.EMPFANGEN, False): "ENTSCHLÜSSELN – den ganzen Funkspruch:",
+    (story.SENDEN, True): "VERSCHLÜSSELN – nur den hellen Anfang:",
+    (story.SENDEN, False): "VERSCHLÜSSELN – den ganzen Funkspruch:",
 }
 #: Auf dem Glas, wenn die Zeit für diese Nachricht nicht mehr reichte und sie
 #: nur noch zum Mitlesen dasteht (Arbeitsplan Phase 7).
@@ -113,8 +119,19 @@ LAMPE_EMPFANG = (325, 385, 11)
 LAMPE_SENDEN = (382, 385, 11)
 #: So weit bleibt die Schrift vom Rand des Glases weg.
 GLASRAND = 8
-#: Schriftgrösse der Anzeige in Punkt (Maßstab 1).
+#: Schriftgrösse der Anzeige in Punkt (Maßstab 1). Grösser geht nicht: Bei
+#: zehn Punkt ragt die längste Rückmeldung unten aus dem Glas.
 ANZEIGEGROESSE = 9
+#: Die Nachricht selbst steht **fett** auf dem Glas, auch wo sie nicht
+#: hervorgehoben ist.
+#:
+#: Eine Pilotperson konnte in der Funkanzeige I und J kaum auseinanderhalten.
+#: Daran ist die Grösse schuld – bei neun Punkt ist der Haken des J zwei
+#: Pixel breit –, und das Glas gibt keine grössere her. In einer Schrift mit
+#: festen Zeichenbreiten ist die fette Fassung aber **genauso breit** wie die
+#: normale (geprüft in den Tests): Sie kostet keine Zeile und keinen Pixel,
+#: macht den Haken aber doppelt so dick. Buchstabe für Buchstabe gelesen wird
+#: nur die Nachricht, deshalb steht nur sie fett – nicht die Rückmeldung.
 #: Abstände auf dem Glas.
 ABSTAND_KOPF = 4
 ABSTAND_NACHRICHT = 4
@@ -200,10 +217,11 @@ class Funk(Screen):
         groesse = stil.skaliert(ANZEIGEGROESSE, self.massstab)
         self.schrift = tkfont.Font(root=self, family=familie, size=groesse)
         self._fett = tkfont.Font(root=self, family=familie, size=groesse, weight="bold")
-        self._unterstrichen = tkfont.Font(root=self, family=familie, size=groesse, underline=True)
+        self._unterstrichen = tkfont.Font(root=self, family=familie, size=groesse,
+                                          weight="bold", underline=True)
         self._lampen_zeichnen()
 
-        self._feld = tk.Entry(self.buch, font=self.schrift, bg=stil.FARBE_GLAS, fg=stil.FARBE_LEUCHTSCHRIFT_HELL,
+        self._feld = tk.Entry(self.buch, font=self._fett, bg=stil.FARBE_GLAS, fg=stil.FARBE_LEUCHTSCHRIFT_HELL,
                               insertbackground=stil.FARBE_LEUCHTSCHRIFT_HELL, relief="flat", highlightthickness=1,
                               highlightbackground=stil.FARBE_LEUCHTSCHRIFT_MATT,
                               highlightcolor=stil.FARBE_LEUCHTSCHRIFT)
@@ -385,13 +403,14 @@ class Funk(Screen):
         y += px(ABSTAND_KOPF)
         auftrag = (AUFTRAG_NACHGELESEN[funkspruch.richtung] if self._nur_lesen
                    else AUFTRAG[(funkspruch.richtung, aufgabe.hat_teilaufgabe)])
-        for text in umbrechen(auftrag, s, x1 - x0):
-            leinwand.create_text(x0, y, text=text, anchor="nw", font=s, fill=stil.FARBE_LEUCHTSCHRIFT,
-                                 tags=("anzeige", "auftrag"))
+        for text in umbrechen(auftrag, self._fett, x1 - x0):
+            leinwand.create_text(x0, y, text=text, anchor="nw", font=self._fett,
+                                 fill=stil.FARBE_LEUCHTSCHRIFT_HELL, tags=("anzeige", "auftrag"))
             y += zeile
         y += px(ABSTAND_NACHRICHT // 2)
         self._nachricht_oben = y
-        self._zeilen = tuple(umbrechen(aufgabe.anzeigetext, s, x1 - x0))
+        # Umbrochen wird mit der Schrift, in der die Nachricht auch steht.
+        self._zeilen = tuple(umbrechen(aufgabe.anzeigetext, self._fett, x1 - x0))
         y += len(self._zeilen) * zeile + px(ABSTAND_NACHRICHT)
 
         if self._nur_lesen:
@@ -444,7 +463,7 @@ class Funk(Screen):
 
     def _nachricht_zeichnen(self):
         """Die Nachricht, soweit sie da ist: der zu rechnende Anfang hell und unterstrichen, der Rest matt."""
-        leinwand, s = self.buch, self.schrift
+        leinwand, s = self.buch, self._fett
         leinwand.delete("nachricht")
         x0 = self._glas()[0]
         # So lang wie die Lösung ist der Anfang, der gerechnet wird – ohne
@@ -552,7 +571,7 @@ class Funk(Screen):
             return
         if not 0 <= stelle < len(zeile) or zeile[stelle] == " ":
             return
-        s = self.schrift
+        s = self._fett
         staerke = max(1, self.px(2))
         links = self._glas()[0] + s.measure(zeile[:stelle]) + staerke
         breite = max(s.measure(zeile[stelle]) - 2 * staerke, self.px(4))
@@ -628,7 +647,7 @@ class Funk(Screen):
         self.buch.delete("eingabe")
         self._feld.destroy()
         x, y, _, hoehe = self._feldkasten
-        self.buch.create_text(x, y + hoehe // 2, text=self._antwort, anchor="w", font=self.schrift,
+        self.buch.create_text(x, y + hoehe // 2, text=self._antwort, anchor="w", font=self._fett,
                               fill=stil.FARBE_LEUCHTSCHRIFT_HELL, tags=("anzeige", "antwort"))
 
     def weiter(self):
