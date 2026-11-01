@@ -102,9 +102,14 @@ from game.rueckmeldung import fehlerzahl_der_aufgabe, rueckmeldung
 HOECHSTZAHL_VERSUCHE_OHNE_FORTSCHRITT = 3
 
 #: Satz, der erscheint, wenn eine Eingabe zwar falsch war, aber besser als
-#: alles bisher. Er macht sichtbar, dass dieser Versuch nichts gekostet hat.
+#: alles bisher.
+#:
+#: Er sagt, was wirklich passiert: Die Strähne beginnt von vorn, der Zähler
+#: steht wieder bei drei. "Dieser Versuch zählt nicht mit" stand hier bis zum
+#: Pilotdurchlauf – das war zu wenig und passte nicht zu der Zeile darunter,
+#: die plötzlich wieder "Noch 3 Versuche" sagte.
 HINWEIS_FORTSCHRITT = (
-    "Du bist näher dran als vorher – dieser Versuch zählt nicht mit."
+    "Du bist näher dran als vorher – deine drei Versuche fangen wieder von vorn an."
 )
 
 

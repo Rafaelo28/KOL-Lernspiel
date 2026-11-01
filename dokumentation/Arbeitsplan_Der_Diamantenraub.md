@@ -633,7 +633,8 @@ Versuche, Lösung angezeigt (ja/nein), benötigte Sekunden, Zusatzaufgabe (ja/ne
     für eine Karte kein Platz
   - **Die Regeln kommen aus der Spiellogik**, der Screen zeigt sie nur: die
     konkrete Fehlermeldung (Projektregel 6), der Hinweis "Du bist näher dran
-    als vorher – dieser Versuch zählt nicht mit", die verbleibenden Versuche
+    als vorher – deine drei Versuche fangen wieder von vorn an", die
+    verbleibenden Versuche
     und nach dreien ohne Fortschritt die Lösung (Projektregel 2). Eine leere
     Eingabe kostet keinen Versuch
   - **Drei Dinge machen die Rückmeldung sichtbar statt nur lesbar:** Die
