@@ -208,7 +208,7 @@ die Folgen für die Phasen 4, 5 und 6 in `CLAUDE.md`.
 #### **Adaptive Zusatzaufgaben (Timer):**
 
 - Zeit **pro Level/Aufgabe** messen, nicht die gesamte Spielöffnungsdauer (sonst verfälscht durch Pausen/Ablenkung).
-- Zusatzaufgaben dürfen die festen Zeitfenster (15/20/25 Min, siehe A4) nicht verlängern – sonst ist der Vergleich mit der Frontalunterrichts-Gruppe (60 Min gesamt) nicht mehr sauber. Zeitfenster endet → weiter zum nächsten Level, egal wie viele Zusatzaufgaben offen sind.
+- Zusatzaufgaben dürfen die festen Zeitfenster (im Konzept 15/20/25 Min, seit dem Pilotdurchlauf 15/10/25, siehe A4 und `game/zeitfenster.py`) nicht verlängern – sonst ist der Vergleich mit der Frontalunterrichts-Gruppe (60 bzw. jetzt 50 Min gesamt) nicht mehr sauber. Zeitfenster endet → weiter zum nächsten Level, egal wie viele Zusatzaufgaben offen sind.
 - Schwellenwert ("zu schnell") vor dem eigentlichen Test mit einem kleinen Pilotdurchlauf kalibrieren, statt ihn zu schätzen.
 
 **Fehlerhandling / Lösungsanzeige:**
