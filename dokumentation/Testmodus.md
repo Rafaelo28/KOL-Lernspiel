@@ -1,6 +1,6 @@
 # Testmodus – Kurzanleitung
 
-Zum Durchklicken der Geschichte, ohne 15/10/25 Minuten zu warten und ohne
+Zum Durchklicken der Geschichte, ohne 12/10/25 Minuten zu warten und ohne
 jede Aufgabe von Hand zu rechnen. **Nicht** für den Unterricht.
 
 ```bash
@@ -116,7 +116,7 @@ lassen** und gleich bei der Landung sein.
 
 ## Wichtig
 
-* **Die Zeitfenster sind echt.** 15/10/25 Minuten laufen wie im Spiel, sie
+* **Die Zeitfenster sind echt.** 12/10/25 Minuten laufen wie im Spiel, sie
   lassen sich nur überspringen. Für die Frage, ob die Zeiten reichen
   (Arbeitsplan 8.1), deshalb **ohne** Schalter starten und richtig spielen.
 * **Testdaten sind keine Messdaten.** Sie landen in `logs/testmodus/`, und

@@ -11,27 +11,44 @@ sich ohne Bildschirm testen, und kein Screen kann sie später anders auslegen.
 Die Oberfläche fragt :attr:`game.spielstand.Spielstand.naechster_schritt` und
 zeigt, was zurückkommt.
 
-Die Vorrang-Regel
-─────────────────
+Die Vorrang-Regel – und warum sie die Pflichtübungen nicht mehr anrührt
+──────────────────────────────────────────────────────────────────────
 Zwei Projektregeln beissen sich: Regel 1 wechselt starr zum nächsten Level,
 egal was offen ist; Regel 2 begrenzt eine einzelne Aufgabe nicht über die
 Zeit. Ein langsames Kind kann also an den Übungen so viel Zeit verlieren, dass
-die Funksprüche nie drankommen – und ab da ergibt die Geschichte keinen Sinn
-mehr.
+die Funksprüche nie drankommen.
 
-Deshalb wird vor jeder weiteren Übung geschätzt, wie lange die noch offenen
-Funksprüche des Levels dauern werden (``zusatzaufgaben.zeit_reicht_noch``, das
-dafür dieselbe Gerade benutzt wie für die Zusatzaufgaben). Reicht die Restzeit
-dafür nicht mehr, kommt keine Übung mehr, sondern der nächste Funkspruch –
-auch wenn dafür die zweite Basis-Übung ausfällt.
+Deshalb wurde vor jeder weiteren Übung geschätzt, wie lange die noch offenen
+Funksprüche des Levels dauern werden (``zusatzaufgaben.zeit_reicht_noch``) –
+und notfalls auch eine **Pflichtübung** übersprungen. Seit dem
+Pilotdurchlauf gilt das nur noch für die Zusatzaufgaben. Die zwei
+Pflichtübungen kommen in jedem Fall; sie hören erst auf, wenn weniger als die
+Mindestrestzeit bleibt (dann wäre eine angefangene Übung nur eine Logzeile).
 
-Das verlängert kein Zeitfenster und ändert am Ablauf schneller Kinder nichts;
-es sortiert nur um, was in der verbleibenden Zeit zuerst drankommt. Eine schon
-laufende Aufgabe bricht es nie ab – gefragt wird erst, wenn eine Aufgabe
-fertig ist. Läuft die Zeit trotzdem ab, während noch gerechnet wird, greift
-weiter Regel 1: Das Level endet sofort. Der Funkspruch fällt deshalb nicht
-aus – nach dem Wechsel steht er zum Mitlesen da (Regel 1, "Kein Funkspruch
-geht verloren"); gerechnet hat ihn dann aber niemand.
+Warum: In den fünf Pilotläufen hat die Regel genau das gekostet, wofür die
+Übungen da sind.
+
+* In Level 1 lautete die Reihenfolge bei zwei von fünf Personen Übung →
+  Funksprüche → Übung. Sie haben eine Richtung geübt und dann die andere
+  gefunkt.
+* In Level 3 bekamen **drei von fünf** überhaupt nur eine Übung, und bei
+  allen dreien war es die falsche Richtung: Sie haben entschlüsseln geübt
+  und mussten dann ihren eigenen Standort verschlüsseln (``standort``), ohne
+  das je geübt zu haben. Das war mit 420 bis 573 Sekunden die teuerste
+  Aufgabe des ganzen Spiels.
+* Dazu passt, dass eine Testperson einen Geheimtext ein zweites Mal
+  verschlüsselt hat.
+
+Ein Level besteht aus zwei Übungen – eine je Richtung – und den
+Funksprüchen. Fällt eine der beiden weg, übt jemand nur den halben Stoff.
+Verloren geht dadurch nichts: Ein Funkspruch, für den die Zeit nicht mehr
+reicht, steht nach dem Levelwechsel zum Mitlesen da (Regel 1, "Kein
+Funkspruch geht verloren"). Gerechnet hat ihn dann niemand – dafür hat jeder
+beide Richtungen geübt.
+
+Eine schon laufende Aufgabe bricht hier nie etwas ab – gefragt wird erst,
+wenn eine Aufgabe fertig ist. Läuft die Zeit ab, während noch gerechnet wird,
+greift Regel 1: Das Level endet sofort.
 
 Warum die Funksprüche vor den Zusatzaufgaben kommen
 ───────────────────────────────────────────────────
@@ -105,8 +122,7 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
     nicht im Mittel, sondern im Tempo dieses Kindes.
     ``funkverkehr_begonnen`` sagt, ob in diesem Level schon gefunkt wurde.
 
-    Zuerst die Pflichtübungen, dann die Funksprüche, dann die Zusatzaufgaben –
-    und wird die Zeit knapp, rücken die Funksprüche noch weiter vor:
+    Zuerst die Pflichtübungen, dann die Funksprüche, dann die Zusatzaufgaben:
 
     >>> from content import story
     >>> naechster_schritt(0, story.FUNKSPRUECHE_NACH_LEVEL[1], 900).art
@@ -118,10 +134,17 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
     'erster_ruf'
     >>> naechster_schritt(2, (), 900, zusatzaufgabe_faellig=True).art
     'zusatzaufgabe'
-    >>> naechster_schritt(0, story.FUNKSPRUECHE_NACH_LEVEL[1], 300).funkspruch.kennung
-    'erster_ruf'
     >>> naechster_schritt(2, (), 900).art
     'levelende'
+
+    Die Pflichtübungen kommen auch dann noch, wenn die Zeit für die
+    Funksprüche längst nicht mehr reicht – erst unter der Mindestrestzeit
+    hört das auf:
+
+    >>> naechster_schritt(0, story.FUNKSPRUECHE_NACH_LEVEL[1], 300).art
+    'uebung'
+    >>> naechster_schritt(0, story.FUNKSPRUECHE_NACH_LEVEL[1], 30).funkspruch.kennung
+    'erster_ruf'
 
     Hat der Funkverkehr einmal begonnen, kommt keine Übung mehr dazwischen –
     auch dann nicht, wenn wieder Zeit dafür wäre:
@@ -139,14 +162,16 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
         # Vorrang-Regel eine Pflichtübung übersprungen hat und der erste
         # Funkspruch dann schnell ging.
         return Schritt(SCHRITT_FUNKSPRUCH, offene_funksprueche[0])
-    zeit_fuer_uebung = _zusatzaufgaben.zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche, tempo)
-    if zeit_fuer_uebung and erledigte_uebungen < BASIS_UEBUNGEN_JE_LEVEL:
+    # Die zwei Pflichtübungen sind das Level – sie kommen, solange überhaupt
+    # noch Zeit für eine Aufgabe ist (siehe Modulkopf).
+    if erledigte_uebungen < BASIS_UEBUNGEN_JE_LEVEL and _zusatzaufgaben.zeit_reicht_noch(verbleibende_sekunden):
         return Schritt(SCHRITT_UEBUNG)
     if offene_funksprueche:
         return Schritt(SCHRITT_FUNKSPRUCH, offene_funksprueche[0])
     # Erst wenn die Geschichte des Levels erzählt ist, füllen Übungen die
     # Restzeit. Ob eine fällig ist, hat die Spiellogik schon entschieden –
     # samt Restzeit und Obergrenze (game/zusatzaufgaben.py).
+    zeit_fuer_uebung = _zusatzaufgaben.zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche, tempo)
     if zeit_fuer_uebung and zusatzaufgabe_faellig:
         return Schritt(SCHRITT_ZUSATZAUFGABE)
     return Schritt(SCHRITT_LEVELENDE)

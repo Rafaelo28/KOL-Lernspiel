@@ -6,8 +6,10 @@ den Versuchsaufbau wichtig:
 * **Die Reihenfolge:** zwei Übungen, dann die Funksprüche, dann füllen
   Zusatzaufgaben die Restzeit. (Bis zum Pilotdurchlauf lagen die
   Zusatzaufgaben davor – siehe Modulkopf von ``game/levelablauf.py``.)
-* **Die Vorrang-Regel:** Wird die Zeit knapp, fallen Übungen aus, damit die
-  Funksprüche noch drankommen – sie tragen die Geschichte. Kein Zeitfenster
+* **Die Vorrang-Regel:** Wird die Zeit knapp, fällt die Zusatzaufgabe aus,
+  damit die Funksprüche noch drankommen – sie tragen die Geschichte. Die
+  zwei **Pflichtübungen** rührt sie seit dem Pilotdurchlauf nicht mehr an
+  (Begründung im Modulkopf von ``game/levelablauf.py``). Kein Zeitfenster
   wird dabei länger (Projektregel 1).
 
 Geprüft wird beides doppelt: an der reinen Funktion und am Spielstand, der
@@ -120,39 +122,35 @@ def test_die_basis_uebungen_gehen_einer_zusatzaufgabe_vor():
 # 2. Die Vorrang-Regel
 # ───────────────────────────────────────────────────────────────────────────
 
-def test_wird_die_zeit_knapp_kommt_der_funkspruch_statt_der_uebung():
-    """Die Geschichte darf nicht daran scheitern, dass davor noch geübt wurde."""
-    schritt = naechster_schritt(0, LEVEL_1, _knappe_zeit(LEVEL_1))
+def test_die_pflichtuebungen_kommen_auch_wenn_die_zeit_knapp_wird():
+    """Ein Level besteht aus zwei Übungen und den Funksprüchen – beide Richtungen gehören dazu.
+
+    Bis zum Pilotdurchlauf sprang die Regel auch für die Pflichtübungen ein.
+    Die Folge: In Level 3 bekamen drei von fünf Personen nur eine Übung, und
+    zwar in der falschen Richtung – sie übten entschlüsseln und mussten dann
+    ihren Standort verschlüsseln.
+    """
+    for restzeit in (_knappe_zeit(LEVEL_1), zusatzaufgaben.MINDESTRESTZEIT_SEKUNDEN):
+        assert naechster_schritt(0, LEVEL_1, restzeit).art == SCHRITT_UEBUNG
+        assert naechster_schritt(1, LEVEL_1, restzeit).art == SCHRITT_UEBUNG
+
+
+def test_unter_der_mindestrestzeit_kommt_auch_keine_pflichtuebung_mehr():
+    """Eine Übung, die sofort abgebrochen wird, ist nur eine Logzeile."""
+    schritt = naechster_schritt(0, LEVEL_1, zusatzaufgaben.MINDESTRESTZEIT_SEKUNDEN - 1)
     assert (schritt.art, schritt.funkspruch) == (SCHRITT_FUNKSPRUCH, LEVEL_1[0])
 
 
-def test_bei_knapper_zeit_faellt_auch_die_zusatzaufgabe_aus():
-    schritt = naechster_schritt(BASIS_UEBUNGEN_JE_LEVEL, LEVEL_1, _knappe_zeit(LEVEL_1),
-                                zusatzaufgabe_faellig=True)
-    assert schritt.art == SCHRITT_FUNKSPRUCH
-
-
-def test_reicht_die_zeit_knapp_doch_kommt_die_uebung():
-    """Die Grenze gilt einschliesslich – sonst fiele eine Übung aus, für die es reicht."""
-    gerade_genug = (_knappe_zeit(LEVEL_1)
-                    + zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung(),
-                                                     LEVEL_1[0].verfahren))
-    assert naechster_schritt(0, LEVEL_1, gerade_genug).art == SCHRITT_UEBUNG
-    assert naechster_schritt(0, LEVEL_1, gerade_genug - 1).art == SCHRITT_FUNKSPRUCH
+def test_bei_knapper_zeit_faellt_die_zusatzaufgabe_aus():
+    """Für sie gilt die Vorrang-Regel weiter – sie ist das Füllmaterial, nicht das Level."""
+    knapp = zusatzaufgaben.MINDESTRESTZEIT_SEKUNDEN - 1
+    assert naechster_schritt(BASIS_UEBUNGEN_JE_LEVEL, (), knapp,
+                             zusatzaufgabe_faellig=True).art == SCHRITT_LEVELENDE
 
 
 def test_ohne_funkspruch_und_ohne_zeit_endet_das_level():
     """Auch wenn noch Übungen fehlten: Für sie ist keine Zeit mehr."""
     assert naechster_schritt(0, (), 10).art == SCHRITT_LEVELENDE
-
-
-def test_je_mehr_funksprueche_offen_sind_desto_frueher_greift_der_vorrang():
-    zeit = _knappe_zeit(LEVEL_1) + zusatzaufgaben.erwartete_dauer(zusatzaufgaben.laengste_uebung(),
-                                                                 LEVEL_1[0].verfahren)
-    assert naechster_schritt(0, LEVEL_1, zeit).art == SCHRITT_UEBUNG
-    assert naechster_schritt(0, LEVEL_1[:1], zeit).art == SCHRITT_UEBUNG, "Weniger offen, mehr Luft."
-    mehr = LEVEL_1 + story.FUNKSPRUECHE_NACH_LEVEL[3]
-    assert naechster_schritt(0, mehr, zeit).art == SCHRITT_FUNKSPRUCH
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -276,17 +274,20 @@ def test_bei_knapper_zeit_ist_am_spielstand_keine_zusatzaufgabe_mehr_faellig():
     assert stand.naechster_schritt.art == SCHRITT_FUNKSPRUCH
 
 
-def test_wer_troedelt_kommt_trotzdem_zum_funkspruch():
-    """Der Fall aus dem Arbeitsplan: lange an den Übungen, aber die Geschichte läuft weiter."""
+def test_wer_troedelt_bekommt_seine_zweite_uebung_trotzdem():
+    """Der Fall aus dem Arbeitsplan – seit dem Pilotdurchlauf andersherum entschieden.
+
+    Wer lange an der ersten Übung sitzt, bekommt trotzdem die zweite: Sonst
+    übt er nur eine Richtung. Reicht die Zeit danach nicht mehr für den
+    Funkspruch, steht der nach dem Levelwechsel zum Mitlesen da – verloren
+    geht er nie (Projektregel 1).
+    """
     uhr = Uhr()
     stand = _stand(uhr)
     stand.naechste_uebung()
     _loese(stand, sekunden=DAUER_JE_LEVEL_SEKUNDEN[1] - _knappe_zeit(LEVEL_1), uhr=uhr)
     assert stand.uebungen_im_level() == 1, "Die zweite Basis-Übung steht noch aus …"
-    schritt = stand.naechster_schritt
-    assert (schritt.art, schritt.funkspruch) == (SCHRITT_FUNKSPRUCH, LEVEL_1[0]), (
-        "… kommt aber nicht mehr, damit die Funksprüche noch drankommen."
-    )
+    assert stand.naechster_schritt.art == SCHRITT_UEBUNG, "… und kommt auch."
 
 
 def test_ein_gestellter_funkspruch_ist_nicht_mehr_offen():

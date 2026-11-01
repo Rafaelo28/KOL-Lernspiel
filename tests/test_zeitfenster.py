@@ -54,12 +54,12 @@ def _stand(uhr, seed=4711):
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_die_zeitfenster_sind_genau_die_aus_dem_versuchsaufbau():
-    """15 / 10 / 25 Minuten, wie bei der Kontrollgruppe (Anhang A4).
+    """12 / 10 / 25 Minuten, wie bei der Kontrollgruppe (Anhang A4).
 
     Diese Zahlen sind keine Einstellung. Wer sie ändert, ändert den Vergleich
     zwischen den beiden Gruppen – und dieser Test soll dabei auffallen.
     """
-    assert DAUER_JE_LEVEL_MINUTEN == {1: 15, 2: 10, 3: 25}
+    assert DAUER_JE_LEVEL_MINUTEN == {1: 12, 2: 10, 3: 25}
 
 
 def test_sekunden_und_minuten_passen_zusammen():
@@ -71,13 +71,13 @@ def test_es_gibt_fuer_jedes_level_ein_zeitfenster():
     assert set(DAUER_JE_LEVEL_MINUTEN) == set(LEVEL)
 
 
-def test_die_gesamtzeit_der_drei_level_ist_fuenfzig_minuten():
-    """Seit der Kürzung von Level 2: 15 + 10 + 25 statt 15 + 20 + 25.
+def test_die_gesamtzeit_der_drei_level_ist_siebenundvierzig_minuten():
+    """Nach dem Pilotdurchlauf: 12 + 10 + 25 statt 15 + 20 + 25.
 
-    Die zehn gesparten Minuten gehören dem Vor- und Nachtest – und der
+    Die dreizehn gesparten Minuten gehören dem Vor- und Nachtest – und der
     Kontrollgruppe, die dieselbe Kürzung bekommt.
     """
-    assert sum(DAUER_JE_LEVEL_MINUTEN.values()) == 50
+    assert sum(DAUER_JE_LEVEL_MINUTEN.values()) == 47
 
 
 def test_level_2_ist_das_kuerzeste_und_level_3_das_laengste():
@@ -215,7 +215,7 @@ def test_solange_zeit_bleibt_wird_nicht_gewechselt():
     uhr = Uhr()
     stand = _stand(uhr)
     stand.starte_level(1)
-    for minute in range(15):
+    for minute in range(DAUER_JE_LEVEL_MINUTEN[1]):
         uhr.jetzt = minute * 60
         assert not stand.pruefe_zeitfenster()
         assert stand.aktuelles_level == 1

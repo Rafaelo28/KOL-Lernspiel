@@ -31,13 +31,14 @@ auf aufwendiger Grafik.
 | Nachtest               | 10 Min |
 | Puffer                 | 5 Min  |
 
-> **Nach dem Pilotdurchlauf geändert:** Level 2 dauert **10 Min** statt 20.
-> Die Substitution ist das schnellste Verfahren – der Pflichtteil war bei
-> fünf Testpersonen nach 3,9 bis 7,7 Minuten erledigt, die übrigen zwölf bis
-> sechzehn Minuten füllten gleichartige Zusatzübungen. Die Kontrollgruppe
-> bekommt dieselbe Kürzung; die drei Level dauern zusammen 50 statt 60
-> Minuten, der Zeitrahmen insgesamt 65 statt 75. Zahlen im Modulkopf von
-> `game/zeitfenster.py`.
+> **Nach dem Pilotdurchlauf geändert:** Die Zeitfenster sind jetzt
+> **12 / 10 / 25 Min**. Ein Level ist die Handbuchseite, zwei Übungen – eine
+> je Richtung – und die Funksprüche; nur wer damit früh fertig ist, bekommt
+> Zusatzaufgaben. Gemessen an fünf Testpersonen brauchen die mittleren dafür
+> 10,3 / 6,3 / 24,6 Minuten. Level 2 ist das kürzeste, weil die Substitution
+> reines Nachschlagen ist. Die Kontrollgruppe bekommt dieselbe Kürzung; die
+> drei Level dauern zusammen 47 statt 60 Minuten, der Zeitrahmen insgesamt
+> 62 statt 75. Zahlen im Modulkopf von `game/zeitfenster.py`.
 
 **Kritisch:** Die drei Level-Zeitfenster (15/20/25 Min) dürfen durch
 Zusatzaufgaben (siehe Punkt 6) **nicht verlängert** werden – sonst ist der

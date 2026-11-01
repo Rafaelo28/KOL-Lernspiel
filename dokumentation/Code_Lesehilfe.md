@@ -232,7 +232,7 @@ Screenwechsel automatisch wieder abgemeldet.
 | **Durchlauf** | Eine Person spielt das Spiel einmal – Spielstand plus Logdatei |
 | **Spielstand** | Wo im Spiel wir stehen: Level, Zeitfenster, laufende und erledigte Aufgaben |
 | **Bearbeitung** | Der Verlauf *einer* Aufgabe: Versuche, Zeit, ob gelöst |
-| **Zeitfenster** | Die feste Zeit eines Levels (15/10/25 Minuten) |
+| **Zeitfenster** | Die feste Zeit eines Levels (12/10/25 Minuten) |
 | **Seed / Zufallsquelle / Strom** | Der Seed ist die Startzahl des Zufalls. Aus ihm entstehen je Level eigene Zufallsströme. Weil er im Log steht, lässt sich jede gezogene Aufgabe später rekonstruieren |
 | **Teilaufgabe** | Bei langen Funksprüchen wird nur der Anfang von Hand gerechnet; ein Knopf löst den Rest auf |
 | **Wächter** (`_verlange_…`) | Prüft am Anfang einer Methode, dass die Reihenfolge stimmt, und bricht sonst mit einer klaren Meldung ab |

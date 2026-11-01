@@ -1,4 +1,4 @@
-"""Der Testmodus: die Geschichte durchklicken, ohne 15/10/25 Minuten zu warten.
+"""Der Testmodus: die Geschichte durchklicken, ohne 12/10/25 Minuten zu warten.
 
 Start::
 
@@ -27,7 +27,7 @@ Was anders ist
   als solche zu erkennen, wenn sie einmal im falschen Ordner liegt.
 * In der Titelzeile des Fensters steht "TESTMODUS".
 
-Was **nicht** anders ist: die Zeitfenster (15/10/25 Minuten laufen normal,
+Was **nicht** anders ist: die Zeitfenster (12/10/25 Minuten laufen normal,
 sie lassen sich nur überspringen), die 3-Versuche-Regel, die Aufgaben, die
 Reihenfolge der Screens. Wer im Testmodus etwas sieht, sieht es im Spiel
 genauso – sonst wären die Stichproben wertlos.

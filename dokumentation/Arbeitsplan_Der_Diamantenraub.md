@@ -28,7 +28,7 @@ Git-Historie als Prozessnachweis (60 % der Bewertung) aussagekräftig.
 
 ### 0.2 CLAUDE.md mit den Projektregeln schreiben
 Inhalt (Kurzfassung der unverhandelbaren Regeln):
-- Zeitfenster 15/10/25 Min pro Level sind fix, Zusatzaufgaben verlängern sie nie
+- Zeitfenster 12/10/25 Min pro Level sind fix, Zusatzaufgaben verlängern sie nie
 - 3-Versuche-Regel gilt für **alle** Aufgaben, auch für Bobs zwei Funksprüche
 - Kein Klartext-Funkverkehr, auch nicht durch Bob
 - Level 2 ist **monoalphabetische Substitution**, nicht Transposition
@@ -230,7 +230,7 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   CLAUDE.md verlangt die Zeitmessung pro Level *und* pro Aufgabe
 
 ### 5.2 Level-Timer — `game/zeitfenster.py`
-- 15 / 10 / 25 Minuten pro Level (Level 2 seit dem Pilotdurchlauf gekürzt, siehe 8.2)
+- 12 / 10 / 25 Minuten pro Level (seit dem Pilotdurchlauf an den gemessenen Zeiten ausgerichtet, siehe 8.2)
 - Bei Ablauf: automatisch weiter zum nächsten Level, unabhängig davon, was
   gerade offen ist
 - `spielstand.restzeit_text` liefert die Restzeit als "MM:SS" – **wird aber
@@ -843,8 +843,17 @@ Funksprüche – Level 1 und 3 haben je zwei (`erster_ruf`/`bob_erste_antwort`
 bzw. `standort`/`bob_zweite_antwort`), Level 2 einen (`verfolger`) – nie
 drankommen. Ab dem Punkt ergibt die Geschichte keinen Sinn mehr.
 
-**Entscheidung:** Innerhalb eines Levels haben die noch ausstehenden
-Funksprüche Vorrang vor weiteren Übungen. Sobald die verbleibende Levelzeit
+> **Nach dem Pilotdurchlauf eingeschränkt:** Die Regel gilt nur noch für die
+> **Zusatzaufgaben**. Die zwei Pflichtübungen kommen in jedem Fall – sie sind
+> das Level. In den Logs hatte die Regel genau das gekostet, wofür die
+> Übungen da sind: In Level 3 bekamen drei von fünf Personen nur eine Übung,
+> und bei allen dreien war es die falsche Richtung (entschlüsseln geübt, dann
+> den eigenen Standort verschlüsseln müssen). Reicht die Zeit danach nicht
+> mehr für den Funkspruch, steht er zum Mitlesen da. Begründung im Modulkopf
+> von `game/levelablauf.py`.
+
+**Entscheidung (ursprünglich):** Innerhalb eines Levels haben die noch
+ausstehenden Funksprüche Vorrang vor weiteren Übungen. Sobald die verbleibende Levelzeit
 nicht mehr für **alle** noch offenen Funksprüche dieses Levels reicht
 (Summe von `zusatzaufgaben.erwartete_dauer(laenge)` über deren
 `selbst_zu_loesen`-Länge, plus Sicherheitspuffer – Vorbild ist
@@ -990,7 +999,7 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 ## Phase 8 – Test und Verteilung
 
 ### 8.1 Zeitmessung im Selbsttest
-- Selbst durchspielen und stoppen: Sind 15/10/25 Min realistisch? Dafür das
+- Selbst durchspielen und stoppen: Sind 12/10/25 Min realistisch? Dafür das
   Spiel **ohne** Schalter starten – gemessen wird der echte Ablauf
 - Für Stichproben an einzelnen Stellen der Geschichte gibt es den Testmodus
   (`python3 main.py --testmodus`, siehe `ui/testmodus.py`): Aufgaben lösen
@@ -1001,31 +1010,36 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
 ### 8.2 Pilotdurchlauf mit 2–3 Personen
 - Ziel: Schwellenwert für Zusatzaufgaben kalibrieren (Aufgabe 5.4)
 - Zweites Ziel: Verständlichkeit der Handbuchtexte prüfen
-- **Drittes Ziel – entschieden: die Zeitfenster sind jetzt 15/10/25 Min.**
+- **Drittes Ziel – entschieden: die Zeitfenster sind jetzt 12/10/25 Min.**
   Offen war, ob es bei 15/20/25 bleibt; im Gespräch war eine gleichmässige
-  Kürzung auf 10/15/20 oder 12/15/20. Die fünf Pilotläufe haben gezeigt, dass
-  eine gleichmässige Kürzung falsch gewesen wäre: Gekürzt gehört **nur
-  Level 2**, dafür deutlich.
+  Kürzung auf 10/15/20 oder 12/15/20. Eine gleichmässige Kürzung wäre falsch
+  gewesen: Level 3 braucht jede seiner 25 Minuten, Level 2 nicht einmal die
+  Hälfte seiner zwanzig.
 
-  Gemessen (nur Pflichtübungen und Funksprüche, ohne Zusatzaufgaben):
+  Festgelegt wurde zuerst, **woraus ein Level besteht**: aus der
+  Handbuchseite, zwei Übungen – eine je Richtung – und den Funksprüchen.
+  Zusatzaufgaben bekommt nur, wer damit früh fertig ist. Danach bemessen sich
+  die Fenster. Gemessen wurde dieser Kern bei fünf Personen, die Lesezeit der
+  Handbuchseite eingerechnet (die Uhr läuft ab ihr):
 
-  | Level | Fenster | Median | langsamste Person | Rest |
-  |-------|---------|--------|-------------------|------|
-  | 1 – Caesar       | 15 Min | 8,4 Min | 13,0 Min | wenig |
-  | 2 – Substitution | 20 Min | 6,1 Min | **7,7 Min** | 12–16 Min Füllmaterial |
-  | 3 – Vigenère     | 25 Min | 20,5 Min | 24,2 Min | nichts |
+  | Level | schnellste | mittlere | langsamste | Fenster |
+  |-------|-----------|----------|------------|---------|
+  | 1 – Caesar       | 6,4 Min | 10,3 Min | 11,7 Min | **12 Min** |
+  | 2 – Substitution | 4,9 Min |  6,3 Min |  8,5 Min | **10 Min** |
+  | 3 – Vigenère     | 22,0 Min | 24,6 Min | über 25 | **25 Min** |
 
-  Level 1 hat also kaum Luft (eine Person brauchte 13 der 15 Minuten),
-  Level 3 gar keine – dort liefen drei von fünf Durchläufen in den
-  Zeitablauf, und Bobs zweite Antwort musste dreimal aufgelöst werden. Nur
-  Level 2 lief leer: Die Substitution ist reines Nachschlagen und damit das
-  schnellste Verfahren (Median 67 s je Übung gegen 130 bei Caesar und 298 bei
-  Vigenère). Zehn Minuten decken die langsamste Pilotperson mit Puffer für
-  den Funkspruch, der jetzt ohne langes Warmlaufen kommt.
+  Damit bekommt die mittlere Person null bis zwei Zusatzaufgaben, die
+  schnellste zwei bis drei – vorher waren es bis zu vierzehn. Die
+  langsamsten erreichen den letzten Funkspruch nicht mehr; er steht dann zum
+  Mitlesen da (Projektregel 1).
 
-  Die drei Level dauern damit zusammen 50 statt 60 Minuten; die zehn
-  gesparten Minuten entlasten die Doppelstunde. **Der Frontalunterricht wird
-  identisch gekürzt** (Anhang A4).
+  Level 2 ist das kürzeste, obwohl es in der Mitte liegt: Die Substitution
+  ist reines Nachschlagen und damit das schnellste Verfahren (Median 67 s je
+  Übung gegen 130 bei Caesar und 298 bei Vigenère).
+
+  Die drei Level dauern zusammen 47 statt 60 Minuten; die dreizehn gesparten
+  Minuten entlasten die Doppelstunde. **Der Frontalunterricht wird identisch
+  gekürzt** (Anhang A4).
 
   Weiter im Blick behalten:
   - `level_sekunden` und `levelende` je Level – wie viele endeten am Timer

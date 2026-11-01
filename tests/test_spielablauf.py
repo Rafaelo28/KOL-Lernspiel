@@ -203,14 +203,19 @@ def test_die_zusatzaufgaben_hoeren_an_der_obergrenze_auf(fenster, bei_der_uebung
 # 3. Die Vorrang-Regel
 # ───────────────────────────────────────────────────────────────────────────
 
-def test_wer_troedelt_kommt_trotzdem_zum_funkspruch(fenster, bei_der_uebung, uhr):
-    """Auch wenn die zweite Übung dafür ausfällt (Arbeitsplan Phase 7)."""
+def test_wer_troedelt_bekommt_trotzdem_seine_zweite_uebung(fenster, bei_der_uebung, uhr):
+    """Seit dem Pilotdurchlauf geht die Vorrang-Regel nicht mehr an die Pflichtübungen.
+
+    Vorher kam hier der Funkspruch und die zweite Übung fiel aus – mit der
+    Folge, dass jemand nur eine Richtung geübt hatte, bevor er die andere
+    funken musste.
+    """
     noetig = zusatzaufgaben.erwartete_dauer_funksprueche(story.FUNKSPRUECHE_NACH_LEVEL[1])
     _loesen(fenster, DAUER_JE_LEVEL_SEKUNDEN[1] - noetig - zusatzaufgaben.MINDESTRESTZEIT_SEKUNDEN, uhr)
     screen = fenster.aktueller_screen
-    assert isinstance(screen, funk.Funk), "Die zweite Übung fällt aus, der Funkspruch nicht."
-    assert fenster.durchlauf.spielstand.uebungen_im_level() == 1
-    assert screen.funkspruch is story.FUNKSPRUCH_ERSTER_RUF
+    assert isinstance(screen, uebung.Uebung), "Die zweite Pflichtübung kommt trotzdem."
+    assert not screen.aufgabe.zusatzaufgabe
+    assert screen.aufgabe.richtung != bei_der_uebung.aufgabe.richtung, "und zwar die andere Richtung"
 
 
 def test_eine_laufende_uebung_wird_nicht_abgebrochen(fenster, bei_der_uebung, uhr):
@@ -524,13 +529,17 @@ def test_ein_ganzer_durchlauf_kommt_bei_allen_funkspruechen_an(fenster, bei_der_
                                      + zusatzaufgaben.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL)
 
 
-def test_ein_troedel_durchlauf_kommt_trotzdem_bei_allen_funkspruechen_an(fenster, bei_der_uebung, uhr):
-    """Der Fall aus dem Arbeitsplan (7.4): an den Übungen wird getrödelt, bis die Zeit knapp wird.
+def test_ein_troedel_durchlauf_uebt_beide_richtungen_und_verliert_keinen_funkspruch(fenster,
+                                                                                     bei_der_uebung, uhr):
+    """Der Fall aus dem Arbeitsplan (7.4), seit dem Pilotdurchlauf anders entschieden.
 
-    Die Funksprüche tragen die Geschichte – sie müssen trotzdem alle drankommen.
+    Getrödelt wird so lange, dass die Zeit nach den zwei Pflichtübungen knapp
+    ist. Dann gilt: Beide Richtungen sind geübt, und kein Funkspruch geht
+    verloren – was nicht mehr gerechnet werden konnte, steht zum Mitlesen da
+    (Projektregel 1).
     """
     def troedeln(fenster, uhr):
-        """Lässt so viel Zeit verstreichen, dass gerade keine weitere Übung mehr hineinpasst."""
+        """Lässt so viel Zeit verstreichen, dass es für die Funksprüche knapp wird."""
         _herumrechnen(fenster, uhr)
         stand = fenster.durchlauf.spielstand
         grenze = (zusatzaufgaben.erwartete_dauer_funksprueche(stand.offene_funksprueche)
@@ -540,12 +549,12 @@ def test_ein_troedel_durchlauf_kommt_trotzdem_bei_allen_funkspruechen_an(fenster
 
     _durchspielen(fenster, uhr, vor_der_uebung=troedeln)
     stand = fenster.durchlauf.spielstand
-    assert _gestellte_funksprueche(fenster) == [f.kennung for f in story.FUNKSPRUECHE]
-    assert all(not b.abgebrochen for b in stand.erledigte_aufgaben)
-
-    # Die Funksprüche bekommen den Vortritt: Als die Zeit knapp wurde, kam
-    # keine Übung mehr dazwischen.
-    reihenfolge = [b.aufgabe.quelle for b in stand.erledigte_aufgaben_im_level(1)]
-    assert reihenfolge[:3] == [QUELLE_UEBUNG, QUELLE_FUNKSPRUCH, QUELLE_FUNKSPRUCH]
-    # Danach steht nichts mehr an – die Restzeit füllt wieder eine Übung.
-    assert reihenfolge[3:] and set(reihenfolge[3:]) == {QUELLE_UEBUNG}
+    for level in (1, 2, 3):
+        pflicht = [b.aufgabe for b in stand.erledigte_aufgaben_im_level(level)
+                   if b.aufgabe.quelle == QUELLE_UEBUNG and not b.aufgabe.zusatzaufgabe]
+        assert len(pflicht) == levelablauf.BASIS_UEBUNGEN_JE_LEVEL, f"Level {level}"
+        assert len({aufgabe.richtung for aufgabe in pflicht}) == 2, f"Level {level}: beide Richtungen"
+    gestellt = set(_gestellte_funksprueche(fenster))
+    nachgelesen = {f.kennung for level in (1, 2, 3)
+                   for f in stand.funksprueche_zum_nachlesen(level)}
+    assert gestellt | nachgelesen == {f.kennung for f in story.FUNKSPRUECHE}
