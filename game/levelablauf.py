@@ -31,11 +31,11 @@ Warum: In den fünf Pilotläufen hat die Regel genau das gekostet, wofür die
 * In Level 1 lautete die Reihenfolge bei zwei von fünf Personen Übung →
   Funksprüche → Übung. Sie haben eine Richtung geübt und dann die andere
   gefunkt.
-* In Level 3 bekamen **drei von fünf** überhaupt nur eine Übung, und bei
-  allen dreien war es die falsche Richtung: Sie haben entschlüsseln geübt
-  und mussten dann ihren eigenen Standort verschlüsseln (``standort``), ohne
-  das je geübt zu haben. Das war mit 420 bis 573 Sekunden die teuerste
-  Aufgabe des ganzen Spiels.
+* In Level 3 bekamen **drei von fünf** überhaupt nur eine Übung – und damit
+  nur eine der beiden Richtungen. Zwei von ihnen hatten entschlüsseln geübt
+  und mussten dann ihren eigenen Standort verschlüsseln (``standort``, mit
+  420 bis 573 Sekunden die teuerste Aufgabe des Spiels); die dritte hatte
+  verschlüsseln geübt und bekam Bobs Antwort zum Entschlüsseln.
 * Dazu passt, dass eine Testperson einen Geheimtext ein zweites Mal
   verschlüsselt hat.
 

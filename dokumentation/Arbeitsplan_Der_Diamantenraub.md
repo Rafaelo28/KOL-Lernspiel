@@ -846,9 +846,9 @@ drankommen. Ab dem Punkt ergibt die Geschichte keinen Sinn mehr.
 > **Nach dem Pilotdurchlauf eingeschränkt:** Die Regel gilt nur noch für die
 > **Zusatzaufgaben**. Die zwei Pflichtübungen kommen in jedem Fall – sie sind
 > das Level. In den Logs hatte die Regel genau das gekostet, wofür die
-> Übungen da sind: In Level 3 bekamen drei von fünf Personen nur eine Übung,
-> und bei allen dreien war es die falsche Richtung (entschlüsseln geübt, dann
-> den eigenen Standort verschlüsseln müssen). Reicht die Zeit danach nicht
+> Übungen da sind: In Level 3 bekamen drei von fünf Personen nur eine Übung
+> und damit nur eine der beiden Richtungen – zwei von ihnen mussten danach
+> ihren eigenen Standort verschlüsseln, ohne das geübt zu haben. Reicht die Zeit danach nicht
 > mehr für den Funkspruch, steht er zum Mitlesen da. Begründung im Modulkopf
 > von `game/levelablauf.py`.
 

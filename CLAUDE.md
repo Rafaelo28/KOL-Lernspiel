@@ -42,8 +42,9 @@ mit wenig Rest; Begründung und Zahlen im Modulkopf von
 
 **Die zwei Pflichtübungen fallen nie aus.** Die Vorrang-Regel
 (`game/levelablauf.py`) darf dafür keine Zeit mehr wegnehmen: Wer nur eine
-Übung bekommt, hat nur eine Richtung geübt – im Pilotdurchlauf mussten drei
-von fünf Personen ihren Standort verschlüsseln, ohne das je geübt zu haben.
+Übung bekommt, hat nur eine Richtung geübt – im Pilotdurchlauf traf das in
+Level 3 drei von fünf Personen, zwei davon vor der teuersten Aufgabe des
+Spiels (den eigenen Standort verschlüsseln).
 Reicht die Zeit danach nicht mehr für den Funkspruch, steht der zum
 Mitlesen da (siehe unten).
 
