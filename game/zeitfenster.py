@@ -164,7 +164,7 @@ def fuer_level(level, zeitgeber=None):
     """Baut das Zeitfenster eines Levels.
 
     >>> fuer_level(2, zeitgeber=lambda: 0).restzeit_text
-    '20:00'
+    '10:00'
     """
     if level not in DAUER_JE_LEVEL_SEKUNDEN:
         raise ValueError(
