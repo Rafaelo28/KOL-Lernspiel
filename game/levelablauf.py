@@ -1,8 +1,8 @@
 """Was im Level als Nächstes drankommt (Arbeitsplan Phase 7).
 
 Ein Level läuft nach diesem Muster: die Handbuchseite, zwei Übungen, dann die
-Funksprüche, die die Geschichte tragen. Wer schnell ist, bekommt zwischen den
-Übungen Zusatzaufgaben (:mod:`game.zusatzaufgaben`), wer langsam ist, nicht.
+Funksprüche, die die Geschichte tragen – und danach füllen Zusatzaufgaben
+(:mod:`game.zusatzaufgaben`) die Restzeit, solange sie reicht.
 
 Diese Entscheidung steht hier und nicht in der Oberfläche: Sie hängt an der
 Restzeit, am Tempo und daran, was im Level schon gelaufen ist – lauter Dinge,
@@ -32,6 +32,23 @@ fertig ist. Läuft die Zeit trotzdem ab, während noch gerechnet wird, greift
 weiter Regel 1: Das Level endet sofort. Der Funkspruch fällt deshalb nicht
 aus – nach dem Wechsel steht er zum Mitlesen da (Regel 1, "Kein Funkspruch
 geht verloren"); gerechnet hat ihn dann aber niemand.
+
+Warum die Funksprüche vor den Zusatzaufgaben kommen
+───────────────────────────────────────────────────
+Bis zum Pilotdurchlauf schoben sich Zusatzaufgaben **vor** den Funkspruch: So
+stand es in der Zusammenfassung ("Übungsaufgaben (+ ggf. Zusatzaufgaben) →
+echte Sendeaufgabe → Bobs Antwort"). In den Logs der fünf Pilotläufe kam der
+Funkspruch von Level 2 dadurch als neunte, elfte, zwölfte, sechzehnte und
+siebzehnte Aufgabe – davor lagen acht bis fünfzehn Substitutionsübungen. Eine
+Testperson nannte das Level "viel zu lang", eine zweite das Abarbeiten
+langweilig, und beides meint dieselbe Sache: Der Teil, für den man spielt,
+kam zuletzt.
+
+Jetzt kommen nach den zwei Pflichtübungen die Funksprüche, und die
+Zusatzaufgaben füllen danach die Restzeit. Das ändert nichts an der Menge
+Arbeit im Zeitfenster – nur an der Reihenfolge. Zwei Dinge gewinnt es: Die
+Geschichte kommt früh, und sie geht auch dann nicht verloren, wenn jemand
+hinterher langsam wird.
 
 Und wenn nichts mehr ansteht
 ────────────────────────────
@@ -88,13 +105,19 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
     nicht im Mittel, sondern im Tempo dieses Kindes.
     ``funkverkehr_begonnen`` sagt, ob in diesem Level schon gefunkt wurde.
 
-    Zuerst die Übungen, dann die Funksprüche – ausser die Zeit wird knapp:
+    Zuerst die Pflichtübungen, dann die Funksprüche, dann die Zusatzaufgaben –
+    und wird die Zeit knapp, rücken die Funksprüche noch weiter vor:
 
     >>> from content import story
     >>> naechster_schritt(0, story.FUNKSPRUECHE_NACH_LEVEL[1], 900).art
     'uebung'
     >>> naechster_schritt(2, story.FUNKSPRUECHE_NACH_LEVEL[1], 900).funkspruch.kennung
     'erster_ruf'
+    >>> naechster_schritt(2, story.FUNKSPRUECHE_NACH_LEVEL[1], 900,
+    ...                   zusatzaufgabe_faellig=True).funkspruch.kennung
+    'erster_ruf'
+    >>> naechster_schritt(2, (), 900, zusatzaufgabe_faellig=True).art
+    'zusatzaufgabe'
     >>> naechster_schritt(0, story.FUNKSPRUECHE_NACH_LEVEL[1], 300).funkspruch.kennung
     'erster_ruf'
     >>> naechster_schritt(2, (), 900).art
@@ -119,10 +142,11 @@ def naechster_schritt(erledigte_uebungen, offene_funksprueche, verbleibende_seku
     zeit_fuer_uebung = _zusatzaufgaben.zeit_reicht_noch(verbleibende_sekunden, offene_funksprueche, tempo)
     if zeit_fuer_uebung and erledigte_uebungen < BASIS_UEBUNGEN_JE_LEVEL:
         return Schritt(SCHRITT_UEBUNG)
-    # Ob eine Zusatzaufgabe fällig ist, hat die Spiellogik schon entschieden –
+    if offene_funksprueche:
+        return Schritt(SCHRITT_FUNKSPRUCH, offene_funksprueche[0])
+    # Erst wenn die Geschichte des Levels erzählt ist, füllen Übungen die
+    # Restzeit. Ob eine fällig ist, hat die Spiellogik schon entschieden –
     # samt Restzeit und Obergrenze (game/zusatzaufgaben.py).
     if zeit_fuer_uebung and zusatzaufgabe_faellig:
         return Schritt(SCHRITT_ZUSATZAUFGABE)
-    if offene_funksprueche:
-        return Schritt(SCHRITT_FUNKSPRUCH, offene_funksprueche[0])
     return Schritt(SCHRITT_LEVELENDE)

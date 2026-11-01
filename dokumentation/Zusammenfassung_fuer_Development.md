@@ -151,6 +151,15 @@ pro Aufgabe/Spieler:in protokolliert werden:
 5. Level 3: Handbuch-Erklärung (inkl. Vigenère-Quadrat) → Übungsaufgaben → echte Standort-Sendeaufgabe → Bobs zweite (verschlüsselte) Antwort
 6. Abschluss-Screen: Rettung, Diamanten bleiben zurück
 
+> **Nach dem Pilotdurchlauf geändert (Punkt 3–5):** Die Zusatzaufgaben stehen
+> oben vor der Sendeaufgabe. Umgesetzt ist die umgekehrte Reihenfolge –
+> Handbuch → zwei Pflichtübungen → Funksprüche → Zusatzaufgaben, die die
+> Restzeit füllen. In den fünf Pilotläufen kam der Funkspruch von Level 2
+> sonst erst als neunte bis siebzehnte Aufgabe; davor lagen acht bis fünfzehn
+> Übungen, und zwei Testpersonen nannten genau das zu lang beziehungsweise
+> langweilig. Die Arbeitsmenge im Zeitfenster ändert sich dadurch nicht, nur
+> die Reihenfolge. Siehe `game/levelablauf.py`.
+
 ---
 
 ## 11. Offene Punkte / To-dos für den Projektstart

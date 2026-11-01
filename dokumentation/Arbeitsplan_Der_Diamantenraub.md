@@ -287,9 +287,13 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   `gerechnete_buchstaben` aus dem Log gegeneinander auftragen und die Gerade
   daran anpassen – Zeilen mit `abgebrochen = ja` vorher herausfiltern, dort
   ist die Zeit keine Rechenzeit
-- **Nur Übungen lösen eine Zusatzaufgabe aus.** Die Zusammenfassung legt den
-  Ablauf fest: "Übungsaufgaben (+ ggf. Zusatzaufgaben) → echte Sendeaufgabe
-  → Bobs Antwort". Nach einem Funkspruch hat die Geschichte begonnen
+- **Zusatzaufgaben kommen nach den Funksprüchen.** Die Zusammenfassung legte
+  den Ablauf ursprünglich andersherum fest ("Übungsaufgaben (+ ggf.
+  Zusatzaufgaben) → echte Sendeaufgabe → Bobs Antwort"); seit dem
+  Pilotdurchlauf füllen sie die Restzeit **danach** – sonst lagen in Level 2
+  bis zu fünfzehn Übungen zwischen Handbuchseite und Geschichte. Begründung
+  im Modulkopf von `game/levelablauf.py`. Zwischen zwei Funksprüche schiebt
+  sich weiterhin keine Übung
 - **Die Restzeit wird am längsten Text im Pool gemessen**, nicht an der eben
   gelösten Aufgabe – welcher Text als Nächstes kommt, steht nicht fest. (Seit
   alle Level einen Pool haben, liegen nur noch 10 gegen 14 Buchstaben

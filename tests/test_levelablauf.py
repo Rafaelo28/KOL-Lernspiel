@@ -3,7 +3,9 @@
 Hier steht, was in einem Level als Nächstes drankommt. Zwei Dinge sind für
 den Versuchsaufbau wichtig:
 
-* **Die Reihenfolge** aus dem Konzept: zwei Übungen, dann die Funksprüche.
+* **Die Reihenfolge:** zwei Übungen, dann die Funksprüche, dann füllen
+  Zusatzaufgaben die Restzeit. (Bis zum Pilotdurchlauf lagen die
+  Zusatzaufgaben davor – siehe Modulkopf von ``game/levelablauf.py``.)
 * **Die Vorrang-Regel:** Wird die Zeit knapp, fallen Übungen aus, damit die
   Funksprüche noch drankommen – sie tragen die Geschichte. Kein Zeitfenster
   wird dabei länger (Projektregel 1).
@@ -96,9 +98,16 @@ def test_ist_nichts_mehr_offen_endet_das_level():
     assert (schritt.art, schritt.funkspruch) == (SCHRITT_LEVELENDE, None)
 
 
-def test_eine_faellige_zusatzaufgabe_kommt_nach_den_uebungen():
+def test_eine_faellige_zusatzaufgabe_wartet_auf_die_funksprueche():
+    """Erst die Geschichte, dann das Füllmaterial.
+
+    Im Pilotdurchlauf kam der Funkspruch von Level 2 erst als neunte bis
+    siebzehnte Aufgabe, weil sich jede Zusatzaufgabe davorschob.
+    """
     schritt = naechster_schritt(BASIS_UEBUNGEN_JE_LEVEL, LEVEL_1, 900, zusatzaufgabe_faellig=True)
-    assert schritt.art == SCHRITT_ZUSATZAUFGABE
+    assert (schritt.art, schritt.funkspruch) == (SCHRITT_FUNKSPRUCH, LEVEL_1[0])
+    danach = naechster_schritt(BASIS_UEBUNGEN_JE_LEVEL, (), 900, zusatzaufgabe_faellig=True)
+    assert danach.art == SCHRITT_ZUSATZAUFGABE
 
 
 def test_die_basis_uebungen_gehen_einer_zusatzaufgabe_vor():
@@ -149,11 +158,10 @@ def test_je_mehr_funksprueche_offen_sind_desto_frueher_greift_der_vorrang():
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_der_spielstand_fuehrt_durch_das_ganze_level():
-    """Zwei Übungen, dann Zusatzaufgaben, dann die Funksprüche – und danach weiter geübt.
+    """Zwei Übungen, dann die Funksprüche, dann Zusatzaufgaben bis zum Schluss.
 
     Das Level endet erst, wenn die Zeit um ist oder ihm die eigenen Texte
-    ausgehen; die Funksprüche kommen dazwischen, sobald die Restzeit für sie
-    knapp wird.
+    ausgehen.
     """
     uhr = Uhr()
     stand = _stand(uhr)
@@ -171,10 +179,11 @@ def test_der_spielstand_fuehrt_durch_das_ganze_level():
     uebungen = gesehen[:BASIS_UEBUNGEN_JE_LEVEL]
     zusatz = [art for art in gesehen if art == SCHRITT_ZUSATZAUFGABE]
     assert uebungen == [SCHRITT_UEBUNG] * BASIS_UEBUNGEN_JE_LEVEL, "Erst die Pflichtübungen …"
-    assert zusatz, "… dann Zusatzaufgaben, solange die Zeit reicht …"
-    assert [a for a in gesehen if a in ("erster_ruf", "bob_erste_antwort")] == [
+    assert gesehen[BASIS_UEBUNGEN_JE_LEVEL:BASIS_UEBUNGEN_JE_LEVEL + 2] == [
         "erster_ruf", "bob_erste_antwort",
-    ], "… dazwischen die Funksprüche in ihrer Reihenfolge …"
+    ], "… dann die Funksprüche in ihrer Reihenfolge, ohne etwas dazwischen …"
+    assert zusatz, "… dann Zusatzaufgaben, solange die Zeit reicht …"
+    assert gesehen.index(SCHRITT_ZUSATZAUFGABE) > gesehen.index("bob_erste_antwort")
     assert gesehen[-1] == SCHRITT_LEVELENDE
     assert gesehen[-2] == SCHRITT_ZUSATZAUFGABE, "… und zum Schluss füllen Übungen die Restzeit."
 
@@ -223,14 +232,18 @@ def test_uebungen_im_level_zaehlt_die_zusatzaufgaben_nicht_mit():
     assert stand.naechster_schritt.art == SCHRITT_UEBUNG
 
 
-def test_nach_den_pflichtuebungen_kommt_eine_zusatzaufgabe():
+def test_nach_den_funkspruechen_kommt_eine_zusatzaufgabe():
     """Nicht mehr nach Tempo, sondern solange die Zeit reicht (siehe game/zusatzaufgaben.py)."""
     uhr = Uhr()
     stand = _stand(uhr)
     for _ in range(BASIS_UEBUNGEN_JE_LEVEL):
         stand.naechste_uebung()
         _loese(stand, uhr=uhr)
-    assert stand.zusatzaufgabe_faellig
+    assert stand.zusatzaufgabe_faellig, "fällig schon – drankommen tut sie später"
+    assert stand.naechster_schritt.art == SCHRITT_FUNKSPRUCH
+    for funkspruch in LEVEL_1:
+        stand.stelle_funkspruch(funkspruch)
+        _loese(stand, uhr=uhr)
     assert stand.naechster_schritt.art == SCHRITT_ZUSATZAUFGABE
 
 

@@ -82,13 +82,14 @@ dürfen nicht ausfallen, weil davor noch eine Übung lief. Was daraus für den
 Ablauf folgt, steht in :mod:`game.levelablauf`; hier steht nur, wie lange es
 voraussichtlich dauert.
 
-Warum nur Übungen eine Zusatzaufgabe auslösen
-─────────────────────────────────────────────
-Die Zusammenfassung legt den Ablauf fest: "Übungsaufgaben (+ ggf.
-Zusatzaufgaben) → echte Sendeaufgabe → Bobs Antwort". Zusatzaufgaben gehören
-also in die Übungsphase und kommen "aus demselben Wortpool". Nach einem
-Funkspruch hat die Geschichte schon begonnen – eine Handbuch-Übung zwischen
-dem eigenen Ruf und Bobs Antwort risse sie auseinander.
+Wann eine Zusatzaufgabe drankommt
+─────────────────────────────────
+Erst, wenn die Funksprüche des Levels erzählt sind: Sie füllen die Restzeit
+*danach*, nicht die Wartezeit davor (siehe :mod:`game.levelablauf`, "Warum
+die Funksprüche vor den Zusatzaufgaben kommen"). Solange noch ein Funkspruch
+offen ist, löst nur eine **Übung** eine Zusatzaufgabe aus – eine
+Handbuch-Übung zwischen dem eigenen Ruf und Bobs Antwort risse die Geschichte
+auseinander.
 """
 
 from content import uebungen as _uebungen

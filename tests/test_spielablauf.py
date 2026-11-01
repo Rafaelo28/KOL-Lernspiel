@@ -142,7 +142,11 @@ def test_nach_dem_handbuch_kommt_die_erste_uebung(bei_der_uebung):
 
 
 def test_nach_den_uebungen_kommt_das_funkgeraet(fenster, bei_der_uebung, uhr):
-    """Erst die Pflichtübungen, dann Zusatzaufgaben, solange Zeit ist – dann das Gerät."""
+    """Erst die Pflichtübungen, dann gleich das Gerät – Zusatzaufgaben kommen danach.
+
+    Bis zum Pilotdurchlauf schoben sie sich davor; in Level 2 lagen dadurch
+    bis zu fünfzehn Übungen zwischen der Handbuchseite und der Geschichte.
+    """
     for _ in range(levelablauf.BASIS_UEBUNGEN_JE_LEVEL):
         assert isinstance(fenster.aktueller_screen, uebung.Uebung)
         assert not fenster.aktueller_screen.aufgabe.zusatzaufgabe
@@ -151,7 +155,7 @@ def test_nach_den_uebungen_kommt_das_funkgeraet(fenster, bei_der_uebung, uhr):
     assert screen.funkspruch is story.FUNKSPRUCH_ERSTER_RUF
     stand = fenster.durchlauf.spielstand
     assert stand.uebungen_im_level(1) == levelablauf.BASIS_UEBUNGEN_JE_LEVEL
-    assert stand.zusatzaufgaben_im_level(1) > 0, "Die Restzeit wurde mit Übungen gefüllt."
+    assert stand.zusatzaufgaben_im_level(1) == 0, "Vor der Geschichte wird nicht gefüllt."
 
 
 def test_nach_dem_letzten_funkspruch_beginnt_das_naechste_level(fenster, bei_der_uebung, uhr):
@@ -170,23 +174,29 @@ def test_nach_dem_letzten_funkspruch_beginnt_das_naechste_level(fenster, bei_der
 # ───────────────────────────────────────────────────────────────────────────
 
 def test_wer_schnell_ist_bekommt_eine_zusatzaufgabe(fenster, bei_der_uebung):
-    """Die Uhr steht still – schneller geht es nicht."""
-    for _ in range(levelablauf.BASIS_UEBUNGEN_JE_LEVEL):
-        _loesen(fenster)
-    screen = fenster.aktueller_screen
+    """Die Uhr steht still – schneller geht es nicht. Gefüllt wird nach der Geschichte."""
+    screen = _spielen_bis(fenster, None,
+                          lambda s: getattr(getattr(s, "aufgabe", None), "zusatzaufgabe", False))
     assert isinstance(screen, uebung.Uebung)
     assert screen.aufgabe.zusatzaufgabe, "Sie muss im Log als Zusatzaufgabe stehen."
+    assert _gestellte_funksprueche(fenster) == ["erster_ruf", "bob_erste_antwort"], (
+        "Die Funksprüche waren vorher dran.")
     _loesen(fenster)
     assert fenster.durchlauf.spielstand.zusatzaufgaben_im_level() == 1
     assert fenster.durchlauf.spielstand.uebungen_im_level() == levelablauf.BASIS_UEBUNGEN_JE_LEVEL
 
 
-def test_nach_den_zusatzaufgaben_kommt_trotzdem_das_funkgeraet(fenster, bei_der_uebung):
-    """Die Obergrenze des Levels gilt – sonst käme man nie zur Geschichte."""
-    for _ in range(levelablauf.BASIS_UEBUNGEN_JE_LEVEL
-                   + zusatzaufgaben.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL):
-        _loesen(fenster)
-    assert isinstance(fenster.aktueller_screen, funk.Funk)
+def test_die_zusatzaufgaben_hoeren_an_der_obergrenze_auf(fenster, bei_der_uebung):
+    """Sonst liefen sie bis zum Zeitablauf weiter.
+
+    Die Uhr steht still, das Zeitfenster begrenzt hier also nichts – was das
+    Level beendet, ist allein die Obergrenze aus game/zusatzaufgaben.py.
+    (Vor dem Pilotdurchlauf sicherte dieser Test, dass man über die
+    Zusatzaufgaben überhaupt zur Geschichte kommt. Die kommt jetzt vorher.)
+    """
+    _spielen_bis(fenster, None, lambda s: isinstance(s, handbuch.Handbuch) and s.seite.level == 2)
+    stand = fenster.durchlauf.spielstand
+    assert stand.zusatzaufgaben_im_level(1) == zusatzaufgaben.HOECHSTZAHL_ZUSATZAUFGABEN_JE_LEVEL
 
 
 # ───────────────────────────────────────────────────────────────────────────
