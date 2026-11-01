@@ -283,6 +283,13 @@ Standort senden). Die Aufteilung steht fertig in `content/story.py`.
   (`tests/test_generator.py` und `tests/test_zusatzaufgaben.py` prüfen das)
 - Eine Zusatzaufgabe kurz vor Schluss wird nicht gestellt (Projektregel 1: sie
   würde nur unfertig abgebrochen)
+- **Teilaufgaben nachgemessen (erledigt):** `HOECHSTLAENGE_TEILAUFGABE` gilt
+  seit dem Pilotdurchlauf je Level (25 / 25 / 10). Der eigene Standort war
+  mit siebzehn Buchstaben und sieben Minuten im Median die teuerste Aufgabe
+  des Spiels – in dem Level, in dem drei von fünf Personen die Zeit ausging.
+  Er rechnet jetzt acht Buchstaben ("OASE DREI") von Hand, der Knopf löst den
+  Rest auf. Bobs zweite Antwort bleibt ganz von Hand: Sie ist der Zahltag,
+  und Entschlüsseln kostet weniger als die Hälfte je Buchstabe
 - **Im Pilotdurchlauf nachgemessen (erledigt):** 85 Übungen von fünf
   Personen, ohne die Zeilen mit `abgebrochen = ja`. Ergebnis: Die Gerade
   (20 s + 4 s je Buchstabe) trifft die **Substitution** auf die Sekunde

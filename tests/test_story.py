@@ -396,9 +396,10 @@ def test_die_teilaufgabe_laesst_wirklich_etwas_uebrig(funkspruch):
 def test_keine_teilaufgabe_ueberschreitet_die_hoechstlaenge(funkspruch):
     """Der Schwellenwert steht an einer Stelle und wird nach dem Pilot angepasst."""
     buchstaben = len(funkspruch.selbst_zu_loesen.replace(LEERZEICHEN, ""))
-    assert buchstaben <= story.HOECHSTLAENGE_TEILAUFGABE, (
+    erlaubt = story.HOECHSTLAENGE_TEILAUFGABE[funkspruch.level]
+    assert buchstaben <= erlaubt, (
         f"{funkspruch.kennung}: {buchstaben} Buchstaben von Hand – erlaubt "
-        f"sind {story.HOECHSTLAENGE_TEILAUFGABE} "
+        f"sind in Level {funkspruch.level} {erlaubt} "
         f"(story.HOECHSTLAENGE_TEILAUFGABE)."
     )
 
@@ -444,9 +445,21 @@ def test_die_kurzen_funksprueche_werden_ganz_selbst_geloest():
     assert kennungen == {"erster_ruf", "bob_zweite_antwort"}
 
 
-@pytest.mark.parametrize("funkspruch", MIT_TEILAUFGABE, ids=[f.kennung for f in MIT_TEILAUFGABE])
-def test_die_teilaufgabe_ist_fuer_sich_verstaendlich(funkspruch):
-    """Der geschnittene Anfang soll eine lesbare Aussage sein, kein Fragment."""
+@pytest.mark.parametrize("funkspruch", [f for f in MIT_TEILAUFGABE if f.richtung == story.EMPFANGEN],
+                         ids=[f.kennung for f in MIT_TEILAUFGABE if f.richtung == story.EMPFANGEN])
+def test_eine_entschluesselte_teilaufgabe_ist_fuer_sich_verstaendlich(funkspruch):
+    """Beim Empfangen soll der geschnittene Anfang eine lesbare Aussage sein.
+
+    Dort ist er das, was man liest: Der Geheimtext steht da, und was man
+    entschlüsselt hat, ergibt den Anfang der Nachricht – ein Fragment aus
+    zwei Wörtern wirkte willkürlich.
+
+    Beim **Senden** gilt das nicht: Dort steht der vollständige Klartext
+    ohnehin auf dem Glas (Projektregel "Lange Funksprüche"), hervorgehoben
+    ist nur, wie weit man selbst verschlüsselt. Gelesen wird der Anfang also
+    nie für sich. Deshalb darf `standort` seit dem Pilotdurchlauf bei zwei
+    Wörtern aufhören – siehe story.HOECHSTLAENGE_TEILAUFGABE.
+    """
     assert len(funkspruch.selbst_zu_loesen.split()) >= 3, (
         f"{funkspruch.kennung}: {funkspruch.selbst_zu_loesen!r} ist zu kurz, "
         "um für sich zu stehen."
@@ -504,11 +517,13 @@ def test_der_schwellenwert_bleibt_in_einem_sinnvollen_bereich():
     darüber hinaus braucht, sollte stattdessen die Teilaufgabe kürzen.
     """
     assert 10 <= story.HOECHSTLAENGE_GANZE_NACHRICHT <= 40
-    assert 10 <= story.HOECHSTLAENGE_TEILAUFGABE <= 40, (
-        f"HOECHSTLAENGE_TEILAUFGABE = {story.HOECHSTLAENGE_TEILAUFGABE}. "
-        "Unter 10 Buchstaben ist die Aufgabe kein Beleg für das Verfahren, "
-        "über 40 wird sie im Zeitfenster nicht mehr zu schaffen sein."
-    )
+    assert set(story.HOECHSTLAENGE_TEILAUFGABE) == {1, 2, 3}, "je Level eine Zahl"
+    for level, grenze in story.HOECHSTLAENGE_TEILAUFGABE.items():
+        assert 10 <= grenze <= 40, (
+            f"HOECHSTLAENGE_TEILAUFGABE[{level}] = {grenze}. "
+            "Unter 10 Buchstaben ist die Aufgabe kein Beleg für das Verfahren, "
+            "über 40 wird sie im Zeitfenster nicht mehr zu schaffen sein."
+        )
 
 
 # ───────────────────────────────────────────────────────────────────────────

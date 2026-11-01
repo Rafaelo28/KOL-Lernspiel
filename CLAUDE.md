@@ -178,8 +178,12 @@ Die Aufteilung steht als `selbst_zu_loesen` in `content/story.py`.
     Empfangen-Regel versehentlich auch beim Senden anwendet, macht die Aufgabe
     durch Abschreiben lösbar und die gemessene Zeit für Level 3 wertlos.
 - Der Schwellenwert `HOECHSTLAENGE_TEILAUFGABE` in `content/story.py` steht an
-  genau einer Stelle und wird nach dem Pilotdurchlauf angepasst – genau wie
-  der Schwellenwert für die Zusatzaufgaben.
+  genau einer Stelle. Nach dem Pilotdurchlauf gilt er **je Level**
+  (25 / 25 / 10): Ein Buchstabe kostet in Level 3 ein Vielfaches – gemessen
+  7,2 s beim Verfolger-Funkspruch gegen 24,7 s beim eigenen Standort, weil
+  man beim Entschlüsseln die zweite Hälfte eines Wortes errät und beim
+  Verschlüsseln jeden Buchstaben nachschlagen muss. Begründung und Zahlen im
+  Kopf von `content/story.py`.
 - Die Erzählzeit ("zwanzig Minuten später") ist reine Fiktion. Der echte
   Level-Timer läuft unverändert weiter; Zeitfenster bleiben fix (Regel 1).
 

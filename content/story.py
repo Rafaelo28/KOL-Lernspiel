@@ -86,6 +86,11 @@ Funksprüche ohne ``selbst_zu_loesen`` werden ganz von Hand gelöst. Das sind
 die beiden kurzen: der erste Ruf (22 Buchstaben) und Bobs zweite Antwort
 (27 Buchstaben) – letztere ist der Zahltag des Spiels, den will man selbst
 entschlüsseln.
+
+Wie lang eine Teilaufgabe sein darf, steht in
+:data:`HOECHSTLAENGE_TEILAUFGABE` – je Level, seit im Pilotdurchlauf gemessen
+wurde, wie verschieden teuer ein einzelner Buchstabe in den drei Verfahren
+ist.
 """
 
 from typing import NamedTuple
@@ -121,10 +126,28 @@ ABSENDER_UNBEKANNT = ""
 SCHLUESSELWORT_DER_GESCHICHTE = "ROT"
 
 #: Höchstlänge einer selbst zu lösenden Teilaufgabe, in Buchstaben ohne
-#: Leerzeichen. Diese Zahl steht bewusst an genau *einer* Stelle: Nach dem
-#: Pilotdurchlauf (Arbeitsplan 8.2) wird sie mit einem Handgriff angepasst,
-#: und ``tests/test_story.py`` prüft danach jeden Funkspruch dagegen.
-HOECHSTLAENGE_TEILAUFGABE = 25
+#: Leerzeichen – **je Level**. Diese Zahlen stehen bewusst an genau *einer*
+#: Stelle; ``tests/test_story.py`` prüft jeden Funkspruch dagegen.
+#:
+#: Dass Level 3 eine eigene, kleinere Zahl bekommt, ist das Ergebnis des
+#: Pilotdurchlaufs (Arbeitsplan 8.2). Ein Buchstabe kostet dort viel mehr als
+#: in den anderen Leveln – gemessen über fünf Personen:
+#:
+#:     Level 1, erster Ruf (senden)      5,6 s je Buchstabe
+#:     Level 2, Verfolger (empfangen)    7,2 s je Buchstabe
+#:     Level 3, Bobs Antwort (empfangen) 11,2 s je Buchstabe
+#:     Level 3, Standort (senden)       24,7 s je Buchstabe
+#:
+#: Die 24,7 Sekunden sind kein Ausreisser, sondern die Richtung: Beim
+#: Entschlüsseln errät man die zweite Hälfte eines deutschen Wortes und muss
+#: sie nicht mehr nachschlagen – beim Verschlüsseln ist jeder Buchstabe ein
+#: Gang ins Quadrat. Siebzehn Buchstaben "OASE DREI KILOMETER" waren damit
+#: mit sieben Minuten im Median die teuerste Aufgabe des ganzen Spiels, in
+#: dem Level, in dem drei von fünf Personen die Zeit ausging.
+#:
+#: Zehn Buchstaben in Level 3 sind nach denselben Messwerten ungefähr so viel
+#: Handarbeit wie fünfundzwanzig in Level 2 – beim Senden sogar mehr.
+HOECHSTLAENGE_TEILAUFGABE = {1: 25, 2: 25, 3: 10}
 
 #: Höchstlänge eines Funkspruchs, der *ganz* von Hand gelöst wird. Bewusst
 #: eine zweite Zahl: Sonst liesse sich HOECHSTLAENGE_TEILAUFGABE nicht mehr
@@ -409,7 +432,10 @@ FUNKSPRUCH_STANDORT = Funkspruch(
     # Funkspruch der Verfolger. Das Wort, das niemand mitlesen darf, steht
     # vorn: Die Oase wird von Hand verschlüsselt, nicht erst vom Knopf.
     klartext="OASE DREI KILOMETER NORDWESTLICH VOM WRACK {initialen}",
-    selbst_zu_loesen="OASE DREI KILOMETER",
+    # Acht Buchstaben, nicht siebzehn: siehe HOECHSTLAENGE_TEILAUFGABE. Die
+    # nächste Wortgrenze läge erst bei "KILOMETER" (17) – und das Wort, das
+    # niemand mitlesen darf, steht weiterhin vorn und wird von Hand gerechnet.
+    selbst_zu_loesen="OASE DREI",
     weiterrechnen=(
         "Den Rest verschlüsselst du in Ruhe zu Ende, Zeile um Zeile mit dem "
         "Quadrat. Dann drückst du die Sendetaste."
