@@ -49,6 +49,19 @@ Arbeitsverzeichnis heraus; die Messdaten landen immer in `logs/` neben
 Fehlt Tkinter, meldet `main.py` das im Klartext mit Installationshinweis,
 statt mit einem Stacktrace abzubrechen.
 
+### Für Rechner ohne Python
+
+```bash
+pip install pyinstaller
+python3 bauen.py
+```
+
+Daraus entsteht in `dist/` eine einzelne ausführbare Datei, die Python und
+Tkinter mitbringt – gedacht für Schulrechner ohne Adminrechte. PyInstaller
+baut dabei immer für das System, auf dem es läuft: Eine `Diamantenraub.exe`
+entsteht nur unter Windows. Die ganze Anleitung samt Prüfliste für den
+Schulrechner steht in [dokumentation/Verteilung.md](dokumentation/Verteilung.md).
+
 ### Testmodus
 
 Zum Durchklicken der Geschichte – nicht für den Unterricht:
@@ -109,6 +122,7 @@ tests/           pytest
 logs/            Messdaten der Durchläufe (Inhalt steht in .gitignore)
 dokumentation/   Konzept, Arbeitsplan, Handbuchtexte, Commit-Regeln
 main.py          Einstiegspunkt
+bauen.py         Baut das Spiel zu einer ausführbaren Datei (nur Entwicklungsrechner)
 ```
 
 Erlaubte Abhängigkeitsrichtung: `ui` → `game` → `crypto` / `content`, niemals
@@ -353,3 +367,4 @@ Die vollständige Aufgabenzerlegung steht in
 | [dokumentation/Commit_Regeln.md](dokumentation/Commit_Regeln.md) | Wann und wie committet wird |
 | [dokumentation/Animationen.md](dokumentation/Animationen.md) | Wie Animationen entstehen und ins Spiel kommen |
 | [dokumentation/Testmodus.md](dokumentation/Testmodus.md) | Kurzanleitung für `main.py --testmodus` |
+| [dokumentation/Verteilung.md](dokumentation/Verteilung.md) | Wie das Spiel auf die Schulrechner kommt – Build und Prüfliste |

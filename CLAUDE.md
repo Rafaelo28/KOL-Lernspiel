@@ -12,6 +12,7 @@ durchlesen:
 - `dokumentation/Tipps-und-Tricks.md` – Hinweise zu Tkinter, Normalisierung, Logging
 - `dokumentation/Commit_Regeln.md` – wann und wie committet wird
 - `dokumentation/Animationen.md` – wie Animationen entstehen und ins Spiel kommen
+- `dokumentation/Verteilung.md` – wie das Spiel auf die Schulrechner kommt
 
 ## Sprache
 
@@ -265,6 +266,7 @@ tests/         – pytest
 logs/          – Messdaten der Durchläufe (Inhalt in .gitignore!)
 dokumentation/ – Konzept, Arbeitsplan, Handbuchtexte, Tipps, Commit-Regeln (keine Programmdateien)
 main.py        – Einstiegspunkt
+bauen.py       – baut das Spiel zu einer ausführbaren Datei (nur Entwicklungsrechner)
 ```
 
 Erlaubte Abhängigkeitsrichtung: `ui` → `game` → `crypto` / `content`.

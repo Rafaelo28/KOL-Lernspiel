@@ -852,6 +852,34 @@ def test_die_messdaten_landen_neben_main_py():
     assert main.PROTOKOLLORDNER == Path(main.__file__).resolve().parent / "logs"
 
 
+def test_im_gebauten_spiel_landen_die_messdaten_neben_der_programmdatei(monkeypatch, tmp_path):
+    """Sonst schriebe das Spiel sie in das Entpackverzeichnis – und das wird gelöscht.
+
+    Eine mit ``bauen.py`` gebaute Einzeldatei packt sich beim Start in einen
+    temporären Ordner aus, den das Betriebssystem beim Beenden wegräumt.
+    ``__file__`` zeigt dann dorthin. Die Messdaten eines ganzen
+    Unterrichtsblocks wären nach dem Schliessen weg (Arbeitsplan 8.3).
+    """
+    programm = tmp_path / "stick" / "Diamantenraub.exe"
+    programm.parent.mkdir()
+    monkeypatch.setattr(main.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(main.sys, "executable", str(programm))
+    assert main.programmordner() == programm.parent
+
+
+def test_ohne_konsole_bricht_eine_meldung_das_spiel_nicht_ab(monkeypatch, capsys):
+    """Ein Build ohne Konsolenfenster hat kein stdout und kein stderr.
+
+    ``print(..., file=None)`` endet dort mit einem AttributeError – und zwar
+    ausgerechnet beim Melden eines Startfehlers.
+    """
+    monkeypatch.setattr(main.sys, "stdout", None)
+    monkeypatch.setattr(main.sys, "stderr", None)
+    main.melden("etwas")
+    main.melden("etwas Schlimmes", fehler=True)
+    assert capsys.readouterr() == ("", "")
+
+
 def test_ohne_bildschirm_meldet_main_das_verstaendlich(monkeypatch, capsys):
     def ohne_anzeige(*_, **__):
         """Tut so, als gäbe es keine Bildschirmanzeige."""

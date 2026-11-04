@@ -1066,6 +1066,13 @@ Bobs zweite Antwort entschlüsseln → Warten-Button → Abschluss
     `game/zeitfenster.py`
 
 ### 8.3 Verteilung auf Schulrechner testen
+- **Vorbereitet:** `bauen.py` im Projektordner erzeugt den Build, die
+  Anleitung samt Prüfliste steht in `dokumentation/Verteilung.md`. Die beiden
+  Fallstricke unten sind darin bereits gelöst: Der Logordner hängt an
+  `main.programmordner()` (im Build also an der ausführbaren Datei), und
+  `content/animationen/` wird als Daten mitgegeben. Ein Probebau unter Linux
+  lief durch (39 MB, startet, Animationen da) – die .exe selbst entsteht erst
+  unter Windows, denn PyInstaller baut nicht kreuzweise
 - Läuft Python dort? Ist Tkinter vorhanden?
 - Falls nein: PyInstaller-Build erstellen und **auf einem echten Schulrechner**
   testen, nicht nur auf dem eigenen
